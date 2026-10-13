@@ -1,0 +1,128 @@
+# 🚀 XPilot TNG (The Next Generation) 🛸
+### *The 90s cult classic returns — dust-free, turbocharged & powered by SDL3!*
+
+> *"In space, no one can hear you scream... but across university computer labs in 1994, everyone knew who just ate a cluster nuke."*
+
+---
+
+## 🛰️ What is XPilot TNG?
+
+Welcome to **XPilot TNG** — the resurrection of one of the most legendary 2D multiplayer space dogfight games in computer history!
+
+First conceived in 1991 by Bjørn Stabell and Ken Ronny Schouten, XPilot reliably brought down university subnets, hijacked dormitory networks, and dominated office LAN parties throughout the 1990s and early 2000s. After years of dormancy — bogged down by ancient 2006 GNU Autotools, obsolete C89 prototypes, and libraries that now belong in computer museums — the codebase has been thoroughly modernized:
+
+- 🏎️ **No more Autotools headaches:** Rebuilt with a modern **CMake** & **Ninja** build system.
+- 🦾 **C23 & GCC 15 Ready:** Pure, type-safe C code, UTF-8 clean, and stripped of deprecated syntactic fossils.
+- 🎨 **SDL3 & GPU 2D Renderer:** Say goodbye to vintage OpenGL 1.1 immediate mode (`glBegin`/`glEnd`) and obsolete GLU. Crisp 2D vector rendering powered directly by `SDL_Renderer` with native Wayland and X11 support.
+- 🔤 **Razor-Sharp Typography:** TrueType font rendering with **SDL3_ttf**.
+- 🔊 **Modern Sound:** Crisp audio effects delivered through native **SDL3 Audio Streams**.
+- 🌐 **Modernized Networking:** Clean, thread-safe POSIX sockets (`getaddrinfo`, `getnameinfo`, `sockaddr_storage`) replacing archaic `SIGALRM` DNS timeouts from the 90s.
+
+---
+
+## 🛠️ Prerequisites & Dependencies
+
+To build XPilot TNG, all you need is a modern C compiler and a handful of standard libraries:
+
+- **C Compiler:** GCC 13+ or Clang 16+ (fully tested with GCC 15 & C23)
+- **Build Tools:** `cmake` (>= 3.25) and `make` (or `ninja`)
+- **Libraries:**
+  - `SDL3` and `SDL3_ttf` (for windowing, input, sound & text rendering)
+  - `zlib` (for map compression)
+  - `expat` (for XML maps and configurations)
+
+
+---
+
+## 🚀 Building & Compiling
+
+The project builds with a simple `make` command (which wraps CMake) or directly with CMake:
+
+### Option A: Simple Make (Recommended)
+```bash
+make -j$(nproc)
+```
+
+### Option B: Direct CMake
+```bash
+# 1. Configure build files (uses Ninja if installed with -G Ninja, otherwise Make)
+cmake -B build
+
+# 2. Compile (Server, Client & Libraries)
+cmake --build build -j$(nproc)
+```
+*(Tip: If you have Ninja installed, you can pass `-G Ninja` for even faster builds).*
+
+The resulting binaries will be right inside `build/` (and symlinked directly into the project root):
+- `./xpilot-tng-server` (or `build/xpilot-tng-server`)
+- `./xpilot-tng-client` (or `build/xpilot-tng-client`)
+
+---
+
+## 🎮 Quickstart: Jumping into Battle
+
+XPilot uses a client-server architecture. You can host your own server (and test your skills against AI bots) or battle friends across a local network or the internet.
+
+### 1. Launch a Local Server
+
+Fire up a server running a map of your choice (such as the classic *New Dark Hell* map `ndh.xp2`):
+
+```bash
+./xpilot-tng-server -map lib/maps/ndh.xp2 -noQuit
+```
+*Pro tip:* If you play alone, the server automatically spawns merciless combat robots (`Wimpy`, `Terminator`, `Sparky`, and `Sniper`) to keep you on your toes!
+And even worse, there are also intelligent "smart" robots now, add for example 3 of them with the option `-smartrobots 3`.
+
+### 2. Connect Your Ship
+
+Open a new terminal and fire up the client:
+
+```bash
+./xpilot-tng-client localhost -name Maverick
+```
+
+... and **BOOM!** You are strapped into the cockpit of your starfighter, surrounded by asteroids, fueling bases, and trigger-happy bots!
+
+---
+
+## 🕹️ Flight Academy: Piloting Your Ship
+
+XPilot models **Newtonian space physics and inertia**. When you hit the thrusters, you keep gliding until counter-thrust slows you down — or until you become one with a solid granite wall!
+
+| Key | Action | Pilot Survival Tip |
+| :--- | :--- | :--- |
+| **Left Shift** / **Right Mouse** | **Thrusters (Thrust)** | Feather it! Continuous thrust will turn you into a high-speed projectile heading straight for a wall. |
+| **Left / Right Arrows** | **Rotate / Steer** | Point your ship toward where you want to shoot — which isn't always the direction you're flying! |
+| **Spacebar** / **Left Mouse** | **Main Cannons (Fire)** | Cannon shots inherit your ship's momentum. Leading your targets is essential! |
+| **s** | **Shields** | Absorbs hostile fire, but drinks your fuel tank like a thirsty black hole. |
+| **Tab** | **Lock Target** | Acquire a missile lock on your nemesis. |
+| **m** | **Launch Missile** | Send a high-explosive greeting card to whoever is on your tail. |
+| **c** | **Cloaking Device** | Go invisible to human eyes (and confuse most bots). |
+| **d** | **ECM (Electronic Jammer)** | Scrambles enemy radar, HUDs, and missile tracking. |
+| **p** | **Phasing Device** | Pass right through solid rock walls — just don't run out of energy while inside a mountain! |
+| **f** | **Refuel** | Hover near a green fuel depot. An empty tank means you're just target practice. |
+| **Escape** | **Pause / Menu** | When your boss or professor suddenly walks into the room. |
+
+---
+
+## 🤖 Hostile Intelligence: The Smartbots
+
+Behind the scenes in `suibotdef.c`, the server runs a cunning bot AI:
+- They compute predictive ballistic deflection firing solutions.
+- They bounce shots off walls with billiards-grade geometry.
+- They sense when your fuel is low and swarm in for the kill.
+
+Give them hell, or join forces with them in team-play mode!
+
+---
+
+## 📜 License & Credits
+
+XPilot TNG is released under the **GNU General Public License v2 (GPLv2)**.
+
+- **Original XPilot Authors:** Bjørn Stabell, Ken Ronny Schouten, Bert Gijsbers, Dick Balaska, Kristian Söderblom, Uoti Urpala, Erik Andersson, and many open-source contributors.
+- **XPilot TNG Modernization (2026):** Ported to CMake, C23/GCC 15, SDL3 GPU 2D rendering, SDL3_ttf & modern POSIX networking.
+
+---
+
+*Fly fast, shoot straight, and always remember: Gravity never negotiates.* 🚀💥

@@ -1,0 +1,17 @@
+# Build outputs and temporary directories
+build/
+*.log
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+*~
+.*.kate-swp
+smartbot_brain.dat
+
+# Root convenience symlinks
+/xpilot-tng-server
+/xpilot-tng-client
+/xpilot-tng-sdl3
