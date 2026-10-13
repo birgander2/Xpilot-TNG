@@ -4,7 +4,7 @@
  */
 
 #include "sdl3_client.h"
-#include "../sdl/SDL_gfxPrimitives_font.h"
+#include "SDL_gfxPrimitives_font.h"
 #include <SDL3_ttf/SDL_ttf.h>
 
 #define ATLAS_COLS      16
