@@ -20,6 +20,12 @@ First conceived in 1991 by Bjørn Stabell and Ken Ronny Schouten, XPilot reliabl
 
 ---
 
+## Background
+
+Being an old Xpilot player, after almost 30 years, I had the idea to play again some rounds with my kids. But: None of the available versions is really working anymore. What a pity, it was such a cool game. So I took some time to (mostly) let the AI bring it back to live. This is work in progress, there are even some fresh ideas waiting to be implemented.
+
+---
+
 ## 🛠️ Prerequisites & Dependencies
 
 To build XPilot TNG, all you need is a modern C compiler and a handful of standard libraries:
@@ -103,16 +109,23 @@ XPilot models **Newtonian space physics and inertia**. When you hit the thruster
 | **f** | **Refuel** | Hover near a green fuel depot. An empty tank means you're just target practice. |
 | **Escape** | **Pause / Menu** | When your boss or professor suddenly walks into the room. |
 
+📚 **Complete Controls & Weapons Reference:**
+- ⌨️ [**Keyboard Controls Cheat Sheet**](doc/CHEATSHEET-KEYS.md) — Full list of all default flight, weapon, utility, and communication key bindings.
+- 🚀 [**Weapons & Items Cheat Sheet**](doc/CHEATSHEET-WEAPONS.md) — Illustrated guide to primary guns, missiles, nuclear/cluster modifiers, and defensive devices.
+
 ---
 
 ## 🤖 Hostile Intelligence: The Smartbots
 
-Behind the scenes in `suibotdef.c`, the server runs a cunning bot AI:
+Behind the scenes, mainly because there are so few players around nowadays, the server now runs a cunning bot AI that can be activated:
+
 - They compute predictive ballistic deflection firing solutions.
 - They bounce shots off walls with billiards-grade geometry.
 - They sense when your fuel is low and swarm in for the kill.
 
 Give them hell, or join forces with them in team-play mode!
+
+📖 **For detailed usage, configuration options, in-game chat commands, and AI architecture, see the [Smartbots Documentation](doc/SMARTBOTS.md).**
 
 ---
 
@@ -122,6 +135,30 @@ XPilot TNG is released under the **GNU General Public License v2 (GPLv2)**.
 
 - **Original XPilot Authors:** Bjørn Stabell, Ken Ronny Schouten, Bert Gijsbers, Dick Balaska, Kristian Söderblom, Uoti Urpala, Erik Andersson, and many open-source contributors.
 - **XPilot TNG Modernization (2026):** Ported to CMake, C23/GCC 15, SDL3 GPU 2D rendering, SDL3_ttf & modern POSIX networking.
+
+---
+
+## 🔗 Historic XPilot Projects & Community Links
+
+For enthusiasts, historians, and retro space aces seeking original archives, repositories, guides, and community lore:
+
+### 🏛️ Classic Hubs & Source Repositories
+- 🌐 [**XPilot.org (Official Classic Website)**](http://www.xpilot.org) ([Wayback Archive](https://web.archive.org/web/20050205004739/http://www.xpilot.org/)) — The original web hub featuring historical FAQs, world rankings, and map collections.
+- 🛸 [**XPilot NG Project on SourceForge**](https://sourceforge.net/projects/xpilot-ng/) & [**Website**](http://xpilot.sourceforge.net/) — The prominent 2000s branch that introduced SDL/OpenGL, polygonal maps (`.xp2`), and HUD enhancements.
+- 📦 [**XPilot NG GitHub Mirror**](https://github.com/jwr/xpilot-ng) — Preserved Git mirror of the XPilot NG SVN repository.
+- 💾 [**Classic XPilot on SourceForge**](https://sourceforge.net/projects/xpilot/) — The original SourceForge repository hosting historical XPilot 4.5.x releases and patches.
+- 📁 [**Local Legacy Trees (`legacy/`)**](legacy/) & [**Legacy Documentation (`doc/OLD_DOCS.md`)**](doc/OLD_DOCS.md) — Preserved, compilable copies of `xpilot-classic-4.5.5` and `xpilot-ng-4.7.3` included directly inside this repository.
+
+### 📖 History, Guides & Community Lore
+- 📚 [**Wikipedia: XPilot**](https://en.wikipedia.org/wiki/XPilot) — Comprehensive overview of the game's 1991 inception at the University of Tromsø, development history, and reception.
+- 🎓 [**Jarno's Unofficial XPilot Newbie Guide**](https://web.archive.org/web/20070216124707/http://www.j-a-r-n-o.nl/newbie/) — The quintessential flight academy manual covering Newtonian maneuvers, dodge maneuvers, and ballistics.
+- 🏆 [**XPilot Tournament & Teamcup Archives**](https://web.archive.org/web/20050212003730/http://www.xpilot.org/tournaments/) — Historical records of the European Team Cups, Spring Teamcup, Death Cup, and clan wars.
+- 📼 [**Vipa's Ballrun Archive & Match Replays**](https://web.archive.org/web/20050212003740/http://www.xpilot.org/replays/) — Match recordings (`.xpr`) featuring legendary ball runners and tournament tactics.
+- 💬 [**rec.games.computer.xpilot (Usenet Newsgroup)**](https://groups.google.com/g/rec.games.computer.xpilot) — Decades of Usenet discussions, server announcements, and tactics from the 1990s and 2000s.
+
+### 🚀 Modern Spin-Offs & AI Research
+- 🌐 [**WPilot (HTML5 Web Remake)**](https://github.com/jfd/wpilot) — The open-source browser remake using HTML5 Canvas and WebSockets inspired directly by XPilot.
+- 🧠 [**XPilot-AI**](https://github.com/mit-ll/xpilot-ai) — MIT Lincoln Laboratory's autonomous AI agent research and competition platform built on XPilot.
 
 ---
 
