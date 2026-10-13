@@ -18,6 +18,10 @@ First conceived in 1991 by Bjørn Stabell and Ken Ronny Schouten, XPilot reliabl
 - 🔊 **Modern Sound:** Crisp audio effects delivered through native **SDL3 Audio Streams**.
 - 🌐 **Modernized Networking:** Clean, thread-safe POSIX sockets (`getaddrinfo`, `getnameinfo`, `sockaddr_storage`) replacing archaic `SIGALRM` DNS timeouts from the 90s.
 
+New game features:
+
+- **Smartbots**: Strong AI-powered robots that will make you suffer (see below)
+
 ---
 
 ## Background
@@ -91,7 +95,7 @@ Open a new terminal and fire up the client:
 
 ---
 
-## 🕹️ Flight Academy: Piloting Your Ship
+## 🕹️ Newby Flight Academy: Piloting Your Ship
 
 XPilot models **Newtonian space physics and inertia**. When you hit the thrusters, you keep gliding until counter-thrust slows you down — or until you become one with a solid granite wall!
 
@@ -117,13 +121,14 @@ XPilot models **Newtonian space physics and inertia**. When you hit the thruster
 
 ## 🤖 Hostile Intelligence: The Smartbots
 
-Behind the scenes, mainly because there are so few players around nowadays, the server now runs a cunning bot AI that can be activated:
+Behind the scenes, mainly because there are so few players around nowadays, the server now runs a cunning bot AI that can be activated. The old bots are still there, but smartbots play much stronger:
 
 - They compute predictive ballistic deflection firing solutions.
 - They bounce shots off walls with billiards-grade geometry.
 - They sense when your fuel is low and swarm in for the kill.
 
-Give them hell, or join forces with them in team-play mode!
+Give them hell, or join forces with them in team-play mode! Ball-game smartbots / smartbot teams are
+planned to come in future.
 
 📖 **For detailed usage, configuration options, in-game chat commands, and AI architecture, see the [Smartbots Documentation](doc/SMARTBOTS.md).**
 

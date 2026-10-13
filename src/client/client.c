@@ -2218,6 +2218,7 @@ int Client_power(void)
 int Client_start(void)
 {
     Key_init();
+    Pointer_control_set_state(true);
 
     return 0;
 }
