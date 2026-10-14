@@ -1,0 +1,119 @@
+# Created by xmapedit on Mon Dec 13 16:20:59 1993
+
+allowshields:no
+playersonradar:no
+playerstartshielded:yes
+robotsleave:yes
+itemprobmult:1
+maxitemdensity:0.003
+itemafterburnerprob:0.00000005
+itemrearshotprob:0
+itemsensorprob:0
+itemtankprob:0
+itemmineprob:0.00000005
+itemmissileprob:0
+itemenergypackprob:0.00000005
+itemcloakprob:0
+itemecmprob:0.0000001
+itemwideangleprob:0
+itemtransporterprob:0
+itemlaserprob:0.0000001
+movingitemprob:1.0
+limitedlives:no
+#worldlives : 3
+mapwidth : 80
+mapheight : 80
+mapname : Laser Doggy
+mapauthor : John Denune (Shorty)
+edgewrap : no
+edgebounce : yes
+teamplay : no
+maxrobots : 4
+limitedvisibility : yes
+playershielding : no
+gravity : 0
+maxplayershots : 0
+crashwithplayer : no
+
+mapData: \multiline: EndOfMapdata
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                    _____                                       
+                                    _____                                       
+                                    __-__                                       
+                                    _____                                       
+                                    _____                                       
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+EndOfMapdata

@@ -1,0 +1,106 @@
+mapwidth: 167
+mapheight: 98
+mapname: XPilot
+mapauthor: Mark Boyns "DR.DEATH" <boyns@sdsu.edu>
+edgewrap: yes
+edgebounce: yes
+mapData: \multiline: EndOfMapdata
+                                                                                                                                                                       
+                                                                                                                                                                       
+                                                                                                                                                                       
+xxxxxxxxxxxxxxxxxx               xxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxx                           xxxxxxxxxx                                                       
+xxxxxxxxxxxxxxxxxx               xxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                       dxxxxxxxxxx                                                       
+xxxxxxxxxxxxxxxxxx               xxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                      xxxxxxxxxx                                                       
+xxxxxxxxxxxxxxxxxx               xxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                     xxxxxxxxxx                                                       
+    xxxxxxxxxx                      xxxx     c c   xxxxxxxxx      c   xxxxxxxxxxxx                      xxxxxxxx                                                       
+    xxxxxxxxxx                      xxx            xxxxxxxxx             xxxxxxxxxx                     xxxxxxxx                                                       
+     xxxxxxxxx_                    _xxx            xxxxxxxxx               xxxxxxxxx                    xxxxxxxx                                                       
+     xxxxxxxxx#                    #xxx            xxxxxxxxx                xxxxxxxx                    xxxxxxxx                                                       
+     xxxxxxxxxx                    xxx             xxxxxxxxx                xxxxxxxxx                   xxxxxxxx                                                       
+      xxxxxxxxx                    xxx             xxxxxxxxx                 xxxxxxxx                   xxxxxxxx                                                       
+      xxxxxxxxxx                  xxx              xxxxxxxxx                  xxxxxxxx                  xxxxxxxx                                                       
+     dxxxxxxxxxx                  xxx              xxxxxxxxx                  xxxxxxxx       ###        xxxxxxxx                                                       
+       xxxxxxxxx                  xxx              xxxxxxxxx                   xxxxxxx      #xxx#       xxxxxxxx                                                       
+       xxxxxxxxxx                xxx               xxxxxxxxx                   xxxxxxxx    #xxxxx#      xxxxxxxx                   @                                   
+       xxxxxxxxxx                xxx               xxxxxxxxx                   xxxxxxxx    #xxxxx#      xxxxxxxx                                                       
+        xxxxxxxxx               xxxx               xxxxxxxxx                   cxxxxxxx   #xxxxxxx#     xxxxxxxx                                                       
+        xxxxxxxxxx              xxx                xxxxxxxxx                    xxxxxxxx  #xxxxxxx#     xxxxxxxx                                                       
+        xxxxxxxxxx              xxx                xxxxxxxxx                    xxxxxxxx  #xxxxxxx#     xxxxxxxx                                                       
+         xxxxxxxxx             xxx                 xxxxxxxxx                    xxxxxxxx  #xxxxxxx#     xxxxxxxxf                                                      
+         xxxxxxxxxx            xxx                 xxxxxxxxx                    xxxxxxxx  #xxxxxxx#     xxxxxxxx                                                       
+         xxxxxxxxxx            xxx                 xxxxxxxxxf       @           xxxxxxxx  #xxxxxxx#     xxxxxxxx                                                       
+          xxxxxxxxx           xxx                  xxxxxxxxx                    xxxxxxxx   #xxxxx#      xxxxxxxx                                                       
+          xxxxxxxxxx          xxx                  xxxxxxxxx                    xxxxxxxx   #xxxxx#      xxxxxxxx                                                       
+           xxxxxxxxx         xxxx                  xxxxxxxxx                    xxxxxxxx    #xxx#       xxxxxxxx                                          r            
+           xxxxxxxxxx        xxx                   xxxxxxxxx                    xxxxxxxx     ###        xxxxxxxx                                      xxxxxxxx         
+           xxxxxxxxxx        xxx                   xxxxxxxxx                   _#xxxxxx                 xxxxxxxx                                      xxxxxxxx         
+            xxxxxxxxxf     dxxxx                   xxxxxxxxx                   xxxxxxxx                 xxxxxxxx                                      xxxxxxxx         
+            xxxxxxxxxx      xxx                    xxxxxxxxx                   xxxxxxxx                 xxxxxxxx                                      xxxxxxxx         
+            xxxxxxxxxx      xxx                    xxxxxxxxx                   xxxxxxx                  xxxxxxxx                                      xxxxxxxx         
+             xxxxxxxxx     xxx                     xxxxxxxxx                  xxxxxxxx                  xxxxxxxx                                      xxxxxxxx         
+             xxxxxxxxxx    xxx                     xxxxxxxxx                  xxxxxxxx                  xxxxxxxx                                      xxxxxxxx         
+             xxxxxxxxxx   xxxx                     xxxxxxxxx                 xxxxxxxx                   xxxxxxxx                                      xxxxxxxx         
+              xxxxxxxxx   xxx                      xxxxxxxxx                xxxxxxxxx                   xxxxxxxx                                      xxxxxxxx         
+              xxxxxxxxxx  xxx                      xxxxxxxxx                xxxxxxxx                    xxxxxxxx                                      xxxxxxxx         
+              xxxxxxxxxx xxxx                      xxxxxxxxx               xxxxxxxxx                    xxxxxxxx                                      xxxxxxxx         
+               xxxxxxxxx_xxx                       xxxxxxxxx             xxxxxxxxxx                     xxxxxxxx                                      xxxxxxxx         
+               xxxxxxxxx#xxx                       xxxxxxxxx_      r  xxxxxxxxxxxx            _         xxxxxxxx                                     _xxxxxxxx_        
+               xxxxxxxxxxxxx                       xxxxxxxxx#xxxxxxxxxxxxxxxxxxxx        xxxxx#xxxx     xxxxxxxx               xxxxxxx             xx#xxxxxxxx#xxx     
+                xxxxxxxxxxxf                       xxxxxxxxxxxxxxxxxxxxxxxxxxxxx         xxxxxxxxxx     xxxxxxxx             xxxxxxxxxxx           xxxxxxxxxxxxxxx     
+                xxxxxxxxxxxf                       xxxxxxxxxxxxxxxxxxxxxxxxxxx           xxxxxxxxxx     xxxxxxxx           xxxxxxxxxxxxxxx         xxxxxxxxxxxxxxx     
+                xxxxxxxxxxxf                       xxxxxxxxxxxxxxxxxxxxxxxx              xxxxxxxxxx     xxxxxxxx          xxxxxxxxxxxxxxxxx        xxxxxxxxxxxxxxx     
+                 xxxxxxxxxxf                       xxxxxxxxx                               xxxxxxxx     xxxxxxxx         xxxxxxxccccxxxxxxxx          xxxxxxxx         
+                 xxxxxxxxxxf            @          xxxxxxxxx                               xxxxxxxx     xxxxxxxx        xxxxxxx       xxxxxxx         xxxxxxxx         
+                 xxxxxxxxxxf                       xxxxxxxxx                               xxxxxxxx     xxxxxxxx        xxxxxx         xxxxxx         xxxxxxxx         
+                  xxxxxxxxxx                       xxxxxxxxx                               xxxxxxxx     xxxxxxxx       xxxxxx           xxxxxx        xxxxxxxx         
+                  xxxxxxxxxx                       xxxxxxxxx                               xxxxxxxx     xxxxxxxx       xxxxxx           xxxxxx        xxxxxxxx         
+                  xxxxxxxxxx                       xxxxxxxxx                               xxxxxxxx     xxxxxxxx      xxxxxx             xxxxxx       xxxxxxxx         
+                  dxxxxxxxxxx                      xxxxxxxxxf                              xxxxxxxx     xxxxxxxx      xxxxxx             xxxxxx       xxxxxxxx         
+                  dxxxxxxxxxx                      xxxxxxxxx                               xxxxxxxx     xxxxxxxx     xxxxxx               xxxxxx      xxxxxxxx         
+                  dxxxxxxxxxx                      xxxxxxxxx                               xxxxxxxx     xxxxxxxx     xxxxxx               xxxxxx      xxxxxxxx         
+                  dxxxxxxxxxxx                     xxxxxxxxx                               xxxxxxxx     xxxxxxxx    xxxxxxx               xxxxxxx     xxxxxxxx         
+                  dxxxxxxxxxxx                     xxxxxxxxx                               xxxxxxxx     xxxxxxxx   dxxxxxxx               xxxxxxxf    xxxxxxxx         
+                  dxxxxxxxxxxx                     xxxxxxxxx                               xxxxxxxx     xxxxxxxx    xxxxxxx               xxxxxxx     xxxxxxxx         
+                  xxxxxxxxxxxxx                    xxxxxxxxx                               xxxxxxxx     xxxxxxxx    xxxxxx                 xxxxxx     xxxxxxxx         
+                  xxxxxxxxxxxxx                    xxxxxxxxx                               xxxxxxxx     xxxxxxxx    xxxxxx                 xxxxxx     xxxxxxxx         
+                  xxxcxxxxxxxxx_                   xxxxxxxxx                               xxxxxxxx     xxxxxxxx   xxxxxxx                 xxxxxxx    xxxxxxxx         
+                 xxxx xxxxxxxxx#                   xxxxxxxxx                               xxxxxxxx     xxxxxxxx   xxxxxxx                 xxxxxxx    xxxxxxxx         
+                 xxx  xxxxxxxxxx                   xxxxxxxxx                               xxxxxxxx     xxxxxxxx   xxxxxxx                 xxxxxxx    xxxxxxxx         
+                xxxx   xxxxxxxxx                   xxxxxxxxx                               xxxxxxxx     xxxxxxxx   xxxxxxx                 xxxxxxx    xxxxxxxx         
+                xxx    xxxxxxxxxx                  xxxxxxxxx                               xxxxxxxx     xxxxxxxx   xxxxxxx                 xxxxxxx    xxxxxxxx         
+                xxx    xxxxxxxxxx                  xxxxxxxxx                               xxxxxxxx     xxxxxxxx   xxxxxxx                 xxxxxxx    xxxxxxxx         
+               xxxx     xxxxxxxxx                  xxxxxxxxx                               xxxxxxxx     xxxxxxxx   xxxxxxx                 xxxxxxx    xxxxxxxx         
+               xxx      xxxxxxxxxx                 xxxxxxxxx                               xxxxxxxx     xxxxxxxx   xxxxxxx                 xxxxxxx    xxxxxxxx         
+               xxx      xxxxxxxxxx                 xxxxxxxxx             @                 xxxxxxxx     xxxxxxxx   xxxxxxx                 xxxxxxx    xxxxxxxx         
+              xxx        xxxxxxxxx                 xxxxxxxxx                               xxxxxxxx     xxxxxxxx   xxxxxxxf       @        xxxxxxx    xxxxxxxx         
+              xxx        xxxxxxxxxx                xxxxxxxxx                               xxxxxxxx     xxxxxxxx   xxxxxxx                 xxxxxxx    xxxxxxxx         
+             xxxx        xxxxxxxxxx                xxxxxxxxx                               xxxxxxxx     xxxxxxxx   xxxxxxx                 xxxxxxx    xxxxxxxx         
+             xxx          xxxxxxxxx                xxxxxxxxx                               xxxxxxxx     xxxxxxxx   xxxxxxx                 xxxxxxx    xxxxxxxx         
+             xxx          xxxxxxxxxx               xxxxxxxxx                              dxxxxxxxx     xxxxxxxx   xxxxxxx                 xxxxxxx    xxxxxxxx         
+            xxxx          xxxxxxxxxx               xxxxxxxxx                               xxxxxxxx     xxxxxxxx   xxxxxxx                 xxxxxxx    xxxxxxxx         
+            xxx            xxxxxxxxx               xxxxxxxxx                               xxxxxxxx     xxxxxxxx   xxxxxxx                 xxxxxxx    xxxxxxxx         
+           xxxx            xxxxxxxxxx              xxxxxxxxx                               xxxxxxxx     xxxxxxxx   xxxxxxx                 xxxxxxx    xxxxxxxx         
+           xxx             xxxxxxxxxx              xxxxxxxxxf                              xxxxxxxx     xxxxxxxx   xxxxxxx                 xxxxxxx    xxxxxxxx         
+           xxx              xxxxxxxxxx             xxxxxxxxx                               xxxxxxxx     xxxxxxxx    xxxxxx                 xxxxxx     xxxxxxxx         
+          xxxx              xxxxxxxxxx             xxxxxxxxx                               xxxxxxxx     xxxxxxxx    xxxxxx                _xxxxxx     xxxxxxxx         
+          xxx               xxxxxxxxxx             xxxxxxxxx                               xxxxxxxx     xxxxxxxx    xxxxxxx               #xxxxxx     xxxxxxxx         
+          xxx                xxxxxxxxxx            xxxxxxxxx                               xxxxxxxx     xxxxxxxx   dxxxxxxx               xxxxxxxf    xxxxxxxx         
+         xxxx                xxxxxxxxxx            xxxxxxxxx                               xxxxxxxx     xxxxxxxx    xxxxxxx               xxxxxxx     xxxxxxxx         
+         xxx                 xxxxxxxxxx            xxxxxxxxx                               xxxxxxxx     xxxxxxxx     xxxxxx               xxxxxx      xxxxxxxx         
+         xxx                  xxxxxxxxxx           xxxxxxxxx                               xxxxxxxx     xxxxxxxx     xxxxxx               xxxxxx      xxxxxxxx         
+        xxxx                  xxxxxxxxxx           xxxxxxxxx                               xxxxxxxx     xxxxxxxx      xxxxxx             xxxxxx        xxxxxxxx        
+        xxx                   xxxxxxxxxx           xxxxxxxxx                               xxxxxxxx     xxxxxxxx      xxxxxx             xxxxxx        xxxxxxxx        
+      dxxxx                    xxxxxxxxxx          xxxxxxxxx                               xxxxxxxx     xxxxxxxx       xxxxxx           xxxxxx         xxxxxxxxxf   dxf
+       xxx                     xxxxxxxxxx          xxxxxxxxx                               xxxxxxxx     xxxxxxxx       xxxxxx           xxxxxx         xxxxxxxxxxx_ xx 
+       xxx                     xxxxxxxxxx          xxxxxxxxx                               xxxxxxxx     xxxxxxxx        xxxxxx         xxxxxx           xxxxxxxxxx#xxx 
+      xxxx                      xxxxxxxxxx         xxxxxxxxx                               xxxxxxxx     xxxxxxxx        xxxxxxx       xxxxxxx           xxxxxxxxxxxxxx 
+      xxxx  _                 _ xxxxxxxxxx_  r r  _xxxxxxxxx_                             _xxxxxxxx_    xxxxxxxx_        xxxxxxx  _ xxxxxxxx             xxxxxxxxxxxx  
+xxxxxxxxxxxx#f             dxx#xxxxxxxxxxx#xxx xxx#xxxxxxxxx#xxx                         x#xxxxxxxx#x xxxxxxxxxx#x        xxxxxxxx#xxxxxxxx              xxxxxxxxxxxx  
+xxxxxxxxxxxxxf             dxxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxx                         xxxxxxxxxxxx xxxxxxxxxxxx         xxxxxxxxxxxxxxx                xxxxxxxxxx   
+xxxxxxxxxxxxxf             dxxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxx                         xxxxxxxxxxxx xxxxxxxxxxxx           xxxxxxxxxxx                   xxxxxxxx    
+xxxxxxxxxxxxxf             dxxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxx                         xxxxxxxxxxxx xxxxxxxxxxxx             xxxxxxx                      xxxxx      
+                                                       c                                 cc                                       c                                    
+                                                                                                                                                                       
+                                                                                                                                                                       
+                                                                                                                                                                       
+EndOfMapdata

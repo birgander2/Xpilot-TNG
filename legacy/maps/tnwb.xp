@@ -1,0 +1,215 @@
+# Created by xmapedit on Sun Oct 10 17:49:52 1993
+
+maxrobots: 3
+noquit: true
+edgewrap: yes
+gravitypoint: 0,0
+gravityangle: 90
+gravity: -0.05
+mapwidth : 200
+mapheight : 200
+mapname : Ted Nugent's Bowhunters' World
+mapauthor : The Notorious Tre`
+
+mapData: \multiline: EndOfMapdata
+                                                                                                 xxxxxxxx                                                                                               
+                                                                                         x xxxxxxxxxxxxxxxxxxxx x                                                                                       
+                                                                                x xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx x                                                                              
+                                                                            x xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx x                                                                          
+                                                                        x xxxxxxxxxxxxxxxxxxxx xx  x x x x x xx xxxxxxxxxxxxxxx xx                                                                      
+                                                                      x xxxxxxxxxxxxxxx        x x  x x             xxxxxxxxxxxxxxxxx                                                                   
+                                                                   xxxxxxxxxxxxxxx     xxxxxxxxxxxxxxxxx              x   xxxxxxxxxxxxx                                                                 
+                                                                xxxxxxxxxxxxxx         xxxxxxxxxxxxxxxxxxx           xxxxx    xxxxxxxxxxxx                                                              
+                                                            r xxxxxxxxxxxx             xxxxxxxxxxxxxxxxxxx           xxxxxxx     xxxxxxxxxxxx                                                           
+                                                            xxxxxxxxxxx                 xxxxxxxxxxxxxxxxxxx          xxxxxxx      c  xxxxxxxxxx                                                         
+                                                         xxxxxxxxxxx xxxxxxx           xxxxxxxxxxxxxxxxxxxx         xxxxxxxx           xxxxxxxxxx                                                       
+                 (                                      xxxxxxxxx   xxxxxxxxxx         xxxxxxxxx x xxxxxxxx          xxxxxxx              xxxxxxxx                                                      
+                                                     r xxxxxxx    xxxxxxxxxxxxx         xxxxxxx     xxxxxxx         xxxxxxx                 x xxxxxxf                                                   
+                                                    xxxxxxxx x   xxxxxxxxxxxxxxx        xxxxxxx     xxxxxxx         xxxxxxx                    xxxxxx                                                   
+                                                   xxxxxxx      xxxxxxxxxxxxxxxxx       xxxxxxx     xxxxxxx        xxxxxxxx                     xxxxxxx                                                 
+                                                 xxxxxxxx      xxxxxxxxxxxxxxxxxxx      xxxxxxxxxxxxxxxxxx         xxxxxxxx       @           xx   xxxxxx                                               
+                                                xxxxxx        xxxxxxxx x xxxxxxxxx      xxxxxxxxxxxxxxxxx          xxxxxxx                   xxxx   xxxxxx                                              
+                                             xxxxxxxx         xxxxxxx     xxxxxxxxx     xxxxxxxxxxxxxxxxxx         xxxxxxx                   xxxxxx   xxxxxx                                            
+                                           r xxxxxxx         xxxxxxxx      xxxxxxxx     xxxxxxxxxxxxxxxxxxx       xxxxxxxx                  xxxxxxxx    xxxxxx                                          
+                                           xxxxxxx  xx       xxxxxxx       xxxxxxxx     xxxxxxxxxxxxxxxxxxxx      xxxxxxx                  xxxxxxxxxxx   xxxxxx                                         
+                                          xxxxxxx xxxx       xxxxxxx        xxxxxxxx    xxxxxxxxxxxxxxxxxxxx      xxxxxxx                dxxxxxxxxxxxxx   xxxxxx                                        
+                                         xxxxxx  xxxxxx      xxxxxxx         xxxxxxx    xxxxxxxx    xxxxxxxx     xxxxxxxxf                xxxxxxxxxxxxxx    xxxxxx r                                    
+                                       xxxxxxx  xxxxxxx      xxxxxxxx        xxxxxxx     xxxxxxx     xxxxxxx     xxxxxxxx                xxxxxxxxxxxxxxxx    xxxxxxx                    )               
+                                      xxxxxxx   xxxxxxx      xxxxxxxx        xxxxxxx    xxxxxxxx     xxxxxxx      xxxxxxx                xxxxxxxxxxxxxxxxx    xxxxxx                                    
+                                     xxxxxx     xxxxxxxx     xxxxxxxx        xxxxxxx    xxxxxxxx     xxxxxxx     xxxxxxxxx              xxxxxxxx xxxxxxxxx      xxxxx                                   
+                                    xxxxxx      xxxxxxxxx     xxxxxxxx       xxxxxx      xxxxxxx     xxxxxxxx   xxxxxxxxxxxxxx _       xxxxxxxxx   xxxxxxxx      xxxxx r                                
+                                   xxxxxx  x     xxxxxxx      xxxxxxxx      xxxxxxx      xxxxxxx     xxxxxxxx    xxxxxxxxxxxxxx#x     xxxxxxxxx     xxxxxxx      x xxxxx                                
+                                  xxxxx   xxx     xxxxxxx      xxxxxxxxx  xxxxxxxxx      xxxxxxx      xx x      xxxxxxxxxxxxxxxxx     xxxxxxxx       xxxxxx        xxxxx                                
+                                 xxxxx  xxxxxxx   xxxxxxx       xxxxxxxxxxxxxxxxxx       x x                      xxxxxxxxxxxxxxx    xxxxxxxxx      xxxxxxx          xxxxx                              
+                                xxxxx  xxxxxxxxx  xxxxxxxx      xxxxxxxxxxxxxxxxx                       x            xxxxxxxxxxxx   xxxxxxxxx       xxxxxxx           xxxxx                             
+                              dxxxxx   xxxxxxxxxx   xxxxxx      xxxxxxxxxxxxxxxxx        xxxxxxxxxxxxxxxxxxxxxx x        xxxxxxxx  rxxxxxxxxx       xxxxxxx            xxxxx                            
+                              xxxxx     xxxxxxxxxx  xxxxxxx       xxxxxxxxxxxxx     xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx        xxxx   xxxxxxxxx       xxxxxxxx             xxxx                            
+                             xxxxx      xxxxxxxxxxx xxxxxxx        xxxxxxxxxxx  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx xx     x   xxxxxxxx       xxxxxxxx              dxxxxx                          
+                            xxxxx xx     xxxxxxxxxxxxxxxxxx         xxxxxxxx  xxxxxxxxxxxxxxcx x x      xcx xxxxxxxxxxxxxxx x       xxxxxxxxx     xxxxxxxx                xxxx                          
+                           xxxxx xxxx    xxxxxxxxxxxxxxxxxxx               xxxxxxxxxxxx x                        x xxxxxxxxxxxx     xxxxxxxxxxx xxxxxxxxxx                 xxxx                         
+                          xxxxxxxxxxxx    xxxxxxxxxxxxxxxxxx            xxxxxxxxxxx                                  xxxxxxxxxxxxx   xxxxxxxxxxxxxxxxxxxx                   xxxx                        
+                         xxxxx xxxxxxxxx  xxxxxxxxxxxxxxxxxxx         xxxxxxxxxx                                         xxxxxxxxxxx   xxxxxxxxxxxxxxxxx                    xxxxx                       
+                        xxxxx  xxxxxxxxxx  xxxxxxxxxxxxxxxxxx       xxxxxxxxx                                               xxxxxxxxxx  xxxxxxxxxxxxxxxx                     xxxxx                      
+                       xxxxx   xxxxxxxxxxx xxxxxx xxxxxxxxxxxx    xxxxxxxxx                                                    xxxxxxxx   xxxxxxxxxxxxx                      xxxxxxf                    
+                      xxxxxx     xxxxxxxxxx xxxxx  xxxxxxxxxxx  xxxxxxxxx                                                       xxxxxxxxx  xxxxxxxxxxx                         xxxx                     
+                     xxxxxx       xxxxxxxxxxxxxxxx  xxxxxxxxx  xxxxxxxx                                                            xxxxxxx   xxxxxxx                            xxxx                    
+                    xxxxxx         xxxxxxxxxxxxxxxx  xxxxxxx xxxxxxxx                                                                xxxxxxx   x                               dxxxxx                   
+                     xxxx           xxxxxxxxxxxxxxx    xxxx xxxxxxcx                                       x xxxxxxx                   xxxxxx                                    xxxx                   
+                    xxxx              xxxxxxxxxxxxx      xxxxxxx                                         xxxxxxcxxxxxxxx                 xxxxxx                                   xxxx                  
+                   xxxxx               xxxxxxxxxxxxx     xxxxxx                                        xxxx       x   xxxx                xxxxxx                                   xxxx                 
+                  xxxxx                 xxxxxxxxxxxx    xxxxx                                        xxx                 xxx              c xxxxx                                   xxx                 
+                  xxxx                   xxxxxxxxxxxx  xxxxx                                      _ xxx                    xx                xxxxxx                                 xxxx                
+                 xxxx                      xxxxxxxxx xxxxxx                                       #xxx                      xx                xxxxxx                                 xxxx               
+                xxxxxf                      xxxxxxx xxxxxx                                       # x                                            xxxxx                                xxxx               
+                xxxx                         xxxxx xxxxx                                         xx                                             xxxxxx                                xxxx              
+              dxxxx                            xx xxxxx                                         xx                                                xxxxx                                xxx              
+               xxxx                              xxxxx                                         xx                                x                xxxxxx                                xxxx            
+              xxxx                              xxxxxx                                         xx                                xx                 xxxx                                xxxx            
+             xxxxx                              xxxx c                                        xx                                  x                 xxxxxx                               xxx            
+             xxxx                              xxxxx                                         xx                                   xx                  xxxx                               xxxx           
+            xxxx                              xxxx                                           xx       @          r x               xx                 xxxxx                               xxxx          
+            xxxx                             xxxxx                                          xx                   xxx               xx                 c xxxx                              xxxx          
+           xxxx                             xxxx                                            x                    xx                 x                   xxxxx                              xxxx         
+           xxxx                            xxxxx                                            xf                  xx                  xx                   xxxxx                             xxxx         
+         dxxxx                             xxxx                                            xx                 xx                    xf                    xxxx                              xxxx        
+          xxxx                            xxxx                                             x                xxxx    qx               x                     xxxx                              xxx        
+         xxxx                            xxxx                                              x               xx x     xxx              x                      xxxx                            xxxx        
+         xxxx                           xxxxx                                              x              xx        xxxx            dxx                      xxxx                            dxxx       
+         xxxx                           xxxx                                               x              x          xxxf            xx                      xxxx                            xxxx       
+        xxxx                           xxxx                                                x               x          xx             xx                       xxxx                            xxxx      
+        xxxf                          xxxxx                                               xx          qxxxxxx         xx             x                        xxxx                @           xxxx      
+       xxxxx                          xxxx                                                xx         qxs    c        xx              x                         xxxx                           xxxx      
+       xxxx                          xxxx                                                 xx        qxs              x               x                         dxxxxf                          xxxx     
+      xxxxx                          xxxx                                                  x       qxs              xx              dxx                        xxxxx                            xxx     
+      xxxx                         xxxxxx                                                  x       xs               xx               x                          xxxxx                           xxxx    
+      xxxx                         dxxxx                                                   xx      xw  _   xx       x#               xx                          xxxx                           xxxx    
+     xxxxx                         xxxxx             @                                     xx      xxx###xxx        xxx             xx                           xxxxx                           xxx    
+      xxx                          xxxx                                                     x      xxxxxx c        xxxf             xf                            xxxx                           xxxx   
+     xxxx                          xxx                                                      xx      xx             xxxx             xx                            xxxx                           xxx    
+    xxxx                          xxxx                                                              x              xxx             xxx                             xxxx                           xx    
+     xxx                          xxxx                                                             xx               xx             xx                               xxx                           xxx   
+    xxxx                         xxxx                                                             xxx              xxx            xx                                xxx                           xxx   
+    xxxx                        xxxxx                                                            xx                xxx            xx                                xxxx                          xxxx  
+   xxxx                         xxxx                                                          qxxx                 xxx           xx                                  xxxx                          xxx  
+    xxx                         xxxx                                                          xx                  xxxs           xx                                  xxxx                          xxx  
+   xxxx                        xxxxx                                               r        qxx                   xxx           x                                    xxxx                          xxx  
+   xxx                         xxxx                                                xx xxxxxxx                     xxx         xxx                                     xxxx                          xxx 
+   xxx              @          xxxf                                             xxxxxxxx  c                       xxs        xx                                       xxxxf                         xxx 
+   xxxx                        xxxx                                          xxxxxx                               xx       xxx                                         xxx                          xxx 
+  xxxx                        xxxxx                                        xxxxxx                                 xx    dxxxx                                          xxx                          xxx 
+  xxxx                        xxxx                                        xxxx                                   xxs   qxxxx                                           xxxx                         xxx 
+  xxxx                        xxxx                                       xxx                                     xx    axx                                             xxxx                         dxxx
+  xxx                         xxxx                                      x x                                      xx     c                                               xxx                         xxxx
+  xxx                        xxxx                                      xx                                        xs                                               dd    xxx                          xxx
+  xxx                        xxxx                                     xx                                         x                                                dd    xxxxf                        xxx
+  xxx                        xxxx                                    xxx                                         xf                                                     xxxx                         xxx
+ xxxx                        xxx                                   dxxx                                         xx                                                       xxx                         xxx
+  xxx                        xxxx                                   xx          x                               xx                                                       xxx                         xxx
+ xxxx                        xxx                                   xxx          x                    r          x                                                        xxx                         xxx
+ xxxx                       xxxx                                 xxxxc     @    x             r      x         xx                                                        xxx                         xxx
+ xxx                        dxxx                                 xx             x             x      xxf       x                                                         xxx                         xxx
+ xxxx                       xxxx                                xxx             xx           xx      x        xx                                                         xxxx                         xx
+ xxx                        xxxx                                xx              x           xx      xx        x                                                          xxx        x                xxx
+xxxxx                       xxxx                               xx               x           xx      xs        x                                                          xxxx     xxx      xxxx       xx
+xxxx                        xxxx                               x                x  x        xx     xs         x                                                          xxxx    xxxxx   xxxxxxxx    xxx
+xxxxf                       xxxx                              xx      r        xx  xxx      xx     x    r     x                                                          xxxx   xxxxx    xxxxxxxxx   xxx
+xxxx                        xxxx                              x      xx        xx  xxxxxxxx xx    x    qx     x                                                          xxxx  xxxxxx   xxxxxxxxxxx  xxx
+xxxx                        xxxx                             xx      xxx      xx     xxxxxx xx    x    xx     xx                                                         xxxx  xxxxxx  xxxxxxxxxxxx   xx
+ xxx                        xxxf                             x       xxxx     xx x    x      x    x    axw     x                                                         xxxx xxxxxxx  xxxxxxxxxxxxx xxx
+ xxx                        xxxx                            xx     xxxx xx    x x     x      x    x     cx     x                                                         xxxx  xxxxxx  xxxxxxxxxxxxx  xx
+ xxx                         xxx                            x       xx xx    xx xx  xxx      x   xx      xw    x                                    @                    dxxx xxxxxx  xxxxxxx xxxxxx  xx
+ xxx                        xxxx                           xx      xxx  x   xx  x  xxx       x  dxx      ax    x                                                         xxxx xxxxxx  xxxxxxx  xxxxx xxx
+ xxx                   xxx   xxx                           x      xxx  x    x  xx  xx        x   xx       xw   xx                                                        xxxx  xxxx  xxxxxxx   xxxxx  xx
+ xxx              xxxxxxxxx  xxx                          xxf    xxx   xx  xx  xx xx         x    x       axw   x                                                        xxx  xxxxxx xxxxxxx   xxxxx xxx
+ xxx         xxxxxxxxxxxxxxx xxx                          xx     xxx  xx  xx  xx xxx         x    x        ax_  xx                                                       xxxx xxxxxxxxxxxxx   xxxxxx xxx
+ xxxx xxxxxxxxxxxxxxxxxxxxx  xxx                         xxx    xxx xxxx  x   x   xx         x    x         x#   x                                                       xxx   xxxxxxxxxxxx  xxxxxx  xxx
+  xx  xxxxxxxxxxxxxxxxxxxxx  xxxx                         xx   xxx  x    xx  xx   xx          x   x         axx  x                                                       xxx  xxxxxxxxxxxxx  xxxxxx  xxx
+ xxxx xxxxxxxxxxxxxxxxxxxxxx xxxx                         xx _xxx   xx  xx    xx  xx          x   x          axx xx                                                      xxx   xxxxxxxxxxx  xxxxxxx  xxx
+  xxx xxxxxxxxxxxxxxxxxxxxxx  xxx                         xxx#xx    xx  x      xx  xx         x   x           ax xx                                                      xxx    xxxxxxxxx    xxxxx   xxx
+  xxx  xxxxxxxxxxxxxxxxxxxxx  xxx                        xxxxx       x xx      xxx  xx        x   x            xx xx                                                    xxxx     xxxxxxxx   xxxxxxx xxxx
+  xxx xxxxxxxxxxxxxx   xxxxx  xxx                         xx        xx xx       xx xxxxx      x   x            xx xxx                                                   xxxx       xxxx     xxxxxx  xxxx
+  xxx  xxxxxx  xxxxx    xxxx  xxxx                        x         xx xx        xx  xxxx     x   x             xx xxxx                                                 xxx    (     c       xxxx    xxx
+  xxxx xxxxx    xxxx    xxxxx xxxf                                  xx xxx       xxxxxxx       x  x_            xx    xx                                                xxx                  x      xxxx
+  xxxx xxxxxx   xxxxx  xxxxxx  xxx                                   x  x         xxxxxx       x  #xx            xx   xxx                                              xxxx                         xxxx
+  xxxx xxxxx    xxxxxxxxxxxxx  xxx                                   x  xx           x x       x   #x            xx xxxxx                                              xxx                          xxx 
+   xxx  xxxxx   xxxxxxxxxxxxx  xxxx                                  xx  x                     x     x            xxxxxxx                                              xxxx                        xxxx 
+   xxxx xxxxxxxxxxxxxxxxxxxx    xxx                                  xx  xxx                   x     xx                x                                               xxx                  )      xxxx 
+  xxxx  xxxxxxxxxxxxxxxxxxxx    xxx                                  xx   xx                    x  ##xf                                                              dxxxx    xxxxx                xxx  
+    xxx xxxxxxxxxxxxxxxxxxxxx   xxx                                  xx xxxxx                   xxxxxxx                                                               xxx   xxxxxxxxx              xxxx 
+    xxx  xxxxxxxxxxx xxxxxx      xxx                                 xxxxxxx                      x                                                                   xxx   xxxxxxxxx             xxxx  
+   xxxx  xxxxxxxxxx   xx         xxx                                                                                                                                  xxx  xxxxxxxxxxxrxrx        xxxx  
+    xxxx  xxxxxxxxx              xxx                                                        x                                                                        xxx  xxxxxxxxxxxxxxxxxx_x    xxxx  
+    xxxx   xxxxxx                 xxx                                    x       xx       x x                               x                                        xxx  xxxxxxxxxxxxxxxxxxxxxx  xxxx  
+    xxxx                          xxx                                xxxxxx      xx   xxxxxxx                xxxxx x       xx                                       xxxx  xxxxxxxxxxxxxxxxxxxxxx xxxxx  
+     xxx                 xxxx      xxx                            xxxxxxx        x   xxxxxxxx          r     xxxxxx xxxxxxxxx                                      xxxx  xxxxxx  xxxxxxxxxxxxxxx xxxx   
+    xxxxx             xxxxxxxxxx  xxxx                          xxxxx           xx  xxxxxxxx           x      x   x xxxxxxxxx                                      xxxx  xxxxxx   xxxxxxxxxxxxxxxxxxx   
+     xxxx           xxxxxxxxxxxxxx xxxx                      xxxxxxx           xxx xxxxxxxx          xxx    xxx         xxx                                        xxx  xxxxxx   xxxxxxxxxxxxxx xxxx    
+      xxxx         xxxxxxxxxxxxxxxxxxxxx                   xxxxxxxx            xx xxxxxxxxx  x   x   xxx   xxxxxxxxxx   x                                         xxxx  xxxxxx   xxxxxxxxxxxxxx xxxxx   
+     xxxxx        xxxxxxxxxxxxxxxxx xxxx                  xxx     x   xxx    xxx xx xxx xx  x#  xx xxx    xxxxxxxxxxxx xx                                         xxx  xxxxxxx   xxxxxx     x   xxxx    
+      xxxx       xxxxxxxxxxxxxxxxxxxxxxx                   x     xx   xxx  xxxxx x  xx  xx  x#  x  xx xx xxxxxxxxxxxx xx                                         xxxx  xxxxxxxxxxxxxxx         xxxxx    
+      xxxxx      xxxxxxxxxxxxxxxxxxxxxxxx                        x  xxxxxxxxxxx     xx  x  xx  xx xx  xxxxxxxxxxxxxx  x                                         xxxxx xxxxxxxxxxxxxxx          xxxx     
+       xxx      xxxxxxxxxx     xxxxxxxxxx                       xx  xx xxxx  xx    xxx xx xx  xxxxx  xxxxxx  xxx  x  xx                                         xxxx  xxxxxxxxxxxxxxxx        xxxxx     
+       xxxx     xxxxxxxx        xxxxxxxxxx                      xx xx xxxx   x     xx  xxxxx  xx x  xxxxxx   xx  xx xxx                                         xxx    xxxxxxxxxxxxxxxx        xxxx     
+       xxxxx    xxxxxx          xxxxxx xxxf                     x  xxxx xx   xxxx xxx xxxxxx xxxxx  xxxxx   xx  xxxxxxxxx                                      xxxx     xxxxxxxxxxxxxxxxxx   xxxxx      
+        xxxx   xxxxxxx          xxxxxx xxxx                    xx xxxx  x   xxxx  xx  xxxxxxxxxxxx xxxxxx  xxx  xxxxxxx                                       xxxx       c xxxxxxxxxxxxxxxxx xxxxx      
+        xxxx    xxxxx           xxxxxx  xxxx                   x  xxx  xx   xxx   xx  xxxxxxxxxxxxxx   xx xxx   xxxxx                                        xxxxx           xxxxxxxxxxxxxx  xxxxx      
+         xxxx  xxxxxx          xxxxxxx   xxx                   x xxx   xx xxxxx   x    x xx xx x xxx   xxxx x   x  x                                         xxxx               xxxxxxxxxxx xxxxx       
+          xxxx  xxxxx          xxxxxxx    xxx                 xx  xx  xxxxxxxx    x             xxxx                                                        xxxx   xx             xxxxxxxxx xxxx        
+         dxxxx  xxxxxx      xxxxxxxxxx    xxxx                x    xxxxxxxx x                    xx                                                        xxxxx  xxxx              xxxxxx  xxxx        
+           xxx  xxxxxxxxxxxxxxxxxxxxx      xxxx              xx   xxxx xx                        x                                                        xxxxx  xxxxxx               xxxx xxxxx        
+           xxxx  xxxxxxxxxxxxxxxxxxxx       xxxx             xx    x                            xx                                                        xxxx  xxxxxxx            @    x xxxxx         
+           xxxxx xxxxxxxxxxxxxxxxxxx    x   xxxx             xx                                 xx                                                       xxxx  xxxxxxx                   dxxxxx         
+            xxxx  xxxxxxxxxxxxxxxxx    xxxx   xxxx          dxxf                               xx                                                       xxxx  xxxxxxx                    xxxxx          
+             xxxx  xxxxxxxxxxxxxxx     xxxxx  xxxx           xx                                x                                                       xxxxx xxxxxxx   xx _              xxxxxf         
+             xxxx   xxxxxxxxxxxxc#    xxxxxxx  xxxx          cc                               xx                                                      xxxx   xxxxxxx   xx#x             xxxxx           
+              xxxx   xxxxxxxxc#       xxxxxxx   xxxx                                          x                                                      xxxxx  xxxxxxx   xxxxxx           xxxxx            
+              xxxx          #        xxxxxxxx     xxxx                                        x                                                    rxxxx   xxxxxxx   xxxxxxx           xxxxx            
+               xxxx                  xxxxxxx      xxxxx                                      dxf                                                   xxxx   xxxxxxx   xxxxxxx    xx     xxxxx             
+                xxxx                xxxxxxx         xxx                                       c                                                   xxxxx  xxxxxxxxxxxxxxxxx   r xxx    xxxx              
+                xxxx           )   xxxxxxxx     xxx  xxxx                                                                                        xxxx    xxxxxxxxxxxxxxxx    xxxxxx  xxxxx              
+                 xxxx   (          xxxxxxx    xxxxxx xxxxx                                                                                      xxxxx     xxxxxxxxxxxxxxx    xxxxxx xxxxx               
+                  xxx              xxxxxxx   xxxxxxxx  xxxx                                                                                   xxxxx        xxxxxxxxxxxxx   xxxxxxx  xxxxx               
+                 dxxxx            xxxxxxx  xxxxxxxxxx  xxxxxx                                                                                xxxxxx         xxxxxxxxxxx   xxxxxxxx xxxxx                
+                   xxxx           xxxxxxx xxxxxxxxxxx    xxxx x                                                                            xxxxxx   xx        xxxxxxxxxx  xxxxxxx xxxxx                 
+                   xxxxx         xxxxxxxxxxxxxxxxxxxx      xxxxx                                                                          xxxxx   xxxxx       xxxxxxxxxxxxxxxxxxx xxxx                  
+                    xxxx        xxxxxxxxxxxxxxxxxxx     xx  xxxxxx                                                                      xxxxxxx  xxxxxx_      c xxxxxxxxxxxxxxx  xxxxxf                 
+                     xxxx       xxxxxxxxxxxxxxxxxxx     xxx  xxxxxxx                                                                  xxxxxxx   xxxxxx#x         xxxxxxxxxxxxxx xxxxx                   
+                     xxxxxx    xxxxxxxxxxxxxxxxxxx   xxxxxxx   xxxxxxx                                                              xxxxxxx   xxxxxxxxxx          xxxxxxxxxxx  xxxxx                    
+                       xxxx    xxxxxxxxxxxxxxxxxx   xxxxxxxxx    xxxxxx                                                            xxxxx x   xxxxxxxxxx            xxxxxxxxx  xxxxxx                    
+                       xxxxx - xxxxxxxxxxx xxxxxx  xxxxxxxxxx     xxxxxxxx                                                       xxxxxx    xxxxxxxxxxx              xxxxxxx   xxxxx                     
+                        xxxxx  xxxxxxxxx   xxxxx  xxxxxxxxxxx       xxxxxxxx                                                   xxxxxx    xxxxxxxxxxxx                 xxxxx  xxxxx                      
+                         xxxx   xxxxxxx   xxxxxxxxxxxxxxxxxx     xxx  xxxxxxxxx                                             xxxxxxx     xxxxxxxxxxxxx                  xxx  xxxxx                       
+                          xxxxx   xxx    xxxxxxxxxxxxxxxxx      xxxxxx    xxxxxxxx                                      xrxxxxxxx     xxxxxxxxxxxxxxx                   x  xxxxx                        
+                           xxxxx   x     xxxxxxxxxxxxxxx        xxxxxxxx    xxxxxxxxx x +                          + xxxxxxxxx        xxxxxxxxxxxxxxxx             >      xxxxx                         
+                            xxxxx       xxxxxxxxxxxxxxx         xxxxxx         xxxxxxxxxxxx x                   xxxxxxxxxxx            xxxxxxxxxxxxxxxxf                 xxxxx                          
+                             xxxx      xxxxxxxxxxxxxx          xxxxxxxx            xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx       xxxx     xxxxx   xxxxxxxx                 xxxxx                           
+                              xxxxx    xxxxxxxxxxxxx      @   xxxxxxxx       xxx      xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx        xxxxxx      xxx     xxxxxxxx               xxxxx                            
+                               xxxxx   xxxxxxxxxxx            xxxxxxxx       xxxxxx                                         xxxxxxx      c      xxxxxxxxx             xxxxx                             
+                                xxxxx   xxxxxxxxx            xxxxxxxx       xxxxxxxx  xx                          x x       xxxxxxx  @           xxxxxxxx           xxxxxx                              
+                                 xxxxx    xxxxx              xxxxxxxx      xxxxxxxx  xxxxxxx                   xxxxxxx      xxxxxxx              xxxxxxxxx         xxxxxx                               
+                                   xxxxx  xxxx              xxxxxxxxxxxx   xxxxxxxx  xxxxxxx                   xxxxxxxx      xxxxxxx              xxxxxxxxx       xxxxxx                                
+                                   xxxxxx  x                xxxxxxxxxxxxxxxxxxxxxxx  xxxxxxx       xxxxxx      xxxxxxxxx     xxxxxxx              xxxxxxxxs      xxxxxx                                 
+                                   c xxxxx                  xxxxxxxxxxxxxxxxxxxxxx   xxxxxxx      xxxxxxx      xxxxxxxxxx    xxxxxxx                xxxxxs      xxxxx                                   
+                                      xxxxxx               xxxxxxxxxxxxxxxxxxxxxx    xxxxxxx      xxxxxxx      xxxxxxxxxxx   xxxxxxx                xxxxs     qxxxxx                                    
+                                       xxxxxx              xxxxxxxxxxxxxxxxxxxxxx    xxxxxxxf      dxxxxx      xxxxxxxxxxxx   xxxxxxx                xxs     qxxxxx                                     
+                                        xxxxxx             xxxxxxx xxxxxxxxxxxxxx    xxxxxxx      xxxxxxx       xxxxxxxxxxxx  xxxxxxx                       qxxxx xf                                    
+                                          xxxxxx          xxxxxxxx  x xxxxxxxxxx     xxxxxxx      xxxxxxx       xxxxxxxxxxxxxxxxxxxxf                      qxxxx                                        
+                                            xxxxx         xxxxxxx       xxxxxxxx    xxxxxxxx      xxxxxxx       xxxxxxxxxxxxxxxxxxxxx                    qxxxxx                                         
+               (                             xxxxx_      xxxxxxxx      xxxxxxxx      xxxxxxx      xxxxxxx       xxxxxxxxxxxxxxxxxxxxx                   qxxxx                                           
+                                             dxxx#xxx    xxxxxxx       xxxxxxxx     xxxxxxxx      xxxxxxx        xxxxxx  xxxxxxxxxxxxx                qxxxxx                                            
+                                                xxxxxx    xxxxxx       xxxxxxxx      xxxxxxx      xxxxxxx        xxxxxx   xxxxxxxxxxxx            _ qxxxxx                                              
+                                                  xxxxxx    xxxx      xxxxxxxx      xxxxxxx       xxxxxxx   @    xxxxxxx   xxxxxxxxxxx            #xxxxxx                                               
+                                                   xxxxxxxx           xxxxxxxx       xxxxxxx      xxxxxxx         dxxxxx    xxxxxxxxxx          xxxxxxx                                                 
+                                                   c xxxxxxx x        xxxxxxx        xxxxxxx      xxxxxxx        xxxxxxx     xxxxxxxxxx      xxxxxxxx                                        )          
+                                                      xxxxxxxx x     xxxxxxxx       xxxxxxxx   _ xxxxxxxx         dxxxxxx     xxxxxxxx    xxxxxxxxx                                                     
+                                                        xxxxxxxx x   xxxxxxx         xxxxxxxxxx#xxxxxxxxx        xxxxxxxx      xxxxxxx xxxxxxxxxx                                                       
+                                                          xxxxxxxxxx    xxxx         xxxxxxxxxxxxxxxxxxx          xxxxxxx      xxxx xxxxxxxxxxxx                                                        
+                                                            xxxxxxxxxxxx  x           xxxxxxxxxxxxxxxxxx           xxxxxx         xxxxxxxxxxxx                                                          
+                                                               xxxxxxxxxxxx            xxxxxxxxxxxxxxxx            xxxxxx      xxxxxxxxxxxx                                                             
+                                                                 xxxxxxxxxxxxxx         xxxxxxxxxxxxxx             xxxxx   xxxxxxxxxxxxx                                                                
+                                                                    x xxxxxxxxxxxxx       xxxxxxxxxx x                xxxxxxxxxxxxxxxx                                                                  
+                                                                       x xxxxxxxxxxxxxxx x  x x x x         -   xxxxxxxxxxxxxxxxx x                                                                     
+                                                                           x xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                                           
+                                                                                xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx x                                                                              
+                                                                                     xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                                                  
+EndOfMapdata

@@ -1,0 +1,133 @@
+# Created by ./xmapedit on Tue Dec 14 22:33:42 1993
+
+maxitemdensity:5.46021e-10
+itemecmprob:1.92426e-03
+itemtransporterprob:1.60596e-03
+movingitemprob:5.0
+itemenergypackprob:9.01e-01
+itemwideangleprob:2.10371e-03
+itemrearshotprob:2.94386e-04
+itemafterburnerprob:2.74620e-05
+itemmineprob:6.40779e-06
+itemmissileprob:1.92426e-01
+itemlaserprob:1.00371e-09
+itemtankprob:1.40292e-09
+itemcloakprob:1.10596e-09
+
+mapwidth : 100
+mapheight : 100
+mapname : Blocks
+mapauthor : Paul king
+edgewrap : yes
+edgebounce : no
+teamplay : no
+limitedvisibility : no
+playershielding : yes
+gravity : -0.05
+losemass : no
+shotsgravity : yes
+crashwithplayer : yes
+playerkillings : yes
+
+mapData: \multiline: EndOfMapdata
+xxxxxxxxxxxxxxxxxxxx                  xxxxxxxx x     ___    xxxxxxxxx                    xxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxx                  xxxxxxxxxx           xxxxxxxxxx                    x  xxxxxxxx
+xxxxxxxxxxxxxxxxxxxx                  xxxxxxxxxx           xxxxxxxxxx                    x  xxxxxxxx
+xxxxxxxxxxxxxxxxxxxx                  xxxxxxxxxxx          xxxxxxxxxx                    xxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxx                  xxxxxxxxxxx          xxxxxxxxxx                    xxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxx                  xxxxxxxxxxxx         xxxxxxxxxx                    xxxxxxx xxx
+ xxxxxxxxx                            xxxxxxxxxxxx         xxxxx xxxx                    xxxx xx xx 
+ xxxxxxxxx                            xxxxxxxxxxx          x xxxxxxxx                    xx x xx xx 
+xxxxxxxxxx                            xxxxxxxxxx              x xxxxx                              x
+xxxxxxxxxx                            xxxxxxx                 xxx xxx                              x
+xxxxxxxxxx                            xxxxxx                      xxx                              x
+xxxxxxxxxx     xxxxx                  xxxxx                         x                              x
+xxxxxxxxxx     xxxxx                  xxxxs                         x                              x
+xxxxxxxxxx     xxxxx                  xxxs         xxxxrr           x          r r r               x
+xxxxxxxxxx !!! xxxxx                  xxx          xxxxxx                    x######xx             x
+xxxxxxxxxx ___ xxxxx                  axx          xxxxxx                   dxxxxxxxxxf            x
+                                                  xxxxxxx                    xxxxxxxxx              
+                                                  xxxxxxxx                  dxxxxxxxxxf             
+                                                  xxxxxxxxx                  xxxxxxxxx              
+                          x      qx                                         dxxxxxxxxxf             
+                          xw    qxs                                          xxxxxxxxx              
+                          axw  qxs                                            c c c c               
+                           axw xs                                                                   
+                            axxs                                                                    
+                            qxxw                                                                    
+                           qxs xw                                                                   
+                          qxs  axw                                                                  
+                          xs    axw                                                                 
+                          x      ax                                                                 
+xxxxxxxxxxxxxxxxxxxxx                                                                     qxxxxxxxxx
+xxxxxxxxxxxxxxxxx   x                                      !!!                            xxxxxxxxxx
+xxxxxxxxxxxxxxxxx   x                   qxxxxxxxxxxxx!!!   ___xxxxxxxxx                   xxxxxxxxxx
+xxxxxxxxxxxxxxxxx   x                   xxxxxxxxxxxxx___      xxxxxxxxx                   xxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxx                   xxxxxxxxxxxx        xxxxxxxxxxx                   xxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxx                   xxxxxxxxxxx        xxxxxxxxxxxx                   xxxxxxxxxx
+               xxxxxx                   xxxxxxxxxx         xxxxxxxxxxxx                   xxxxxxxx  
+               xxxxxx                   xxxxxxxxx        xxxxxxxxxxxxxx                   xxxxxxxx  
+               xxxxxx                   xxxxxxxxx       xxxxxxxxxxxxxxx                   xxxxxxxx  
+               xxxxxx                   xxxxxxxx       xxxxxxxxxxxxxxxx                   xxxxxxxx  
+   dxxxxxf     xxxxxx                   xxxxxxx        xxxxxxxxxxxxxxxx                   xxxxxxxx  
+    x   x      xxxxxx                   xxxxxxx      xxxxxxxxxxxxxxxxxx                   xxxxxxxx  
+   dx   xf     xxxxxx                   xxxxxx       xxxxxxxxxxxxxxxxxx                   xxxxxxxx  
+    x   x                               xxxxx       xxxxxxxxxxxxxxxxxxx                             
+   dx   xf                              xxxxx       xxxxxxxxxxxxxxxxxx#                             
+    x   x                               xxxx       xxxxxxxxxxxxxxxxxxx                              
+   dx   xf                              xxx       xxxxxxxxxxxxxxxxxx#                               
+    x   x                               xx       xxxxxxxxxxxxxxxxxxx                                
+   dx   xf                                       xxxxxxxxxxxxxxxxx#                                 
+xxxxx  #xx xx####xxxx                           xxxxxxxxxxxxxxxxx                         xxxxx####x
+xxxxx  xxx xxxxxxxxxx                           xxxxxxxxxxxxxxxxx     #                   xxxxxxxxxx
+xxxxx      xxxxxxxxxx                          xxxxxxxxxxxxxxxxx#                         xxxxxxxxxx
+xxxxx      xxxxxxxxxx                         xxxxxxxxxxxxxx#x#x    #                     xxxxxxxxxx
+xxxx#######xxxxxxxxxx                        xxxxxxxxxx+++#                               xxxxxxxxxx
+xx#xx#####xx#xxxxxxxx                       xxxxxxxxxxxxxxxx#x#x    #                     xxxxxxxxxx
+xxx#xx###xx#xxxxxxxxx                       xxxxxxxxxxxxxxxxxxxx#                         xxxxxxxxxx
+x#xx#xx#xx# x#xxxxxxx                      xxxxxxxxxxxxxxxxxxxxxxx    #                   xxxxxxxxxx
+xx#xx#xxx#xx#xxxxxxxx                     xxxxxxxxxxxxxxxxxxxxxxxx#                       xxxxxxxxxx
+xxx#xx#x#xx#xxxxxxxxx                    xxxxxxxxxxxxxxxxxxxxxxxxxx                       xxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxx                   xxxxxxxxxxxxxxxxxxxxxxxxxxxx#                     xxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxx                   xxxxxxxxxxxxxxxxxxxxxxxxxxxxx                     axxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxx                   xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx#                    axxxxxxxx
+                                        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                             
+                                        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                             
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                           r r r                                                                    
+                          x#####x                                                                   
+                          xxxxxxx                                                                   
+                         dxxxxxxxf                                                                  
+                          xxxxxxx                                             xxxxxxxxxxxxw         
+                         dxxxxxxxf                                            xxxxxxxxxxxxx         
+                          xxxxxxxf                                            xxxxxxxxxxxxx         
+                         dxxxxxxx                   rrrr                      xxxxxxxxxxxx          
+                          xxxxxxx                xxx####xxx                   xxxxxxxxxxx           
+                           c c c                 xxxxxxxxxx                   xxxxxxxxxx   !        
+                                                  xxxxxxxx                    xxxxxxxxx    _        
+                                                   xxxxxx                     xxxxxxxx      _       
+                                                    xxxx                      xxxxxxx      ! _!     
+                                                                              xxxxxx                
+                                                                              xxxxx                 
+                                                                              xxxx                  
+            !!!                                      !!!                      xxx                   
+ xxxxxxxxxxx___xxxxx                      xxxxxx     ___      xxxxxxx         xx                    
+xxxxxxxxxxxx   xxxxx                      xxxxxxx            xxxxxxxx         x                     
+xxxxxxxxxxxx   xxxxx                    xxxxxxxxxx          xxxxxxxxx                              x
+xxxxxxxxxxxx   xxxxx                   xxxxxxxxxxxxx       xxxxxxxxxx                             xx
+xxxxxxxxxxxx   xxxxx                  xxxxxxxxxxxxxx       xxxxxxxxxx                            xxx
+xxxxxxxxxxxx   xxxxx                  xxxxxxxxxxxxxx      xxxxxxxxxxx                           xxxx
+xxxxxxxxxxxx   xxxxx                  xxxxxxxxxxxxxx      xxxxxxxxxxx                          xxxxx
+xxxxxxxxxxxx                          xxxxxxxxxxxxxx      xxxxxxxxxxx                         xxxxxx
+xxxxxxxxxxxx                          xxxxxxxxxxxxxx      xxxxxxxxxxx                        xxxxxxx
+xxxxxxxxxxxx                          xxxxxxxxx xx         xxxxxxxxxx                       xxxxxxxx
+xxxxxxxxxxxxxxxxxxxx                  xxxxxxxxxxx          xxxxxxxxxx                      xxxxxxxxx
+xxxxxxxxxxxxxxxxxxxx                  xxxxxxxx x             xxxxxxxx                     xxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxx                  xxxxxxx xx              x xxxxx                    xxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxx                  xxxxxxxx                 xxxxxx                    xxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxx                  xxxxxxxx                xxxxxxx                    xxxx  xxxxx
+xxxxxxxxxxxxxxxxxxxx                  xxxxxxxxxx     !!!     xxxxxxxx                    xxxx  xxxxx
+EndOfMapdata

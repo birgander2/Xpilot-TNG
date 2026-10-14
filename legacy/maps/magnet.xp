@@ -1,0 +1,60 @@
+# Created by xmapedit on Tue Nov  8 18:08:01 1994
+
+limitedlives:yes
+limitedlives:yes
+
+limitedlives : yes
+mapwidth : 40
+mapheight : 40
+mapname : my_cube
+mapauthor : Integra
+maxrobots : 6
+worldlives : 6
+gravity : -1.3
+gravityangle : 0
+gravitypoint : 20,20
+gravitypointsource : yes
+shotsgravity : yes
+
+mapData: \multiline: EndOfMapdata
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xs                                     x
+x                                      x
+x  _                _               _  x
+x                                      x
+x                                      x
+x                                      x
+x                                      x
+x                                      x
+x                                      x
+x  _      xx               xx       _  x
+x         xx               xx          x
+x                                      x
+x                                      x
+x                                      x
+x                                      x
+x                                      x
+x                                      x
+x                q##w                  x
+x  _             ####               _  x
+x                ####                  x
+x                a##s                  x
+x                                      x
+x                                      x
+x                                      x
+x                                      x
+x                                      x
+x                                      x
+x  _      xx             xx         _  x
+x         xx             xx            x
+x                                      x
+x                                      x
+x                                      x
+x                                      x
+x                                      x
+x                                      x
+x  _                _               _  x
+x                                      x
+x                                      x
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+EndOfMapdata

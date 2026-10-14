@@ -1,0 +1,67 @@
+# Map converted by mapmapper @(#)Version 1.0
+
+mapWidth:            49
+mapHeight:           50
+mapName:             Cool
+mapAuthor:           Mark Boyns
+crashWithPayer:      yes
+playerKillings:      yes
+playerShielding:     yes
+limitedVisibility:   no
+teamPlay:            no
+timing:              no
+onePlayerOnly:       no
+limitedLives:        no
+worldLives:          0
+mapData: \multiline: EndOfMapdata
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+x###############################################x
+x                                               x
+x    _                 _                   _    x
+x                                               x
+x                                               x
+x                                               x
+x                                               x
+x                                               x
+x                                               x
+x                                               x
+x                                               x
+x    _                _                    _    x
+x                                               x
+x                                               x
+x                                               x
+x                                               x
+x                                               x
+x                                               x
+x                                               x
+x            drrrrrrrrrrrrrrrrrf                x
+x           ddrrrrrrrrrrrrrrrrrff               x
+x          dddrrrrrrf    drrrrrfff              x
+x          dddccccccf    dcccccfff              x
+x           ddcccccccccccccccccff               x
+x            dcccccccccccccccccf                x
+x                                               x
+x                                               x
+x                                               x
+x                                               x
+x                                               x
+x    _                _                   _     x
+x                                               x
+x                                               x
+x                                               x
+x                                               x
+x                                               x
+x                                               x
+x                                               x
+x                                               x
+x                                               x
+x                                               x
+x     _               _                   _     x
+x                                               x
+x                                               x
+x                                               x
+x                                               x
+x                                               x
+x####     #############################     ####x
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+EndOfMapdata

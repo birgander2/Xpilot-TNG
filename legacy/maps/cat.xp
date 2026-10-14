@@ -1,0 +1,83 @@
+# Created by xmapedit on Thu Feb  3 11:33:57 1994
+
+mapwidth : 100
+mapheight : 70
+mapname : Cat Logo
+mapauthor : John E. Norlin
+edgewrap : yes
+teamplay : no
+timing : no
+gravity: 0
+
+mapData: \multiline: EndOfMapdata
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                x   
+                                      @                                                        xx   
+                                                                                              xxx   
+                                                                                             xxxx   
+                                                                                            xxxxx   
+                                                                                           xxxxxx   
+                                                                                           xxxxxx   
+                                                                                           xxxxxx   
+                        rr                                                  _              xxxxxx   
+                      xxxxxx                   xxxxxxxxxx        xxxxxxxxxxxxxxxxxxxxxx    xxxxxx   
+                   xxxxxxxxxxxx               dxxxxxxxxxxf       xxxxxxxxxxxxxxxxxxxxxx    xxxxxx   
+                  xxxxxxxxxxxxxx              xxxxxxxxxxxx       xxxxxxxxxxxxxxxxxxxxxx    xxxxxx   
+                 xxxxxxxxxxxxxxxx             xxxxxxxxxxxx       xxxxxxxxxxxxxxxxxxxxxx    xxxxxx   
+                xxxxxxxxxxxxxxxxxx            xxxxxxxxxxxx       xxxxxxxxxxxxxxxxxxxxxx    xxxxxx   
+               xxxxxxxxxxxxxxxxxxxx           xxxxxxxxxxxx       xxxxxxxxxxxxxxxxxxxxxx    xxxxxx   
+               xxxxxxxxxxxxxxxxxxxx          xxxxxxxxxxxxxx      xxxxxxxxxxxxxxxxxxxxxx    xxxxxx   
+              _xxxxxxxxxxxxxxxxxxxx          xxxxxxxxxxxxxx      xxxxxxxxxxxxxxxxxxxxxx    xxxxxx   
+              xxxxxxxxx    xxxxxxxxx         xxxxxx _xxxxxx             xxxxxxxx           xxxxxx   
+              xxxxxxxx      xxxxxxxx        dxxxxxx  xxxxxxf            xxxxxxxx           xxxxxx   
+              xxxxxxxx      xxxxxxxx        xxxxxxx  xxxxxxx            xxxxxxxx           xxxxxx   
+              xxxxxxxx  _   xxxxxxxx        xxxxxxx  xxxxxxx            xxxxxxxx           xxxxxx   
+              xxxxxxxx      xxxxxxxx        xxxxxxx  xxxxxxx            xxxxxxxx           xxxxxx   
+              xxxxxxxx      xxxxxxxx       qxxxxxx    xxxxxxw           xxxxxxxx          _xxxxxx   
+              xxxxxxxx      xxxxxxxx       xxxxxxx    xxxxxxx           xxxxxxxx          axxxxxx   
+              xxxxxxxx      xxxxxxxx       xxxxxxx  @ xxxxxxx           xxxxxxxx           xxxxxx   
+              xxxxxxxx      xxxxxxxx       xxxxxxx    xxxxxxx           xxxxxxxx           xxxxxx   
+              xxxxxxxx      xxxxxxxx      dxxxxxxx    xxxxxxxf          xxxxxxxx           xxxxxx   
+              xxxxxxxx                    xxxxxxx      xxxxxxx          xxxxxxxx           xxxxxx   
+              xxxxxxxx                    xxxxxxx      xxxxxxx          xxxxxxxx           xxxxxx   
+              #xxxxxxx                    xxxxxxxxx##xxxxxxxxx          xxxxxxxx           xxxxxx   
+              #xxxxxxx                   qxxxxxxxxx##xxxxxxxxxw         xxxxxxxx           xxxxxx   
+              #xxxxxxx                   xxxxxxxxxs  axxxxxxxxx         xxxxxxxx           xxxxxx   
+              #xxxxxxx                   xxxxxxxxs    axxxxxxxx         xxxxxxxx     @     xxxxxx   
+              xxxxxxxx                   xxxxxxxs      axxxxxxx         xxxxxxxx           xxxxxx   
+              xxxxxxxx                  dxxxxxxs    _   axxxxxxf        xxxxxxxx           xxxxxx   
+              xxxxxxxx      x######x    xxxxxxs   qxxw    axxxxx        xxxxxxxx           xxxxxx   
+              xxxxxxxx      xxxxxxxx    xxxxxs   qxxxxw    axxxx        xxxxxxxx           xxxxxx   
+              xxxxxxxx      xxxxxxxx    xxxs    qxxxxxxw    axxx        xxxxxxxx           xxxxxx   
+              xxxxxxxx      xxxxxxxx   qxxs    qxxxxxxxxxw   axxw       xxxxxxxx           xxxxxx   
+              xxxxxxxx      xxxxxxxx   xxs    qxxxxxxxxxxxw   axx       xxxxxxxx           xxxxxx   
+              xxxxxxxx      xxxxxxxx   xs    qxxxxxxxxxxxxxw   ax       xxxxxxxx           xxxxxx   
+              xxxxxxxx      xxxxxxxx        qxxxxxxxxxxxxxxxw           xxxxxxxx           xxxxxx   
+              xxxxxxxx      xxxxxxxx      qxxxxxxxxxxxxxxxxxxw          xxxxxxxx           xxxxxx   
+              xxxxxxxx      xxxxxxxx     qxxxxxxxxxxxxxxxxxxxxw         xxxxxxxx           xxxxxx   
+              xxxxxxxxx _  xxxxxxxx     qxxxxxxxxxxx    axxxxxxw        xxxxxxxx           xxxxxx   
+               xxxxxxxxxxxxxxxxxxx     qxxxxxxxxxxs       axxxxxw       xxxxxxxx           xxxxxx   
+               xxxxxxxxxxxxxxxxx      qxxxxxxxxxxs         axxxxxw      axxxxxxx           xxxxxx   
+               xxxxxxxxxxxxxxxx     qxxxxxxxxxxxx           xxxxxxxw     axxxxxx           xxxxxx   
+                xxxxxxxxxxxxxx     qxxxxxxxxxxxxx         _ xxxxxxxxw     axxxxx           xxxxxx   
+                 xxxxxxxxxxxx     qxxxxxxxxxxxxxx        qxxxxxxxxxxxw     axxxx           xxxxxx   
+                  xxxxxxxxx      qxxxxxxxxxxxxxxx     qxxxxxxxxxxxxxxxw      axx           xxxxxx   
+                   xxxxxxx     qxxxxxxxxxxxxxxxxxxx  xxxxxxxxxxxxxxxxxxxw     ax           xxxxxx   
+                      xxx     qxxxxxxxxxxxxxxxxx###  ###xxxxxxxxxxxxxxxxxw     a           xxxxxx   
+                                                                                           xxxxxx   
+                                                                                           xxxxxx   
+                                                                                           xxxxxx   
+            _                                                                             _xxxxxx   
+          xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   
+         xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   
+        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   
+       xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   
+      xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxf  
+     xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxf  
+                                                                                               cc   
+                                                                                                    
+                                                                                                    
+EndOfMapdata

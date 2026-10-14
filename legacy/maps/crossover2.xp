@@ -1,0 +1,110 @@
+# Created by xmapedit on Mon Oct 11 12:28:30 1993
+
+mapwidth : 100
+mapheight : 100
+mapname : CrossOver2
+mapauthor : Mark Boyns
+edgewrap : yes
+
+mapData: \multiline: EndOfMapdata
+  d#xxxxxxxxxxxxxxxxxxxxxxxxxx#                   x                   #xxxxxxxxxxxxxxxxxxxxxxxxxx#f 
+                           qxs#                   x                   #axw                          
+r                         qxs #                   x                   # axw                         
+#                        qxs  #                   x                   #  axw                        
+x                       qxs   #                   x                   #   axw                       
+x_                     qxs                        x                        axw                     _
+x                     qxs                         x                         axw                     
+x_                   qxs                          x                          axw                   _
+x                   qxs                           x                           axw                   
+x_                 qxs                            x                            axw                 _
+x         @       qxs                             x                             axw       @         
+x_               qxs                              x                              axw               _
+x                xx                   @           x           @                   xx                
+x_               axw                              x                              qxs               _
+x                 axw                             x                             qxs                 
+x_                 axw                            x                            qxs                 _
+x                   axw                           x                           qxs                   
+x_         qxw       axw                          x                          qxs       qxw         _
+x         qxxxw       axw                         x                         qxs       qxxxw         
+x_       qxs axw       axw                        x                        qxs       qxs axw       _
+x       qxs   axw       axw                       x                       qxs       qxs   axw       
+x_     qxs     axw       axw                      x                      qxs       qxs     axw     _
+x     qxs       axw       axw                     x                     qxs       qxs       axw     
+x    qxs         axw       axw                    x                    qxs       qxs         axw    
+x   qxs           axw       axw                   x                   qxs       qxs           axw   
+x  qxs             axw       axw                  x                  qxs       qxs             axw  
+x qxs               axw       axw                 x                 qxs       qxs               axw 
+xqxs                 axw       axw                x                qxs       qxs                 axw
+xxs                   axw       axw               x               qxs       qxs                   ax
+xs                     axw       axw              x              qxs       qxs                     a
+#####                   axw       axw             x             qxs       qxs                   ####
+                         axw       axw            x            qxs       qxs                        
+                          axw       axw           x           qxs       qxs                         
+                           axw       axw          x          qxs       qxs                          
+                            axw       axw         x         qxs       qxs                           
+                             axw       axw        x        qxs       qxs                            
+                              axw       axw       x       qxs       qxs                             
+                               axw       axw      x      qxs       qxs                              
+            @                   axw       axw     x     qxs       qxs                   @           
+                                 axw       axw    x    qxs       qxs                                
+                                  axw       axw   #   qxs       qxs                                 
+                                   axw       axw     qxs       qxs                                  
+                                    axw       a#     #s       qxs                                   
+                                     axw                     qxs                                    
+                                      axw                   qxs                                     
+                                       axw                 qxs                                      
+                                        axw               qxs                                       
+                                         a#               #s                                        
+                                                                                                    
+                                                 )()                                                
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx#        (-(        #xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                                                 )()                                                
+                                                                                                    
+                                         q#               #w                                        
+                                        qxs               axw                                       
+                                       qxs                 axw                                      
+                                      qxs                   axw                                     
+                                     qxs                     axw                                    
+                                    qxs       q#     #w       axw                                   
+                                   qxs       qxs     axw       axw                                  
+                                  qxs       qxs   #   axw       axw                                 
+                                 qxs       qxs    x    axw       axw                                
+            @                   qxs       qxs     x     axw       axw                   @           
+                               qxs       qxs      x      axw       axw                              
+                              qxs       qxs       x       axw       axw                             
+                             qxs       qxs        x        axw       axw                            
+                            qxs       qxs         x         axw       axw                           
+                           qxs       qxs          x          axw       axw                          
+                          qxs       qxs           x           axw       axw                         
+                         qxs       qxs            x            axw       axw                        
+#####                   qxs       qxs             x             axw       axw                   ####
+xw                     qxs       qxs              x              axw       axw                     q
+xxw                   qxs       qxs               x               axw       axw                   qx
+xaxw                 qxs       qxs                x                axw       axw                 qxs
+x axw               qxs       qxs                 x                 axw       axw               qxs 
+x  axw             qxs       qxs                  x                  axw       axw             qxs  
+x   axw           qxs       qxs                   x                   axw       axw           qxs   
+x    axw         qxs       qxs                    x                    axw       axw         qxs    
+x     axw       qxs       qxs                     x                     axw       axw       qxs     
+x_     axw     qxs       qxs                      x                      axw       axw     qxs     _
+x       axw   qxs       qxs                       x                       axw       axw   qxs       
+x_       axw qxs       qxs                        x                        axw       axw qxs       _
+x         axxxs       qxs                         x                         axw       axxxs         
+x_         axs       qxs                          x                          axw       axs         _
+x                   qxs                           x                           axw                   
+x_                 qxs                            x                            axw                 _
+x                 qxs                             x                             axw                 
+x_               qxs                              x                              axw               _
+x                xx                   @           x           @                   xx                
+x_               axw                              x                              qxs               _
+x         @       axw                             x                             qxs       @         
+x_                 axw                            x                            qxs                 _
+x                   axw                           x                           qxs                   
+x_                   axw                          x                          qxs                   _
+x                     axw                         x                         qxs                     
+x_                     axw                        x                        qxs                     _
+x                       axw   #                   x                   #   qxs                       
+#                        axw  #                   x                   #  qxs                        
+c                         axw #                   x                   # qxs                         
+                           axw#                   x                   #qxs                          
+EndOfMapdata

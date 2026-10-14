@@ -1,0 +1,210 @@
+# Created by xmapedit on Mon Jul 11 13:26:58 1994
+
+mapwidth : 200
+mapheight : 200
+mapname : Space Rays
+mapauthor : Juha Leskelä
+edgewrap : yes
+
+mapData: \multiline: EndOfMapdata
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                   r                                            x                                                                                       
+                                                                   x                                            x                                                                                       
+                                                                   x                                            x                                                                                       
+                                                                   x                                            x                                                                                       
+                                                                  qxw                                          qxw                                                                                      
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxf      xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxf         xxxxxxxxxxxxxxxxxxxxxxxxxxx
+                                                                  axs                                          axs                                                                                      
+                                                                   x                                            x                                                                                       
+                                                                   x                                            x                                                                                       
+                                                                   x                                            x                                                                                       
+                                                                   x                                            x                                                                                       
+                                                                   x                                            x                                                                                       
+                                                                   x                                            x                                                                                       
+                                                                   x                                            x                                                                                       
+                        r                                          x          x                                 x                                                                                       
+                        x                                          x          x                                 x                    r                                                                  
+                        x                                          x          x                                 x     qx             x                                                                  
+                        x                                          x          x                                 x    qxs             x                                                                  
+                        x               x                          x          x                                 x   qxs              x                                                                  
+                       qxw             qxw                        qxw         xw                               qxw qx               qxw                                                                 
+xxxxxx        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx         xxxxxxx       xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx       xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                       axs             axs                        axs         xs                               axxxs                axs                                                                 
+                        x               x                          x          x                                 xxs                  x                                                                  
+                        x               x                          x          x                                qxs                   x                                                                  
+                        x   (           x                          x          x                          (    qxx   (                x                                                                  
+                        x               x                          x          x                              qxxx                    x                                                                  
+                        x               x                          x          x                             qxxxx                    x                                                                  
+                       qxw             qxw                        qx         qxw                           qxxxxxw                  qxw                                                                 
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx      xxxxx         dxxxxxxxxxxxxxx      xxxxxx       xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx          xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                       axs             axs                        ax         axs                          xs   axs                  axs                                                                 
+                        x               x                          x          x                         qxs     x                    x                                                                  
+                        x               x                          x          x                        qxs                           x                                                                  
+                        x               x                          x          x                       qxs                            x                                                                  
+                        x               x                          x          x                      qxs                             x                                                                  
+                        x               x                          x          x                     qxs                              x                                                                  
+                        x               x                          x          x                    qxs                               x                                                                  
+                        x               x                          x          x                   qxs                                x                                                                  
+                        x               x                          x _        x                  qxs            x                    x                                                                  
+                        x                                          xw#        x                 qxs             x                    x                                                                  
+                        x                                          xx                          qxs              x                                                                                       
+                        x                                         qxs                         qxs               x                                                                                       
+                        x                                        qxx                         qxs                x                                                                                       
+                        x                                       qxxx                        qxs                 x                                                                                       
+                        x                                      qxxxx                       qxs                  x                                                                                       
+                        x                                     qxxxxx                      qxs                   x                                                                                       
+                        x                                    qxxxxxx                     qxs                    x                                                                                       
+                        x                                   qxxxxxxx                    qxs                     x                                                                                       
+                        x               x                  qxxxxxxxx          x        qxs                      x                    x                                                                  
+                       qxw             qxw       _        qxxxxxxxxxw        qxw      qx                       qxw                  qxw                                            _                    
+xxxxxxxxxxxxxxxxxxxxxxxxxxxf       xxxxxxxxxxxxxx#xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx        xxxxxxxxx         dxxxxxxxxxxxxxxxxxxxxxxxxxxxxx#xxxxxxxxxxxxxxxxxxxx
+                       axs             axs               xs       axs        axxxxxxxxs                        axs                  axs                                                                 
+                        x               x               xs         x          #xxxxxxs                          x                    x                                                                  
+                        x               x                          x          #xxxxxs                           x                    x                                                                  
+                                        x                          x   ########xxxxs                            x                    x                                                                  
+                                        x                          x          #xxxs                                                  x                                                                  
+                                                                   x          #xxs                                                   x                                                                  
+                                                  qx               x    @     #xs                                                    x                                                                  
+                                                 qxs               x       ####s                                                     x                                                                  
+                                                qxs                x        qxx                                                      x                                                                  
+                        x                      qxs                 x       qxxx                                                      x                                                                  
+                        x               x     qxs                  x   ####xxxx                                 x          qx        x                                                                  
+                        x               x    qxs                   x     qxxxxx                                 x         qxs        x                                                                  
+                        x               x   qxs                    x    qxxxxxx                                 x        qxs         x                                                                  
+                       qxw             qxw qx      _              qxw  qxxxxxxxw                               qxw_     qx          qxw                                                                 
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx        xxxxxxxxxxxxx#       xxxxxxxxxx##xxxxxxxxxxxxxxxxxxxxxxxxxxxxx        dxxxxx#xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                       axs             axxxs                      axxxxs     axs                               axxxxxxxxs           axs                                                                 
+                                        xxs                        xxxs                                         xxxxxxxs             x                                                                  
+                                       qxs                         xxs                                          xxxxxxs              x                                                                  
+                                      qxx                         qxs                                           xxxxxs               x                                                                  
+                                     qx x                        qxx                                            xxxxs                x                                                                  
+                                    qxs x                       qx x                    qx                      xxxs                 x                                                                  
+                                   qxs  x                      qxs x          x        qxs                      xxs                  x                                                                  
+                                  qxs   x                     qxs  x          x       qxs                      qxs                   x                                                                  
+                                 qxs    x                    qxs   x          x      qxs                      qxx                    x                                                                  
+                        x       qxs     x                   qxs    x          x     qxs                      qx x                    x                                                                  
+                        x      qxs      x                  qxs     x          x    qxs                      qxs x                    x                                                                  
+                        x     qxs       x                 qxs      x          x   qxs                      qxs                       x                                                                  
+                        x    qxs        x                qxs       x          x  qxs                      qxs                        x                                                                  
+                        x   qxs         x               qxs        x          x qxs                      qxs                         x                                                                  
+                        x  qxs          x              qxs         x          x xs                      qxs                          x                                                                  
+                        x qxs           x             qxs                     xxs                      qxs                           x                                                                  
+                        x xs            x            qxs                     qxs                      qxs                            x                                                                  
+                        xxs             x           qxs                     qxx                      qxs                             x                                                                  
+                       qxs              x          qxs                     qx x                     qxs         x                    x                                                                  
+                      qxx                         qxs                     qxs x                    qxs          x                    x                                                                  
+                     qx x                        qxs                     qxs  x                   qxs           x                    x                                                                  
+                    qxs x                       qxs                     qxs   x                  qxs            x                    x                                                                  
+                   dxs  x                      qxs                 _   qxs    x                 qxs             x                    x                                                                  
+                        x                     qxs                  #  qxs     x                qxs              x                                                                                       
+                        x                    qxs                   x qxs      x               qxs               x                                                                                       
+                        x                   qxs                    x xs       x              qxs                x                                                                                       
+                        x               x  qxs                     xxs        x             qxs                 x                                                                                       
+                        x               x qxs                     qxs                      qxs                  x                                                                                       
+                        x               x xs                     qxx                      qxs                   x                                                                                       
+                        x               xxs                      x x  (                  qxs                    x                                                                                       
+                        x              qxs                         x                    qxs                     x                                                                                       
+                        x             qxx                          x                   qxs                      x                    x                                                                  
+                        x            qxxx                          x                  qxs                       x                    x                                                                  
+                       qxw          qxxxxw                        qxw                qx                        qxw                  qxw                                                   _             
+xxxxxxxxxxxxxxxxxxxxxxxxxxxx       xxxxxxxx       xxxxxxxxxxxxxxxxxxxxxx      xxxxxxxxxxxxxxxxxxxxxx        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx#xxxxxxxxxxxxx
+                       axs        qxs  axs                        axs         xxxxxxxs                         axs                  axs                                                                 
+                        x        qxs    x                          x          xxxxxxs                           x                    x                                                                  
+                        x       qxs     x                          x          xxxxxs                            x                    x                                                                  
+                        x      qxs      x                          x          xxxxs                             x                    x                                                                  
+                        x     qxs       x                          x          xxxs                              x                    x                                                                  
+                        x     xs        x                          x          xxs                               x                    x                                                                  
+                        x               x                          x         qxs                                x                    x                                                                  
+                        x               x                          x        qxx                                 x                    x                                                                  
+                                        x                          x       qx x                                 x                    x                                                                  
+                                        x                          x      qxs x                                 x                    x                                                                  
+                                        x                                qxs  x                                 x                    x                                                                  
+                                        x                               qxs   x                                 x                    x                                                                  
+                                        c                              qxs    x                                 x                    x                                                                  
+                                                                      qxs     x                                 x                    c                                                                  
+                                                                     qxs      x                                 x                                                                                       
+                                                                    qxs       x                                 x                                                                                       
+                                                                   qxs        x                                 x                                                                                       
+                                                                  qxs         x                                 x                                                                                       
+                                                                  xs          x                                 x                                                                                       
+                                                                              x                                 x                                                                                       
+                                                                              x                                 x                                                                                       
+                                                                              x                                 x                                                                                       
+                                                                              x                                 x                                                                                       
+                                                                              x                                 x                                                                                       
+                                                                              x                                 x                                                                                       
+                                                                              x                                 x                                                                                       
+                                                                              x                                 x                                                                                       
+                                                                              x                                 x                                                                 )                     
+                                                                              x                                                                                                                         
+                                                                              x                                                                                                                         
+                                                                              x                                                                                                                         
+                                                                              x                                                                                                                         
+                                                                              x                                                                                                                         
+                                                                              x                                                                                                                         
+                                                                              x                                                                                                                         
+                                                                              x                                                                                                                         
+                                                                              x                                 _                                                                                       
+                                                                              x                                 #                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                    _                                                                                          qxw                                                                                      
+xxxxxx             x#xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxf          xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx           xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                                                                                                               axs                                                                                      
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+                                                                                                                x                                                                                       
+EndOfMapdata

@@ -1,0 +1,117 @@
+# Map converted by mapmapper @(#)Version 1.0
+
+mapWidth:            100
+mapHeight:           100
+mapName:             Arena
+mapAuthor:           Dave Lemke
+crashWithPayer:      yes
+playerKillings:      yes
+playerShielding:     yes
+limitedVisibility:   yes
+teamPlay:            no
+timing:              no
+onePlayerOnly:       no
+limitedLives:        no
+worldLives:          0
+mapData: \multiline: EndOfMapdata
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxx xxx xxx xxx xxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx xxx xxx xxx xxx xxxxxxxxxxxxxx
+xxxxxxx xxx xxx xxx xxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx xxx xxx xxx xxx xxxxxxxxxxxxxx
+xxxxxxx_xxx_xxx_xxx_xxx_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_xxx_xxx_xxx_xxx_xxxxxxxxxxxxxx
+xxxxxxx#xxx#xxx#xxx#xxx#xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx#xxx#xxx#xxx#xxx#xxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx##xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs  axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx    axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx     xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxx#xxxs         xxxxxxxxxxxxx#xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxs                                            axx#xxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxs                                                      axxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxs                                                          axxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxs                                                             axxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxs                                                               axxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxx                                                                 xxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxs                                                                 axxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxx#                                                                   xxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxx                                                                   xxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxs                                                                   axxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxx                                  @                                  xxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxs                                                                     #xxxxxxxxxxxxxx
+xxxxxxxxxxxxxxx                                                                      xxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxs                                                                      axxxxxxxxxxxxxx
+xxxxxxxxxxxxxx                                                                        xxxxxxxxxxxxxx
+xxxxxxxxxxxxxx                                                                        xxxxxxxxxxxxxx
+xxxxxxxxxxxxx#                                                                        xxxxxxxxxxxxxx
+xxxxxxxxxxxxx#                                                                        xxxxxxxxxxxxxx
+xxxxxxxxxxxxxx                                                                        xxxxxxxxxxxxxx
+xxxxxxxxxxxxxxw                                                                       xxxxxxxxxxxxxx
+xxxxxxxxxxxxxxx                                                                       xxxxxxxxxxxxxx
+xxxxxxxxxxxxxxx                                                                       xxxxxxxxxxxxxx
+xxxxxxxxxxxxxxx                                                                       xxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxw                                                                      xxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxx                                                                      xxxxxxxxxxxxxx
+xxxxxxxxxxxxxxx#                                                                      xxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxw                                                                     #xxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxw                                                                    xxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxw                                                                   xxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxw                                                                  xxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxw                                                                 xxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxx                                                                xxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxw                                                               xxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxx                                                               xxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxw                                                              xxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxw                                                             xxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxx#                                                             #xxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxx#                                                             #xxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxs                                                             xxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxs                                                              xxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxs                                                               xxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxs                                                                xxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxs                                                                 xxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxs                                                                  xxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxs                                                                  qxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxx#                                                                   xxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxs                                                                  qxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxx                                                                   xxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxx                                                                   xxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxx                                                                   xxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxx                                                                   xxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxx                                                                   #xxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxx                                                                   #xxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxx                                                                   xxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxx#                                                                   xxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxx#                                                                   xxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxx                                                                   xxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxx                                                                   xxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxs                                                                   xxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxw                                                                   xxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxx                                 @                                  xxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxx                                                                   xxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxw                                                                 qxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxx                                                               qxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxw                                                              xxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxw                                                          qxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxx#                                                        #xxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxw                                                      qxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxw                                                   qxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxw                                                 xxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                                              qxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                                         qxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                                     qxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx#xxxxxxxw                         qxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw            qxxxxxxx#xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx##xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+EndOfMapdata

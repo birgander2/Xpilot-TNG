@@ -1,0 +1,62 @@
+# Created by xmapedit on Fri Dec 17 01:28:05 1993
+
+limitedlives:yes
+allowshields:no
+robotsleave:no
+playersonradar:no
+playerstartshielded:yes
+itemprobmult:0
+limitedlives:yes
+
+limitedlives : yes
+mapwidth : 90
+mapheight : 35
+mapname : Oatmo Team Tourney 3
+mapauthor : Fred Gruner (I Kill You)
+edgewrap : yes
+teamplay : yes
+maxrobots : 0
+worldlives : 4
+limitedvisibility : yes
+gravity : 0
+maxplayershots : 2
+crashwithplayer : yes
+playerkillings : yes
+
+mapData: \multiline: EndOfMapdata
+              axw      9                         xxxxx              xs                    
+               xxx   xx#w      9                 xxxxs              x           4         
+                ax   xxxxxxxxxx#                 xxxxw             qx           #xw  4    
+                     axxxxxxxxxx                xxxxxx  7          xx           xxx x#w   
+                       axxxxxxxs              xw xxxxxxx#          xs          qxxs axxw  
+                                             qxxxxxxxxxxx         qx           xxs    axx 
+                                            xxxxxxxxxxxxx         xs          qxs      xx 
+                                           qxxxxxxxxxxxxxw                   qxx      qxx 
+                                          xxxxxxxxxxxxxxxxx                 qxxs     qxxs 
+  6   6                                    axxxxxxxxxxxxxs                 qxxs     qxxs  
+  #xxx#       2                             xxxxxxxxxxxxx                  xxs      xxs   
+         axxxx#w                           xxxxxxxxxxxxxs                  ax       xs    
+             axxxw                          x xxxxxxxxxx                            x     
+               axxw  2                      xxxxxxxxxxxs                            xw    
+                axxxx#            5         axxs xxxxxx                             xxw   
+                            5     #          ax  xxxxs         xw                   axx   
+            qx             x#w  qxx             qxxs           xxw                   ax   
+         qxxxx             axxxxxx              xxx            axx                        
+       qxxxxxs                                                  xxw8                      
+   qxxxxxs                                                      axx#                      
+   axs                                                            ax                      
+                                                                   x                      
+                                                                   x           1          
+                                      3                            x         xx#          
+                                     q#                            x         axx          
+                                    qxx          xxxxxxxx          xw8        axw         
+                 xxw               qxxs        xxxxxxxxxx          xx#         xxw        
+            x    axx    3      qxxxxxs        xx                    ax         axxw  1    
+            x      axxxx#xxxxxxxxs                                   x          axxxx#xx  
+            x                                                        x                    
+            x                                                        x                    
+            xxw                                                      x                    
+            axx                                                      x                    
+             axw                                     7               x                    
+              xx                                 xxxx#              qx                    
+EndOfMapdata

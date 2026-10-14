@@ -1,0 +1,156 @@
+# Created by xmapedit.color on Thu Mar  2 17:47:51 1995
+
+#
+# TEAMBALL 2.1 by DR.DEATH <boyns@sdsu.edu>
+#             and Bretton Wade <bwade@graphics.cornell.edu>
+#
+playerStartsShielded:no
+allowplayercrashes:no
+targetkillteam:no
+targetteamcollision:no
+treasurekillteam:no
+treasurecollisiondestroys:yes
+treasurecollisionmaykill:no
+teamassign:yes
+mineswallbounce:yes
+itemswallbounce:yes
+ballswallbounce:yes
+shotswallbounce:no
+allownukes:yes
+allowclusters:no
+allowshields:no
+allowmodifiers:yes
+allowlasermodifiers:yes
+minesonradar:yes
+treasuresonradar:yes
+ecmsreprogrammines:yes
+teamimmunity:yes
+minefusetime:0
+
+maxShieldedWallBounceSpeed:30
+maxUnshieldedWallBounceSpeed:30
+maxShieldedPlayerWallBounceAngle:180
+maxUnshieldedPlayerWallBounceAngle:180
+playerWallBounceBrakeFactor:0.8
+
+maxitemdensity:0.1
+movingitemprob:1.0
+itemprobmult:0.001
+dropitemonkillprob:1.0
+itemmissileprob:0
+itemlaserprob:0
+itemcloakprob:0
+itemautopilotprob:0
+itemsensorprob:0
+itememergencyshieldprob:0
+itemwideangleprob:0
+itemrearshotprob:0
+itemecmprob:0.9
+itemenergypackprob:0.4
+itememergencythrustprob:0.8
+itemtractorbeamprob:0.8
+itemmineprob:0.5
+itemtankprob:0.5
+itemafterburnerprob:0.005
+itemtransporterprob:0.5
+initialautopilots:4
+initialafterburners:1
+initialtractorbeams:1
+
+mapwidth : 57
+mapheight : 83
+mapname : TEAMBALL 2.1 - new field, more bounce, more shots
+mapauthor : DR.DEATH with modifications by Toast
+edgewrap : no
+edgebounce : no
+teamplay : yes
+limitedvisibility : no
+gravity : 0.0
+maxplayershots : 3
+reset:no
+
+mapData: \multiline: EndOfMapdata
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxs-                                     -axxxxxxxx
+xxxxxxxs-                                       -axxxxxxx
+xxxxxxs-                                         -axxxxxx
+xxxxxs-                     %                     -axxxxx
+xxxxx                                               xxxxx
+xxxxx                      q#w                      xxxxx
+xxxxx                     qxxxw                     xxxxx
+xxxxx                    qx***xw                    xxxxx
+xs  !                   qxs   axw                   !  ax
+x   !                  qxs     axw                  !   x
+#1$ !                 qxs       axw                 ! $1#
+x   !                 xs         ax                 !   x
+#1$ !                                               ! $1#
+x   !                                               !   x
+#1$ !                                               ! $1#
+x   !                                               !   x
+xw  !                                               !  qx
+xxxxx                                               xxxxx
+xxxxx                                               xxxxx
+xxxxx                                               xxxxx
+xxxxx                                               xxxxx
+xxxxx                                               xxxxx
+xxxxx                                               xxxxx
+xxxxx                                               xxxxx
+xxxxx                                               xxxxx
+xxxxx                                               xxxxx
+xxxxx                                               xxxxx
+xxxxx                                               xxxxx
+xxxxx                                               xxxxx
+xxxxx                                               xxxxx
+xxxxx                                               xxxxx
+xxxxx                                               xxxxx
+xxxxx                                               xxxxx
+xxxxx                                               xxxxx
+xxxxx                                               xxxxx
+xxxxx                                               xxxxx
+xxxxx                   qxw   qxw                   xxxxx
+xxxxx                   x-x   x-x                   xxxxx
+xxxxx                   axs   axs                   xxxxx
+xxxxx                                               xxxxx
+xxxxx bbbbbbbbbbbbbbbbbb    +    bbbbbbbbbbbbbbbbbb xxxxx
+xxxxx                                               xxxxx
+xxxxx                   qxw   qxw                   xxxxx
+xxxxx                   x-x   x-x                   xxxxx
+xxxxx                   axs   axs                   xxxxx
+xxxxx                                               xxxxx
+xxxxx                                               xxxxx
+xxxxx                                               xxxxx
+xxxxx                                               xxxxx
+xxxxx                                               xxxxx
+xxxxx                                               xxxxx
+xxxxx                                               xxxxx
+xxxxx                                               xxxxx
+xxxxx                                               xxxxx
+xxxxx                                               xxxxx
+xxxxx                                               xxxxx
+xxxxx                                               xxxxx
+xxxxx                                               xxxxx
+xxxxx                                               xxxxx
+xxxxx                                               xxxxx
+xxxxx                                               xxxxx
+xxxxx                                               xxxxx
+xxxxx                                               xxxxx
+xxxxx                                               xxxxx
+xs  !                                               !  ax
+x   !                                               !   x
+#2$ !                                               ! $2#
+x   !                                               !   x
+#2$ !                                               ! $2#
+x   !                 xw         qx                 !   x
+#2$ !                 axw       qxs                 ! $2#
+x   !                  axw     qxs                  !   x
+xw  !                   axw   qxs                   !  qx
+xxxxx                    ax***xs                    xxxxx
+xxxxx                     axxxs                     xxxxx
+xxxxx                      a#s                      xxxxx
+xxxxx                                               xxxxx
+xxxxxw-                     %                     -qxxxxx
+xxxxxxw-                                         -qxxxxxx
+xxxxxxxw-                                       -qxxxxxxx
+xxxxxxxxw-                                     -qxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+EndOfMapdata

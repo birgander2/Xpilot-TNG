@@ -1,0 +1,219 @@
+# Created by xmapedit.color on Thu Aug 19 14:13:58 1993
+
+mapwidth : 200
+mapheight : 200
+mapname : Religious cannons
+mapauthor : Andrew Scherpbier (Ender)
+edgewrap : yes
+edgebounce : no
+teamplay : no
+oneplayeronly : no
+limitedvisibility : no
+playershielding : yes
+losemass : yes
+shotsgravity : yes
+crashwithplayer : yes
+playerkillings : yes
+
+mapData: \multiline: EndOfMapdata
+              -                         -                            -                   df                +                                                               -    +          +            
+              -   +                    -                                                 df               +                                                                -     +        +             
+             -    +                    -                                                 df              +                                                                        +      +              
+            -      +                  -                                                  df             +                                                                               +               
+            -       +                -                                                   df            +                                                                               +                
+           -        +                -                                                   df           +                                                                               +                 
+          -          +              -                                                    df          +                                                                               +                  
+         -            +            -                                                     df         +                                                                               +                   
+         -             +           -                                                     df        +                                                                               +                    
+        -              +          -                                                      df       +                                +                                              +                     
+       -                +        -                                                       df                                        +                  -                          +                      
+       -                 +                                                               df                                        +                  -                         +                       
+                         +                                                               df                                        +                  -                        +                        
+                          +                                                              df                                        +                  -                       +                         
+                           +                                                             df                                        +                  -                      +                          
+                            +                                                            df                                        +                  -                                                 
+                            +                                                            df                                        +                  -                                                 
+                             +                                                           df                                        +                  -                                                 
+                              +                            + +                           df                                        +                  -                                                 
+                              +                           ++_++                          df                                        +                  -                                                 
+                               +                          +++++                          df                                        +                   -                                                
+                                +                         +++++                          df                                        +                                                                    
+                                 +                         +++                           df                                        +                                                                    
+                                                            +                            df                                        +                                                                    
+                                                                                         df                      + +               +                                                                    
+                                                                                         df                     ++_++              +                                                                    
+                                                                                         df                     +++++              +                                                                    
+                                                                                         df                     +++++             +                                                                     
+                                                                                         df                      +++                                                                                    
+                                                                                         df                       +                                                                                     
+                                                                                         df                                                                                                             
+       + +                                                                               df                                                                                                             
+      ++_++                                                                              df                                                                                                             
+      +++++                                                                              df                                                                                                             
+      +++++                                                                              df                                                                                                             
+       +++                                                                               df                                                                                                             
+        +                                                                                df                                                                                                             
+                                                                                         df                                                                                                             
+                                                                                         df                                                                                                             
+                                                                                         df                                                                                        + +                  
+                                                                                         df                                                                                       ++_++                 
+                                                                                         df                                                                                       +++++                 
+                                      + +                                                df                                                                                       +++++                 
+                                     ++_++                                               df                                                                                        +++                  
+                                     +++++                                               df                                                                                         +                   
+                                     +++++                                               df                                                + +                                                          
+                                      +++                                                df                                               ++_++                                                         
+                                       +                                                 df                                               +++++                                                         
+                                                                                         df                                               +++++                                                         
+                                                                                         df                                                +++                                                          
+                                                                                         df                                                 +                                                           
+                                                                                         df                                                                                                             
+                                                                                         df              + +                                                                                            
+                                                                                         df             ++_++                                                                                           
+                                                                                         df             +++++                                                                                           
+                                                                                         df             +++++                                                                                           
+                                                                                         df              +++                                                                                            
+                                                                                         df               +                                                                                             
+                                                                                         df                                                                                                             
+                                                                 + +                     df                                                                                                             
+                                                                ++_++                    df                                                                                                             
+                                                                +++++                    df                                                                                                             
+   + +                                                          +++++                    df                                                                                                             
+  ++_++                                                          +++                     df                                                                                                             
+  +++++                                                           +                      df                                                                                                             
+  +++++                                                                                  df                                                                                                             
+   +++                                                                                   df                                                                                                             
+    +                                                                                    df                                                                                                             
+                                                                                         df                                                                                                             
+                                                                                         df                                                                                                             
+                                                                                         df                                                                                                             
+                                                                                         df                                                                                                             
+                                                                                         df                                                                                                             
+                                                                                         df                                                                                                             
+                                                                                         df                                                                                                             
+                                                                                         df                                                                                                             
+                                                                                         df                                                                                                             
+                                          + +                                            df                                                                        + +                                  
+                                         ++_++                                           df                                                                       ++_++                                 
+                                         +++++                                           df                                                                       +++++                                 
+                                         +++++                                           df                                                                       +++++                                 
+                                          +++                                            df                                                                        +++                                  
+                                           +                                             df                                                                         +                                   
+                                                                                         df                                       + +                                                                   
+                                                                                         df                                      ++_++                                                                  
+                                                                                         df                                      +++++                                                                  
+                                                                                         df                                      +++++                                                                  
+                                                                                         df                                       +++                                                                   
+                                                                                         df                                        +                                                                    
+                                                                                         df                                                                                                             
+                                                                                         df                                                                                                             
+                                                                                         df                                                                                                             
+                                                                                         df                                                                                                             
+                                                                                         df                                                                                                             
+                                                                                         df                                                                                                             
+                                                                                         ##                                                                                                             
+rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr####rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc####cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+                                                                                         ##                                                                                                             
+                                                                                         df                                                                                                             
+                                                                                         df                                                                                                             
+                                                                                         df                                                                                                             
+             ---                                                                         df                                                                                                             
+                --                                                                       df                                                                                                             
+                  --                                                                     df                                                                                                             
+                    --                                                                   df                                                                                                             
+                      --                                                                 df                                                           +                                                 
+                        --                                                               df                                                   ++++++++                                         +        
+                          --                                                             df                                          +++++++++                                                 +        
+                            -                                                            df                                 +++++++++                                                          +        
+                                                                                         df                                                                                                     +       
+                                                                                -        df                                                                                                     +       
+                                                                              --         df                                                                                                     +       
+                                                                            --           df                                                                                                      +      
+                                                                          --             df                                                                                                      +      
+                                                                        --               df                                                                                ++                    +      
+                                                                      --                 df                               -                                                  ++                   +     
+                                                                    --                   df                              -                                                     +                  +     
+                                                                  --                     df                             -                                                       ++                +     
+                                                                --                       df                            -                                                          +                +    
+                                                              --                         df                           -                                                            ++              +    
+                                                            --                           df                           -                                                              ++            +    
+                                                          --                             df                          -                                                                 +            +   
+                                                        --                               df                         -                                                                   ++          +   
+         -                                            --                                 df                        -                                                                      +         +   
+         -                                          --                         +         df                        -                                                                       +         +  
+         -                                        --                           +         df                       -                                                                                  +  
+        -                                       --                             +         df                      -                                                                                   +  
+        -                                    ---                               +         df                     -                                                                                     + 
+       -                                                                       +         df            +       -              -                                                       -               + 
+       -                                                                       +         df            +       -              -                             --------------------------                + 
+       -                                                                       +         df            +      -                -                                                                       +
+      -                                                                        +         df            +     -                  -                                                                       
+      -                                                                         +        df            +    -                    -                                                                      
+     -                                                                          +        df            +    -                     -                                                                     
+     -                                                                          +        df            +                           -                                                                    
+     -                                                                          +        df            +                           -                                                                    
+    -                                                                           +        df            +                            -                                                                   
+    -                                                                           +        df            +                             -                                                                  
+   -                                                                            +        df            +                              -                                                                 
+                                         ---                                     +       df            +                               -                                                                
+-                                           ---                                  +       df            +                                -                                                              -
+ -                                             ---                               +       df            +   ++                           -                                                               
+  --                                              --                             +       df            +     ++                          -                                                              
+    -                                               ---                          +       df            +       ++                         -                                                             
+     --                         +                      ---                       +       df            +         ++                        -                                                            
+       -                         +                        ---                    +       df            +           ++                       -                                                           
+        --                       +                           --                   +      df            +             ++                      -                                                          
+          -                      +                             -                  +      df            +               ++                     -                             +                           
+           --          +         +                                                +      df            +                 ++                   -                            +                            
+             -    +++++          +                                                +      df            +                   ++                  -                          +                             
+            ++++++                +                                               +      df            +                     ++                 -                         +                             
+      ++++++    -                 +                                               +      df            +                       ++                -                       +                              
+++++++           --               +                                               +      df            +                         +                -                     +                               
+                   -              +                                                +     df            +                                           -                    +                         ++++++
+                    -             +                                                +     df            +                                           -                   +                                
+                                   +                                               +     df            +                                            -                 +                                 
+                                   +                                               +     df            +                                             -                +                                 
+                                   +                                               +     df            +                                              -              +                                  
+                                   +                                               +     df            +                                               -            +                                   
+                                   +                                               +     df            +                                                -           +                                   
+                                    +                                               +    df            +                                                 -         +                                    
+                                    +                                -                   df            +                                                          +                                     
+                                    +                      ----------                    df            +                                                          +                                     
+                                    +            ----------                              df            +                                                         +                                      
+                                 +  + -----------                                        df            +                              +                         +                                       
+                              +++   +                                                    df                                            +                        +                      -                
+                          ++++       +                                                   df                                             +-                     +                      -                 
+                      ++++           +                                                   df                                           ---+                    +                       -                 
+                  ++++               +                              -                    df                                       ----    +                   +                      -                  
+              ++++                   +                               -                   df                                    ---         +                 +                       -                  
+              +                      +                               -                   df                                ----             +               +                        -                  
+              +                       +                              -                   df                            ----                  +              +                       -                   
+              +                       +                              -                   df                         ---                       +            +                        -                   
+              +                       +                              -                   df                     ----                           +          +                         -                   
+              +                       +                              -                   df                 ----                                +         +                        -                    
+             +                        +                              -                   df                                                      +       +                         -                    
+             +                         +                             -                   df                                                       +     +                          -                    
+             +                         +                             -                   df                                                        +    +                         -                     
+             +                         +                             -                   df                                                         +                             -                     
+             +                         +                             -                   df                                                          +                            -                     
+             +                         +                             -                   df                                                           +                          -                      
+            +               -          +                             -                   df                                                                                      -                      
+            +              -                                         -                   df                                                                                      -                      
+            +             -                                          -                   df                                                                                     -                       
+            +            -                                           -                   df                                                                                     -                       
+            +            -                                           -                   df                                         -                                           -                       
+            +           -                                            -                   df                                          -                                         -                        
+           +           -                       -                     -                   df                                           -                           ++           -                        
+                      -                        -                     -                   df                                            -                            +          -                        
+                      -                       -                      -                   df                                             -                            +        -                         
+                     -                        -                      -                   df                                              -                            +       -                     +   
+                    -                        -                       -                   df                       +                       -                            +      -                    +    
+                    -                       -                        -                   df                       +                        -                            +    -                    +     
+                   -                        -                        -                   df                      +                          -                            +   -                   +      
+                  -                        -                         -                   df                     +                            -                            ++ -                  +       
+                 -                        -                          -                   df                    +                              -                             +                  +        
+                 -                        -                          -                   df                   +                                -                            -+                +         
+                -                        -                           -                   df                  +                                  -                           - +              +          
+               -                        -                            -                   df                 +                                                              -   +            +           
+EndOfMapdata

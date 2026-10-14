@@ -1,0 +1,111 @@
+# Created by xmapedit on Fri Feb 18 20:37:08 1994
+
+mapwidth : 50
+mapheight : 80
+mapname : Oatmo Revenge (Team Tourney)
+mapauthor : Fred Gruner (I Kill You)
+
+
+
+limitedlives:yes
+allowshields:no
+robotsleave:yes
+playersonradar:no
+playerstartshielded:yes
+itemprobmult:0
+itemProbMult:           0
+edgewrap : yes
+teamplay : yes
+maxrobots : 0
+worldlives : 4
+limitedvisibility : yes
+maxplayershots : 3
+crashwithplayer : yes
+playerkillings : yes
+gravity: 0
+
+
+
+
+mapData: \multiline: EndOfMapdata
+                                                  
+         3                                        
+         #w                                       
+         xxw            3                         
+         axxxw   qxxxxxx#                         
+           axxxxxxs                               
+                               xw                 
+                               xxw                
+                     xxxw       axw               
+       4              axxw       xxw              
+       #w              axxw       axw             
+       ax     8 88 8    axxw       ax             
+        xw    #x##x#     axx        x             
+        xx                ax        x             
+        ax                 x        x             
+   4     xw               qx        x             
+   #     ax               xx                      
+   x      xw             qxs                      
+   x      xx            qxx                       
+   x      ax            xxs                       
+   x                                              
+   x                           6  6               
+   x                         qx#xx#xw             
+   x                        xxx   axxxw           
+   xw                      qxs       axw          
+   ax            xw        xs         xx          
+    xw           axxw                 axw         
+    axxw          axxw                 xx         
+     axxxw         xxxw                ax         
+        axxw       axxxw                          
+          axw        axxw                         
+           xxw        axxw                        
+            axw        axx                        
+             xxw                      2           
+             axx                      #           
+                                      x          2
+                                      x          #
+w                       xw            x          x
+xw                 11   axw           xw         a
+axw                ##    xx           ax          
+ xxw               ax    axw                      
+  axw               x     ax                      
+   axxw             x      xw                     
+    axxw           qx      axw                    
+     axxw          xx       xxw                   
+      axxw         xs       axxw                  
+       axx        qx         axxxw                
+                 qxx           axxw77             
+                qxxs             ax##w            
+               qxxs                axx            
+              qxxs                                
+           qxxxxs                                 
+        qxxxs                                     
+    xxxxxxs                                       
+    xxs                                           
+                                                  
+                                4 4               
+                                #x#w              
+                                 axxxw            
+                                    axxw          
+                                      axxxw       
+             55                          axxw     
+             ##w                          axxw    
+             axxxw                         axxw   
+                axxw                        axx   
+                  axxw                       axw  
+                    axxw                      xx  
+                      axxw                    ax  
+                        axw                    x  
+                         axw                      
+                          axxxw                   
+                            axxxw                 
+                               axxw               
+                                 axxxw            
+                                    axxxw 99      
+                                       axx##w     
+                                          axx     
+                                                  
+                                                  
+                                                  
+EndOfMapdata

@@ -1,0 +1,179 @@
+# Created by xmapedit on Thu Mar  2 10:01:06 1995
+
+limitedlives : yes
+mapwidth : 83
+mapheight : 83
+mapname : Everyteam For Itself
+mapauthor : Andy Nicholas - andy.nicholas@jhuapl.edu
+edgewrap : no
+
+maxitemdensity:0.3
+itemprobmult:9.9e-07
+
+
+idleRun:true
+noQuit:true
+treasureKillTeam:yes
+
+itemenergypackprob:1
+itemtankprob:0
+itemecmprob:0
+itemmineprob:0
+itemmissileprob:0
+itemcloakprob:0
+itemsensorprob:0
+itemwideangleprob:0
+itemrearshotprob:0
+itemafterburnerprob:0
+itemtransporterprob:0
+itemlaserprob:0
+itememergencythrustprob:0
+itemtractorbeamprob:0
+itemautopilotprob:0
+itememergencyshieldprob:0
+
+itemconcentratorradius:15
+movingitemprob:0.95
+rogueheatprob:0
+roguemineprob:0
+#initialemergencyshields:1
+initialfuel:600
+initialautopilots:1
+detonateitemonkillprob: 0.9
+dropitemonkillprob: 0.9
+allowmodifiers:yes
+allowclusters:no
+allownukes: no
+
+# This doesn't work on certain setups...
+allowshields : no
+
+
+playerstartssheilded : no
+framespersecond:12
+firerepeatrate: 1
+
+#motd:
+
+treasuresonradar:yes
+treasurekillteam:yes
+targetkillteam:yes
+targetteamcollision:no
+maxshieldedplayerwallbounceangle:360
+maxshieldedwallbouncespeed:400
+maxunshieldedplayerwallbounceangle:360
+maxunshieldedwallbouncespeed:200
+playerwallbouncebrakefactor:0.1
+wallbouncefueldrainmult:5
+sparkswallbounce:yes
+mineswallbounce:yes
+
+teamplay : yes
+maxrobots : 0
+gravity : 0
+shotmass : 0.08
+#shotspeed : 35
+#shotlife : 60
+losemass : yes
+maxplayershots : 15
+shotsgravity : no
+
+edgebounce : no
+teamplay : yes
+oneplayeronly : no
+timing : no
+maxrobots : 0
+worldlives : 3
+limitedvisibility : no
+playershielding : no
+crashwithplayer : yes
+playerkillings : yes
+gravity : no
+
+mapData: \multiline: EndOfMapdata
+                                xxxxxxxxxxxxxxxxxxx                                
+                                xs 1     *     1 ax                                
+                                x  $           $  x                                
+                                x                 x                                
+                                x                 x            qxw                 
+                  qxw           x                 x           qxxxw                
+                 qxxxw          x                 x          qxs2axw               
+                qxs8axw         x                 x         qxs $ axw              
+               qxs $ axw        x                 x        qxs     axw             
+              qxs     axw       x                 x       qxs       axw            
+             qxs       axw      x                 x      qxs         axw           
+            qxs         axw     x                 x     qxs           axw          
+           qxs           axw    x                 x    qxs            *axw         
+          qxs*            axw   x                 x   qxs               axw        
+         qxs               axw  x                 x  qxs                 axw       
+        qxs                 axw x                 x qxs                   axw      
+       qxs                   axxx                 xxxs                     axw     
+      qxs                     axs                 axs                       axw    
+     qxs                                                                   $2xx    
+     xx8$                                                                   qxs    
+     axw                                                                   qxs     
+      axw                                                                 qxs      
+       axw                                                               qxs       
+        axw                                                             qxs        
+         axw                                                           qxs         
+          axw                                                         qxs          
+           axw                                                       qxs           
+            axw                                                     qxs            
+             axw                                                   qxs             
+              axw                                                 qxs              
+               axw                                               qxs               
+                xx                                               xx                
+xxxxxxxxxxxxxxxxxs                  qxxxxxxxxxw                  axxxxxxxxxxxxxxxxx
+xs                                 qs         aw                                 ax
+x                                 qs           aw                                 x
+x7$                              qs             aw                              $3x
+x                               qs               aw                               x
+x                               x                 x                               x
+x                               x                 x                               x
+x                               x xxx xxx xxx xxx x                               x
+x                               x x    x  x x x x x                               x
+x*                              x xxx  x  x x xxx x                              *x
+x                               x   x  x  x x x   x                               x
+x                               x xxx  x  xxx x   x                               x
+x                               x                 x                               x
+x                               x                 x                               x
+x                               aw               qs                               x
+x7$                              aw             qs                              $3x
+x                                 aw           qs                                 x
+xw                                 aw         qs                                 qx
+xxxxxxxxxxxxxxxxxw                  axxxxxxxxxs                  qxxxxxxxxxxxxxxxxx
+                xx                                               xx                
+               qxs                                               axw               
+              qxs                                                 axw              
+             qxs                                                   axw             
+            qxs                                                     axw            
+           qxs                                                       axw           
+          qxs                                                         axw          
+         qxs                                                           axw         
+        qxs                                                             axw        
+       qxs                                                               axw       
+      qxs                                                                 axw      
+     qxs                                                                   axw     
+     xx6$                                                                 $4xx     
+     axw                                                                   qxs     
+      axw                     qxw                 qxw                     qxs      
+       axw                   qxxx                 xxxw                   qxs       
+        axw                 qxs x                 x axw                 qxs        
+         axw               qxs  x                 x  axw               qxs         
+          axw*            qxs   x                 x   axw            *qxs          
+           axw           qxs    x                 x    axw           qxs           
+            axw         qxs     x                 x     axw         qxs            
+             axw       qxs      x                 x      axw       qxs             
+              axw     qxs       x                 x       axw     qxs              
+               axw $ qxs        x                 x        axw $ qxs               
+                axw6qxs         x                 x         axw4qxs                
+                 axxxs          x                 x          axxxs                 
+                  axs           x                 x           axs                  
+                                x                 x                                
+                                x                 x                                
+                                x                 x                                
+                                xw 5     *     5 qx                                
+                                xxxxxxxxxxxxxxxxxxx                                
+EndOfMapdata
+
+

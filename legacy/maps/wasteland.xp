@@ -1,0 +1,230 @@
+allowclusters: no
+allowlasermodifiers: no
+allowmodifiers: yes
+allownukes: no
+allowplayerbounces: no
+allowplayercrashes: yes
+allowplayerkilling: yes
+allowshields: no
+allowshipshapes: yes
+
+ballswallbounce: yes
+
+checkpointradius: 0
+contactport: 15345
+
+debriswallbounce: no
+destroyitemincollisionprob: 0.4
+detonateitemonkillprob: 0
+distinguishmissiles: yes
+dropitemonkillprob: 0.2
+
+ecmsreprogrammines: yes
+edgewrap: yes
+extraborder: no
+
+firerepeatrate: 2
+framespersecond: 12
+friction: 0
+
+gameduration: 0
+gravity: 0
+
+identifymines: yes
+idlerun: no
+initialafterburners: 1
+initialautopilots: 1
+initialcloaks: 0
+initialecms: 1
+initialemergencyshields: 0
+initialemergencythrusts: 0
+initialfuel: 800
+initiallasers: 0
+initialmines: 0
+initialmissiles: 0
+initialrearshots: 0
+initialsensors: 0
+initialtanks: 1
+initialtransporters: 0
+initialwideangles: 0
+itemafterburnerprob: 0.1
+itemautopilotprob: 0
+itemcloakprob: 0
+itemecmprob: 0.2
+itememergencyshieldprob: 0.2
+itememergencythrustprob: 0.1
+itemenergypackprob: 0.2
+itemlaserprob: 0.2
+itemmineprob: 0.2
+itemmissileprob: 0.1
+itemprobmult: 0.0001
+itemrearshotprob: 0
+itemsensorprob: 0
+itemtankprob: 0.2
+itemtractorbeamprob: 0.2
+itemtransporterprob: 0.2
+itemwideangleprob: 0.1
+itemswallbounce: no
+
+laserisstungun: no
+limitedlives: yes
+limitedvisibility: no
+
+mapauthor: "Anthony Ignacio (ignacio@cs.odu.edu)"
+mapheight: 100
+mapname: Wingman's Wasteland -- Version II
+mapwidth: 100
+maxitemdensity: 0.1
+maxmissilesperpack: 1
+maxplayershots: 12
+maxrobots: 3
+maxshieldedplayerwallbounceangle: 90
+maxshieldedwallbouncespeed: 60
+maxunshieldedplayerwallbounceangle: 30
+maxunshieldedwallbouncespeed: 20
+minesonradar: yes
+mineswallbounce: no
+missilesonradar: yes
+motd: /home/ignacio/xpilot.dir/wasteland.motd
+movingitemprob: 0.2
+missilesonradar: yes
+missileswallbounce: no
+
+noquit: yes
+nukesonradar: yes
+
+oneplayeronly: no
+
+playerminimumstartfuel: 500
+playerstartsshielded: yes
+playersonradar: yes
+
+racelaps: 0
+reporttometaserver: yes
+reset: yes
+robotsleave: no
+robotstalk: no
+rogueheatprob: 0
+roguemineprob: 0
+
+shieldeditempickup: no
+shieldedmining: no
+shipmass: 20
+shotlife: 60
+shotmass: 0.1
+shotspeed: 22
+shotsgravity: no
+shotswallbounce: no
+sparkswallbounce: no
+
+targetkillteam: yes
+targetsync: yes
+targetteamcollision: no
+teamassign: yes
+teamimmunity: yes
+teamplay: yes
+
+worldlives: 3
+
+mapData: \multiline: EndOfMapdata
+      xxxx       xxxx               xxxxxxxx                                        xxxxxx          
+      xxxx       xxxx                                                   xx          xxxxxx          
+      xxxxx  5  xxxxx                                                  xxxx 4       xxxxxx          
+       xxxxx###xxxxxx                                                  xxxx##      xxxxxxx          
+       xxxxxxxxxxxxx                                                   xxxxxx      xxxxxxx          
+       xxxxxxxxxxxxx                                                   xxxxxxxxx    xxxxxx          
+        xxxxxxxxxxx                                                    xxxxxxxxx    xxxxx           
+                                                                        xxxxxxxx    xxxx            
+                                                                         xxxxxxxx   xxxx            
+                                                                              xxx   xxxx            
+                                                                                                    
+                                                   xxxx                                             
+                                                  #xxxxxx                                           
+                                                  #xxxxxxx                                          
+                                                  #xxxxxxx                                          
+                xxxxxxxx                          xxxxxxxxx                                        0
+               xxxxxxxxxx   xxx                    xxxxxxxxx                                       #
+               xxxxxxxxxx   xxxxxx                 xxxxxxxxx                                        
+               xxxx  xxxx   xxxxxxx               xxxxxxxxxx                                        
+              xxx#          xxxxxxx               xxxxxxxxx#                                        
+              xxx#!!        xxxxxx                xxxxxxxxx#                                        
+              xxx#!!         ##xx                 xxxxxxxxx#                                        
+               xx#                                 xxxxxxxxx                    xxx                 
+               xxx                  xx             xxxxxxxxx                 xxxxxxxxxxx            
+               xxxx                xxx             xxxxxxxxx                 xxxxxx##xxxxx          
+                xxx               xxx                 xxxxxx          xxx     xx       xxxx         
+                 xxxx  1          xxx                 xxxxxxx        xxxx               xxx         
+                 xxxxx###        xxx                  xxxxxxx        xxxx                xx         
+                 xxxxxxxx        #xx                  xxxxxx        xxxxx                xx         
+                  xxxxxxx       1#x                    x###         xxxx                            
+   xxx             xxxxx        #xx                                 xxxx                            
+  #xx#     x#x       xx      1 xxx                                  xxx                             
+  xxxx     xxx             x###xx                                  xxxx        xx                   
+           x#x             xxxxx                                   xxxx       xxxx      #xx         
+                            xxx                                    xx#        xxxxx    2#xx         
+                                                                   xx#!!      xxxxx    #xx          
+       xxx                                                         xx#!!      xxxx     xxx          
+       #x#                                                         xx#         xx      xxx        x#
+x      xx                                     xxxxxx               xxxx                xxx        xx
+x                                            xxxxxxxx        xx    xxxxx               xxx        xx
+x            #x                             xxxxxxxxx        xx    xxxxx 2             xxx        x#
+            xxx                             xxxxxxxxxx       xx     xxxx##             xxx          
+            x#x                             xxxxxxxxxx       xx     xxxxxx#            xx           
+    xxxx                                     xxxxxxxxx       xx     xxxxxxx           xxx           
+    #xx#                                      xxxxxxx        xxx     xxxxx            xxx           
+     xx                               xx        ###x         xxx      xxxx    xxx    2#xx           
+                     xx              xxxx                    xxx       xx    xxxxx   #xx            
+#                    xx              xxxx#                   xxx             xxxxxxx#xx            x
+xx                  xxx              xxxx#                  xxxx              xxxxxxxx             x
+#x                  xxx              xxxx#         xxx      xxxxx                                  x
+                    xxx              xxxxx      ###xxx      xxxxxx                                  
+                    xxxx              xxxx     xxxxxxxx      xxxxxx                                 
+                ###xxxxx               xxx    xxxxxxxxxx     xxxxxxx                                
+               xxxxxxxxxx                     xxxxxxxxxx     xxxxxxxxxxx                            
+              #xxxxxxxxxx                     xxxxxxxxxx     xxxxxxxxxxxxxx                         
+              #xxxxxxxxxx                      xxxxxxxx      xxxxxxxxxxxxxxxxxx                     
+             #xxxxxxxxxxx                      xxxxxxxx       xxxxxxxxxxxxxxxxx                     
+             xxxxxxxx###                        xxxxxxx        xxxx                                 
+             xxxxxxxx                                                                             0 
+               xxx                                                                                # 
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                        xxxx                        
+                                                                      xxxxxxx     xxx               
+                                        xxxxxxx                      xxxxxxxx   xxxxxxxx            
+                                   xxxxxxxxxxxx                      xxxxxxxx   xxxxxxxxx           
+   xx                          xxxxxxxxxxxxxxx                       xxxxxxxx   xxxxxxxxxx          
+  xxx                          xxxxxxxxxxxxxx                       xxxxxxxxx   xxxxxxxxxx          
+  xxx                                    xxx     xx                xxxxxxxxx#   xxxxxxxxxx          
+ xxx                                            xxx               xxxxxxxxxx#    xxxxxxxxx          
+ xx                                            xxxxx              xxxxxxxxxx#    #xxxxxxxx          
+ xx         xx                   xxxx         xxxxxx               xxxxxxxxx#    #xxxxxxxx          
+ xx        xxxxx            xx   xxxx        xxxxxxxx              xxxxxxxxxx    #xxxxxxxx          
+ xx      ##xxxxxx##         xx    ##         xxxxxxxx               xxxxxxxxxx   #xxxxxxx           
+ xx      #xxxxxxxx#         xx                xxxxxxxx                xxxxxxxx   xxxxxxxx           
+ xx     xxxxxxxxxxxx        x#                xxxxxxxx                  xxxxxx   xxxxxxxx           
+ xx     xxxxxxxxxxxx        x#3               xxxxxxxx                    xxxx   xxxxxx             
+ xx     xxxxxxxxxxx         xx#                xxxxxx                                               
+xxx       xxxxxxxxx         xxx                #xxxxx                                               
+xxx        xxxxxxxx         xxxx             !!#xxxxx                                               
+xxx        ##xxxxx          xxxx 3           !!#xxxxxx                                              
+xxx         #xx              xxx###            #xxxxxx                                              
+xxx                           xxxxxx      3    xxxxxxx                                              
+xxx                             xxxx   xx###xxxxxxxxx                                               
+xxx                                    xxxxxxxxxxxx                                                 
+xxx                                      xxxxxxxxx                                                 x
+xxx                                                             0                                 xx
+x                                                               #                                xxx
+x                                                                                                xxx
+                                                                                                  xx
+                                                                                                    
+        xxxx   xxx                                                                                  
+        xxxx   xxxxx                                                                                
+      xxxxxx   xxxxxx                                                                               
+      xxxxxx   xxxxxx                         xx                           xx    xxxx               
+      xxxx      xxxxx                      xxxxxxx                       xxxxx   xxxx               
+                                          xxxxxxxx                       xxxxx   xxxxxx             
+                                      xxxxxxxxxxx                           xx   xxxxxxxx           
+                                    xxxxxxxxxx                                     xxxxxxx          
+EndOfMapdata

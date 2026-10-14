@@ -1,0 +1,325 @@
+# Created by xmapedit on Wed May 25 17:21:17 1994
+mapname : Pin-ball Team Play
+mapauthor : P.D.Thomas
+mapWidth: 100
+mapHeight: 200
+gravitypoint:0,0
+robotsTalk:	Yes
+robotsLeave:	Yes
+shotsGravity:	No
+noQuit:	No
+targetKillTeam:	Yes
+limitedVisibility:	No
+limitedLives:	Yes
+onePlayerOnly:	No
+idleRun:	Yes
+allowPlayerCrashes:	Yes
+allowPlayerKilling:	Yes
+allowShields:	Yes
+playerStartsShielded:	Yes
+teamPlay:	Yes
+timing:	No
+allowNukes:	Yes
+playersOnRadar:	Yes
+missilesOnRadar:	Yes
+shieldedItemPickup:	Yes
+shieldedMining:	Yes
+laserIsStunGun:	Yes
+gravityPointSource:	No
+gravityClockwise:	No
+gravityAnticlockwise:	No
+edgeWrap:	No
+edgeBounce:	No
+extraBorder:	Yes
+allowPlayerBounces:	Yes
+shotsWallBounce:	Yes
+ballsWallBounce:	Yes
+minesWallBounce:	Yes
+itemsWallBounce:	Yes
+missilesWallBounce:	Yes
+sparksWallBounce:	Yes
+debrisWallBounce:	Yes
+reportToMetaServer:	Yes
+teamAssign:	No
+teamImmunity:	Yes
+targetTeamCollision:	Yes
+treasureKillTeam:	Yes
+treasureCollisionDestroys:	No
+emcsReprogramMines:	Yes
+identifyMines:	Yes
+treasureCollisionMayKill:	Yes
+allowClusters:	Yes
+allowModifiers:	Yes
+allowLaserModifiers:	Yes
+allowShipShapes:	Yes
+minesOnRadar:	Yes
+nukesOnRadar:	Yes
+distinguishMissiles:	Yes
+shotLife:	60
+robotLeaveLife:	50
+robotLeaveScore:	-90
+robotLeaveRatio:	-5
+fireRepeatRate:	2
+maxRobots:	4
+maxPlayerShots:	256
+worldLives:	3
+framesPerSecond:	12
+itemProbMult:	1
+gameDuration:	0
+itemEnergyPackProb:	0.7
+itemTankProb:	0.4
+itemECMProb:	0.8
+itemMineProb:	0.7
+itemMissileProb:	0.6
+itemCloakProb:	0.2
+itemSensorProb:	0.8
+itemWideangleProb:	0.4
+itemRearshotProb:	0.3
+itemAfterburnerProb:	0.4
+itemTransporterProb:	0.3
+itemLaserProb:	0.1
+movingItemProb:	0.2
+dropItemOnKillProb:	0.5
+destroyItemInCollisionProb:	0
+maxItemDensity:	0.000312
+gravity:	0
+gravityAngle:	90
+shipMass:	20
+shotMass:	0.1
+shotSpeed:	21
+nukeMinSmarts:	12
+nukeMinMines:	6
+maxObjectWallBounceSpeed:	40
+maxShieldedWallBounceSpeed:	2000
+maxUnshieldedWallBounceSpeed:	200
+maxShieldedPlayerWallBounceAngle:	360
+maxUnshieldedPlayerWallBounceAngle:	180
+playerWallBounceBrakeFactor:	0.7
+objectWallBounceBrakeFactor:	0.95
+objectWallBounceLifeFactor:	0.8
+wallBounceFuelDrainMult:	0.2
+wallBounceDestroyItemProb:	0
+playerMinimumStartFuel:	1000
+nukeClusterDamage:	1
+mineFuseTime:	0
+itemEmergencyThrustProb:	0.4
+itemTractorBeamProb:	0.3
+itemAutopilotProb:	0.4
+gravityPoint:	0,0
+initialFuel:	1000
+initialTanks:	0
+initialECMs:	0
+initialMines:	0
+initialMissiles:	0
+initialCloaks:	0
+initialSensors:	0
+initialWideangles:	0
+initialRearshots:	0
+initialAfterburners:	2
+initialTransporters:	0
+initialLasers:	0
+initialEmergencyThrusts:	0
+initialTractorBeams:	0
+initialAutopilots:	2
+mapData: \multiline: EndOfMapdata
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxs  axxxxxs  axxxxxs  axxxxxs  axxxxxs  axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxs+++++++<axxxxxxxxxxxxs    axxxs    axxxs    axxxs    axxxs    axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxx+++++++  <<axxxxxxxxxs      axs      axs      axs      axs      axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxx+++        <<axxxxxx                                             xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxx++           <<axxxx                                             xxxxxxxx++++++++++++++++xxxxxxxx
+xxx++             <<axx                                             xxxxx+++++++++++++++++++++xxxxxx
+xxxw+   >>          <<ax                                            xxxx+++++              ++++xxxxx
+xxxxw   >w>           <<                                            xxx+++                   +++xxxx
+xxxxx<  >aw>                                                        xx+++                     +++xxx
+xxxxxw<  >xw>                                                       x+++                       +++xx
+xxxxxx<  >axw>                                                      x++                         ++xx
+xxxxxxw<  >xxw>                                                                                  ++x
+xxxxxxx<  >axxw>                                                                                 ++x
+xxxxxxxw<  >xxxw>                                                                                ++x
+xxxxxxxx<  >axxxw>                                                                               ++x
+xxxxxxxxw<  >xxxxw                                  <                                            ++x
+xxxxxxxxx<  >axxxx                                 <<<                                           ++x
+xxxxxxxxxw<  >xxxx                                  <                                            ++x
+xxxxxxxxxx<  >axx                                                                                ++x
+xxxxxxxxxxw<  >xx                                                                                ++x
+xxxxxxxxxxx<  >axx                                                                               ++x
+xxxx  xxxxxw<  >xx                                                                               ++x
+xxx    xxxxx<  >axx                                                                              ++x
+xxx     xxxxw<  >xx                                                                              ++x
+xx       xxxx<  >axx                                                                             ++x
+xx        xxxw<  >xx                                                                             ++x
+xx         xxx<  >ax                                                                             ++x
+x           xxw<  >x                                                                             ++x
+x            xx<  >x                                                                             ++x
+x             xw< >>                                                                             ++x
+x              x<                                                                                ++x
+x              <<                                                                                ++x
+x                                                                                                ++x
+x                                                                                                ++x
+x                                                                                                ++x
+x                                                                                                ++x
+x                                                          qx   xw                               ++x
+x                                                        qxxs   axxw                             ++x
+x                                                       qxs       axw                            ++x
+x                                                      qxs         axw                           ++x
+x                                                      xs           ax                           ++x
+x                                                     qx             xw                          ++x
+x                                                     xs      r      ax                          ++x
+x                                                     xw     dxf     qx                          ++x
+x                                                     x!     dxf     *x                          ++x
+x                                                     xs      c      ax                          ++x
+x                                                     xw             qx                          ++x
+x                                                     axw           qxs                          ++x
+x                                                      xxw         qxx                           ++x
+x                                                      axxxxxxxxxxxxxs                           ++x
+x                                                       axxx(((((xxxs                             +x
+x                                                        axx44444xxs                              +x
+x                                                          axxxxxs                                +x
+x                           qx   xw                                                               +x
+x                         qxxs   axxw                                                             +x
+x                        qxs       axw                                                            +x
+x                       qxs         axw                                                           +x
+x                       xs           ax                                                           +x
+x                      qx             xw                                                          +x
+x                      xs      r      ax                                                          +x
+x                      xw     dxf     qx                                                          +x
+x      <<              x*     dxf     !x                                                          +x
+x     <  <             xs      c      ax                                                          +x
+x     <  <             xw             qx                                                          +x
+x      <<              axw           qxs                                                          +x
+x                       xxw         qxx                                                           +x
+x                       axxxxxxxxxxxxxs                                                           +x
+x                        axxx(((((xxxs                                                            +x
+x                         axx33333xxs                                                      qxxw< >qx
+x                           axxxxxs                                                        xxxx< >xx
+x                                                                                          xxxx< >xx
+x                                                                                          xxxx< >xx
+x                                                                                          xxxx< >xx
+x                                                                                          xxxx< >xx
+x                                                                                          xxxx< >xx
+x                                                                                          axxx< >xx
+x                                                                                          dxxx< >xx
+x                                                                                          dxxx< >xx
+x                                                                                          qxxx< >xx
+x                                                                                          xxxx< >xx
+x                                                                                          xxxx< >xx
+x                                           >>                                             xxxx< >xx
+x                                          >  >                  qx   xw                   xxxx< >xx
+x                                          >  >                qxxs   axxw                 xxxx< >xx
+x                                           >>                qxs       axw                xxxx< >xx
+x                                                            qxs         axw               axxx< >xx
+x                                                            xs           ax               dxxx< >xx
+x                                                           qx             xw              dxxx< >xx
+x                                                           xs      r      ax              qxxx< >xx
+x                      qx   xw                              xw     dxf     qx              xxxx< >xx
+x                    qxxs   axxw                            x!     dxf     *x              xxxx< >xx
+x                   qxxs     axxw                           xs      c      ax              xxxx< >xx
+x                  qxxs       axxw                          xw             qx              xxxx< >xx
+x                  xxs         axx                           xw           qx               xxxx< >xx
+xx                qxs           axw                          xxw         qxx               xxxx< >xx
+xxx               xs      r      ax                           xxxxxxxxxxxxx                axxx< >xx
+xxxx              xw     dxf     qx                            xxx(((((xxx                 dxxx< >xx
+xxxxx             x*     dxf     !x                             xx22222xx                  dxxx< >xx
+xxxxxx            xs      c      ax                               xxxxx                    qxxx< >xx
+xxxx              xw             qx                                                        xxxx< >xx
+xxf               axw           qxs                                                        xxxx< >xx
+xxf                xxw         qxx                                                         xxxx< >xx
+xxf                axxxxxxxxxxxxxs                                                         xxxx< >xx
+xxf                 axxx(((((xxxs                                                          xxxx< >xx
+xxxx                 axx11111xxs                                                           xxxx< >xx
+xxxxxx                 axxxxxs                                                             axxx< >xx
+xxxx                                                                                       dxxx< >xx
+xxf                                                                                        dxxx< >xx
+xxf                                                                                        qxxx< >xx
+xxf                                                                                        xxxx< >xx
+xxf                                                                                        xxxx< >xx
+xxxx                                                                                       xxxx< >xx
+xxxxxx                                                                                     xxxx< >xx
+xxxx                                                                                       xxxx< >xx
+xxf                                                                                        xxxx< >xx
+xxf                                                                                        axxx< >xx
+xxf                                                                                        dxxx< >xx
+xxf                                                                                        dxxx< >xx
+xxxx                                                                                       qxxx< >xx
+xxxxxx                                    qxx          xxw                                 xxxx< >xx
+xxxx                                    qxxxx          xxxxw                               xxxx< >xx
+xxf                                    xxxxsc          caxxxx                              xxxx< >xx
+xxf                                    xxsc              caxx                              xxxx< >xx
+xxf                                    cc                  cc                              xxxx< >xx
+xxf                                                                                        xxxx< >xx
+xxxx                                                                                       axxx< >xx
+xxxxx                                                                                      dxxx< >xx
+xxxx                             xxf                            dxx                        dxxx< >xx
+xxx                             qxxf                            dxxw                       qxxx< >xx
+xx                              xxs                              axx                       xxxx< >xx
+x                              qxxf                              dxxw                      xxxx< >xx
+x                              xxs                                axx                      xxxx< >xx
+x                              xxf                                dxx                      xxxx< >xx
+x                              xx                ##                xx                      xxxx< >xx
+x                              xx               ####               xx                      xxxx< >xx
+x                              xxf               ##               dxx                      axxx< >xx
+x                              xxf                                 xx                       xxx< >xx
+x                              xx                                 dxx                       xxx< >xx
+x                              xx                                  xx                       xxx< >xx
+x                              xx                                  xx                       xxx< >xx
+x                              xxf                                dxx                       xxx< >xx
+x                                                                                           xxx< >xx
+x                                                                                           xxx< >xx
+x                                                ##                                         xxx< >xx
+x                                               ####                                        xxx< >xx
+x                                                ##                                         xxx< >xx
+x                                                                                           xxx< >xx
+x                              xxf                                dxx                       xxx< >xx
+x                              xx                                  xx                       xxx< >xx
+x                              xx                                  xx                       xxx< >xx
+x                              xxf                                dxx                       xxx< >xx
+x      xx      xxx                                                                xxx       xxx< >xx
+x      xx      xxx                                                                xxx       xxx< >xx
+x      xx      xxx                                                                xxx       xxx< >xx
+x      xx      xxx                                                                xxx       xxx< >xx
+x      xx      xxx                                                                xxx       xxx< >xx
+x      xx      xxxx                                                              xxxx       xxx< >xx
+x      xx      xxxxx                                                            xxxxx       xxx< >xx
+x      xx       xxxxx                                                          xxxxx        xxx< >xx
+x      xx        xxxx >>                                                    << xxxx         xxx< >xx
+x      xx         xx  qw>>                                                <<qw  xx          xxx< >xx
+x      xx            qxxxw>>                                            <<qxxxw             xxx< >xx
+x      xx            xxxxxxw>>                                        <<qxxxxxx             xxx< >xx
+x      xx            xxxxxxxxw>>                                    <<qxxxxxxxx             xxx< >xx
+x      xx            axxxxxxxxxw>>                                <<qxxxxxxxxxs             xxx< >xx
+x      xx            <axxxxxxxxxxw>>                            <<qxxxxxxxxxxs>             xxx< >xx
+x      xx             <<<axxxxxxxxxw>>                        <<qxxxxxxxxxs>>>              xxx< >xx
+x      xx                <<<axxxxxxxxw>>                    <<qxxxxxxxxs>>>           x     xxx< >xx
+x      xx                   <<<axxxxxxxw>>                <<qxxxxxxxs>>>             xxx    xxx< >xx
+x      xx                      <<<axxxxxxw>              <qxxxxxxs>>>                xxx    xxx< >xx
+x      xx                         <<<axxxx>              <xxxxs>>>                   xxx    xxx< >xx
+x      xx                            <<<as>              <as>>>                      xxx    xxx< >xx
+x      xx         xxx                   <<                >>                         xxx    xxx< >xx
+x      xx         xxx#                                                               xxx    xxx< >xx
+x      xx         xxxx#                                                              xxx    xxx<)>xx
+x      xxx         #xxx#                                                             #xx    xxx+++xx
+x       xxx         #xxx#                                                            #xx    xxx+++xx
+x        xxx         #xxxx                                                           xxx    xxx+++xx
+x         xx          #xxx           qxxxw (            ( qxxxw            xxxxxxx##xxx#    xxx+++xx
+x                      xxx          qxxxxs (            ( axxxxw          xxxxxxxxxxxx#     xxx+++xx
+x                                  qxxxxxf (  (      (  ( dxxxxxw          xxxxxxxxxx#      xxx+++xx
+x                                 qxxxxxxw (  (      (  ( qxxxxxxw                          xxx+++xx
+x                                qxxxxxxxs (  ((((((((  ( axxxxxxxw                         xxxxxxxx
+x                               qxxxxxxxxf (            ( dxxxxxxxxw                        xxxxxxxx
+x                              qxxxxxxxxxw (            ( qxxxxxxxxxw                       xxxxxxxx
+x                             qxxxxxxxxxxs (((((((((((((( axxxxxxxxxxw                      xxxxxxxx
+x                            qxxxxxxxxxxxf                dxxxxxxxxxxxw                     xxxxxxxx
+x                           qxxxxxxxxxxxxwrqwrqwrqwrqwrqwrqxxxxxxxxxxxxw                    xxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxs(axxxxs(axxxxs(axxxxxxxxxxxx xs(axxxxs(axxxxs(axxxxxxxxxxxxxxxxxxxxxxxxxx
+xxx ###xx###xx#####xxxxxxs   axxs   axxs   axxxxxxxxxxxxs   axxs   axxs   axxxxxx###xx###xx#####xxxx
+xxxx#xx#x#xx#xxx#xxxxxxxx     xx     xx     xxxxxxxxxxxx     xx     xx     xxxxxx#xx#x#xx#xxx#xxxxxx
+xxxx#xx#x#xx#xxx#xxxxxxxxw   qxxw   qxxw   qxxxxxxxxxxxxw   qxxw   qxxw   qxxxxxx#xx#x#xx#xxx#xxxxxx
+xxxx###xx#xx#xxx#xxxxxxxxx   xxxx   xxxx   xxxxxxxxxxxxxx   xxxx   xxxx   xxxxxxx###xx#xx#xxx#xxxxxx
+xxxx#xxxx#xx#xxx#xxxxxxxxx< >xxxx< >xxxx< >xxxxxxxxxxxxxx< >xxxx< >xxxx< >xxxxxxx#xxxx#xx#xxx#xxxxxx
+xxxx#xxxx###xxxx#xxxxxxxxx<0>xxxx<0>xxxx<0>xxxxxxxxxxxxxx<0>xxxx<0>xxxx<0>xxxxxxx#xxxx###xxxx#xxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+EndOfMapdata

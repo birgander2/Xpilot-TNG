@@ -1,0 +1,209 @@
+# Created by xmapedit on Fri Sep  3 16:49:55 1993
+
+mapwidth : 100
+mapheight : 200
+mapname : The Zen Room
+mapauthor : Tribble
+
+mapData: \multiline: EndOfMapdata
+w  _     _  qxxxxxxxx                +++++>      -                                xxxxxxxxxxxxxxxxxx
+x   _ _ _   xxxxxxxxx                +++++>      -                               qxxxxxxxxxxxxxxxxxx
+xw         qxxxxxxxxx                +++++>      -                               xxxxxxxxxxxxxxxxxxx
+xxw       qxxxxxxxxxx                +++++>      -                               xxxxxxxxxxxxxxxxxxx
+xxxw     qxxxxxxxxxxx                 ++++>      -                              qxxxxxxxxxxxxxxxxxxx
+xxxxx###xxxxxxxxxxxxx                 ++++>      -                              xxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxs                 +++++>     -                              axxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxx                  +++++>      -                              xxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxs                  +++++>      -                              axxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxx                   +++++>      -                               xxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxs                   +++++>      -                               axxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxx                    +++++>      -                                xxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxs                    +++++>       -                               axxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxs                      +++++>      -                                axxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxs                       +++++>      -                                 axxxxxxxxxxxxxx
+xxxxxxxxxxxxxxs                        +++++>       -                                 axxxxxxxxxxxxx
+xxxxxxxxxxxxxs                         +++++>       -                                  axxxxxxxxxxxx
+xxxxxxxxxxxs                            +++++>      -                                    axxxxxxxxxx
+x x x xxxs                              +++++>       -                                     axxx x x 
+xxxxxxxs                                +++++>       -                                       axxxxxx
+                                        +++++>        -                                             
+                                         +++++>       -                                             
+                                         +++++>        -                                            
+                                         ++++++>       -                                            
+                                          +++++>        -                                           
+                                          +++++>        -                                           
+                                           +++++>        -                                          
+                                           +++++>        -                                          
+                                            +++++>        -                                         
+                                            +++++>         -                                        
+                                             +++++>         -                                       
+                                             ++++++>        -                                       
+                                              +++++>         -                                      
+                                              ++++++>         -                                     
+                                               ++++++>         -                                    
+                                               ++++++>          -                                   
+                                                ++++++>          -                                  
+                                                 ++++++>          -                                 
++++                                              +++++++>          --                               
+++++++++++++                                      ++++++>            -                              
+++++++++++++++++                                   ++++++>            -                             
+++++++++++++++++++++                                ++++++>            --                           
++++++++++++++++++++++++                              ++++++>             --                         
+<<<<<++++++++++++++++++++                            +++++++>              --                       
+     <<<<<<<+++++++++++++++                           +++++++>               --                     
+            <<<<+++++++++++++                          +++++++>>               --                   
+                <<<<+++++++++++                         ++++++++>                ---                
+                    <<+++++++++++                        ++++++++>                  ---             
+)                     <<<++++++++++                       ++++++++>>                   -----        
+-------                  <<+++++++++                        ++++++++>                       --------
+       -----               <<+++++++++                       ++++++++>>                             
+            ---              <+++++++++                       +++++++++>                            
+               ---            <<++++++++                       +++++++++>>                          
+                  --            <++++++++                        +++++++++>>                        
+                    --           <<++++++++                       ++++++++++>>>                     
+                      --           <++++++++                        +++++++++++>>                   
+                        --          <++++++++                         +++++++++++>>>>               
+                          --         <<+++++++                          +++++++++++++>>>>           
+                            -          <+++++++                           +++++++++++++++>>>>>>>    
+>                            -          <+++++++                            ++++++++++++++++++++>>>>
++                             --         <++++++                              ++++++++++++++++++++++
++                               -         <++++++                                +++++++++++++++++++
++                                -         <++++++                                   +++++++++++++++
++                                 -         <++++++                                      +++++++++++
++                                  -        <+++++++                                              ++
+                                    -        <++++++                                                
+                                     -        <++++++                                               
+                                      -        <++++++                                              
+                                      -        <++++++                                              
+                                       -        <++++++                                             
+                                        -        <+++++                                             
+                                         -       <++++++                                            
+                                         -        <+++++                                            
+                                          -        <+++++                                           
+                                          -        <+++++                                           
+                                           -        <+++++                                          
+                                           -        <+++++                                          
+                                            -        <+++++                                         
+                                            -        <+++++                                         
+xxxxxxxw                                     -       <++++++                                 qxxxxxx
+x x x xxxw                                   -        <+++++                               qxxx x x 
+xxxxxxxxxxxw                                  -       <+++++                             qxxxxxxxxxx
+xxxxxxxxxxxxxw                                -        <+++++                          qxxxxxxxxxxxx
+xxxxxxxxxxxxxxw                               -        <+++++                         qxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxw                               -       <+++++                        qxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxw                              -       <+++++                       qxxxxxxxxxxxxxxx
+        axxxxxxxxw                             -        <+++++                     qxxxxxxxxxxxxs   
+          axxxxxxx                              -       <+++++                     xxxxxxxxxxxs     
+             axxxxw                             -       <+++++                    qxxxxxxxxxxs      
+              axxxx                             -       <+++++                    xxxxxxxxxxs       
+               axxxw                            -        <+++++                  qxxxxxxxxxs        
+                axxx                            -        <+++++                  xxxxxxxxxs         
+                 xxxw                            -       <+++++                 qxxxxxxxxx          
+   qxxxxxxxw     axxx                            -       <+++++                 xxxxxxxxxs          
+  qxxxxxxxxxxw    axx                            -       <+++++                 xxxxxxxxs   _ _ _   
+ qxxxxxxxxxxxxxw   as                            -       <+++++                 xxxxxxx#   _     _  
+ xxxxxxxxxxxxxxxw                                -       <+++++                 xxxxxxx#            
+ #xxxxxxxxxxxxxxxw                               -        <++++                 xxxxxxx#   _     _  
+ #xxxxxxxxxxxxxxxxw                              -        <++++                 xxxxxxx#      (     
+ xxxxxxxxxxxxxxxxxx                              -        <+++++                xxxxxxxx   _     _  
+qxxxxxxxxxxxxxxxxxxw                             -        <+++++                xxxxxxxxw   _ _ _   
+xxxxxxxxxxxxxxxxxxxx                             -        <+++++                xxxxxxxxx           
+xxxxxxxxxxxxxxxxxxxx                             -        <+++++                xxxxxxxxxw         q
+xxxxxxxxxxxxxxxxxxxx                             -        <+++++                xxxxxxxxxxw       qx
+xxxxxxxxxxxxxxxxxxxxw                            -        <++++                 xxxxxxxxxxxw     qxx
+xxxxxxxxxxxxxxxxxxxxx                            -        <++++                 xxxxxxxxxxxxx###xxxx
+xxxxxxxxxxxxxxxxxxxxs                            -       <+++++                 axxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxx                            -        <+++++                  xxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxs                            -        <+++++                  axxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxx                             -        <+++++                   xxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxs                             -        <+++++                   axxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxx                              -        <+++++                    xxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxs                             -         <+++++                    axxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxs                              -        <+++++                      axxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxs                               -        <+++++                       axxxxxxxxxxxxxx
+xxxxxxxxxxxxxxs                               -         <+++++                        axxxxxxxxxxxxx
+xxxxxxxxxxxxxs                                -         <+++++                         axxxxxxxxxxxx
+xxxxxxxxxxxs                                  -        <+++++                            axxxxxxxxxx
+x xxx xxxs                                   -         <+++++                              axxxxxxx 
+xxxxxxxs                                     -         <+++++                                axxxxxx
+                                            -          <+++++                                       
+                                            -         <+++++                                        
+                                           -          <+++++                                        
+                                           -         <++++++                                        
+                                          -          <+++++                                         
+                                          -          <+++++                                         
+                                         -          <+++++                                          
+                                         -          <+++++                                          
+                                        -          <+++++                                           
+                                       -           <+++++                                           
+                                      -           <+++++                                            
+                                      -          <++++++                                            
+                                     -           <+++++                                             
+                                    -           <++++++                                             
+                                   -           <++++++                                              
+                                  -            <++++++                                              
+                                 -            <++++++                                               
+                                -            <++++++                                                
++                             --            <+++++++                                              ++
++                            -              <++++++                                      +++++++++++
++                           -              <++++++                                   +++++++++++++++
++                         --              <++++++                                +++++++++++++++++++
++                       --               <++++++                              ++++++++++++++++++++++
+>                     --                <+++++++                            ++++++++++++++++++++>>>>
+                    --                 <+++++++                           +++++++++++++++>>>>>>>    
+                  --                 <<+++++++                          +++++++++++++>>>>           
+               ---                  <++++++++                         +++++++++++>>>>               
+            ---                    <++++++++                        +++++++++++>>                   
+       -----                     <<++++++++                       ++++++++++>>>                    )
+-------                         <++++++++                        +++++++++>>                --------
+                              <<++++++++                       +++++++++>>             -----        
+                             <+++++++++                       +++++++++>            ---             
+                           <<+++++++++                       ++++++++>>          ---                
+                         <<+++++++++                        ++++++++>          --                   
+                      <<<++++++++++                       ++++++++>>         --                     
+                    <<+++++++++++                        ++++++++>         --                       
+                <<<<+++++++++++                         ++++++++>        --                         
+            <<<<+++++++++++++                          +++++++>>       --                           
+     <<<<<<<+++++++++++++++                           +++++++>        -                             
+<<<<<++++++++++++++++++++                            +++++++>        -                              
++++++++++++++++++++++++                              ++++++>       --                               
+++++++++++++++++++++                                ++++++>       -                                 
+++++++++++++++++                                   ++++++>       -                                  
+++++++++++++                                      ++++++>       -                                   
++++                                              +++++++>      -                                    
+                                                 ++++++>      -                                     
+                                                ++++++>      -                                      
+                                               ++++++>      -                                       
+                                               ++++++>      -                                       
+                                              ++++++>      -                                        
+                                              +++++>      -                                         
+                                             ++++++>     -                                          
+                                             +++++>      -                                          
+                                            +++++>      -                                           
+                                            +++++>      -                                           
+                                           +++++>      -                                            
+                                           +++++>      -                                            
+                                          +++++>      -                                             
+                                          +++++>      -                                             
+xxxxxxxw                                 ++++++>     -                                       qxxxxxx
+x x x xxxw                               +++++>      -                                     qxxx x x 
+xxxxxxxxxxxw                             +++++>     -                                    qxxxxxxxxxx
+xxxxxxxxxxxxxw                          +++++>      -                                  qxxxxxxxxxxxx
+xxxxxxxxxxxxxxw                         +++++>      -                                 qxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxw                        +++++>     -                                 qxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxw                       +++++>     -                                qxxxxxxxxxxxxxxx
+   axxxxxxxxxxxxxw                     +++++>      -                               qxxxxxxxxxxs     
+      axxxxxxxxxxx                     +++++>     -                                xxxxxxxxs        
+        axxxxxxxxxw                    +++++>     -                               qxxxxxxs          
+          axxxxxxxx                    +++++>     -                               xxxxxs            
+           xxxxxxxxw                  +++++>      -                              qxxxs              
+           axxxxxxxx                  +++++>      -                              xxxx               
+            xxxxxxxxw                 +++++>     -                              qxxxs               
+            axxxxxxxx                 +++++>     -                              xxxs     qxxxxxxw   
+             xxxxxxxx                 +++++>     -                              xxs   qxxxxxxxxxxw  
+    _ _ _    #xxxxxxx                 +++++>     -                              as   qxxxxxxxxxxxxxw
+   _     _   #xxxxxxx                 +++++>     -                                  qxxxxxxxxxxxxxxx
+             #xxxxxxx                 ++++>      -                                 qxxxxxxxxxxxxxxx#
+   _  (  _   #xxxxxxx                 ++++>      -                                 xxxxxxxxxxxxxxxx#
+             xxxxxxxx                +++++>      -                                qxxxxxxxxxxxxxxxxx
+EndOfMapdata

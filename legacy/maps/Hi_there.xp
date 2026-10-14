@@ -1,0 +1,156 @@
+
+
+allowshields:no
+playersonradar:yes
+playerstartshielded:yes
+robotsleave:yes
+itemprobmult:1
+maxitemdensity:0.005
+itemafterburnerprob:0
+itemrearshotprob:0
+itemsensorprob:0
+itemtankprob:0
+itemmineprob:0.00000005
+itemmissileprob:0
+itemenergypackprob:0.00000005
+itemcloakprob:0
+itemecmprob:0.0000001
+itemwideangleprob:0.000000001
+itemtransporterprob:0
+
+itemlaserprob:0.0000001
+movingitemprob:1.0
+limitedlives:no
+allowplayerbounces:Yes
+maxobjectwallbouncespeed:40
+
+maxunshieldedwallbouncespeed:200
+
+maxunshieldedplayerwallbounceangle:180
+playerwallbouncebrakefactor:0.70
+objectwallbouncebrakefactor:0.95
+objectwallbouncelifefactor:0.8
+
+shotswallbounce:No
+minesonradar:Yes
+
+mineswallbounce:Yes
+
+mapwidth : 80
+mapheight : 80
+mapname : Hi There     (former Laser Doggy)
+mapauthor : John Denune (Shorty)  (mod. by Tobias Feaux)
+edgewrap : yes
+edgebounce : yes
+
+teamplay : no
+maxrobots : 4
+limitedvisibility : no
+playershielding : no
+gravity : 0
+maxplayershots : 0
+crashwithplayer : no
+
+mapData: \multiline: EndOfMapdata
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                x        x              x                                          
+                x        x              x                                          
+                x        x              x                                          
+                xxxxxxxxxx              x                                                  
+                x        x              x                                          
+                x        x              x                                          
+                x        x              x                                                            
+                                                                                
+                                                                                
+                                                                               
+                                                                                
+                                                                                
+                       
+
+
+
+
+
+   xxxxxxxxxxx       x        x        xxxxxxxxx         xxxxxxxx        xxxxxxxx                              
+        x            x        x        x                 x       x       x
+        x            x        x        x                        x        x
+        x            xxxxxxxxxx        xxxxx              xxxxx          xxxxxx 
+        x            x        x        x                 x     x         x 
+        x            x        x        x                 x      x        x
+        x            x        x        xxxxxxxxx         x       x       xxxxxxxx                                                         
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                    _____                                       
+                                    _____                                       
+                                    __-__                                       
+                                    _____                                       
+                                    _____                                       
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+EndOfMapdata
+
+
+
+
+
+
+
+
+
+

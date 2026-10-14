@@ -1,0 +1,308 @@
+# Created by xplts/editors/edmapedit on Sat Sep 26 06:08:08 1998
+
+robotteam:0
+restrictrobots:true
+reserverobotteam:true
+cloakedexhaust:no
+cloakedshield:yes
+cannonsmartness:1
+cannonspickupitems:no
+ecmsreprogramrobots:yes
+wreckagecollisionmaykill:yes
+gravityvisible:no
+wormholevisible:true
+itemconcentratorvisible:true
+allowsmartmissiles:True
+allowheatseekers:True
+allowtorpedoes:True
+maxminesperpack:2
+minelife:0
+missilelife:0
+baseminerange:5
+shotkillscoremult:1.0
+torpedokillscoremult:1.0
+smartkillscoremult:1.0
+heatkillscoremult:1.0
+clusterkillscoremult:1.0
+laserkillscoremult:1.0
+tankkillscoremult:0.44
+runoverkillscoremult:0.33
+ballkillscoremult:1.0
+explosionkillscoremult:0.33
+shovekillscoremult:0.5
+crashscoremult:0.33
+minescoremult:0.17
+itemdeflectorprob:0.00001
+itemhyperjumpprob:0
+itemphasingprob:0
+initialdeflectors:0
+initialhyperjumps:0
+initialphasings:0
+maxfuel:9533
+maxtanks:8
+maxecms:300
+maxmines:300
+maxmissiles:300
+maxcloaks:300
+maxsensors:300
+maxwideangles:300
+maxrearshots:300
+maxafterburners:15
+maxtransporters:300
+maxdeflectors:300
+maxphasings:300
+maxhyperjumps:300
+maxemergencythrusts:300
+maxlasers:5
+maxtractorbeams:4
+maxautopilots:300
+maxemergencyshields:300
+allowviewing:false
+rounddelay:0
+maxroundtime:0
+
+mapname : > Donkey Kong! (turn on decor)
+mapauthor : Vincent (www-personal.ksu.edu/~rohmon/xpmaps/)
+mapwidth : 100
+mapheight : 100
+extraborder : no
+edgewrap : no
+edgebounce : yes
+losemass : yes
+gravity : -2.0
+gravitypoint : 0,0
+gravityangle : 90
+gravitypointsource : no
+gravityclockwise : no
+gravityanticlockwise : no
+shotsgravity : no
+limitedvisibility : no
+minvisibilitydistance : 0
+maxvisibilitydistance : 0
+shotswallbounce : no
+ballswallbounce : yes
+mineswallbounce : yes
+itemswallbounce : yes
+missileswallbounce : no
+sparkswallbounce : yes
+debriswallbounce : yes
+playerwallbouncebrakefactor : 0.35
+objectwallbouncebrakefactor : 0.99
+robotstalk : no
+robotsleave : yes
+robotleavelife : 50
+robotleavescore : -90
+robotleaveratio : -5
+allowshipshapes : yes
+shipmass : 16
+shotmass : 0.2
+shotspeed : 30
+shotlife : 15
+firerepeatrate : 1
+maxplayershots : 3
+maxoffensiveitems : 50
+maxdefensiveitems : 50
+loseitemdestroys : no
+initialfuel : 1750
+initialtanks : 0
+initialecms : 1
+initialmines : 1
+initialmissiles : 0
+initialcloaks : 0
+initialsensors : 0
+initialwideangles : 0
+initialrearshots : 0
+initialafterburners : 1
+initialtransporters : 0
+initiallasers : 0
+initialemergencythrusts : 1
+initialtractorbeams : 0
+initialautopilots : 2
+initialemergencyshields : 1
+allowshields : no
+shieldeditempickup : yes
+shieldedmining : yes
+playerstartsshielded : yes
+wallbouncefueldrainmult : 0.2
+wallbouncedestroyitemprob : 0
+maxshieldedwallbouncespeed : 250
+maxunshieldedwallbouncespeed : 150
+maxshieldedplayerwallbounceangle : 180
+maxunshieldedplayerwallbounceangle : 180
+destroyitemincollisionprob : 0
+dropitemonkillprob : 0.9
+detonateitemonkillprob : 0.1
+allownukes : no
+allowclusters : yes
+nukeclusterdamage : 1
+allowmodifiers : yes
+allowlasermodifiers : yes
+laserisstungun : no
+ecmsreprogrammines : yes
+missilesonradar : yes
+minesonradar : yes
+nukesonradar : yes
+distinguishmissiles : yes
+identifymines : yes
+minefusetime : 0
+maxmissilesperpack : 3
+nukeminsmarts : 4
+nukeminmines : 2
+movingitemprob : 1.0
+maxobjectwallbouncespeed : 10000
+objectwallbouncelifefactor : 1.0
+itemconcentratorradius : 2
+itemconcentratorprob : 1
+itemprobmult : 0.05
+maxitemdensity : 0.01
+itemenergypackprob : 0
+itemtankprob : 0
+itemecmprob : 0
+itemmineprob : 1.0
+roguemineprob : 1.0
+itemmissileprob : 0
+rogueheatprob : 0
+itemcloakprob : 0
+itemsensorprob : 0
+itemwideangleprob : 0
+itemrearshotprob : 0
+itemafterburnerprob : 0.0000001
+itemtransporterprob : 0
+itemlaserprob : 0
+itememergencythrustprob : 0
+itemtractorbeamprob : 0
+itemautopilotprob : 0
+itememergencyshieldprob : 0
+oneplayeronly : no
+allowplayerkilling : yes
+allowplayercrashes : no
+allowplayerbounces : yes
+limitedlives : no
+playersonradar : yes
+teamplay : no
+teamassign : yes
+teamimmunity : yes
+reset : yes
+lockotherteam : yes
+targetkillteam : yes
+targetteamcollision : no
+targetsync : no
+treasurekillteam : no
+treasurecollisiondestroys : yes
+treasurecollisionmaykill : no
+treasuresonradar : yes
+timing : yes
+racelaps : 2
+checkpointradius : 6
+friction : 0
+framespersecond : 12
+reporttometaserver : yes
+idlerun : yes
+noquit : yes
+gameduration : 0
+contactport : 15345
+denyhosts : no
+plockserver : no
+
+mapData: \multiline: EndOfMapdata
++++++++++++++++++++++++++++++++<b  b  b  b                                  mmmmmmmmmmmmmmmmmmmmmm+<
+kkkkkkkkk                mmmmm+<bbbb  bbbb          tby                        mmmmmmmmmmmmmmmmmmm+<
+kkkkkkk                   mmmm+<b  b  b  b        thbbbgy                         mmmmmmmmmmmmmmmm+<
+kkkkk                      mmm+<b  b  b  b        h gbh h                            mmmmmmmmmmmmm+<
+kkk                         mm+<bbbb  bbbb           b                                  mmmmmmmmmm+<
+k                      g g   m+<b  b  b  b   (    tbbbbby                                  mmmmmmm+<
+                     g  tby   +<b  b  b  b  (F(  th bbb gy                                    mmmm+<
+ bbb   bbb             bbbbb   <bbbb  bbbb   (     tbbby                                         m+<
+biiib biiib         g b bb(b    b  b  b  b        tbbbbby                                         mm
+bi%ib bi%ib           b gbbbby  b  b  b  b          b b                                           mm
+biiib biiib       g b gy tbbbb  bbbb  bbbb         tb by                                          mm
+biiib biiib          y gbbh     b  b  b  bxxxxxxxxxxxxxxxxb  b                                    mm
+ bbb   bbb       g  b    gbbbh  b  b  b  baw  qsaw  qsaw  bbbb                                    mm
+                    gy y        bbbb  bbbb<awqs  awqs  awqbiib                                    mm
+ bbb   bbb       b   b   y      b  b  b  bxxxxxxxxxxxxxxxxbbbb                                    mm
+biiib biiib    t    tbb y kkk   b  b  b  b                b  b                                    mm
+bi%ib bi%ib     b  bbbgy kbbby  bbbb  bbbb                bbbb                                    mm
+biiib biiib  tb  tbbb    bbhkk  b  b  b  b                biib                                    mm
+biiib biiib bb   bb   y  kbykk  b  b  b  b                bbbb                     E              mm
+ bbb   bbb  gbby    bbby kgbbh  bbbb  bbbb                b  b                                    mm
++++++++++++  gbbb   gbbbb kkk   b  b  b  b                bbbb                                    mm
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw        biib                                    mm
+aw  qsaw  qsaw  qsaw  qsaw  qsaw  qsaw  qsaw  qsaxxxxxxxxxxxxxxw                                  mm
+ awqs  awqs  awqs  awqs  awqs  awqs  awqs  awqs  aw  qsaw  qsawaxxxxxxxxxxxxxxw                   mm
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxwawqs  awqs  aw  qsaw  qsaw axxxxxxxxb  bxxx     mm
+     +mm                                        axxxxxxxxxxxxxwawqs  awqs  awqsaw  qsabbbbaw      mm
+    +mm                                                       axxxxxxxxxxxxxxx  awqs  biib aw     mm
+   +mm                                                                       axxxxxxxxbbbbxxx     mm
+  +mm                #-#                                                              b  b        mm
+ +mm                 ###                                                              bbbb        mm
++mm                   b                                                               biib        mm
+mm                    b       D                                                       bbbb        mm
+mm                                                                                    b  b        m+
+mm                                                                                    bbbb        ++
+mm                                                                                    biib       ++<
+mm                                                                           qxxxxxxxxxxxxxxxxxxxxxx
+mm                                                    qxxxxxxxb  bxxxxxxxxxxxxsaw  qsaw  qsaw  qsaw 
+mm                             qxxxb  bxxxxxxxxxxxxxxxxs qsaw biibaw  qsaw  qs  awqs  awqs  awqs  aw
+mm      xxxb  bxxxxxxxxxxxxxxxxsqsabbbbsaw  qsaw  qsaw  qs  awbbbb awqs  awqsqxxxxxxxxxxxxxxxxxxxxxx
+mm      aw bbbbaw  qsaw  qsaw  qs  biib  awqs  awqs  awqxxxxxxb  bxxxxxxxxxxxxs              mm+    
+mm       awbiib awqs  awqs  awqsqxxbbbbxxxxxxxxxxxxxxxxs                                      mm+   
+mm      xxxbbbbxxxxxxxxxxxxxxxxxs  b  b                                                        mm+  
+mm         b  b                    bbbb                                                         mm+ 
+mm         bbbb                    biib                                                          mm+
+mm         biib                    bbbb                                                           mm
++m         bbbb                    b  b                                                           mm
+++         b  b                    bbbb                       b  b                                mm
++++        bbbb                    biib                       bbbb                                mm
+>+++       biib                    bbbb                       b  b                                mm
+xxxxxxxxxxxxxxxxxxxxxxxxw          b  b                       bbbb                                mm
+aw  qsaw  qsaw  qsaw  qsaxxxxxxxxxxxxxxxxxxxxxxw              b  b                                mm
+ awqs  awqs  awqs  awqs  aw  qsaw  qsaw  qsaw axxxxxb  bxxxxxxxxxxxxxxw                           mm
+xxxxxxxxxxxxxxxxxxxxxxxxw awqs  awqs  awqs  aw qsaw biibaw  qsaw  qsawaxxxxxxxxxxxxxxxb  bxxx     mm
+     +mm               axxxxxxxxxxxxxxxxxxxxxxxs  awbbbb awqs  awqs  aw qsaw  qsaw  qsbbbb qs     mm
+    +mm                                       axxxxxb  bxxxxxxxxxxxxxxxqs  awqs  awqs biibqs      mm
+   +mm                                              bbbb              axxxxxxxxxxxxxxxbbbbxxx     mm
+  +mm                                               biib                              b  b        mm
+ +mm                                                bbbb                              bbbb        mm
++mm                                                 b  b                              biib        mm
+mm                                  C               bbbb                              bbbb        m+
+mm                                                  biib                              b  b        ++
+mm                                                  bbbb                              bbbb       +++
+mm                                                  b  b                              biib      +++<
+mm                                                  bbbb                    qxxxxxxxxxxxxxxxxxxxxxxx
+mm                                                  biiqxxb  bxxxxxxxxxxxxxxxw  qsaw  qsaw  qsaw  qs
+mm                              qxxxxxxxxxxxxxxxxxxxxxxs qbiib qsaw  qsaw  qsawqs  awqs  awqs  awqs 
+mm      xxxb  bxxxxxxxxxxxxxxxxxxsaw  qsaw  qsaw  qsaw  qsbbbbqs  awqs  awqsqxxxxxxxxxxxxxxxxxxxxxxx
+mm      aw biibaw  qsaw  qsaw  qs  awqs  awqs  awqs  awqxxb  bxxxxxxxxxxxxxxxs               mm+    
+mm       awbbbb awqs  awqs  awqsqxxxxxxxxxxxxxxxxxxxxxxs                                      mm+   
+mm      xxxb  bxxxxxxxxxxxxxxxxxxs                                             #-#             mm+  
+mm         bbbb                                                                ###              mm+ 
+mm         biib                                                                 b                mm+
++m         bbbb                                                                 b                 mm
+++         b  b                                           b  b                         B          mm
++++        bbbb                                           bbbb                                    mm
+>+++       biib                                           b  b                                    mm
+xxxxxxxxxxxxxxxxxxxxxxxxw                                 bbbb                                    mm
+aw  qsaw  qsaw  qsaw  qsaxxxxxxxxxxxxb  bxxxxxxw          b  b                                    mm
+ awqs  awqs  awqs  awqs  aw  qsaw  qsbiibqsaw axxxxxxxxxxxxxxxxxxxxxxxw                           mm
+xxxxxxxxxxxxxxxxxxxxxxxxw awqs  awqs bbbbs  aw qsaw  qsaw  qsaw  qsawaxxxxxxxxxxxxxxxxb  bxxx     mm
+                       axxxxxxxxxxxxxb  bxxxxxxs  awqs  awqs  awqs  aw  qsaw  qsaw  qsbiib qs     mm
+      t                                       axxxxxxxxxxxxxxxxxxxxxxxwqs  awqs  awqs bbbbqs      mm
+        h                                                            axxxxxxxxxxxxxxxxb  bxxx     mm
+          g                                                                           bbbb        mm
+      g  t                                                                            biib        mm
+       h                                                                              bbbb        mm
+     y   y                                                                            b  b        m+
+     g h h                                                                            bbbb        ++
+                                                                                      biib       +++
+     !    !      A                                                                    bbbb      +++<
+     !iiii!                                                                           b  b qxxxxxxxx
+     !))))!                          b  b                                         qxxxxxxxxsqsaw  qs
+     !$$$$!                          bbbb                                 qxxxxxxxs  qsaw  qs  awqs 
+     !____!                          b  b                        qxxxxxxxxxs  qsaw  qs  awqxxxxxxxxx
+     !iiii!                          bbbb               qxxxxxxxxxsaw  qsaw  qs  awqxxxxxxxxs       
+     !!!!!!                          b  b       qxxxxxxxxsqsaw  qs  awqs  axxxxxxxxs                
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs qsaw  qs  awqs qxxxxxxxxs                        
+aw  qsaw  qsaw  qsaw  qsaw  qsaw  qsaw  qsaw  qsawqs  awqxxxxxxxxxs                                 
+ awqs  awqs  awqs  awqs  awqs  awqs  awqs  awqs qxxxxxxxxs                                          
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs                                                  
+EndOfMapdata

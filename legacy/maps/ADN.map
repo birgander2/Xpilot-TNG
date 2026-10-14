@@ -1,0 +1,264 @@
+# Created by xmap on Sat May 10 21:17:15 1997
+
+# rajoute aux donnees de xmapedit
+allowplayerbounces:yes
+playerwallbouncebrakefactor:0.5
+maxshieldedwallbouncespeed:150
+maxunshieldedwallbouncespeed:150
+maxshieldedplayerwallbounceangle:180
+maxunshieldedplayerwallbounceangle:180
+playerstartsshielded:yes
+limitedlives:no
+racelaps:3
+friction:0.023
+allowshields:no
+allowplayercrashes:no
+firerepeatrate:2
+roguemineprob:0.0
+itemmineprob:0.0
+maxmissilesperpack:2
+itemprobmult:0.95
+initialfuel:3000
+initialtanks:2
+initialautopilots:2
+initialecms:4
+initialafterburners:2
+initialtractorbeams:4
+reporttometaserver:yes
+# donnees d'origine
+allownukes:yes
+allowclusters:yes
+allowmodifiers:true
+allowlasermodifiers:true
+checkpointradius:10
+# donnees crees par xmapedit
+
+mapwidth : 200
+mapheight : 200
+mapname : ADN v1.3
+mapauthor : Gorthyn  sg@depinfo.u-bourgogne.fr
+edgewrap : no
+edgebounce : no
+teamplay : no
+oneplayeronly : no
+timing : yes
+maxrobots : 0
+limitedvisibility : no
+playershielding : no
+shipmass : 12
+gravity : 0
+gravityangle : 0
+gravitypoint : 0,0
+gravitypointsource : no
+gravityclockwise : no
+gravityanticlockwise : no
+shotmass : 0.01
+shotspeed : 50
+losemass : no
+maxplayershots : 20
+shotsgravity : no
+crashwithplayer : no
+playerkillings : yes
+
+mapData: \multiline: EndOfMapdata
+xx(((((((((((((((((((((((xxxxxxxxxxxxxxxxxxxxxxxxxx++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++xxxxxxxxxxxxxxxxxxx+++++++++++++++++++++++++++++++++++++++++++++++++++++xxxxxxxxxxx
+xx(((((((((((((((((((((((xxx xxxxxxxx++++++++++++++++++++++++++++++++++++++++++++++++++++++++xxxxxxxxxxxxxxxxxxxxx+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++xxxxxxx
+xx(((((((((((((((((((((((xxxxxxxxxx+++++++++++++++++++++++++++++++++++++++++++++++++++++++++sc                   cax++++++++++++++++++++++++++xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx+++++++++++xxxxx
+xx(((((((((((((((((((((((xxxxxxxxx+++++xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx+++++++++++++++++++xs                        ax++++++++++++++++++xxxxxs                                          axx+++++++++xxxx
+xx(((((((((((((((((((((((xxxxxxxx++++xsc                              ca+++++++++++++++++s                            a++++++++++++++++sc c c                                              a+++++++++xxx
+xx(((((((((((((((((((((((xxxxxxx+++xs                                   a+++++++++++++++s                              a++++++++++++++s                                                     a+++++++++xx
+xx(((((((((((((((((((((((xxxxxx+++s                                      a+++++++++++++s                                a++++++++++++x                                                       a+++++++++x
+xxw((((((((((((((((((((((xxxxx+++s                                        x+++++++++++s                                  a+++++++++++s                                                        a+++++++++
+xxx<<<<<<<<<<(>>>>>>>>>>qxxxx+++s                                         a++++++++++s                                    x+++++++++s                                                          a++++++++
+xxs<<<<<<<<<< >>>>>>>>>>xxxx+++s                                           a++++++++s                                     a++++++++s                                                            a+++++++
+xxw<<<<<<<<<< >>>>>>>>>>axx+++s                E                            x++++++s                    G                  a++++++x                                                              a++++++
+xxx<<<<<<<<<< >>>>>>>>>>qx+++s                                              a+++++s                                         a+++++s                                                               a+++++
+xxs<<<<<<<<<< >>>>>>>>>>x+++s                                                a+++s                                           a+++s                                                                 x++++
+xxw<<<<<<<<<   >>>>>>>>>a++s                                                  axs                                             x+x                                                                  a++++
+xxx<<<<<<<<<   >>>>>>>>>q+xf                                                   c                                              axs                                                                   ax++
+xxs<<<<<<<<<   >>>>>>>>>x+x                                                                                                    c                                                         C            x+
+xxw<<<<<<<<<   >>>>>>>>>a+x                                                                                                                                                                           x+
+xxx<<<<<<<<     >>>>>>>>q+xf                                                                       r        r                                           qxxxxxxxxxxxxxxxxw                            a+
+xxs<<<<<<<<     >>>>>>>>x+x                                                                       qxxxxxxxxxxw                                        qxxxxxxxxxxxxxxxxxxxw                            x
+xxw<<<<<<<<     >>>>>>>>a+x                       r    r                                        qxxxxxxxxxxxxxxw                                    qxxxxxxxxxxxxxxxxxxxxxxxw                          x
+xxx<<<<<<<<     >>>>>>>>q+xf                     qxxxxxxw                                      qxxxxxxxxxxxxxxxxw                                  qxxx         x      xxxxxxxw                        x
+xxs<<<<<<<<     >>>>>>>>x+x                     qxxxxxxxxxw                                   qxxxxxxxxxxxxxxxxxxw                                qxxxxx        x      xxxxxxxxxw                      x
+xxw<<<<<<<<     >>>>>>>>a+x                    qxxxxxxs  axxw                                qxxxxxxxxxxxxxx xxxxxw                             qxxxxxxxxs    xxx      xxxxxxxxxxw                     x
+xxx<<<<<<<       >>>>>>>q+x                   qxxxxxxx    xxxw                              qxxx          axxxx x xw                           qxxxxx xxx     xxxxs qxxxxxxxxxxxxxw                    x
+xxs<<<<<<<       >>>>>>>x+x                  qxxxxxxxs    axxxxw                            xxxx            a xxxxxxw                        qxxxxxxxxxxx     xxxx  xxxxxxxxxxxxxxxw                   x
+xxw<<<<<<<       >>>>>>>a+x                  xxxxxxxs  q   xxxxx                           qxxxxxx   xxxxw   xxxxxxxx                       qxxxxxxxxxxxs  qx  xx  qxxxxxxxxxxxxxxxxw                  x
+xxx<<<<<<<       >>>>>>>q+x                 dxxxxxxs  qx   xxxxxw                         dxxxxxxx   xxxxxw  xxxxxxxxw                     qxxxxxxxxxxxx   xx  xx  xxxxxxxxxxxxxxxxxxw                 x
+xxs<<<<<<<       >>>>>>>x+x                  xxxxxx  qxx   xxxxxxw                         xxxxxxs   xxxxxx  xxxxxxx xf                   dxxxxxxxxxxxxx  qxx  xx  xxxxxxxxxxxxxxxxxxxw               qx
+xx<<<<<<<<       >>>>>>>x+x                  xxxxxs  xxx   xxxxxxxw                        xxxxxx    xxxxxx  xxxxxxxxxf                   dxxxxxxxxxxxxs  xxx      xxxxxxxxxxxxxxxxxxxx>             <xx
+xxw<<<<<<         >>>>>qx+x                 dxxxxx         xxxxxxxxf                      dxxxxxx    xxxxxx  xxxxxxxxxf                   dxxxxxxxxxxxx   xxx     qxxxxxxxxxxxxxxx xxxx>             <xx
+xxxw<<<<<         >>>>qxx+x                  xxxxs         xxxxxxxxf                       xxxxxx    xxxxxs  xxxxxxxxs                     axx xxxxxxxs  qxxxx    xxxxxxxxxxxxxxxxxxxxx>             <xx
+xxxxxxxw<         >qxxxxx+x                  xxxs          xxxxxxxs                        xxxxxx    xxxxs   xxxxxxxx                       axxxxxxx       xx      xxxxxxxxxxxxxxxxxxxx>             <xx
+xxxxxxxx<         >xxxxxx+x                 dxxx  qxxxxxx  xxxxxxs                        dxxxxxx   qxxxs   qxxxxxxxx                        axx x x       xx      xxxxxxxxxxxxxxxxxxxx>             <xx
+xxxxxxxs<         >axxxxx+x                  xx     xxx      xxxs                          axxxxs   xxxs   qxxxxxxxxs                         axxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx>             <xx
+xxxff<<<<         >>>>ddx+x                  xx     xxx      xxx                            ax            qxxxxxxxxx                            axxxxxxxxxxxxxxxxxxx++++++++xxxxxxxxxxx>             <xx
+xxxf <<<<         >>>> dx+x                 dxxxxxxxxxxxxxxxxxxs                             x           qx xxxxxxxs                              axxxxx++++++++++++++++++++++xxxxxxxxx>             <xx
+xxxf <<<<         >>>> dx+xf                 axxxxxxxxxxxxxxxxs                              axxxxxxxxxxxxxxxxxxxs                                     axxxxxxxxxxxx++++++++++++xxxxxxx>             <xx
+xxx f<<<<         >>>>d x+x                   axxxxxxxxxxxxxxs                                axxxxxxxxxxxxxxxxxs                                                  axxx++++++++++xxxxxx>             <xx
+xxxf <<<<         >>>> dx+x                     axxxxxxxxxxs                                   axxxxxxxxxxxxxxxs                                                      ax+++++++++xxxxxx>             <xx
+xxxf <<<<         >>>> dx+xf                      axxxxxs                                       axxxxxxxxxxxxxs                                                         a+++++++++xxxxx>             <xx
+xxx f<<<<         >>>>d x+x                        c   c                                         c           c                                                           ax++++++++xxxx>             <xx
+xxxf <<<<         >>>> dx+x                                                                                                    r                                           a++++++++xxx>             <xx
+xxxf <<<<         >>>> dx+xf                                                  r                                               qxw                                           a+++++++xxx>             <xx
+xxx f<<<<         >>>>d x+xw                                                 qxw                                              x+x                                            a+++++++xx>             <xx
+xxxf <<<<         >>>> dx++x                                                q++xw                                            qx+xw                                            a++++++xx>             <xx
+xxx f<<<<         >>>>d x+++w                                              q++++xw                                          qx+++xw                 H                          x+++++xx>             <xx
+xxxf <<<<         >>>> dx++++w                                            q++++++xw                                         x+++++x                                            ax+++++x>             <xx
+xxx f<<<<         >>>>d x+++++w                                          q+++++++++w                                       q+++++++w                                            a+++++x>             <xx
+xxxf <<<<         >>>> dx++++++w                F                       q+++++++++++w                   D                 q+++xxx+++w                                            x++++x>             <xx
+xxxf <<<<         >>>> dx+++++++w                                     qx+++++++++++++w                                   q+++xxxxx+++w                                           a++++x>             <xx
+xxx f<<<<         >>>>d x++++++++w                                  qx+++xxxxxxxxx++++w                                 q+++xxxxxxx+++w                                           x+++x>             <xx
+xxxf <<<<         >>>> dx+++++++++w                               qx++++scccccccccax+++w                               q++++xxxxxxx++++w                                          a+++x>             <xx
+xxxf <<<<         >>>> dx++++++++++w                             q++++xscccccccccccax+++w                             q+++++xxxxxxxx++++w                                          x++x>             <xx
+xxx f<<<<         >>>>d x+++++++++++w                         qxx++++sccccccccccccccax+++xw                         qx+++++xxxxxxxxxx++++w                                         x++x>             <xx
+xxxf <<<<         >>>> dx++++++++++++xxw                   qxx++++++s                ax++++xw                     qx+++++++xxxxx xxxxx++++xxw               qxxxxw                 x++x>             <xx
+xxxf <<<<         >>>> dx+++++++++++++++wr             rqxx+++++++xs                  ax+++++xxwr              rqx++++++++xxxxxxxxxxxxx++++++xxxw         qxx++++xw                a++x>             <xx
+xxxff<<<<         >>>>ddx++++++++++++++++xxxxxxxxxxxxxxx++++++++xs>                    ax+++++++xxxxxxxxxxxxxxxxx+++++++xxxxxxxxxxxxxxx+++++++++xxxxxxxxxxx+++++++x                 x+x>             <xx
+xxxxxxxw<   > <   >qxxxxx++++++++++++++++++++++++++++++++++++++s>>                      ax++++++++++++++++++++++++++++xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx+++++++++++++x                 x+x>             <xx
+xxxxxxxx<   > <   >xxxxxx++++++++++++++++++++++++++++++++++++xs>                         axxx++++++++++++++++++++xxxxs                              axxx++++++++++s                 x+x>             <xx
+xxxxxxxx<   > <   >xxxxxx++++++++xxxxxxxxxxxxxxxxxxxxxxxxxxxs>>                             ax++++++++++++++++++xxs                                     a++++++++s                  x+x>             <xx
+xxxxxxxx<   > <   >xxxxxx++++++xs                         >>>                                axxx++++++++++++++xs                                        a++++++s                   x+x>             <xx
+xxxxxxxx<   > <   >xxxxxx+++++s                                                                 axxx++++++++++xs                                          a++++s                    x+x>             <xx
+xxxxxxxx<   > <   >xxxxxx++++s                                                                     ax++++++++xs                                            a++x                     x+x>             <xx
+xxxxxxxx<   > <   >xxxxxx+++s                                                                       ax+++++++s                     N                        a+x                     x+x>             <xx
+xxxxxxxx<   > <   >xxxxxx++s                                      <<<qxxxxxxxxxxxxxxw                ax+++++x                                                xx                     x+x>             <xx
+xxxxxxxx<   > <   >xxxxxx+s                                  <<<<<qxxs              aw                ax+++xs                                                ax                     x+x>             <xx
+xxxxxxxx<   > <   >xxxxxxs                                <<<qxxxxs                  axxw              ax++x                                                  x                     x+x>             <xx
+xxxxxxxx<   > <   >xxxxxx                  qxxxxxxxxxxxxxxxxxs                          aw              xxxs                                                  x                     x+x>             <xx
+xxxxxxxs    > <    axxxxs       T         qs                                             aw             axx                 qxw  qxw                          x< >                  x+s               ax
+xxxxxxx<    > <    >xxxx>                qs                                               aw             ax                qxxx  xxxxxxxxxxxxxw               x< >                  xx>               <x
+xx xxxx<    > <    >xxxx>               qs                                                 aw             x                xxxx  xxx((((((((((aw              x< >                  xx>               <x
+xxxxxxx<    > <    >xxxx>              qs                                                   aw            x               qxxxs  axs    -    -(aw             x< >                  xx>               <x
+xxxxxxx<    > <    >xxxx>             qs                        Q                            aw           x               xs(                  (x             x< >                  xx>               <x
+xxxxxxx<    > <    >xxxx>            qs                                                       aw          x               x(-       +          (x             x< >                  xx>               <x
+xxxxxxx<    > <    >xxxx>           qs                                                         x          x               x(                 + (x             x< >                  xx>               <x
+xxxxxxx<    > <    >xxxx>          qs                                qxxxxxxxxxxw              x          x               xw(         %        (x             x< >++++++++++++++++++xx>               <x
+xxxxxxx<    > <    >xxxx>         qs                      qxxxxxxxxxxs++++++++++aw             x          x               ax(  +               (x             x< >++++++++++++++++++xx>               <x
+xxxxxxx<    > <    >xxxx>        <x                  qxxxxxxs                   +aw            aw         x                x(             +    (x             x< >                  xx>               <x
+xxxxxxx<    > <    >xxxx>        <x                qxs                           +aw            x         aw               x((     +          -(x             x< >                  xx>               <x
+xxxxxxx<    > <    >xxxx>        <x               qs                              +aw           x          x               axw((-             (qx             x< >                  xx>               <x
+xxxxxxs     > <    >xxxx>        <x              qs                                +x           aw         aw                axw((((((-      -(xs             x< >------------------xx>               <x
+xxxxxx<     > <     axxx>        <x             qs                                 +xw           x          aw                 axxxxxw((((((((qx              x< >------------------xx>               <x
+xxxxxx<     > <     >xxx>        <x            qs                                  +axw          x           aw                      axxxxxxxxxs              x< >                  xx(               (x
+xxxxxx<     > <     >xxx>        <x           qx                                    +ax          aw           x                                               x< >                  xx((             ((x
+xxxxxx<     > <     >xxx>        <x           xs                                    ++xw          x           x                                               x< >                  xx(((           (((x
+xxxxxx<     > <     >xxx>        <x          qx                                      +axw         x           aw                                              x< >++++++++++++++++++xx((((         ((((x
+xxxxxx<     > <     >xxx>        <x          xs                                       +axw        aw           aw                                             x< >++++++++++++++++++xx(((((       (((((x
+xxxxxx<     > <     >xxx>        <x          x            qxxxsxxxxxxxw                +ax         aw           aw                                            x< >                  xx((((((     ((((((x
+xxxxxx<     > <     >xxx>        <x         qs           qxs++++++++axxxx               +xw         aw           axw                                          x< >                  xx(((((((   (((((((x
+xxxx x<     > <     >xxx>        <x         x           qxs+        +++++               +axw         aw            aw                                         x< >                  xx(((((((   (((((((x
+xxxxxx<     > <     >xxx>        <x         x           xx+                              +ax          a             aw                                        x< >------------------xx(((((((   (((((((x
+xxxxxx<     > <     >xxx>        <x         x          qxs+                               +x           w     S       axw                                      x< >------------------xx(((((((   (((((((x
+xxxxxx<     > <     >xxx>        <x         x          xs+                                +x           x               axxw                                   x< >                  xx(((((((   (((((((x
+xxxxxx<     > <     >xxx>        <x         x          x+       R                         +x           aw               axxxxw                                x< >                  xx((((((     ((((((x
+xxxxxx<             >xxx>        <x         x          x+                                 +x            x                  axxxxw        xw                   x< >                  xx(((((       (((((x
+xxxxxs               axx>        <x         x          x+                                 +x            aw                   axxxxw qxxw axxxw                x< >++++++++++++++++++xx((((         ((((x
+xxxxx<               >xx>        <x         x         qx+         >>>                    +qx             x                    axxxx xxxxw   axw               x< >++++++++++++++++++xx(((           (((x
+xxxxx<               >xx>        <x         x         xs+        >qxw>                  +qxs             x                     axxx a#xxxxxw axw              x< >                  xx((             ((x
+xxxxx<               >xx>        <x         x         x+         >axxxw                 +xx              x                      # xw axxxxxxw xx              x< >                  xx(               (x
+xxxxx<               >xx>        <x         x         x+          >>axxw               +qxs              xw                     #x#x    axx#x #xw             x< >                  xs                 x
+xxxxx<               >xx>        <x         x         x+               axxxw        +++qxx               ax          xw         #xxs qxw xxxs xxx             x< >------------------x+                 x
+xxxxx<               >xx>        <x         x         x+                 axxxxxw++++qxxxxs                x          x#         #s  qx#x axs qxxx!           !x< >------------------xw                 a
+xxxxx<               >xx>        <x         x         xw                      axxxxxxs                    x          x#         # qxxxxxw   qxxxs !         ! x< >                  xx                 +
+xxxxx<               >xx>        <x         x         xx                                                  x          x#    #    # x#xx#xs   axxx   !       !  x< >                  xs                 q
+xxxxx<               >xx>        <x         x         axw                                                qs          x#    #    # axxxxs qxw xxx    !     !   x< >                  x+                 x
+xxxxx<               >xx>        <x         x          xxw                                               x           x#    #    #w       x#x xxs     !   !    x< >++++++++++++++++++xw                 a
+xxxxs<               >ax>        <x         x          axxw                                              x           x#    #    #xxw qxw x#x xs       ! !     x< >++++++++++++++++++xx                 +
+xxxx<<               >>x>        <x         x           axxw                                            qs           x#    #    #x#x x#x axs x         !      xxxw                  xs                 q
+xxxx<<               >>x>        <x         x            axxw                                           x            x#    #    #xxx xxxw   qs                xxxx                  x+                 x
+xxxx<<               >>x>        <xw        aw             axxw                                         x            x#    #    #xxx xxxx qxx                 xxxs                  xw                 a
+xxxx<<               >>x>         ax         x               axxxw                                     qs            x#    #    #xxs axxx xxx                 xxx                   xx                 +
+xxxx<<               >>x>         <x         aw                 axxxxw                                qs             x#    #    #xs   axs axs                 xxx                   xs                 q
+xxxx<<               >>x>         <x          x                     axxw                             qs              x#    #    xs                            xxs                   x+                 x
+xxxx<<               >>x>         <xw         aw                       axxxxw                       qs               x#    #    x                             xx                    xw                 a
+xxxx<<               >>x>          ax          aw                           axxxxxxxxw            qxs                x#    #    x                             xx                    xx                 +
+xxxx<<               >>x>          <xw          aw                                   axxxxxxxxxxxxs                  x#         x                             xs                    xs                 q
+xxxx<<               >>x>           ax           axw                                                                 xs         x                             x          I          x+                 x
+xxxx<<               >>x>            aw            axw                                                              qs          x                             x                     x+                 a
+xxxx<<               >>x>             xw             aw                                                            qs           x                            qs                     xw                 +
+xxxx<<               >>x>             axw             axxw                                                        xs            x                           qx                      xx                 q
+xxxx<<               >>x>              axw              axxxw                                                                   x                          qxs                      xs                 x
+xxxx<<               >>x>               axw                axxxxxxw                                                            qx                         qxs                       x+                 a
+xxxx<<               >>x>                axw                     axxxxw                                                       qxs                        q+s                        xw                 +
+xxxx<<               >>x>                 axw                         axxxxw                                                 qxs                        q+s                         xx                 q
+xxxx<<               >>x>                  axw                            axxxxxw                                           qxs                        q+s                          xs                 x
+xxxx<<               >>x>                   xxw                                 axxxxxxxw                                  qxs                        q+s                           x+                 a
+xxxx<<               >>x>                   axxxw        P                              axxxw          qxxxxxxxxxxxxxxxxxxxxs                        q+s                            xw                 +
+xxxx<<               >>x>                    ax++w                                         axxxxxxxxxxxxs                                            x+                             xx                 q
+xxxx<<               >>x>                     x+++xw                                                                                                q+s                             xs                 x
+xxxx<<               >>xw                     x+++++xw                                     qxxxxxxxxxxxxxw                                          xx                              x+                 a
+xxxx<<               >>xxw                    x+++++++w                                   qxxxxxxxxxxxxxxxw                                        q+x                              xw                 +
+xxxx<<               >>xxxw                   x++++++++xw                             xxxxsc c c c c c c caxxxx                                    x+x                              xx                 q
+xxxx<<               >>xxxx                   x++++++++++w                           <<<<<<<<<<<<<<>>>>>>>>>>>>>                                  q++x                              xs                 x
+xxxx<<               >>xxxx                   x++++++++++x                                                                   O                   q++xs               qxw           qx+                 a
+xxxx<<               >>xxxx                   x++++++++++s                                                                   M                  q+++x               qxxx           #xw                 +
+xxxx<<               >>xxxx                   x+++++++++s                                                                                       x+++x             qx###s           #xx                 q
+xxxx<<               >>xxxs                   x++++++++s                                                                                       q++++x           qx###              #xs                 x
+xxxx<<               >>xxxf                   x+++++++s                              >>>>>>>>>>>>>><<<<<<<<<<<<<                              qx++++x           x##                #x+                 a
+xxxx<<               >>xxxw                   x++++++s                                xxxxwr r r r r r r rqxxxx                              qx+++++x          qx#                 #xw                 +
+xxxx<<               >>xxxf       qxw         x+++++s                                     axxxxxxxxxxxxxxxs                                qx++++++xs          xx#                 #xx                 q
+xxxx<<               >>xxxs       x+x         ax+++s                                        >>> >> >> >> >                                q++++++++x          qxx#       q##w      #xs                 x
+xxxx<<               >>xxxf       xxs          x++s                                                                                   qxxx+++++++++x          xxx#      q####w     #x+                 a
+xxxx<<               >>xxxw       xs           x+x                                                                      qxxxxxxxxxxxxxxxxxxxx++++++x          xxx#      ######     #xw                 +
+xxxx<<               >>xxxf       x            x+x                                                                    qxs                    ax++++x          xxx#      ######     #xx                 q
+xxxx<<               >>xxxs       x            xxs                  qxxxxxw                                         qxs                        a+++x          xxx#      a####s     #xs                 x
+xxxx<<               >>xxxf       x            xx                  qxxx+++xxxxxxxxxxxxw     <<< << << << <      qxxxs                           a++x          axx#       a##s      #x+                 a
+xxxx<<               >>xxxw       x            xx                 qxxx+++sc     c    caxxxxxxxxxxxxxxxxxxxxxxxxxs                                a+x           ax#                 #xw                 +
+xxxx<<               >>xxxf       x            xx                qxxx+++s               axxxxx xxxxxxxxxxxxxxs                                    x+w           a##                #xx                 q
+xxxx<<               >>xxxs       x            xx                xxxx++s                 axxxxxxxxx xxxxxxxs                                      a+x            x##               #xs                 x
+xxxx<<               >>xxxf       x            xx               qxxx++s                     a############s                                         xx            ax##              #x+                 a
+xxxx<<               >>xxxw       x            xx              qxxx++s                                                                             x+w            axx             ##xw                 +
+xxxx<<               >>xxxf       x            xx              xxx++x                                                                              x++w            as             #xxx                 q
+xxxx<<               >>xxxs       x            xx              xx+++s                                                                              x++x               qxw        ##xxs                 x
+xxxx<<               >>xxxf       x            xx              xx++x                                                                               x++x               xx##########xxx+                 a
+xxxx<<               >>xxxw       x            xx             qxx++s                                                                               x++x               axxxxxxxxxxxxxxw                 +
+xxxx<<               >>xxxf       x            xx            qxx++xf                                                            qxxxxw             x++x                 axxxxxxxxxxxxx                 q
+xxxx<<               >>xxxs       x            xx            xxx++x                                                          qxxx++++x             x++x                    axx xxx xxs                 x
+xxxx<<               >>xxxf       x            xx            xxx++x                                 K                      qxx+++++++x             x++x                      axxxxx x+                 a
+xxxx<<               >>xxxw       x            xx            xx+++x               r                                     qxxx+++++++++x             x+++w                       axxxxxw                 +
+xxxx<<               >>xx f       x            xx            xx+++x              qxxxxxw                              qx+++xxxxxxxxxxs             x+++x                        axxxxx                 q
+xxxx<<               >>xxxs       x            xx            xx+++xf            qx+++++xxw                          qx+xxxxs                       x++++w                        axxxs                 x
+xxxx<<               >>xxxf       x            xx            xx+++x             x++++++++xxxw                    qxxxxxs                           x+++++w                        xxx+                 a
+xxxx<<               >>xxxw       x            xx            xx+++x             x+++++++++++xxw               qxx+xs                               x++++++w                       axxw                 +
+xxxx<<               >>xxxf       x            xx            xx+++x             xx++++xxxxxxxxxxw         qxxx+++s                                 x+++++++w                       xxx                 q
+xxxx<<               >>xxxs       x            xx            xx+++x             axxxxxs      axxx#########x+++++s                                  x++++++++w                      xxs                 x
+xxxx<<               >>xxxf       x            xx            xx+++xf             c             axxxxxxxxx++++++s                                  qx+++++++++w                     xx+                 a
+xxxx<<               >>xxxw       x            xx            xx+++x                              ax+++++++++++s                <<<<<<            qx+++++++++++xw                   xxw                 +
+xxxx<<               >>xxxf       x            xx            xx+++x                               ax+++++++++s             <<<<>>>>>>           qx++++++++++++++xw                 xxx                 q
+xxxx<<               >>xxxs       x            xx            xx+++x                                ax+++++++s            <<>>>>                 x++++++xxx+++++++xw                xxs                 x
+xxxx<<               >>xxxf       x            xx            xx+++x                                 ax+++++s          <<<>>                     x++++++xxxxx++++++xw               xx+                 a
+xxxx<<               >>xxxw       x            xx            xx+++xf                                 x++++s          <>>>                      q++++++xxxxxxx++++++x               xxw                 +
+xxxx<<               >>xxxxw      x            xx      L     xx+++xw                                 x+++x          <>                       qx+++++++xx xxxxxx++++x               xxx                 q
+xxxx<<       A       >>xxxxxw     x            xx            xxx++++w                                x+++x         <>                       q++++++++++xxxxxxxx++++x               xxs                 x
+xxxx                   xxxxxx     x            xx            xxx+++++w                               x+++x        <>                   qxxxx++++++++++++++xxxx++++xx               xx+                 a
+xxxx                   xxxxxs     x            xx            xxx++++++w                              x+++x       <>                qxxx++++++++++++++++++++xx+++++xx               xxw                 +
+xxxx                   xxxxs      x            xx            xxxx++++++w                             x+++x      <>            qxxxx++++xxxxxxxxxxxxxxx+++++++++++xxx               xxx                 q
+xxxx                   xxxs       x            xx            xxxxx++++++w                            x+++x     <>            qx++++++xxs             ax+++++++++xxxs               xxs                 x
+xxxx                   xxs        x            xx            axxxxx++++++xwr    r    rqxw            x+++x     <>           qx++++xxs                 axxxxxxxxxxxs                xx+                 a
+xxxx                   xs         x            xx             xxxxxx+++++++xxxxxxxxxxxx+x            x+++x     <>          qx+++xxs                     axxxxxxxxs                 xxw                 +
+xxxx                   x          x            xx             axxxxxx+++++++++++++++++++x            x+++x     <>         qx++xxs                                                  xxx                 q
+xxxx                   x         qs           qxx              axxxxxx+++++++++++++++++xs            x+++x     <>        qx++xs                                                    xxs                 x
+xxxx                   x        qs           q++x               xxxxxxxx++++++++++++++xx             x+++x     <>       qx++xs                                                     xx+                 a
+xxxx                   aw      qs           q+++x               axxxxxxxxxxxxxxxxxxxxxxs             x+++x     <>       x++xs                                                      xxw                 +
+xxxx                    aw    qs           q++++x                ax xxxxxxxxxxxxxxxxxxx              x+++x     <>       axxs                                                       xxx                 q
+xxxx                     awU qs           q+++++x                 axxxxxxxxxxxxxxxxxxxs              x+++x     <>                           >>>>>                                  xxs                 x
+xxxx                      axxs           q++++++x                  axxxxxxxxxxxxxxxxxs               x+++x     <>                        >>><<<<<                                  xx+                 a
+xxxx                                    q+++++++x                                                    x+++x     <>                     >>><<<                                      qxxw                 +
+xxxx                                    x+++++++xw                                                   x+++x     <>                    ><<<                   J                     x+xx                 q
+xxxx                                    ax+++++++x                                                  q++++x      <>                  ><                                           qx+xs                 x
+xxxx                                      ax+++++x                                                  x++++x      <>>>               ><                                           qx++x+        B        a
+xxxx                    qxxxxxxw            #xx+++w                                                 x++++x       <<<>>>         >>><                                            x++xxw                 +
+xxxx                   qxxxxxxxxw           #xxx+++w                                               q+++++x          <<<>>>>>>>>><<<                                            qx++xxx                 q
+xxxx                   xxxxxxxxx#           #xxxx+++w                                             q++++++x             <<<<<<<<<                                              qx++xxxs                 x
+xxxx w               q xxxxxxxxx#           #xxxx++++w                                           q++++++++w                                  qxxxxxxxw                      qxx+++xxx+                 a
+xxxx_x w           q x_xxxxxxxxx#           #xxxxx++++w                                         q++++++++++xw                              qx++++++++xw                   qxx++++xxxxw                 +
+xxxxxx_x w       q x_xxxxxxxxxxx#           #xxxxxx++++w                                        x++++++++++++w                            q+++xxxxxxx++w                qxx++++xxxxxxx                 q
+xxxxxxxx_x w   q x_xxxxxxxxxxxxx#           #xxxxxxx++++w                                      q++++++++++++++xxw                       qxxxxxxxxxxxxxxxxxxw         qxx+++++xxxxxxxxs    ) ) ) ) )    x
+xxxxxxxxxx_x x x_xxxxxxxxxxxxxxx#############xxxxxxx+++++w                                 qxxx++++++++++++++++++xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx++++xxxxxxxxxxx+                 a
+xx xxxxxxxxx_x_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx++++++xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx+++++++++++++++++++++++++++++++++++++++++++++++++xxxxxxxxxxx+++++++++++++++++xxxxxxxxxxxxxw+                +
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+EndOfMapdata

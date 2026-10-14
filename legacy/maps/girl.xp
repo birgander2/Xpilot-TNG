@@ -1,0 +1,187 @@
+# Map converted by mapmapper @(#)Version 1.2
+
+mapWidth:            75
+mapHeight:           170
+mapName:             Girl
+mapAuthor:           tk@iesd.auc.dk 25/6-93
+crashWithPayer:      yes
+playerKillings:      yes
+playerShielding:     yes
+limitedVisibility:   no
+teamPlay:            no
+timing:              no
+onePlayerOnly:       no
+limitedLives:        no
+worldLives:          0
+mapData: \multiline: EndOfMapdata
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xs                                                                       ax
+x                                                                         x
+x                                                                         x
+x                                                                         x
+x                         qxxw  qxxxxxw                                   x
+x     @            qxxxxxxxxxxx#xxxxxxxxxxw                               x
+x               qxxs   axxxxxxxxxxxxxxxxxxxxx#xw                          x
+x             qxxs      xxxxxxxxxxxxxxxxxxxxxxxxxxxw           (          x
+x            qw        axs   axxxxxxxxxxxxxxxxxxxxxxxw                    x
+x          qxxxx#xw                axxxxxxxxxxxxxxxxxxw                   x
+x        qxx x  xxxx#w                  axxxxxxxxxs   axw                 x
+x_          xx    xxxxx#xw               xxxxxxxxxxw    s                 x
+xs        qxxxxxxxxxxxxxxxxwqs    @      xxxxxxxxxxxxw                    x
+x         xxxxxxxxxxxxxxxxxxx            xxxxxxxxxxxxxxw                  x
+x         xxxxxxxxxxxxxxxxxxxxw         qxxxxxxxxxxxxxxxx                 x
+x         xxxxxxxxxxxxxxxxxxxxxw       qxxxxxxxxxxxxxxxxxw                x
+x        qxxxxxxxxxxxxxxsc xxxxx      qxxxxxxxxxxxxxxxxxxxx               x
+x      q#xxxxxxxxxxxxxxs   xxxxs     axxxxxxxxxxxxxxx   axxw              x
+x     qxxxxxxxxxxxxxxxs   qxxxs    q    axs  axxxxxxxw    xs              x
+x    qxxxxxxxxxxxxxxxs   qxxs     q           axxxxxx#    s               x
+x   qxxxxxxxxxxxxxxxx    xs      q        @    xxxxxxx#w                  x
+x  qxxxxxxxxxxxxxxxxxw   a      q  a#s        qxxxxxxxxxx       w         x
+x  xs   #xxxxxxxxs  xs         q             qxxxxxxxxxxx#xw_qxxs         x
+x qs  q#xxxxxxxxx   s         q      _      ax xxxxxxxxxxxxxxxxs          x
+x s  qxxxxxxxxxxxw           q  qxxxxxxxw    xxxxxxxxxxxxxxxxxs           x
+x  q#xxxxxxxxs axx          q     ax#xs     qxqxxxxxxxxxxxxxxs            x
+x qxxxxxxxxs    xs         qxx             qxxqxxxxxxxxxxxxxxxxw          x
+x#xxxxxxxxs  x  s         qxxxxx         qxxxxqxxxxxxxxxxxxxxxxxw         x
+xxxxxxxxxs x   s         qxxxxxxxx#xxx#x#xxxxx<xxxxxxxw   axxxxxxw        x
+xxxxxxs x               qxxxxxxxxw       xxxxxxxxxxxxxx#w   axxxxxw       x
+xxxxx   x              qxxxxxxxxxxw      xxxxxxxxxxxxxxxxw    axxx#       x
+x axx   x             qxxxxxxxxxxxxxw     xxxxxxxxxxxxxxxxw    xxx#       x
+x  axw  x            qxxxs xxxxxxxxxxxw       axxxxxs axxxxw  sxxxs       x
+x   ax  x           qxxxs qxxxxxxxxxxxxxxxw      qxs   #xxxs   xxs        x
+x    s  x          qxxxs  xxxxs  axxxxxxxxxxw       axxxxxs    as         x
+x       xw        qxxxs   axxx     axxxxxxxxxxw        axs                x
+x   )   xx       qxxxs     axx  @    ax   axxxxxw        aw               x
+x      qxxw     qxxxx       ax        a     axxxxw   w                    x
+x     qxxxx     xxxxs        a           a    xxxx    w                   x
+x    qxxxxx     xx x          a           a   xxxs      w                 x
+x    a xxxx     xs x                       x qxxs         w               x
+x     xxxxx     x  x                       awcxs            w             x
+x     #xxxx     x  x          _qw           x aw              w           x
+x    #xxxxx     x  x         qxxx#w         x  as              w          x
+x    xxxxxs     a  xw        a#xxxs         x   a               w         x
+x    xxxxs  q      axf         asx          x                 qxx#        x
+x    axxx   aw      aw                     qs          @      a#xs        x
+x     xxx    x       aw                   qs  w                 s         x
+x     axx    aw       axw                qs   aw               s          x
+x      ax     x        axxw           qxxs     aw            qs           x
+x       aw    sw         axxxx#xxx#xxxxs        axw        qxs            x
+x        aw    xw            axxxxxs              axx#xx#xxs              x
+x         aw   xxw                                  axxxxs                x
+x          a   xxxw                      q   w        xs                  x
+x              xxxxw                  qw      xw      x                   x
+x             qxxxxxw               qxs       ax     qs                   x
+x             xxxxxxxw             qxs         axw   x                    x
+x            qxxxxxxxxw           qxs           ax   x                    x
+x           qs xxxxxxax         qxs              x   #                    x
+x           ax xxxxxxxx       qs                 x   x                    x
+x              #xxxxs x      q                   s   xw                   x
+x             qxxxx#  x                              x w        _         x
+x             xxxxxs  x               _              a  w       s         x
+x             xxxxs   s              xs               a  w                x
+x            qxxxs   s              qx x               x  w               x
+x           qxxxs   s              qxs+                a   w              x
+x          qxxxs         q         as          aw       a   w             x
+x          xxxs         q                       xw       a   w            x
+x         qxxs         q                       qxs        xf  w           x
+x        qxs    q     qs                      qxs        dx    w          x
+x      qxxs    qs    qs                     qxs          q  w   w         x
+x     qxs      x     s                    qxs            x  xw   w        x
+x    qs       qs                         qs             qx  xx   x        x
+x             x                         s               ax  x#   #w       x
+x            qs      a                                   a  a# @ #x       x
+x            x        a                                   a  #   #x       x
+x           qs         aw     _     qs                     a x   xx       x
+x           x           axx#xxxxxxxxs                       xx   xs       x
+x           x            axxxxxxxxxs                        xs  qs        x
+x           x             axxx+xxxs                         s  qs         x
+x           x              axxxxxs                         q  qs          x
+x           x               axxxx                          a qs           x
+x           x                 axs                          qxx            x
+x           x                  af                          xxs            x
+x           aw                 q                           xx             x
+x            x                 s                          qxs             x
+x      @     aw           _   q                          qxs              x
+x             x               s                         qxs               x
+x             aw             q                         qxs                x
+x              x             s                        qxs                 x
+x              aw           q                        qxs                  x
+x               x           s                       qxs                   x
+x               aw    @    q                       qxs                    x
+x                x         s                      qxs                     x
+x                aw       q                     rqxs                      x
+x                 xw      s                    d#xs                       x
+x                 ax     q                     qxs                        x
+x                  xw    s                    qxs                         x
+x                  ax   q                    qxs                          x
+x                   xw  s                   qxs                           x
+x                   ax q                   qxs                            x
+x                    xxs                  qxs                             x
+x                    ax                  qxs                              x
+x                     x                 qxs                               x
+x                    qx                qxs                                x
+x                    xx  (            qxs                                 x
+xf                   xx    w         qxx                                  x
+x                    axw    as       xxxw   @                             x
+x                     xxw           qxx x                                 x
+x                     axx   q         x x                                 x
+x                      xx   xxs       x x                                 x
+x                      xx   xx        x x                                 x
+x                      axw  xx        a x                                 x
+x                       xx  xx         a w                                x
+x                       xx  ax          a w              _                x
+x                       xx   a           ax              s                x
+x                       xxw               x                               x
+x                      dxxx               a              +                x
+x                       xxx                w                              x
+x                       xxx                x                              x
+x                       axx                xw                             x
+x                        xx                xx                             x
+x                        xxw              dxxf                            x
+x                        xxx               xx                             x
+x                        xxx               xx                             x
+x                        axx               xx                             x
+x                         xx              qxs                             x
+x                         xxw             xx                              x
+x                         xxx             xs                              x
+x            _            axx            qx                               x
+x            +             xx            xx                               x
+x                          xx            xs                               x
+x                          xx           qx                                x
+x                          xxw          xx                                x
+x                          axx          xs                                x
+x                           xx         qx                                 x
+x                           xxw        xx                                 x
+xf                          axx        xx                                 x
+x                            xx        xs                                 x
+x                            xxw      qx                                  x
+x                            axx      xx                                  x
+x                             xx      xx                                  x
+x                             ax      xx                                  x
+x                              xw     xx                                  x
+x                              xx     xx                                  x
+x                              xx     x w                                 x
+x                              ax     a s                                 x
+x                              dx      a                                  x
+x                             s x       w                                 x
+x                            s   w      x                                 x
+x                           s    x      a                                 x
+x                          s     x       a                                x
+x                         q      aw       a                               x
+x                         x       x        a                              x
+x                         x   @   x         a                             x
+x                         x #     x          a                            x
+x         _               ax # #  x    )     x                            x
+x                          ax #  x#         qx                            x
+x         +                 ax  xx#        q x                       <   >x
+x                            axxs ax    w qxxs                       <   >x
+x                                  aw    w xx                        <   >x
+x                                   aw    qs                         <   >x
+x                                    aw  qs                         #<   >x
+x                                     axxs                          #<   >x
+x                                                                   #<   >x
+x                                                                   #<   >x
+xw                                                                  #< ) >x
+x+w                                                              +r+#<+++>x
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+EndOfMapdata

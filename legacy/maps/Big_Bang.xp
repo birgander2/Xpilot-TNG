@@ -1,0 +1,225 @@
+# Created by /tmp/xmapedit on Wed Feb  9 16:21:11 1994
+
+laserisstungun:yes
+dropitemprob:0.5
+itemmineprob:0
+
+mapwidth : 200
+mapheight : 200
+mapname : The Big Bang..??
+mapauthor : Paul Breckon (ALRIN) email:maugu@warwk.ac.uk
+edgewrap : no
+edgebounce : yes
+teamplay : no
+maxrobots : 20
+playershielding : yes
+gravity : 0.3
+gravitypoint : 100,100
+gravitypointsource : yes
+losemass : yes
+shotsgravity : yes
+crashwithplayer : yes
+playerkillings : yes
+
+mapData: \multiline: EndOfMapdata
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx xxxxxxxxxx                                                                                     xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                                                                                    xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs xxxxxxxxxx xxxxxxxx                                                                                  qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx xs xxxxxxx xxxxxs                                                                                qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs xxxxxxxxxxxxxx                                                                                qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx xxxxx xxxxxxxxxxxxxxx                                                   qxxxxw                       xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs                                                  qxxxxxxw                      xxxxxxxxxx xx   x  xxxxxx xxxxxxxxxxxxxx xxx    x xxxx xxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxxxs                                                 qxxxxxxxxxxxxxxxxw              axxxxxxxx xxx xx xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx  xxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx x xxxxxxxxxxs                                              #xxxxxxxxxxxxxxxxxxxxxw             qxxxxxxxxxxxxxx xxx xxxxxx  xxxxxxxxxxxxxxxxxxxxx xxxx xxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxs                                            qxxxxxxxxxxxxxxxxxxxxxxxxxw           qxxxxxxxxxxxxxx xxxxxxxxx xxxxxxxxxxxxxxxxx    xxx xxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx x xxxx                                           qxxxxxxxxxxxxxxxxxxxxxxxxxxxx          qxxxxxxxxx xxxx xxxxx xxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ xxxxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxs                                          qxxxxxxxxxxxxx xxx xxx xxxxxxxw         xxxxxxxxxxxxxxxxxxxx xxx  xx  xxxxxxxxxxxxxxxxxxxx  xxxx xx x
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxs                                           qxxxx xxxx  xxxx xxxxxx xxxxxxxx         xxxxxxxxxxxxxxxxxxx xxx  xxxxxxxxxxxxxxxxxx  xxxx  xxx  xxxxx
+ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx axxxxxxxxs                                              qxxxxxxxx  xx  xxxxxxxxx xxx  xxx         xxxxxxxxxxxxxxxxxx xxxx  xxxxxxxxxxxxxxxx xxxxxxxxxxx  x xx x
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxs                                               xxxxxxxxxxx xxx  xxxxxxxxxxxxxxxxw        axxxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx x x  xxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx  xxx xxxxxs                                                 qxxxxxxxxxxxxxxxxx xxxx x xxxxxxxxx         #xxxxxxxxxxxxxxxx xxxxxxxxxxx  x xxxxx x xxxxxxxx xxx   xx  
+ xx xxxxx xx xxxxxxxx xxxxxxxxxx x  xx  x xxxs                                                  xxxxxxxx   x xxx x  x xxx xxxxxxxxx         #xxxxxxxxxxxxx x xxxxxxxxx xx xxxxxx  x xxxxxxxxxx xxxxxxxxx
+xxxx  xxxxxxxxxxxxxx xxxxxxxx xx xxxxxxxxxxs                                                    xxxxxxxx xxxxx xxxxx xxxx xxxxxxxxxw        xxxxxxxxxxxxxxx xxx xxxx  xxxxxxxxxxxxxxxxxxxxxxxx xx xxxx  
+ x xxxxxxxxxxxxxxxxxxxxxxxxxxxx  xxxxxxxxxs                                                     xxxxxxxxxxxxxxxx  xxxxxxxxxxxxxxxxxx        axxxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxxxxx  x   xxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxx   xxxxxxxxxs                                                     qxxxxxxxxx  x  xx xxxx xxx xx x  xxxx         axxxxxxxx xxxx xxxxxxxxx xxxxxxxxxxxx xx x x  xxxxxxxxxxxxx
+ xxxxx xxxxx xxx  xxxxxxxxxx   x xxxxxs                                                        xxxxxxxx  xxxxxxx xxxxxx x xxxxxxxxxx          axxxxxxxxx xxxxxx xx xxxxxxx xxxxxxxxxxxxxxxxxxx xxxxxxxx 
+  x xxxxxxxxxxxx   x   xxxxxxxx  xxs                                                           axxxxxxx xxx xxxxxx x xx x xxx  xxxxx            axxxxxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx xxxxxx  
+xxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxs                                                              axxxxxxxxxxxxx     xxxx  xxx xx xxxx             xxxxxxxxxxx    xxxxxxxxxxxx xxxx  xxx    xxx  xxx  xxxx
+xxxxx       xx  xxxx xxx xxxxxxs                                                                 xxxxxxxxxxxx xx    xx xxxxxxxx xxxx             xxxxxxx   xxxxxxxxxxxxxxxxxxxx   xxxxxxxxxxxxxxx  xxx x
+    xxxxxxxxxxxxxxx xxx  xxxxs                                                                   axxxxxxx xxxxxxxxxxxxxxxx x xx xxxx             xxxxxxx     xxxxxxxxxxxxx    x  xxxxxxxxxxxxx xxxxxxx  
+xxxxxxxxxxxxxxxxxxxxxxxxxxs                                                                       axxxx  xxx xx  xxxxxxxx xxxxxxxxxx             xxxxxx   xxxxxxxxxxxxxxxxxxxxxxxxxxx xx xx  xxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxsxs                                                                          axx xx    x x  xxx  x  xx x xxxx            qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx xxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxx                                                                             axxxxxxxxxxxxxxxxxxxxxxxxxxxxs            xxxxxxxxxxxxxxxxxxx   x xxxxxxxxxxxxx xxxx xxxxxxxxxxxxx
+xxxxxxx  xx     x x xxxxs                                                                               axxxxxxxxxxxxxxxxxxxxxxxxxs             xxxxx    xxxx              xxx        xxxxxxxxx        x
+xx  x xxx x    qxxxxxxs                                                              x                       #xxxxs                             axxxxxx      xxxxxxxxxxxxxxx  xxxxxxxxxxxx    x      xxx
+x qxxxxxxxx qxxxxxs                                                                  x                                                           axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   qxw  qxxxxx
+xxxxxxxxxxxxxxxs                                                                     x                                                             #xxxxxxs       axxxxxxxxxxxx x xxx xxxxxxxxxxxxxxx xx
+xxxxxxxxx x xxs                                                                      x                                                              axxxx         qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx xxxxxx
+xxxxx x xxxxs                                                                        x                                                               xxxxxxxw    qxxxxxxx xx xxxx x xxxxxxxxxxxxxxxxxxxx
+xxxxxxxxs                                                                            x                                                                     axxxxxxxx xxxxxxxxxxxxxxxxxxx xxx x x x xxxxx
+xxxs                                                                                qx                                                                           axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                                      qxxxxw                        qxxxw           xs                                                                                      axxs            axxxxxxxs   
+                                    qxxxxsax                       qxxxxxw          x                                                                                                                   
+                                   qxs     x                       xxxxxxx          x                                                                                                                   
+                                  xxs      x                      qxxxxxxx          x                                                                                                                   
+                                           x                    qxxxxxxxxx         qx           M                                                                                                       
+                                           x                 qxxxxxxxxxxxx         xs                                                                                                                   
+                                           xw               q   xx xx x xx         x                                                                                                                    
+                                           ax               x xx x xxxxxxx         x                                                                                                                    
+                                            x               x x   x   x xx         x                                  qxxxw            x                                                                
+                                            x               xxxxxxxxxxxxxx         x                                qxxxxxxw_          x                                                                
+                                            x               xxx  xxxxxxxxx         x                                xxxxxxxxxxw        x                                                                
+                                            x              #xxxxxxxx  xxxx         x            <                   xxx xxxx  xw       x                                                                
+                                            x              xxxxxxxxx  xxxx         x                                axxx   xxxxxw      x                                                                
+                                            x              xxxxxxxxx x xxx         x                                 #x  xxxxxxxx      x                                                                
+                                            x              xxxxxxxx xx xxx                                            x xxxxxxxxxw     x                                                                
+                                            x              xxxx xxxxxx xxx                                            x x   x xxxx     x                                                                
+                                            x              xxxx  xxxxxxxx#                                            x xx  x xxxx     x                                                                
+                                            xw             xxxxxxxxxx xxx          x                                  axxxxxxxxxxx     x                                                                
+                                            ax             axxxx x  x xxx          x                                   axxxxxxxxxx     x                                                                
+                                             x              xxxxxxxx  xxx          x                                    axxxxxxxxs    qx                                                                
+                                             x              xxx xxxxxxxxx          xw                                                qxs                                                                
+                                             xw             xxx xxxx  xxx          ax                                                xs                                                                 
+                                             ax             axxxxxxx  xxx           xs                                              qx                                                                  
+                                              x              xxx xxxxxxxx           xw                                              xs                                                                  
+                                              x              xxxxxxx   xx           ax                                             qx                                                                   
+                                              x              axxxxxxxxxxx            xw                                            xs           qxxxxxxxxxxw                                            
+                                              x               axxxxxxxxxx            ax                                           qx          qxxxxxxxxxxxxx                                            
+                                              xw                axxxxxxxx             x                                          xxs   >     qxxx  xxx  xxxs                                            
+                                              ax                 axxxxxxs             xw                                        qxs          xxxx  x xx xxx                                             
+                                               xw                                     ax                                      qxxs         qxxxxx   xxx xxx                                             
+                                               axw                                     xw                                  qxxxs          qxxxxxxxxxxx  xxx                                             
+          _      qxxxxxxxw _                    axw                                    ax                              qxxxxs            qxxxxxxxxxx xxxxxx                                             
+        qxxxxxxxxxxxxxxxxxxxxxxw    #x#          axxw                                   xw                           xxxs               qx xxx xxxxxxxx xxx                                             
+    qxxxx  x  xxx        x      xxxxxxxxw          axxw_                                ax          xxw_         qx  s                  xx xxxxxx  x    xxx                                             
+    xxx xxx  x  x  x  xxxxxxxxx xxxxxxxxxw           axxxxxw                             xw        qxxxxx     xxxxs                    #xx xxxx xxxxxxxxxxx                 qxx                         
+    xxx xxx x   xxx xxxxxxxxxxx xxxxxxxxxxw               axxxxw                         ax   <    xxxxxx    qxs                       xxxxxxxx xxxxxxxxxxs                qxs                          
+    xxx    x  xxxx  xxxxxxxxxx  xxxxxx  xxx                   axxxxw                      xw       xxxxxx   qxs                        xxx  xx xxxxxxxxxxx                qxs                           
+    xxxxxxxxx xxxxxxxxxxxxxxxxxxxx   xx xxxw                      axw                     ax       axxxxs   xs                        qxxx  xxxxxx xxxxxxs             qxxxs                            
+    xxxxxxxxx xxxxxxxxx   x xxx xxx  xxxxxxx                       ax                      x        xxxs   qx                        qxxxxxxxxx xx xxxxxs             qxs                               
+   qxxxxxxxxxxx  xxx xxxxxxxxxxxxxxx xxx xxx                        xw                     xw              xs                       qxxxxx xxxxxxxxxxxxs            qxxs                                
+   xxxxxxxxxxxxxx x x  xxxxxxxxxxxxxxxxxxxxxw                       ax                     ax             qx                        xxxx x xxxxx xxxxxs           qxxxs                                 
+   axxxxxxxxx xx  xxxxx  xxxxxx x  xxx  xxxxx                        x                      xw            xs                        axxxxx x x  xxxxxs           qxs                                    
+    axxxxxxxxx  xxx xxxxxxx x xx x xxx xxxxxs                        xw        qxxxx        ax            x                          axxxxxxxxxxxxxxs           qxs                                     
+       axxxxxx xxxxxxxxx  x x xx x xxxxxxxxx                         ax        xxxxx         x            x                           xxxxxxx xxxxxs          qxxs                                      
+         axxxxx  xxxxxxxxx xx  xxxxxxx  xxxx                          x        xxxxx         x            x                           xxxxxxxxxxxxs        xxxxs                                        
+          xxx xxxxx xxx   x xxxxx xxxxxxxxxx                          x        xxxxx         xw           x                           xxxxxxxxxxxx        qxs                                           
+          axxx xx   xx xxx xxx xxxx xxxxxxxx                          x        axxxx         axxw         x                           axxxxxxxxxxs        xs                                            
+           xx x x   xxxxxxx  xxxxxxx x   xxx                          x         axxx           ax         x                            axxxxxxxs          x                                             
+           xx   xxxxxxxxx    xxxxx   x  xxxs                               <     xxx            ax        x                             axxs             qx                                             
+           axxxx   xxxxxx xxxxx x xxxxxxxxx                                                      x        x                                              xs                                             
+            axxx xxxxx  xx xx xxxxxxxx   xx                                                      xx       x                                             qx                                  qxxxw       
+              ax xx  x  x  xxxx  xxxxxxxxxs                                                       xxw     x                                            qxs                                 qxxxxxw      
+               x  xxx  x    xxxxxx xxxxxxs                                xxw                      ax     x                                           qxs                             _qxxxxxxxxxx      
+               xxxxxxxxxxxxxxxxxxxxxxxs                   qx#       >      axxw                     x     x                                          qxs                            qxxxxxxxxxxxxx      
+               axxxxxxxxxxxxxxxxxxxxs                    qxxxxxw             axw                    xw    x                                         qxs                          qxxxxxxxxxxxxxxxxw     
+                  axxxxxxs                              qxxxxxxxxw            axxxxw                ax    x                                        qxs                        #xxxxxxxxxxxxxxxxxxxx     
+                                                       qxxxxxxxxxx                axxxxw             x    x                                     _ qxs                       qxxxxxxxxxxxxxxxxxxxxxx     
+                                                    qxxxxx xxxx  x                    axxw           x    x                                  qxxxxxs                       qxxxx xxxxxxxxxxxxxxxxxx     
+                                          qxxw _  qxxxxxxxxxxxxx xw                     axxw         xw   x                               qxxxs                           qxxxxxxx x  x xxxx xxxxxx     
+                                  <      #xxxxxxxxxxxxxxxxxx xx  xx                       axw        xx   x                            qxxxs                      <       xxxxxx xxxxxxxxxxxxxxxxxx     
+                                        qx   xxxx  xxx xx   xxxx xx                        axw    qxxxxxxxxxxw               xxxxxxxxxxxs                                 xxxxxxx    xxxxxxxxxxxxxx     
+                                       qxx xx   xx xx xxxxxxxx xxxx                         axxxxxxxx++++++xxx   qxxxxxxx                                                 xxxxxxxxxxxxxxxxxxxxxxxxx     
+                                      #xxxxxxxx   xxxxxxx   xx x xx                           axxxxx++++++++xxxxxxs                                                       xxxxxx  xxxxx xxxx xxxxxx     
+                                     qxxxx  xxxxxxxxxxxxxxxxxxxx xx                              ax+++****+++xs                                                           axxxxx  xxx     xx xxxxxs     
+                                    qxxxxxx xxxxxxx xx  xxxxxx   xx                               x+++****+++x                                                             axxxxxxxxxxxxxxxxxxxxs       
+                                    xxxxxxxxx   x   xxxxxxxxxx  xxx                               x+++****+++x                                                              axxxxxxxxxxxxxxxxxxs        
+                                    xxxxxx xxxxxxxxxxx   x  x xxxxx                               xx++++++++xx                                                               axxxxxxxxxxxxxxxxs         
+                                   qxxxxxxxxxxxxxxxxxxxxxx  xx xxxxw                              xxx++++++xxxw                                                               axxxxxxxxxxxxxs           
+                                   xxxxxxxx  xxxxxxxxxxxxx xxxxxxxxx                             qxxxxxxxxxxxxxxxw                                                                axxxxxxxs             
+                                  qxxxxxxxxxxxxxxxxxxx  xx x xx xxxx                             xxs   a s      axw                                                                                     
+                                  xxxxx   xx xxx  xxxxxxxxxxx  x xx#                            qxs     x        axxxw                           qxxxxxxxxxxxxw                                         
+                                  xx xxxxxxxxxx  xxxxxxxxxxx xxx xxxw                        qxxxs      x           axxxxxxxxxw              qxxxxs          axxw                                       
+                                  x x x x xxx xxxxxxxxxx   xxxxxxxxxx                     qxxxs         x                    axxxxxxxxxx     xs                axxw                                     
+                                  xxx xxxxxxxxxxxxxxxxxxxxx xxxxxxxxs                  qxxxs            x                                                        axw                                    
+                                  x x xxxxxxxx xxxxxxxxxxx  xxxxxxxx                 qxxs               x                                                         axxw                                  
+                                  x xxxx xxxx  xxxxxxxxxxx xxxxxxxxx               qxxs                 x                                                           axw                                 
+                                 # xxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxx              qxs                   x                                                            axw                                
+                                qxx xxxx xx  xxxxxxxxxxx xxxxxxxxxxx          qxxxxs                    x                                                             ax                                
+                                xx xxx x xxxxxxx xxxxx xxxxxxxxx xxs                                    xw                                                                                              
+                                xx xx  xxx xxxxxxxx xx  xxxxxxx  xs                                     ax                                                                                              
+                               qxx xxxxxxxx xxxxx xx xxxx x  x   x                                       x                                                                                              
+                               xxx xxxxxxxxxx xx xxxxxx xxxxxxxxxs         qxs                           x                                                                                              
+                               axxxxxxx xxxx xx xx xxxxxxxxxxxxxx          xs                            xw                                                                                             
+                               qxxx  xx xxx xxxxxxxx  xx xxxxxxxs          x                             ax                                                                                             
+                              qxxxxx xxxx xxxxx  xx  xx x xxxxxx          qx                              x                             qxxxxw                                                          
+                              xxxxxx xxxx   xx  xx  xxxxx xxxxxx          xs                  qw          xw                          qxxxxxxxw                                                         
+                              xxxx xxxxxxx xxx xx xxxx xx xxxxxx         qx                  qxxw         ax                     qxxxxxxxxxxxxxw                                                        
+                              xxxx  xxx xxxx x xxxxxxxxxxxxxxxx#         xx                 qxxxx          x                   qxxxxxxxxxxxxxxxxx                                                       
+                              xxxx xxxxxxxxx xxxxxxxxxxxx xxxxxx         xx               qxxxxxx                              xxxxxxxxxxxxxxxxxxw                                                      
+                              xxxx  xxx xx xxxxxxxxxxxxxxxxxxxxx         xxw              xxxxxxx                             qxxxxxxxxxxxxxxxxxxx                                                      
+                              xxxx  xxxxxx  x xxxxxx  xxxxxxxxxx         xxx              xxxxxxxw                            xxxx  x    xxxx xxxx                                                      
+                              xxxx x xxx xxxxxxx xxxx xx xxxxxxs         xxx              xxxxxxxx                            xxxxx xxxxxxxxxxxxxxw                                                     
+                              axxxxxxx   x  xx xx xx xxxxxxxxxs          xs               xxxxxxxx          ax                xxxx xxxx xxxxxxxxxxx                                                     
+                                #xxxxxxxx xxxxxx xxxxxxxxxxx             x                xxxxxxxs           x                xxxxx xxxx   xx xxxxx                                                     
+                                 axxxxxxxx xxxxxxx xxxxxxxxx             x                axxxxxx            xw               xxxx  xxxxxx   xxxxxx             >                                       
+                                  axxxxxx x xx x  xxxx xxxxx             x                    axs            ax               xxxxxx xxxxxxxx xxxxx                                                     
+                                   axxxxx     xxxxx    xxxxx             xw                                   xw              xxxx x xx xxxxxxxxxxx                                                     
+                                    axxxxxxxxxxxxxxxxxxxxxxs             ax                                   ax              xxxx xxxxxxxxxx xxxxx                                                     
+                                     axxxxsa#xxxxxxxxxxxs                 x                                    x              xxxx     xx  xxxxxxxx                                                     
+                                       axs     axxxxxs                    x                                    xw             xxxxxxxxxxxxxxxxxxxxs                                                     
+                                                                          x                                    ax             xxxxxxxxxxxxxxxxxxxx                                                      
+                               >                                          x                                     xw            axxxxxxxxxxxxxxxxxxx                                                      
+                                                                          x                                     ax             #xxxxxxxxxxxxxxx#                                                        
+                                                                          x                                      xw               axxxxxxxxs                                                            
+                                                                          x                                      axw                axxs                                                                
+                                                                         qx                                       axw                                                                                   
+                                                                        qxs                                        ax                                                                                   
+                                                                      qxxs                                          xw                                                                                  
+                                                                     qxs                                            axw                                                                                 
+                                                                    qxs                                              axw                                                                                
+                                                                   qxs                                                ax                                                                                
+                                                                qxxxs                                                  xw                                                                               
+                                                             qxxxs                                                     ax                                                                               
+                                                        _  qxxxxs                                                       xw                                                                              
+                                                      qxxxxxs                                                           axw                                                                             
+                                                   qxxxxxs                                                               ax                                                                             
+                                                qxxxxxxxs                                                                 x                                                                             
+                                                xxxxxxxs                            qxw _                                 xw                                                                            
+                                                xxxxxs                           qxxxxxxxxxxxxxxxxxx#                     ax                                                                            
+                                                                                qxxxxxxxxxxxxxxxxxxxxxxxxw                 xw                                                                           
+xxxw                                                                           qx xxx xxxxxxxxxxxxxxxxxxxxxxxxxw           ax                                                                 qxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxw                                                       qxx x x xxxxxxxxxxxxxxxxxxxxxxxxxxw           xw                                                              qxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxw                                                   qxxxxx xxxxxx  xx  xx x   xxxxx  xxxw                                                                         qxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxw                                                 xxxx  xx xxxxxx xxxxxxxxxxxxxxxx xxxx                                                                        qxs xxxxxxxxxx
+xxxxxxxxxxxxxs axxxxxxxxxxxxxw                                              qxxxx xxxxxxxxx   xxxxxxxxxxxxxx  xxxx                                                                      qxxs xxxxxxxxxxx
+xxxxxxxxxxxxxw qxxxxxsaxxxxxxxw                                             xxxxxxx   xxx x    xxxxxxxxx x x  xxxx                                                                     qxs qxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxw xx xxxxxw                                            xxxxxxx   xxx x xxxxxxx xxxxx xxxxxxxx#                                                                 qxxxs xxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx xxw                                          axxxx xxxx    xxxxx xxxxxxxxxx xxxxxxxx                                                                qxs x xxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                                         xxxx  x  xxxxxxx xx  xxxx x xxxxxxxxxxw                                                            qxxxs qxxxxs xxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                                       xxxx  xxxxxxxxxxxx  x xx  xxxx xxxxxxxx                                                          qxxs  qxxxxxs xxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxs xxxxxx axxw                                      axxxxxxxxxxxxxxxx xx  xxxxxxx xxxxxxxxx                                                         qxs   qxs xxx qxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw xxxw                                       axxxxxxx xxxxxxxx xxxxxxxxxxx  xxxxxx                                                      qxxxs  qxxx xs xxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxs xxxxxx axw                                       axxx  xx   x   xx   xxx   x   xxxxxx                                                     qxs  qxxxx xxs xxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxs  xxxxxxxw xw                                       xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                  qxxxs  qxxx xxxs qxxxxx xxs xxxxxx
+xxxxxxxxx xxx xxxxxxxxxxxxxs  qxxxxxxxxw xx                                      axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                 qxxs  qxxxxxxxxs qxxxxxxxxs  xxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxs qxxxxxxxxxxxxxx                                        axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                qxxs qxxxxxxxxxs qxxxxxxs xw xxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxx qxxxxx xxxxxxxxxw                                               axxxxxxxxxxxxxxxxxxxxxxxx                                               qxs qxxxxxxxxxxx qxxxxxxx  xxxxxxxxxx
+xxxxxxxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                    axxxxxxxxxxxxxxxxx                                              qxs qxxs xxs xxxxxxxxxxxxx  xxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx xxxxxxxx xxxxxw                                                        axxxxxsaxxxxs                                             qxs xxxs xxs xxs xxxxxxxxxxx x xxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                                                                                qxxx xxs qxxs xxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxx xxxxxxxxxxxxs xxxxxxxxxxxxx axxw                                                                                                              qxs xxxs  xxx xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxx xxxxxxxxxxxxxxxxxxxs qxxxxxxxxxxxxxw xxx                                                                                                             qxx xxxs  qxxxxxxxxxxxxxxxxxxxxxxxxs xxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxs qxxxxxxxxxxxxxxxw xxw                                                                                                            xxxxxxs  qxxxxxxxxxxxxxxxxxxxxxxxxx  xxs xx
+xxxxx xxxxxxxxxxxxxxxxxxxxw xxxxxxxxxxxxxxxxxxxxx                                                                                                           qxxs xs  qxxxxxxxxxxxxxxxxxxxxxxxxxx  xxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs xxxxxxxxxxxxxxw                                                                                                         qxxs xs qxxxxxxxxxxxxxxxxxxxxxxxxxxxx qxxxxxx
+xxxxs xxxx xxxxxxxxxxxxxxxxxxxxxs xxxxxxxxxxxxxxxxw                                                                                                       qxxs xs qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxx  xxxxxxxxxxxxxx x xxxs xxxs xxxxxxxxxxxxxxxxxxw                                                                                                     qxxs xs qxxs xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxw xxxxxxxxxxxxxxxxxxxx xxxx xxxxxxxxxxxxxxxxx xxw                                                                                                   qxxs xs xxs qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx xxxxxx xxxxxxxxxxxw                                                                                                 qxxxxxx xxx xxxxxxs xxxxxxxxxxxxxxxxxxxxxxxxxx xx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx xxxxxxxxxxx ax                                                                                                qxxxxxxxxx xxxxxxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs axxxxxxxxxxxxxxxxw                                                                                              xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxsxxxxxxxs xx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   xxxxxxxxxxxxxxxxx                                                               >                             qxxxxxxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx qxx
+xxxxxxxx xxxxxxxxxxxxxxxxs xxxxxxxxw xxxxxxxxxxxxxxxxxxw                                                                                           qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxx xxxxxx xxxxxxs xxxxxxxxxxxxxxxxxxxxxx                                                                                           xs xxxx xx xxxxxxxxxs xxs xxxs xxxxxxxxxsxxxs xxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx qxxxxxxxxxxxs xxxxxxxxxw                                                                                          xxxxx xxxxxx xxxxxxx xxx xxxs qxxx xxxxxxxxx xxxxxxxx
+xxxxxxxxxxxx xxxxxxxxxxxxx x xxxxxxxxxxxxxxxx  axxxxxxxxx                                                                                          xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxsxxxxxxxxxxxxxx
+xxxxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx axxxw  xxxxxxxxx                                                                                          xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxx xw xx xxxxxxxxxxxxw                                                                                        qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxs xxxxxxxxxxxxxxxs xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                                                       qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxx x x xxxxxxxxx x xxx  x xxxxxw                                                                                     qxxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxsxxxxxxxx xxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxx                                                                                     x  xxxxxxxxxxxxxxxxxxxxxxx  xxxxxxxxxxxxxxxxxxxxxx    xx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs xxxw                                                                                       xx xxx xxxxxxxxxxx  xxxxxx xxxxxxxxxxxxxxx        qxx
+xxxxxs xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx xxxxxw xxxxx                                                                                     xxxxxxx     xxxxxxxxx  xx   xxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                                                     xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+EndOfMapdata

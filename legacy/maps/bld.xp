@@ -1,0 +1,219 @@
+# Created by xmapedit on Sat Aug 28 15:31:20 1993
+
+mapwidth : 200
+mapheight : 200
+mapname : Birth, Life, and Death
+mapauthor : Andrew Scherpbier (Ender)
+edgewrap : yes
+edgebounce : no
+teamplay : no
+oneplayeronly : no
+limitedvisibility : yes
+playershielding : yes
+losemass : yes
+shotsgravity : yes
+crashwithplayer : yes
+playerkillings : yes
+
+mapData: \multiline: EndOfMapdata
+                                     qxxxxxxxxxxxs      xxxxxxxxx                                   qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs                                                                     
+                                    qxxxxxxxxxxxx       xxxxxxxxx                                  qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs                                                                      
+                                   qxxxxxxxxxxxxx       axxxxxxxxw                                qxxxxxxxxxxxxxxxxxxxxxxxxxxxxs                                                                        
+                                  qxxxxxxxxxxxxxx        xxxxxxxxx                                xxxxxxxxxxxxxxxxxxxxxxxxxxxs                                                                          
+                                 qxxxxxxxxxxxxxxx        xxxxxxxxx                               qxxxxxxxxxxxxxxxxxxxxxxxxxs                                                                            
+                                 xxxxxxxxxxxxxxxs        axxxxxxxx                             qxxxxxxxxxxxxxxxxxxxxxxxxxs                                                                              
+                                qxxxxxxxxxxxxxxx          xxxxxxxxw                          qxxxxxxxxxxxxxxxxxxxxxxxxxs                                                                                
+                               qxxxxxxxxxxxxxxxs          xxxxxxxxxw+                       qxxxxxxxxxxxxxxxxxxxxxxxs                                                                                   
+                              qxxxxxxxxxxxxxxxs           axxxxxxxxxw+                   qxxxxxxxxxxxxxxxxxxxxxxxs                                                                                      
+                             qxxxxxxxxxxxxxxxs             xxxxxxxxxx++               +qxxxxxxxxxxxxxxxxxxs cccc                                                                                        
+                           qxxxxxxxxxxxxxxxs               axxxxxxxxs++               +axxxxxxs                                                                                                         
+                          qxxxxxxxxxxxxxxxs                 xxxxxxs++++               +++                                                                                                               
+                         qxxxxxxxxxxxxxxxx                  axxxxs++++                 ++                                                                                                               
+                         xxxxxxxxxxxxxxxxs                   ++++++++                                                                                                                                   
+                        qxxxxxxxxxxxxxxxx                    ++++++                                                                              -                       -                              
+                       qxxxxxxxxxxxxxxxxx                                                                                                         -                     -                               
+                      qxxxxxxxxxxxxxxxxxx                                                                                                          -                   -                                
+                      axxxxxxxxxxxxxxxxxxw                                                                                                          -     x     x     -                                 
+                       axxxxxxxxxxxxxxxxxx                                                                                                           -    c     c    -                                  
+                         axxxxxxxxxxxxxxxxw                                                                                                           -             -                                   
+                           axxxxxxxxxxxxxxx                                                                                                            -------------                                    
+                             axxxxxxxxxxxxs                                                                                                            -------------                                    
+                               axxx##xxs                                                                                                               -------------                                    
+                                 c    c                                       >>                                                                    xf ------------- dx                                 
+                                                                          <<  >qxxxxw                                                                  -----rrr-----                                    
+                                                                          <<  >xxxxxxw                                                                 ----dxxxf----                                    
+                                                                         qw<  >xxxxxxxw                                                                ----dx-xf----                                    
+                                                                        qxx<  >axxxxxxxw                                                               ----dxxxf----                                    
+                                                                      qxxxx<  > axxxxxxxw                                                              -----ccc-----                                    
+                                                                    qxxxxxs<  >>  axxxxxxw                                                          xf ------------- dx                                 
+                                                                 qxxxxxxxs<<  >>   axxxxxxw                                                            -------------                                    
+                                                               qxxxxxxxxs           axxxxxxw                                                           -------------                                    
+                                                            qxxxxxxxxxs              axxxxxxw                                                          -------------                                    
+                                                           qxxxxxxxxs                 axxxxxxw                                                        -             -                                   
+                                                          qxxxxxxxs                    axxxxxxw                                                      -    r     r    -                                  
+                                                         qxxxxxxs                       axxxxxxw                                                    -     x     x     -                                 
+                                                        qxxxxxs                    _     axxxxxx                                                   -                   -                                
+                                                       qxxxxxs                     #      axxxxxw                                                 -                     -                               
+                                                      qxxxxs                               xxxxxxw                                               -                       -                              
+                                                      xxxxx                                axxxxxxw                                                                                                     
+                                                      xxxxs           _      _      _       axxxxxx                                                                                                     
+                                                      xxxs            #      #      #        axxxxxw                                                                                                    
+                                                      xxx      _                              axxxxx                                                                                                    
+                                                      xxx      #                               xxxxxw                                                                                                   
+                                                      xxx                                      axxxxx                                                                                                   
+                                                      xxxw                          _           xxxxx                                                                                                   
+                                                      xxxxw          _              #     _     xxxxx                                                                                                   
+                                                      xxxxxw         #      _             #     xxxxx                                                                                                   
+                                                      axxxxx                #        _         qxxxxx                                                                            q#w                    
+                                                       axxxxw                 _      #         xxxxxs                                                                           qxxx                    
+                                                        axxxxw     _          #               qxxxxx                                                                           qxxxx                    
+                                                         axxxxw    #                         qxxxxxs                                                                          qxxxxx                    
+                                                          axxxxw                            qxxxxxx                                                                           xxxxxx                    
+                                                           axxxxw                          qxxxxxxs                                                                          qxxxxxs                    
+                                                            axxxxxw                        xxxxxxx                                                                          qxxxxxs                     
+                                                             axxxxxw     _                qxxxxxxs                                                                          xxxxxs                      
+                                                              axxxxxw    #      _    _   qxxxxxxx                                                                          qxxxxs                       
+                                                               axxxxxw          #    #  qxxxxxxxs                                                                          xxxxx                        
+                                                                axxxxxw                qxxxxxxxs                                                                          qxxxxs                        
+                     r                                           axxxxxw             qxxxxxxxxs                                                                           xxxxx                         
+                qxxxxxxxxw                                        axxxxxw           qxxxxxxxxs                                                                           qxxxxx                         
+   r    qxxxxxxxxxxxxxxxxxxw                                       axxxxxxw       qxxxxxxxxs                                                                             xxxxxx                         
+ qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                                   axxxxxxw   qxxxxxxxxxxs                                                                             qxxxxxs                         
+xxxxxxxxxxxxxs         axxxxxxxxs                                    axxxxxxxxxxxxxxxxxxxs                                                                              xxxxxx                   qxxxxxx
+xs                         axs                                        axxxxxxxxxxxxxxxxs                                                                               qxxxxxs                   axxxxxx
+                                                                       axxxxxxxxxxxxxxs                                                                               qxxxxxx                           
+                                                                          axxxxxxxs                                                                                   xxxxxxs                           
+                                                                                                                                                                      xxxxxx                            
+                                                                                                                                                                      xxxxxx                            
+                                                                                                                                                                      xxxxxs                            
+                                                                                                                                                                     qxxxxx                             
+                                                                                                                                                                    qxxxxxs                             
+                                                                                                                                                                   qxxxxxs                              
+                                                                                                                                                                   xxxxxs                               
+                                                                                                                                                                  qxxxxs                                
+                                                                                                                                                                 qxxxxx                                 
+                                                                                                                                                                qxxxxxs                                 
+                                                                                                                                                             qxxxxxxxs                                  
+                                                                                                                                                           qxxxxxxxs                                    
+                                                                                                                                                         qxxxxxxxs                                      
+                                                                                                                         r                            qxxxxxxxxs                                        
+                                                                                                                      q########w                    qxxxxxxxxs                                          
+                                                                                                                     qxxxxxxxxxxw                 qxxxxxxxxxs                                           
+                                                                                                                     xxxxxxxxxxxxxw              qxxxxxxxxs                                             
+                                                                                                                     xxxxxxxxxxxxxxxw           qxxxxxxxxs                                              
+                                                                                                                     xxxxxxxxxxxxxxxxxw        qxxxxxxxxs                                               
+                                                                                                                     xxxxxxxxxxxxxxxxxxw    rqxxxxxxxxxx                                                
+                                                                                                                     axxxxxxxxxxxxxxxxxx#####xxxxxxxxxxx                                                
+                                                                                                                      #xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                
+                                                                                                                      #xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs                                                
+                                                                                                                      #xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs                                                 
+                                                                                                                      #xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs                                                  
+                                     qw                                                                              qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs                                                   
+                                    qxxw                                                                             xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs                                                    
+                                    xxxxw                                                                           qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs                                                     
+                                   qxxxxx                                                                          qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs                                                      
+                                   xxxxxxw                                                                        qxxxxxxxxxxxxxxxxxxxxxxxxxxxxs                                                        
+                                  qxxxxxxx                                                                      qxxxxxxxxxxxxxxxxxxxxxxxxxxxs                                                           
+                                 dxxxxxxxxw                                                                    qxxxxxxxxxxxxxxxxxxxxxxxxxs                                                              
+                                 dxxxxxxxxx                                                                   qxxxxxxxxxxxxxxs                                                                          
+                                  axxxxxxxxw                                                                 qxxxxxxxxxxxxs                                                                             
+                                   xxxxxxxxxw                                                                xxxxxxxxs                                                                                  
+                                   xxxxxxxxxx                                                                a###s                                                                                      
+                                   axxxxxxxxxw                                                                                                                                                          
+                                    axxxxxxxxx                                                                                                                                                          
+                                     axxxxxxxxw                                                                                                                                                         
+                                      axxxxxxxxw                                                                                                                                                        
+                                        axxxxxxxw                                                                                                                                                       
+                                         axxxxxxx                                                                                                                                                       
+                                           axxxxxw                                                                                                                                                      
+                                            axxxxxw                                                                                                                                                     
+                                             axxxxxw                                                                                                                                                    
+                                              xxxxxxw                                                                                                                                                   
+                                              axxxxxxf                                                                                                                                                  
+                                               axxxxxw                                                                                                               r                                  
+                                                axxxxxw                                                                                                            q###w                                
+                                                 axxxxxw                                                                                                        qxxxxxxxxw                              
+                                                  axxxxxw                                                                                                     qxxxxxxxxxxxxxw                           
+                                                   axxxxxw                                                                        q#w                         xxxxxxxxxxxxxxxxw                         
+                                                    axxxxx                                                                       qxxxw                        xxxxxxxxxxxxxxxxxw                        
+                                                     axxxxw                                                                      xxxxxw                       xxxxxxxxxxxxxxxxxxw                       
+                                                      axxxxw                                                                     axxxxxxw                     xxxxxxxxxxxxxxxxxxx                       
+                                                       axxxxw                                                                     xxxxxxx                     xxxxxxxxxxxxxxxxxxx                       
+                                                        xxxxxw                                                                    axxxxxx                     xxxxxxxxxxxxxxxxxxx                       
+                                                        xxxxxxw                                                                    xxxxxxw                    xxxxxxxxxxxxxxxxxxx                       
+                                                        axxxxxx                                                                    axxxxxx                    axxxxxxxxxxxxxxxxxx                       
+                                                         axxxxxw                                                                    axxxxx                     xxxxxxxxxxxxxxxxxx                       
+                                                          axxxxxw                                                                    xxxxx                     xxxxxxxxxxxxxxxxxx                       
+                                                           xxxxxx                                                                    axxxx                     xxxxxxxxxxxxxxxxxx                       
+                                                           axxxxxw                                                                    xxxx                     axxxxxxxxxxxxxxxxs                       
+                                                            xxxxxxw                                                                   xxxx                      axxxxxxxxxxxxxxs                        
+                                                            axxxxxx                                                                   xxxx                       axxxxxxxxxxxxx                         
+                                                             axxxxxw                                                                 qxxxx                        axxxxxxxxxxxs                         
+                                                              axxxxxw                                                                xxxxx                         axxxxxxxxxs                          
+                                                               xxxxxx                                                               qxxxxx                          xxxxxxxxs                           
+                                                               xxxxxxw                                                             qxxxxxs                          axxxxxxx                            
+                                                               axxxxxx                                                            qxxxxxs                            xxxxxxx                            
+                                                                xxxxxxw                                                           axxxxs                             xxxxxxs                            
+                                                                axxxxxx                                                                                              axxxxx                             
+                                                                 xxxxxxf                                                                                              xxxxs                             
+                                                                 xxxxxx                                                                                               xxxs                              
+                                                                 xxxxxx                                                                                               xxx                               
+                                                                qxxxxxx                                                                                               xxx                               
+                                                                xxxxxxxf                                                                                              axxw                              
+                                                                xxxxxxs                                                                                                axxw r                           
+                                                               qxxxxxs                                                  qxxw                                        r  qxxx#####w                       
+                                                              qxxxxxs                                                qxxxxxx                                       q###xxxxxxxxxxxxw                    
+                                                             qxxxxxs                                                qxxxxxxxw                                    qxxxxxxxxxxxxxxxxxxxw                  
+                                                            qxxxxs                                                 qxxxxxxxxx                                   qxxxxxxxsaxxxxxxxxxxxxxxw               
+                                                          qxxxxxs                                                  xxxxxxxxxxw                                 qxxxxxxxs  xxxxxxxxxxxxxxxxw             
+                                                         qxxxxxs                                                   xxxxxxxxxxx                                qxxxxxxxs   axxxxxxxxxxxxxxxxxw           
+xxw                                                     qxxxxxs                                                   qxxxxxxxxxxx                                xxxxxxxx     axxxxxxxxxxxxxxxxxxw  qxxxxxx
+xxxxw                                                  qxxxxs                                                     xxxxxxxxxxxx                               qxxxxxxxx      axxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxw                                                qxxxxs                                                      xxxxxxxxxxxx                               xxxxxxxxs       xxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxw                                           qxxxxs                                                        xxxxxxxxxxxx                              qxxxxxxxx        axxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxx                                         qxxxxxs                                                         xxxxxxxxxxxx                             d#xxxxxxxx           axxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxs                                        qxxxxs                                                           xxxxxxxxxxxx                             d#xxxxxxxx               axxxxxxxxxxxxxxxxxxx
+xxxxxxxs                                        qxxxxs                                                            xxxxxxxxxxxx                             d#xxxxxxxx                 axxxxxxxxxxxxxxxxx
+xxxxxxs                                       qxxxxs                                                              axxxxxxxxxxx                             d#xxxxxxxx                  xxxxxxxxxxxxxxxxx
+xxxxs                                      qxxxxxxs                                                                xxxxxxxxxxx                             d#xxxxxxxx                  axxxxxxxxxxxxxxxx
+xxxs                                       xxxxxs                                                                  xxxxxxxxxxx                             d#xxxxxxxxw                 dxxxxxxxxxxxxxxxx
+s                                         qxxxxs                                                                   axxxxxxxxxx                             d#xxxxxxxxx                 dxxxxxxxxxxxxxxxx
+                                          axxs                                    +                                 axxxxxxxxx                             d#xxxxxxxxx                 dxxxxxxxxxxxxxxs 
+                                                                                                                     xxxxxxxxx                             d#xxxxxxxxx                 dxxxxxxxxxxxs    
+                                                                                                                     axxxxxxxx                              axxxxxxxxx                 dxxxxxxxxs       
+                                                                                    +                                 xxxxxxxx                               xxxxxxxxx                 dxxxxxxs         
+                                                                                                                      axxxxxxx                               axxxxxxxs                 dxxxxs           
+                                                                                                                       xxxxxxx                                xxxxxxx                  dxxs             
+                                                                                                                       axxxxxx                                axxxxxx                   as              
+                                                                                                                        axxxxx                                 axxxxs                                   
+                                                                                                                         xxxxx                                                                          
+                                                                                                                         axxxxw                                                                         
+                                                                                    +                                     axxxx                                                                         
+                                               qxxxxxw                                                                     xxxxw                                                                        
+                                              qxxxxxxxw                                                                    axxxx                                                                        
+                                             qxxxxxxxxxw                                                                    axxxw                                                                       
+                                             xxxxxxxxxxxw                                                                    xxxx                                                                       
+                                             xxxxxxxxxxxx                                                                    axxx                                                                       
+                                             xxxxxxxxxxxxw                               +                                    axxw                                                                      
+                                             xxxxxxxxxxxxx                           +                                         xxxw                                                                     
+                                             axxxxxxxxxxxxw                                                                    xxxxw                                                                    
+                                              xxxxxxxxxxxxxw                                                                   axxxx                                                                    
+                                              axxxxxxxxxxxxxw                                                                   xxxxw                                                                   
+                                               xxxxxxxxxxxxxx                                                                   axxxxw                                                                  
+                                               axxxxxxxxxxxxxw                                                                   xxxxxw                                                                 
+                                                xxxxxxxxxxxxxx                   +                                               xxxxxxw                                                                
+                                                axxxxxxxxxxxxx                                                                   xxxxxxx                                                                
+                                                dxxxxxxxxxxxxx                          +                                        xxxxxxx                                                                
+                                                qxxxxxxxxxxxxxw                      +                                           xxxxxxs                                                                
+                                               qxxxxxxxxxxxxxxx                                                                 qxxxxxx                                                                 
+                                              qxxxxxxxxxxxxxxxx                                                                 xxxxxxs                                                                 
+                                             qxxxxxxxxxxxxxxxxx                                                                qxxxxxx                                                                  
+                                            qxxxxxxxxxxxxxxxxxx                                                               qxxxxxxx                                                                  
+                                           qxxxxxxxxxxxxxxxxxxxw                                                             qxxxxxxxs                                                                  
+                                          qxxxxxxxxxxxxxxxxxxxxx                                                           qxxxxxxxxx                                                                   
+                                         qxxxxxxxxxxxxxxxxxxxxxx                                                          qxxxxxxxxxx                                                                   
+                                         xxxxxxxxxxxsaxxxxxxxxxx                                         rrrr           qxxxxxxxxxxxx                                                                   
+                                        qxxxxxxxxxs   axxxxxxxxx                                        qxxxxw        qxxxxxxxxxxxxxs                                                                   
+                                       qxxxxxxxxxx     xxxxxxxxxw                                     qxxxxxxx########xxxxxxxxxxxxxs                                                                    
+                                      qxxxxxxxxxxx     axxxxxxxx#                                    qxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                                     
+EndOfMapdata

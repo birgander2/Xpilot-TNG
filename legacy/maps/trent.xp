@@ -1,0 +1,319 @@
+# Created by xplts/editors/xmapedit on Sun Jan 19 09:11:11 1997
+
+robotteam:0
+restrictrobots:true
+reserverobotteam:true
+cloakedexhaust:no
+cloakedshield:yes
+cannonsmartness:1
+cannonspickupitems:no
+ecmsreprogramrobots:yes
+wreckagecollisionmaykill:yes
+gravityvisible:true
+wormholevisible:true
+itemconcentratorvisible:true
+allowsmartmissiles:True
+allowheatseekers:True
+allowtorpedoes:True
+maxminesperpack:2
+minelife:0
+missilelife:0
+baseminerange:5
+shotkillscoremult:1.0
+torpedokillscoremult:1.0
+smartkillscoremult:1.0
+heatkillscoremult:1.0
+clusterkillscoremult:1.0
+laserkillscoremult:1.0
+tankkillscoremult:0.44
+runoverkillscoremult:0.33
+ballkillscoremult:1.0
+explosionkillscoremult:0.33
+shovekillscoremult:0.5
+crashscoremult:0.33
+minescoremult:0.17
+itemdeflectorprob:0.00001
+itemhyperjumpprob:0.00001
+itemphasingprob:0.00001
+initialdeflectors:0
+initialhyperjumps:0
+initialphasings:0
+maxfuel:9533
+maxtanks:8
+maxecms:300
+maxmines:300
+maxmissiles:300
+maxcloaks:300
+maxsensors:300
+maxwideangles:300
+maxrearshots:300
+maxafterburners:15
+maxtransporters:300
+maxdeflectors:300
+maxphasings:300
+maxhyperjumps:300
+maxemergencythrusts:300
+maxlasers:5
+maxtractorbeams:4
+maxautopilots:300
+maxemergencyshields:300
+allowviewing:false
+rounddelay:0
+maxroundtime:0
+
+mapwidth : 98
+mapheight : 121
+mapname : Trentsville, USA (turn on decor)
+mapauthor : Vincent (rohmon@ksu.edu)
+edgewrap : no
+edgebounce : yes
+teamplay : no
+oneplayeronly : no
+timing : no
+maxrobots : 1
+limitedvisibility : no
+playershielding : no
+gravity : 0.0
+gravitypointsource : no
+gravityclockwise : no
+gravityanticlockwise : no
+shotmass : 0.1
+shotspeed : 30
+shotlife : 20
+losemass : yes
+maxplayershots : 30
+shotsgravity : no
+crashwithplayer : yes
+playerkillings : yes
+firerepeatrate : 1
+robotstalk : no
+robotsleave : yes
+robotleavelife : 50
+robotleavescore : -90
+robotleaveratio : -5
+idlerun : yes
+noquit : yes
+contactport : 15345
+allowplayercrashes : yes
+allowplayerbounces : yes
+allowplayerkilling : yes
+allowshields : no
+maxobjectwallbouncespeed : 1000
+maxshieldedwallbouncespeed : 150
+maxunshieldedwallbouncespeed : 75
+maxshieldedplayerwallbounceangle : 180
+maxunshieldedplayerwallbounceangle : 180
+playerwallbouncebrakefactor : 0.4
+objectwallbouncebrakefactor : 0.9
+objectwallbouncelifefactor : 0.99
+wallbouncefueldrainmult : 0.2
+wallbouncedestroyitemprob : 0
+reporttometaserver : no
+denyhosts : no
+limitedlives : no
+reset : yes
+teamassign : yes
+teamimmunity : yes
+ecmsreprogrammines : yes
+targetkillteam : yes
+targetteamcollision : no
+targetsync : no
+treasurekillteam : no
+treasurecollisiondestroys : yes
+treasurecollisionmaykill : no
+friction : 0
+edgewrap : no
+extraborder : no
+framespersecond : 12
+allownukes : yes
+allowclusters : no
+allowmodifiers : yes
+allowlasermodifiers : yes
+allowshipshapes : yes
+playersonradar : yes
+missilesonradar : yes
+minesonradar : yes
+nukesonradar : yes
+treasuresonradar : yes
+distinguishmissiles : yes
+maxmissilesperpack : 3
+identifymines : yes
+shieldeditempickup : yes
+shieldedmining : yes
+laserisstungun : no
+nukeminsmarts : 4
+nukeminmines : 3
+nukeclusterdamage : 1
+minefusetime : 0
+movingitemprob : 0.75
+dropitemonkillprob : 0.9
+detonateitemonkillprob : 0.1
+destroyitemincollisionprob : 0
+itemprobmult : 0.04
+itemconcentratorradius : 10
+rogueheatprob : 0
+roguemineprob : 0
+itemenergypackprob : 0.0000001
+itemtankprob : 0.0000001
+itemecmprob : 0.0000001
+itemmineprob : 0.0000001
+itemmissileprob : 0.0000001
+itemcloakprob : 0.0000001
+itemsensorprob : 0.0000001
+itemwideangleprob : 0.0000001
+itemrearshotprob : 0.0000001
+itemafterburnerprob : 0.0000001
+itemtransporterprob : 0.0000001
+itemlaserprob : 0.0000001
+itememergencythrustprob : 0.0000001
+itemtractorbeamprob : 0.0000001
+itemautopilotprob : 0.0000001
+itememergencyshieldprob : 0.0000001
+initialfuel : 9533
+initialtanks : 0
+initialecms : 0
+initialmines : 0
+initialmissiles : 0
+initialcloaks : 0
+initialsensors : 0
+initialwideangles : 0
+initialrearshots : 0
+initialafterburners : 0
+initialtransporters : 0
+initiallasers : 0
+initialemergencythrusts : 0
+initialtractorbeams : 0
+initialautopilots : 0
+initialemergencyshields : 0
+gameduration : 0
+checkpointradius : 6
+racelaps : 3
+lockotherteam : yes
+loseitemdestroys : no
+maxoffensiveitems : 50
+maxdefensiveitems : 50
+plockserver : no
+
+mapData: \multiline: EndOfMapdata
+                                                                                                  
+                                                                                                  
+                                                                                                  
+                                                                                                  
+                                                                                                  
+                                                                                                  
+                                                                                                  
+                         b  b  b    b      b    b                                                 
+                bbbbbbbbb bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb b b              
+              bbb bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb             
+             b bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb bbbbbbb             
+              bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb bbb            
+              b bbb bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb             
+             bbbbbbbb bbbbbbb bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb            
+              b bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb            
+              bbbbbbbbb bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb            
+            b bb bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb bbbb            
+              bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb bb            
+             bb bbbbbbbbbbbbbb bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb            
+              bbbbb bbbb bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb           
+              b bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb bbbb bbbbbbbbbbb            
+             bbbb bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb           
+              bbbbbbb bbbbb bbbbb bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb            
+             bb bbbbbbb bbbbb bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb bbbbb           
+              bbbb bbbbbbbbbbbbbbbbb bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb bbb           
+             b bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb           
+             bbb bbbb bb bb bbbb bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb           
+            b  b   b bb bbbbbb bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb bbbbbbbbbbbb bbbbbbbbb           
+                           b bbbbbb bb bb bbbbbbbbbbbbbbbb bbbbbbbbb bbb bbbbbbb bbb bbb          
+                            bb b b bbbbbbbb bbbbbbbb bbbbbbb bbbbbbbbbbbbb b     b b              
+                                b b b bbbbbbbbb bbbbbbbbbbbbbbbbbbbbbb                            
+                                       b bbbbbbbbbbbbbbbbbbbbbb bb b                              
+                                     b  b bbbbbbbb bbbb bb b    b b                               
+                                          bb bbbbbbb bbbbb b                                      
+                                            bbbbbbbbbb                                            
+                                            b bbb bbb                                             
+                                             bbbbbbb                                              
+                                             bbbbbbb                                              
+                                            bb bbbb b                                             
+                                             bbbbbbbb                                             
+            b                               bbbbbbbbbb                      b  b                  
+             bb      b b                     bbbbbbb b                      bbb   b bbb           
+             b  b     b bbb b               bb bbbbbbbb                  bbbbb b bbbb b           
+           bb bbbb        b  b  b           bbbbbbbbbbb            b  bbbbb b bb bbbbbbb          
+           b bb b b    b bb b b      b      bbbbbbbbbbb           b  bb bb bbb  bbbbbb b          
+            bbbbbb b    bb bbb b b          bbbbbbbbbbb bbb b  b  b  bbbbbbbb  bbbbbbbbb          
+            b b bbb bb   b b   b  b b  b  bbbbbbb bbbbbb b bb bb bb b    b   bbbbb bbbbbb         
+            b bbb bb b bb   bbb bb b b b b b bbbbbbbbbbbbbbb bbbbbbbbbbbbbbbbbbbbbbbbbbb          
+           b b bbbbbbbb bbbbbbbbb bbbbb bbbbbbbbbbbbbbbbbbbbbb bb bbbbb bbbbbbbbbbbb bbb          
+            bbbbbbbbbbbbbbbbb bbbbb bbbbbbbbbbbbbbbbbbb bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb         
+           b  bb bb bb bbb bbbbb bbbbbbbbb bbbbb bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb          
+            bbb bbbbbbbbbbbbbb bbbbbbbb bbbb bbbbbb bbbbb bbbbbbbbbb bbbbbbbbb bbbbbbbbbb         
+             bbbbbbbb bbb bbbbbbb bb bbbbbbbbbbbbbbbbbbbbbb bbbb bbbbb bbbbbbbbbbb bbb b          
+            b b bb bbbb bbbb bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb bbbbbbbbbbbbbbb          
+            b bbbbbbbbbbbbbbbbb bbbbbbb bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb bbbbbbbbbbbbb          
+              bbb bbb bbbbb bbbbbbbb bbbb bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb bbbbb bb           
+              b bbb bbbbb bbb bbb bbbbbbbbb bbbbbbbbbb bbbbb bbbbbbbbbbbbbbbbbbb bbbbbb           
+               b bbbbbb bbbbbbbbbbbbbb bbbbbbbbb bbbbbbbbbbbbb bbbbbbbbbbbbbbbbbbbbb b            
+                bb bb bbbbb bbbbbbbb bbbbbbbbbbbbb bbbbbbbbbbbbbbbb bbbbbbbbbbbbbbbbbb            
+                  bbbbb bbbbbbb bb bbb bb bbbbbbbbbbbbbb bbbbbbbbbbbbbb bbb bbbbbb b              
+                 b b bbbbbbb bbbbbbb bbbbbbb bbbbbbbbbbbbb bbbbbbbbbbbbbbbbbb bb bbb              
+                  b bbbbb bbbbbbbbb bb b bbbbbbbbbbb bbbbbbb bb bbbbbbbbbbbbbbbbbb  b             
+                 b b b bbbbbbb bb bbb bbbb bbbbbbbbbbbbbbbbbbbbbbbbbb bbbbbbbbbbb b               
+                    bbbbbbbbbbbbbbbb b  bbbbbbbbbbbbbbb bbbbbbbbb bbbbbb bb bb b b                
+                  b b bb bb bbbb bb    bb bbbb bbbbbbbbbb b b bbbbbbbbbbbbbbbbbb                  
+                    b bbbbbbbbbbbbb b   bbb bbbbbbbbbbbbbbbb bbbbbbbbbbbbbbbb b  b                
+                    b bb bbbbb bbbbb     bbbbbbb bbbbbbbb b  b bbbbbbbbbbb bbbb                   
+                     b bbbb bbbbb b    b bbbbbbbbbb bbbbbb    bbb bbb bbbbbbb b b                 
+                  b   bb bbbbbbbbbb      bb bbbbbbbbbbbbbb  b  bbbbbbbbb bbbbb b  b               
+                   b b bbbb bbb bb  b  b bbbbbbbbbbbbb bbb b  bbbbbbbbbbbbbb b b b                
+                  b  bbb bbbb bbb bb    bb bbbbbbbbbbbbbbb   bbb bbb bbbbbbb bb b                 
+                 b  b b bbbbbbbbbbbb b bbbbbb bbbbbbbbbbbbbbbbbbbbbbbbb bb bbbb b b               
+                   b b bbbb bbbb b bb bb bbbbbbbbbbbbbbbbbb bb bbbbbbbbbbbbbb b b                 
+                  b bbbbb bbb bbbbbbbb bbbbbbbbbb bbbbbb bbbbbbbb bbbbbbb bbb bb  b               
+                b  b  b bbbbbbb bbb bbbbbb bbbbbbbbb bbbbbbbbbbbbbbb bbbbbb bbb                   
+                    bb bb bbbbbbbbbbbb bbbbb bbbbbbbbbbbbbbbbbbbbbbbbb bbbbbbb b                  
+                 b b  bbbbb bbbbb bbbb bbbbbbbbbbbbbbbbbbbbb bbbbbbbbbbb bbbbb b                  
+                  b bb b bbbb bbbbbbbbb bbbbbb bbbbbbbbbb bbbb bbbbbbbbbbb b b b                  
+                    b bbbbbbbbbbbbbbbbb bbbbbbbb bbbbb bbbbbbbbbbbbbbbbbbbbbb b                   
+                 b b b bb bbbbbb bb bbbbb bbbbbbbb bbbbbb bbbbbbbbbbbbbbbbbbbbb                   
+                   b bbbbbbb bbbbbbbb bb  bbbbbbbbbbbbbb bbbbbbbbb bbbbbbb bb                     
+                   b  b bbbbbbbbbbbbbbb b b bbbbbbbbbbbb bbbbbbbbbbbb bbbbbb b b                  
+                    b bbbb bbb bbbbbbbbbb   b b b bb b  bb bbbbbbbbbbbb bbbbb                     
+                     b b bbbbbbbbb bbbbb                bbbb bbbbbbbbbbbb bb b                    
+                   b b bbbbb bbbbbbbb b b              bbbbbbb bbbbbbbbbbbb b                     
+                     b bb bbbbbb bbbbbbb               bbbbbbbbbb bbbbbbbbbbb                     
+                      b bbbbbb bbbb b b  b           b bbbbbbbbbbbbb bbbbb b                      
+                        b b bbbbb bbbb bb             bb bbbbbbbbbbbbbb bbbb                      
+                      bb bbbb bbbb b bb b              bbb bbbbbbbbbbbbbbb b                      
+                          b  b  b bbb bb  b           bbbbbbbbb bbbbb bb b b                      
+                        b         b bb  b b bb  b   bbbbbbbbbbbbb b bb b b                        
+                                   b  b b   b bbb bbb bbbbbb bbbbbb                               
+                                                bb b b       b b                                  
+                                                 b                                                
+                                                                                                  
+                                  b                      b  b   b b                               
+                                   b b bb bb b       bbbbbbbb bbb                                 
+                                         b bbbbbbbbbbbbbbb b b                                    
+                                       b  bb bb b bbb bb bbb                                      
+                                           b b bb b bbbbbb b                                      
+                                              b  b bb b                                           
+                                                                                                  
+                                                                                                  
+                                                                                                  
+                                                                                                  
+                                                               b  b                               
+                                                          b b bb b                                
+                                                       bbbbbbbbbb                                 
+                                   b b  b    b       b b bbb bb b                                 
+                                     b  b b b bbb   b bbbb bbb bb                                 
+                                         bb b b b b b bb bbb bb                                   
+                                     b b   b bb b b bb bbb b  b                                   
+                                         b b b  b  b b b bb b                                     
+                                              b        b b                                        
+                                                                                                  
+                                                                                                  
+                                                                                                  
+                                                                                                  
+                                                                                                  
+                                                                                                  
+                                                                                                  
+EndOfMapdata

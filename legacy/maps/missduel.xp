@@ -1,0 +1,309 @@
+# Created by xplts/editors/edmapedit on Sun Sep 20 06:05:31 1998
+
+robotteam:0
+restrictrobots:true
+reserverobotteam:true
+cloakedexhaust:no
+cloakedshield:yes
+cannonsmartness:3
+cannonspickupitems:no
+ecmsreprogramrobots:yes
+wreckagecollisionmaykill:yes
+gravityvisible:no
+wormholevisible:no
+itemconcentratorvisible:yes
+allowsmartmissiles:no
+allowheatseekers:no
+allowtorpedoes:True
+maxminesperpack:2
+minelife:0
+missilelife:0
+baseminerange:5
+shotkillscoremult:1.0
+torpedokillscoremult:1.0
+smartkillscoremult:1.0
+heatkillscoremult:1.0
+clusterkillscoremult:1.0
+laserkillscoremult:1.0
+tankkillscoremult:0.44
+runoverkillscoremult:0.33
+ballkillscoremult:1.0
+explosionkillscoremult:0.33
+shovekillscoremult:0.5
+crashscoremult:0.33
+minescoremult:0.17
+itemdeflectorprob:0.000004
+itemhyperjumpprob:0
+itemphasingprob:0
+initialdeflectors:0
+initialhyperjumps:0
+initialphasings:0
+maxfuel:9533
+maxtanks:8
+maxecms:300
+maxmines:300
+maxmissiles:300
+maxcloaks:300
+maxsensors:300
+maxwideangles:300
+maxrearshots:300
+maxafterburners:15
+maxtransporters:300
+maxdeflectors:300
+maxphasings:300
+maxhyperjumps:300
+maxemergencythrusts:300
+maxlasers:5
+maxtractorbeams:4
+maxautopilots:300
+maxemergencyshields:300
+allowviewing:false
+rounddelay:0
+maxroundtime:0
+
+mapname : > Missile Duel! (torpedo heaven)
+mapauthor : Vincent (www-personal.ksu.edu/~rohmon/xpmaps/)
+mapwidth : 120
+mapheight : 100
+extraborder : no
+edgewrap : no
+edgebounce : yes
+losemass : no
+gravity : 0
+gravitypoint : 0,0
+gravityangle : 90
+gravitypointsource : no
+gravityclockwise : no
+gravityanticlockwise : no
+shotsgravity : no
+limitedvisibility : no
+minvisibilitydistance : 1000
+maxvisibilitydistance : 6243
+shotswallbounce : no
+ballswallbounce : yes
+mineswallbounce : no
+itemswallbounce : yes
+missileswallbounce : no
+sparkswallbounce : yes
+debriswallbounce : yes
+playerwallbouncebrakefactor : 0.4
+objectwallbouncebrakefactor : 0.9
+maxrobots : 10
+robotstalk : no
+robotsleave : yes
+robotleavelife : 50
+robotleavescore : -90
+robotleaveratio : -5
+allowshipshapes : yes
+shipmass : 25
+shotmass : 0.2
+shotspeed : 15
+shotlife : 5
+firerepeatrate : 2
+maxplayershots : 1
+maxoffensiveitems : 1000
+maxdefensiveitems : 1000
+loseitemdestroys : no
+initialfuel : 2100
+initialtanks : 0
+initialecms : 0
+initialmines : 0
+initialmissiles : 2
+initialcloaks : 0
+initialsensors : 0
+initialwideangles : 0
+initialrearshots : 0
+initialafterburners : 6
+initialtransporters : 0
+initiallasers : 0
+initialemergencythrusts : 0
+initialtractorbeams : 0
+initialautopilots : 0
+initialemergencyshields : 0
+allowshields : no
+shieldeditempickup : yes
+shieldedmining : yes
+playerstartsshielded : yes
+wallbouncefueldrainmult : 0.2
+wallbouncedestroyitemprob : 0
+maxshieldedwallbouncespeed : 150
+maxunshieldedwallbouncespeed : 75
+maxshieldedplayerwallbounceangle : 180
+maxunshieldedplayerwallbounceangle : 180
+destroyitemincollisionprob : 0
+dropitemonkillprob : 0.9
+detonateitemonkillprob : 0.1
+allownukes : yes
+allowclusters : yes
+nukeclusterdamage : 6
+allowmodifiers : yes
+allowlasermodifiers : no
+laserisstungun : no
+ecmsreprogrammines : yes
+missilesonradar : yes
+minesonradar : yes
+nukesonradar : yes
+distinguishmissiles : yes
+identifymines : yes
+minefusetime : 0
+maxmissilesperpack : 2
+nukeminsmarts : 6
+nukeminmines : 3
+movingitemprob : 0.75
+maxobjectwallbouncespeed : 1000
+objectwallbouncelifefactor : 0.99
+itemconcentratorradius : 2
+itemconcentratorprob : 1
+itemprobmult : 0.1
+maxitemdensity : 0.008
+itemenergypackprob : 0
+itemtankprob : 0.0000005
+itemecmprob : 0.0000001
+itemmineprob : 0
+roguemineprob : 0
+itemmissileprob : 0.000009
+rogueheatprob : 0
+itemcloakprob : 0.00000001
+itemsensorprob : 0.00000009
+itemwideangleprob : 0
+itemrearshotprob : 0
+itemafterburnerprob : 0.00000009
+itemtransporterprob : 0
+itemlaserprob : 0
+itememergencythrustprob : 0
+itemtractorbeamprob : 0
+itemautopilotprob : 0
+itememergencyshieldprob : 0.0000005
+oneplayeronly : no
+allowplayerkilling : yes
+allowplayercrashes : yes
+allowplayerbounces : yes
+limitedlives : no
+playersonradar : yes
+teamplay : yes
+teamassign : yes
+teamimmunity : yes
+reset : yes
+lockotherteam : yes
+targetkillteam : yes
+targetteamcollision : yes
+targetsync : no
+treasurekillteam : no
+treasurecollisiondestroys : yes
+treasurecollisionmaykill : no
+treasuresonradar : yes
+timing : no
+racelaps : 3
+checkpointradius : 6
+friction : 0
+framespersecond : 12
+reporttometaserver : yes
+idlerun : yes
+noquit : yes
+gameduration : 0
+contactport : 15345
+denyhosts : no
+plockserver : no
+
+mapData: \multiline: EndOfMapdata
+  qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxsqwk(as(jqwaxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw  
+ qs++++qs                                              ax0$(($0xs                                              aw++++aw 
+qs++qxxs                                                awk((jqs                                                axxw++aw
+x++qs                                                    awqwqs                                                    aw++x
+x+qs                                                      asas                                                      aw+x
+x+x  ty                                                    ty                                                    ty  x+x
+x+x  gby                                                   bb                                                   tbh  x+x
+xqs   gby t                                                bb                                                y tbh   awx
+xs     gbyb                                                bb                                                btbh     ax
+x       gbb    qxxxx                                       bb                                       xxxxw    bbh       x
+x      tbbb   #xs                                          bb                                          ax#   bbby      x
+x            #xs                                           bb                                           ax#            x
+x           #xs                                            bb                                            ax#           x
+x          #xs                     qxxxxxx                 bb                 xxxxxxw                     ax#          x
+x         #xs                  qxxxxs                      bb                      axxxxw                  ax#         x
+x        qxs                  qxs                          bb                          axw                  axw        x
+x        xs                  qxs                           bb                           axw                  ax        x
+x        x                  qxs                            bb                            axw                  x        x
+x        x                 qxs                             bb                             axw                 x        x
+x        x                qxs                              bb                              axw                x        x
+x                         xs                               bb                               ax                         x
+x                         x                                bb                                x                         x
+x                         s                                bb                                a                         x
+x E                                                        bb                                                          x
+x                                                       qxxxxxxw                                                       x
+x                                                    qxxxs mm axxxw                                                    x
+x                                                  qxxsm m bb m maxxw                                                  x
+x                                                  s m     bb     m a                                                  x
+x                                                  m       bb       m                                                  x
+x                                                +         bb         +                                                x
+x                                                          bb                                                          x
+x                                                          bb                                                          x
+x                                              +           bb           +                                              x
+x                                                         tbby                                                         x
+x                                                         bbbb                                                         x
+x    qx                                       +           bbbb           +                                       xw    x
+x    xs                                                  tbbbby                                                  ax    x
+x    x                                                   bbbbbb                                                   x    x
+x    x                                      +            bbbbbb            +                                      x    x
+x    x                                                   bbbbbb                                                   x    x
+x   qx1$                                                tbbbbbby                                                $2xw   x
+x   xs                                     +            bbbbbbbb            +                                     ax   x
+x   x                                                   bbbbbbbb                                                   x   x
+x   x                                                   bbbbbbbb                                                   x   x
+x  qx                                   qxk             b!!!!!!b             jxw                                   xw  x
+x  xs                                   xs             t!))))))!y             ax                                   ax  x
+x rx1$                                 qxk             !))))))))!             jxw                                 $2xr x
+xr!x                                   xs             !)))%)%))))!             ax                                   x!rx
+x!!x                 y     qxw        qxk             !)))))))%))!             jxw        qxw     t                 x!!x
+x!!x                t%h   *x+xxxxxxxxxxx              !))%)))))))!              xxxxxxxxxxx+x*   g%y                x!!x
+xc!x                 g     axs        axk             !)))))))%))!             jxs        axs     h                 x!cx
+x cx1$                                 xw             !)))%)%))))!             qx                                 $2xc x
+x  xw                                  axk             !))))))))!             jxs                                  qx  x
+x  ax                                   xw             g!))))))!h             qx                                   xs  x
+x   x                                   axk             b!!!!!!b             jxs                                   x   x
+x   x                                                   bbbbbbbb                                                   x   x
+x   xw                                                  bbbbbbbb                                                  qx   x
+x   ax1$                                   +            bbbbbbbb            +                                   $2xs   x
+x    x                                                  gbbbbbbh                                                  x    x
+x    x                                                   bbbbbb                                                   x    x
+x    x                                      +            bbbbbb            +                                      x    x
+x    xw                                                  bbbbbb                                                  qx    x
+x    ax                                                  gbbbbh                                                  xs    x
+x                                             +           bbbb           +                                             x
+x                                                         bbbb                                                         x
+x                                                         gbbh                                                         x
+x                                              +           bb           +                                              x
+x                                                          bb                                                          x
+x                                                          bb                                                          x
+x                                                +         bb         +                                                x
+x                                                  i       bb       i                                                  x
+x                                                  w i     bb     i q                                                  x
+x                                                  axxwi i bb i iqxxs                                                  x
+x                                                    axxxw ii qxxxs                                                    x
+x                                                       axxxxxxs                                                       x
+x                                                          bb                                                          x
+x                         w                                bb                                q                         x
+x                         x                                bb                                x                         x
+x                         xw                               bb                               qx                         x
+x        x                axw                              bb                              qxs                x        x
+x        x                 axw                             bb                             qxs                 x        x
+x        x                  axw                            bb                            qxs                  x        x
+x        xw                  axw                           bb                           qxs                  qx        x
+x        axw                  axw                          bb                          qxs                  qxs        x
+x         #xw                  axxxxw                      bb                      qxxxxs                  qx#         x
+x          #xw                     axxxxxx                 bb                 xxxxxxs                     qx#          x
+x           #xw                                            bb                                            qx#           x
+x            #xw                                           bb                                           qx#            x
+x      gbbb   #xw                                          bb                                          qx#   bbbh      x
+x       tbb    axxxx                                       bb                                       xxxxs    bby       x
+x      tbhb                                                bb                                                bgby      x
+xw    tbh g                                                bb                                                h gby    qx
+xaw  tbh                                                   bb                                                   gby  qsx
+x+x  gh                                                    bb                                                    gh  x+x
+x+x                                                        gh                                                        x+x
+x+aw                                                      qwqw                                                      qs+x
+x++aw                                                    qsasaw                                                    qs++x
+aw++axxw                                                qsk((jaw                                                qxxs++qs
+ aw++++aw                                              qx0$(($0xw                                              qs++++qs 
+  axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxwask(qw(jasqxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs  
+EndOfMapdata

@@ -1,0 +1,223 @@
+# Created by PUBLIC/games/xpilot/xpilotmap on Wed Oct 27 22:38:37 1993
+
+mapwidth : 200
+mapheight : 200
+mapname : The Station and Wormhole
+mapauthor : Dorian S. Araneda (dsaraned@eos.ncsu.edu)
+edgewrap : yes
+edgebounce : no
+teamplay : no
+maxrobots : 2
+limitedvisibility : no
+playershielding : yes
+shipmass : 25
+gravity : 0
+shotmass : 1
+losemass : no
+maxplayershots : 10
+shotsgravity : yes
+crashwithplayer : yes
+playerkillings : yes
+
+mapData: \multiline: EndOfMapdata
+                                q-x#_                                                                                               xxxxxxxx xw                                                  _#x-w  
+                               qxs                                                                                                 qxxx  xxxx xw                                                    axw 
+                              qxs                                                                                                  xxxx w xxx  xw                                                    axw
+w                            qxs                                                                                                   xxxxxxxxxxxxxx                                                     ax
+xw                          qxs                                                                                                    xxxxxx-xxxxxxx                                                      a
+axw        qxxxxxxxw       qxs                                                                                                     xxxxx---xxxxxx                                                       
+ axw       xxxxxxxxx      qxs                                                                                                      xxx x----xx  x                                                       
+  axw     qxxxxxxxxxw    qxs                                                                                                       xx  xx---xx  x                                                       
+   axw   qxxxs   axxxw  qxs                                                                                                        xx  xxxxxxxxxx                                                       
+    axw qxxxs     axxxwqxs                                                                                                         xxxxxxxxxxxxxx                                                       
+     xxxxxxs       axxxxxw                                                                                                         xxxxx    xxxxs                                                       
+     xxxxxs         axxxxx                                                                                                         axxxxx  xxxxs                                                        
+    qxxxxs     !     axxxxw                                                                                                         axxxxxxxxx                                                          
+    xxxxs             axxxx                                                                                                                                                                             
+    xxx#               #xxx                                                                                                                                                                             
+    x x#               #x x                                                                                                                                                                             
+    xxx#               #xxx                                                                                                                                                                             
+    -xx#_      !      _#xx-                                                                                                                                                                             
+    xxx#               #xxx                                                                                                                                                                             
+    xxx#               #xxx                                                                                                                                                                             
+    x x#               #x x                                                                                                                                                                             
+    xxx#               #xxx                                                                                                                                                                             
+    xxxxw      !      qxxxx                                                                                                                                                                             
+   qxxxxxw           qxxxxxw                                                                                                                                                                            
+  qxs axxxw         qxxxs axw                                                                                                                                                                           
+ qxs   axxxw       qxxxs   axw                                                                                                                                                                          
+qxs     axxxw     qxxxs     axw                                                                                                                                                                         
+xs       axxx     xxxs       axw                                                                                                                                                                       q
+s          ax     xs          axw                                                                                                                                                                     qx
+            x     x            axw                                                                                                                                                                   qxs
+            x     x             axw                                                                                                                                                                 qxs 
+            x>   <x              axw                                                                                                                                                             _#x-s  
+            c     c               a-x#_                                                                                                                                                           xxx   
+                                   xxx                                                                                                                                                            xx#   
+                                   #xx                                                                                                                                                              _   
+                                   _                                                                                                                                                                    
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+                                                                                                                                       _ _                                                              
+                                                                                                                                        _                                                               
+                                                                                                                                     >  -  <                                                            
+                                                                                                                                      >---<                                                             
+                                                                                                                                      >---<                                                             
+                                                                                                                                     >>---<<                                                            
+                                                                                                                                    >>>---<<<                                                           
+                                                                                                                                   >>>>---<<<<                                                          
+                                                                                                                                  >>>>>---<<<<<                                                         
+                                                                                                                                  >>>>>---<<<<<                                                         
+                                                                                                                                  >>>>>   <<<<<                                                         
+                                                                                                                                  >>>>>   <<<<<                                                         
+                                                                                                                                  >>>>>   <<<<<                                                         
+                                                                                                                                   >>>>   <<<<                                                          
+                                                                                                                                   >>>>   <<<<                                                          
+                                                                                                                                    >>>   <<<                                                           
+                                                                                                                                    >>>   <<<                                                           
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                            r                                         +   +                                                             
+                                                                                     r    qxxw                                        +   +                                                             
+                                                                                 xw qxxw xxxxx                                        +   +                                                             
+                                                                                qxxxxxxx xxxxxwqxw                                    +   +                                                             
+                                                                              xxxxxxxxxxxxxxxxxxxx                                    +   +                                                             
+                                                                          xw qxxxxxxxxxxxxxxxxxxxx                                    +   +                                                             
+                                                                          axxxxxxxxxxxxxxxxxxxxxxxw qxxf                              +   +                                                             
+                                                                          qxxxxxxxxxxxxxxxxxxxxxxxxxxxs                               +   +                                                             
+                                                                         qxxxxxxxxxxxxxxxxxxxxxxxxx                                   +   +                                                             
+                                                                       dxxxxxxxxxxxxxxxxxxxxxxxxxxx   xxf                             +   +                                                             
+                                                                        axxxxxxxxxxxxxxxxxxxxxxxxx    xxf                             +   +                                                             
+                                                                      dxxxxxxxxxxxxxxxx   xxxxxxx  xxxxxw                             +   +                                                             
+                                                                       xxxxxxxxxxxxxxxs    ax      xxxxxxf                            +   +                                                             
+                                                                      qxxxxxxxxxxxxxxs            qxxxxxxx                            +   +                                                             
+                                                                     dxxxxxxxxxxxxxxs         qxxxxxxxxxxxf                           +   +                                                             
+                                                                      axxxxxxxxxx       qxxxxxxxxxxxxxxxxxw                           +   +                                                             
+                                                                       axxxxxxxxx     qxxxxxxxxxxxxxxxxxxxx                           +   +                                                             
+                                                                       qxxxxxxxxxw   qxxxxxxxxxxxxxxxxxxxxx                           +   +                                                             
+                                                                      xxxxxxxxxxxx   xxxxxxxxxxxxxxxxxxxxxx                           +   +                                                             
+                                                                     dxxxxxxxxxxx    xxxxxxxxxxxxxxxxxxxxs                            +   +                                                             
+                                                                     dxxxxx           cxxxxxxxxxxxxxxxxxx                             +   +                                                             
+                                                                                       dxxxxxxxxxxxxxxxxxw                            +   +                                                             
+                                                                                w       xxxxxxxxxxxxxxxxxx                            +   +                                                             
+                                                                        qw    w xxxx    xxxxxxxxxxxxxxxxxx                            +   +                                                             
+                                                                      dxxxxxxxxxxxxx     xxxxxxxxxxxxxxxxs                            +   +                                                             
+                                                                      qxxxxxxxxxxxxx      s !!!xxxxxxxxxs                             +   +                                                             
+                                                                     dxxxxxxxxxxxxxxxw      !!!xxxxxxxxx                              +   +                                                             
+                                                                      axxxxxxxxxxxxxxxx     !!!xxxxxxxxxw                             +   +                                                             
+                                                                          axxxxxxxxxxxx     !!xxxxxxxxxxxxx                           +   +                                                             
+                                                                          qxxxxxxxxxxxxx   qxxxxxxxxxxxxxxs                           +   +                                                             
+                                                                          xxxxxxxxxxxxxxw xxxxxxxxxxxxxxx                             >   <                                                             
+                                                                          axxxxxxxxxxxxxxxxxxxxxxxxxxxxxs                             +   +                                                             
+                                                                           xxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                             +   +                                                             
+                                                                           xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                             +   +                                                             
+                                                                           xxxxxxxxxxxxxxxxxxxxxxxxs                                  +   +                                                             
+                                                                              axxxxxxxxxxxxxxxxxxxx                                   +   +                                                             
+                                                                               xxxxxxxxxxxxsaxxxxxxw                                  +   +                                                             
+                                                                               xxxxsaxxxxxx  caxxxxx                                  +   +                                                             
+                                                                                axx  xs   c    axs c                                  +   +                                                             
+                                                                                                c                                     >   <                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      >   <                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      >   <                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                          xxx                                                                                         +   +                                                             
+                                       xxxx  xxxx                                                                                     >   <                                                             
+                                      xxxxxxxxxxxxxxx                                                                                 +   +                                                             
+                                    xxxxxxxxxxxxxxxxxxxx                                                                              +   +                                                             
+                                    xxxxxxxxxxxxxxxxxx xxxx                                                                           +   +                                                             
+                                   xxxxxxxxxxxxxxxxxxxxxxxxxxx                                                                        +   +                                                             
+                                  xxxxxxxxxxxxxxxxxxxxxxxxxxx xx                                                                      +   +                                                             
+                                  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                                     +   +                                                             
+                                  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                                     +   +                                                             
+                                  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                                     +   +                                                             
+                                  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                                     +   +                                                             
+                                  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                                     +   +                                                             
+                                  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                                     >   <                                                             
+                                  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                                     +   +                                                             
+                                  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                                     +   +                                                             
+                                  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                                     +   +                                                             
+                                  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                                     +   +                                                             
+                                  xxxxxxxxxxx---------xxxxxxxxxxx                                                                     +   +                                                             
+                                  xxxxxxxxxxx---------xxxxxxxxxxx                                                                     +   +                                                             
+                                  xxxxxxxxxxx---------xxxxxxxxxxx                                                                     +   +                                                             
+                                  xxxxxxxxxxx---------xxxxxxxxxxx                                                                     +   +                                                             
+                                  xxxxxxxxxxx---------xxxxxxxxxxx                                                                     +   +                                                             
+                                  xxxxxxxxxxx---------xxxxxxxxxxx                                                                     +   +                                                             
+                                 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                                     +   +                                                             
+                                 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                                     +   +                                                             
+                                 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                                     >   <                                                             
+                                 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                                     +   +                                                             
+                                 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                                     +   +                                                             
+                                 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                                     +   +                                                             
+                                  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                                     +   +                                                             
+                                  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                                     +   +                                                             
+                                   xxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                                      +   +                                                             
+                                    xxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                                      +   +                                                             
+                                           xxxxxxxxxxxxxxxxxxxx                                                                       +   +                                                             
+                                               xx xxxxxxxxxxxxx                                                                       +   +                                                             
+                                                 xxxxxxxxxxxxx                                                                        +   +                                                             
+                                                  xxxxxxxxxxxx                                                                        +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   +                                                             
+                                                                                                                                      +   -                                                             
+                                                                                                                                      +   -                                                             
+                                                                                                                                      +   -                                                             
+                                                                                                                                      +   -                                                             
+                                                                                                                                      ++ --                                                             
+                                                                                                                                      ++ --                                                             
+                                                                                                                                      ++ --                                                             
+                                                                                                                                      ++ --                                                             
+                                                                                                                                      +++--                                                             
+                                                                                                                                      +++--                                                             
+                                                                                                                                      +++-- ----                                                        
+                                                                                                                                      +++--------                                                       
+                                                                                                                                      ++++------<                                                       
+                                                                                                                                      ++++ ---<<<                                                       
+                                                                                                                                      ++++ <<<<<<                                                       
+                                                                                                                                       ++++                                                             
+                                                                                                                                       +++++                                                            
+                                                                                                                                         ++++>                                                          
+                                                                                                                                          ++++>                                                         
+                                                                                                                                           ++++>                                                        
+                                 _                                                                                                         +++++                                                    _   
+                                 #xx                                                                                                  qxxxxxxw+                                                   xx#   
+                                 xxx                                                                                                 qxxxxxxxx+                                                   xxx   
+EndOfMapdata

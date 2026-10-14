@@ -1,0 +1,84 @@
+# Created by xmapedit on Mon Oct 25 17:59:06 1993
+
+itemprobmult : 0
+#itemEnergypackProb: 0.2
+#itemTankProb:	0.2
+#itemECMProb: 0.2
+#itemMineProb: 0.2
+#itemCloakProb: 0.2
+#itemSensorProb: 0.2
+#itemRearShotProb: 0.2
+#itemAfterburnerProb: 0.2
+#itemWideangleProb: 0.2
+#itemMissileProb: 0.15
+#maxItemDensity : 0.0003
+allowshields : no
+robotsleave : no
+limitedlives : yes
+mapwidth : 100
+mapheight : 53
+mapname : Team Warfare II
+mapauthor : Ronny Arild & Andy Skinner
+edgewrap : yes
+teamplay : yes
+worldlives : 13
+maxplayershots : 3
+playersonradar : no
+limitedvisibility : yes
+playerstartshielded : yes
+
+mapData: \multiline: EndOfMapdata
+xxxx                                         xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                   xxx
+                                             xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                      
+                                            xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                      
+                                           xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                      
+                                         xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                      
+                                      xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                      
+                                   xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                      
+                                 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                      
+             xxx                 xxxxxxxxxxxxxxxxxxxxs            axxxxxxxxxxx                      
+           qxxxxxx             xxxxxxxxxxxxxxxxxxxxxx               xxxxxxxxxx                      
+           xxxxxxxxw           xxxxxxxxxxxxxxxxxxxx                 xxxxxxxxxx                      
+           xxxxxxxxxxxw        xxxxxxxxxxxxxxxxxxxx                 axxxxxxxxxw                     
+           xxxxxxxxxxxx         xxxxxxxxxxxxxxxxxxs                    axxxxxxx                     
+           xxxxxxxxxxxx         xxxxxxxxxxxxxxx                         xxxxxxx                     
+           xxxxxxxxxxxx         xxxxxxxxxxxx                             xxxxxx          qxw        
+           xxxxxxxxxxxx          xxxxxxxxx                               axxxxs          xxx        
+x          xxxxxxxxxxxx          xxxxxxxxx                                               axxxxxxxxxx
+x          xxxxxxxxxxxx          xxxxxxxxx                qxw                             xxxxxxxxxx
+x          xxxxxxxxxxxx            xxxxxxx               xxxx                             axxxxxxxxx
+x          xxxxxxxxxxxx              xxxx              qxxxxxx                             xxxxxxxxx
+x          axxxxxxxxxxx                                xxxxxxxxw                            axxxxxxx
+x           axxxxxxxxs                                qxxxxxxxxx                             xxxxxxx
+xx            axxxs                                   xxxxxxxxxx                             xxxxxxx
+xx                                                   xxxxxxxxxxxxw                           axxxxxx
+xxx                                                 qxxxxxxxxxxxxx                            xxxxxx
+xxx                                                 xxxxxxxxxxxxxxx                             xxxx
+xxx                                                 xxxxxxxxxxxxxxxxx                           xxxx
+xxx                                                 xxxxxxxxxxxxxxxxx                            xxx
+xxx                                                xxxxxxxxxxxxxxxxxx                            xxx
+xxx                                              qxxxxxxxxxxxxxxxxxxxxxw                         xxx
+xxx                                              xxxxxxxxxxxxxxxxxxxxxxx                         xxx
+xxx           qxxxxxxxw                         xxxxxxxxxxxxxxxxxxxxxxxx                        xxxx
+xxx           xxxxxxxxxxxxxxxw                  xxxxxxxxxxxxxxxxxxxxxxxxx                       xxxx
+xxx           xxxxxxxxxxxxxxxx                 qxxxxxxxxxxxxxxxxxxxxxxxxx                       xxxx
+xxx           xxxxxxxxxxxxxxxxx                xxxxxxxxxxxxxxxxxxxxxxxxxx                       xxxx
+xxx           xxxxxxxxxxxxxxxxxxw              xxxxxxxxxxxxxxxxxxxxxxxxxxw                      xxxx
+xxx           xxxxxxxxxxxxxxxxxxxx             xxxxxxxxxxxxxxxxxxxxxxxxxxx                      xxxx
+xxx           xxxxxxxxxxxxxxxxxxxx             xxxxxxxxxxxxxxxxxxxxxxxxxxx                       xxx
+xxx           xxxxxxxxxxxxxxxxxxxx             xxxxxxxxxxxxxxxxxxxxxxxxxxxw                      xxx
+xx            axxxxxxxxxxxxxxxxxxxx           qxxxxxsa#xxxxxxxxxxxx#saxxxxxxw                    xxx
+xx               xxxxxxxxxxxxxxxxxx          qxxs         axxxxs         axxxw                   xxx
+xx               xxxxxxxxxxxxxxxxxx                        xxxx                                  xxx
+xx               xxxxxxxxxxxxxxxxxx                        axxs                                  xxx
+xx               axxxxxxxxxxxxxxxxx                        !xx!                                 xxxx
+xx                 xxxxxxxxxxxxxxxx                        qxxw                                 xxxx
+xx                  axxxxxxxs xxxxs                        xxxx                                 xxxx
+xxx                                                       qxxxxw                                xxxx
+xxx                                            1  1  1    xxxxxx     2  2  2                    xxxx
+xxx                                           xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                   xxxx
+xxx                                           xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                    xxx
+xxx                                           xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                    xxx
+xxx                                          qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                   xxx
+xxxw                                         xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                   xxx
+EndOfMapdata

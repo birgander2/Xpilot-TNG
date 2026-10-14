@@ -1,0 +1,943 @@
+<XPilotMap>
+<GeneralOptions>
+<Option name="itemtankprob" value="0"/>
+<Option name="maxobjectwallbouncespeed" value="40"/>
+<Option name="gravityclockwise" value="yes"/>
+<Option name="numberofrounds" value="0"/>
+<Option name="nukeminsmarts" value="7"/>
+<Option name="maxmines" value="10"/>
+<Option name="allowheatseekers" value="True"/>
+<Option name="gravityvisible" value="true"/>
+<Option name="objectwallbouncelifefactor" value="1.0"/>
+<Option name="mapwidth" value="8050"/>
+<Option name="maxecms" value="10"/>
+<Option name="maxmissiles" value="10"/>
+<Option name="maxhyperjumps" value="10"/>
+<Option name="initialemergencyshields" value="0"/>
+<Option name="idlerun" value="yes"/>
+<Option name="initialtractorbeams" value="0"/>
+<Option name="maxarmor" value="10"/>
+<Option name="wallbouncefueldrainmult" value="0.1"/>
+<Option name="gravity" value="0"/>
+<Option name="shotspeed" value="5"/>
+<Option name="mapauthor" value="Patrick Laarhoven"/>
+<Option name="dropitemonkillprob" value="0.5"/>
+<Option name="mapheight" value="7315"/>
+<Option name="treasuresonradar" value="False"/>
+<Option name="sparkswallbounce" value="no"/>
+<Option name="initialsensors" value="0"/>
+<Option name="itemmissileprob" value="0"/>
+<Option name="maxtractorbeams" value="4"/>
+<Option name="baseminerange" value="0"/>
+<Option name="shieldeditempickup" value="False"/>
+<Option name="itemmirrorprob" value="0"/>
+<Option name="limitedvisibility" value="no"/>
+<Option name="targetteamcollision" value="yes"/>
+<Option name="initialemergencythrusts" value="0"/>
+<Option name="maxshieldedwallbouncespeed" value="150"/>
+<Option name="itemenergypackprob" value="4.01323e-09"/>
+<Option name="maxphasings" value="10"/>
+<Option name="identifymines" value="True"/>
+<Option name="limitedlives" value="yes"/>
+<Option name="initialautopilots" value="0"/>
+<Option name="checkpointradius" value="12"/>
+<Option name="wormholevisible" value="true"/>
+<Option name="denyhosts" value=""/>
+<Option name="initialmines" value="0"/>
+<Option name="maxdeflectors" value="10"/>
+<Option name="shotsgravity" value="true"/>
+<Option name="itemsensorprob" value="1.60596e-09"/>
+<Option name="cannonsmartness" value="1"/>
+<Option name="constantscoring" value="no"/>
+<Option name="contactport" value="15345"/>
+<Option name="initialwideangles" value="0"/>
+<Option name="itemhyperjumpprob" value="0"/>
+<Option name="initialarmor" value="0"/>
+<Option name="playerstartsshielded" value="yes"/>
+<Option name="detonateitemonkillprob" value="0.5"/>
+<Option name="runoverkillscoremult" value="0.33"/>
+<Option name="maxrearshots" value="10"/>
+<Option name="targetkillteam" value="no"/>
+<Option name="teamcannons" value="no"/>
+<Option name="timing" value="yes"/>
+<Option name="itemlaserprob" value="0"/>
+<Option name="maxroundtime" value="0"/>
+<Option name="itemprobmult" value="0.02"/>
+<Option name="allowplayerkilling" value="yes"/>
+<Option name="itemphasingprob" value="0"/>
+<Option name="movingitemprob" value="0"/>
+<Option name="mapname" value="Zandvoort GP"/>
+<Option name="itemwideangleprob" value="0"/>
+<Option name="clientportend" value="0"/>
+<Option name="missilelife" value="0"/>
+<Option name="maxunshieldedwallbouncespeed" value="150"/>
+<Option name="worldlives" value="4"/>
+<Option name="allowshipshapes" value="yes"/>
+<Option name="playersonradar" value="True"/>
+<Option name="lockotherteam" value="false"/>
+<Option name="nukeclusterdamage" value="1.0"/>
+<Option name="ignore20maxfps" value="true"/>
+<Option name="shipmass" value="20"/>
+<Option name="playerwallbouncebrakefactor" value="0.3"/>
+<Option name="wallbouncedestroyitemprob" value="0.0"/>
+<Option name="maxlasers" value="5"/>
+<Option name="initialfuel" value="150"/>
+<Option name="itemautopilotprob" value="1.60596e-09"/>
+<Option name="maxplayershots" value="5"/>
+<Option name="laserkillscoremult" value="1.0"/>
+<Option name="minesonradar" value="False"/>
+<Option name="initialmissiles" value="0"/>
+<Option name="allowlasermodifiers" value="yes"/>
+<Option name="objectwallbouncebrakefactor" value="0.95"/>
+<Option name="itemconcentratorradius" value="10"/>
+<Option name="playerlimit" value="0"/>
+<Option name="allowsmartmissiles" value="True"/>
+<Option name="shovekillscoremult" value="0.5"/>
+<Option name="itemmineprob" value="6.40779e-09"/>
+<Option name="firerepeatrate" value="1"/>
+<Option name="explosionkillscoremult" value="0.33"/>
+<Option name="itemrearshotprob" value="1.94386e-09"/>
+<Option name="laserisstungun" value="yes"/>
+<Option name="destroyitemincollisionprob" value="0.0"/>
+<Option name="wormtime" value="0"/>
+<Option name="maxmissilesperpack" value="4"/>
+<Option name="wreckagecollisionmaykill" value="no"/>
+<Option name="nukesonradar" value="True"/>
+<Option name="resetonhuman" value="yes"/>
+<Option name="allowtorpedoes" value="True"/>
+<Option name="missilesonradar" value="True"/>
+<Option name="roguemineprob" value="1.0"/>
+<Option name="password" value=""/>
+<Option name="itemarmorprob" value="1e-9"/>
+<Option name="itemtransporterprob" value="2.40596e-09"/>
+<Option name="nukeminmines" value="4"/>
+<Option name="rogueheatprob" value="1.0"/>
+<Option name="clusterkillscoremult" value="1.0"/>
+<Option name="targetsync" value="no"/>
+<Option name="rounddelay" value="0"/>
+<Option name="itemconcentratorprob" value="1.0"/>
+<Option name="initialphasings" value="0"/>
+<Option name="maxautopilots" value="10"/>
+<Option name="itemswallbounce" value="yes"/>
+<Option name="mapfilename" value="globe.xp"/>
+<Option name="elimination" value="no"/>
+<Option name="framespersecond" value="13"/>
+<Option name="gravitypointsource" value="yes"/>
+<Option name="allowmodifiers" value="yes"/>
+<Option name="distinguishmissiles" value="True"/>
+<Option name="maxvisibilitydistance" value="0.0"/>
+<Option name="shotlife" value="10"/>
+<Option name="maxwideangles" value="10"/>
+<Option name="crashscoremult" value="0.33"/>
+<Option name="allowplayercrashes" value="no"/>
+<Option name="initiallasers" value="0"/>
+<Option name="maxmirrors" value="10"/>
+<Option name="itemdeflectorprob" value="0"/>
+<Option name="treasurekillteam" value="no"/>
+<Option name="initialafterburners" value="2"/>
+<Option name="allowviewing" value="yes"/>
+<Option name="friction" value="0.03"/>
+<Option name="allowshields" value="yes"/>
+<Option name="shotswallbounce" value="no"/>
+<Option name="gravityanticlockwise" value="yes"/>
+<Option name="itememergencythrustprob" value="0"/>
+<Option name="initialhyperjumps" value="0"/>
+<Option name="debriswallbounce" value="no"/>
+<Option name="itemcloakprob" value="1.60596e-09"/>
+<Option name="maxminesperpack" value="2"/>
+<Option name="searchdomainforxpilot" value="no"/>
+<Option name="initialecms" value="0"/>
+<Option name="shieldedmining" value="False"/>
+<Option name="ecmsreprogrammines" value="yes"/>
+<Option name="minelife" value="0"/>
+<Option name="maxafterburners" value="10"/>
+<Option name="keepshots" value="yes"/>
+<Option name="loseitemdestroys" value="false"/>
+<Option name="reset" value="yes"/>
+<Option name="gravitypoint" value="0,0"/>
+<Option name="cannonsuseitems" value="no"/>
+<Option name="allowclusters" value="yes"/>
+<Option name="allowplayerbounces" value="yes"/>
+<Option name="cloakedexhaust" value="yes"/>
+<Option name="maxfuel" value="150"/>
+<Option name="cloakedshield" value="yes"/>
+<Option name="itemafterburnerprob" value="0"/>
+<Option name="itemecmprob" value="1.92426e-09"/>
+<Option name="shotkillscoremult" value="1.0"/>
+<Option name="maxcloaks" value="10"/>
+<Option name="mineswallbounce" value="no"/>
+<Option name="shotmass" value="0.1"/>
+<Option name="initialdeflectors" value="0"/>
+<Option name="ballswallbounce" value="yes"/>
+<Option name="edgewrap" value="no"/>
+<Option name="minvisibilitydistance" value="0.0"/>
+<Option name="clientportstart" value="0"/>
+<Option name="tankkillscoremult" value="0.44"/>
+<Option name="racelaps" value="3"/>
+<Option name="allownukes" value="yes"/>
+<Option name="maxsensors" value="10"/>
+<Option name="treasurecollisionmaykill" value="no"/>
+<Option name="maxtanks" value="8"/>
+<Option name="maxemergencyshields" value="10"/>
+<Option name="torpedokillscoremult" value="1.0"/>
+<Option name="ballkillscoremult" value="1.0"/>
+<Option name="initialtransporters" value="0"/>
+<Option name="missileswallbounce" value="no"/>
+<Option name="teamimmunity" value="yes"/>
+<Option name="initialmirrors" value="0"/>
+<Option name="cannonitemprobmult" value="1.0"/>
+<Option name="initialrearshots" value="0"/>
+<Option name="smartkillscoremult" value="1.0"/>
+<Option name="heatkillscoremult" value="1.0"/>
+<Option name="maxitemdensity" value="3.46021e-02"/>
+<Option name="initialcloaks" value="0"/>
+<Option name="maxemergencythrusts" value="10"/>
+<Option name="teamfuel" value="no"/>
+<Option name="itemconcentratorvisible" value="true"/>
+<Option name="itememergencyshieldprob" value="1e-9"/>
+<Option name="maxtransporters" value="10"/>
+<Option name="reporttometaserver" value="yes"/>
+<Option name="gravityangle" value="90"/>
+<Option name="gameduration" value="0.0"/>
+<Option name="treasurecollisiondestroys" value="yes"/>
+<Option name="defaultsfilename" value=""/>
+<Option name="teamplay" value="no"/>
+<Option name="minescoremult" value="0.17"/>
+<Option name="minefusetime" value="0.0"/>
+<Option name="itemtractorbeamprob" value="1.74620e-09"/>
+<Option name="dataurl" value=""/>
+<Option name="initialtanks" value="0"/>
+</GeneralOptions>
+<EdgeStyle id="xpbluehidden" width="-1" color="4E7CFF" style="0"/>
+<EdgeStyle id="xpredhidden" width="-1" color="FF3A27" style="0"/>
+<EdgeStyle id="yellow" width="2" color="FFFF00" style="0"/>
+<PolyStyle id="xpblue" color="4E7CFF" defedge="xpbluehidden" flags="1"/>
+<PolyStyle id="xpred" color="FF3A27" defedge="xpredhidden" flags="1"/>
+<PolyStyle id="emptyyellow" color="0000FF" defedge="yellow" flags="1"/>
+<Polygon x="4480" y="465920" style="xpblue">
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="-29465"/>
+<Offset x="0" y="-29465"/>
+<Offset x="0" y="-29465"/>
+<Offset x="0" y="-29465"/>
+<Offset x="0" y="-29465"/>
+<Offset x="0" y="-29465"/>
+<Offset x="0" y="-29465"/>
+<Offset x="0" y="-29465"/>
+<Offset x="0" y="-29464"/>
+<Offset x="0" y="-29464"/>
+<Offset x="0" y="-29464"/>
+<Offset x="0" y="-29464"/>
+<Offset x="0" y="-29464"/>
+<Offset x="2240" y="0" style="internal"/>
+<Offset x="6976" y="14272" style="xpbluehidden"/>
+<Offset x="15424" y="8128"/>
+<Offset x="27626" y="0"/>
+<Offset x="27627" y="0"/>
+<Offset x="27627" y="0"/>
+<Offset x="11200" y="2240"/>
+<Offset x="19200" y="11072"/>
+<Offset x="12160" y="2368"/>
+<Offset x="0" y="6720" style="internal"/>
+<Offset x="-6720" y="0" style="xpbluehidden"/>
+<Offset x="0" y="2240"/>
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="8960"/>
+<Offset x="2240" y="0"/>
+<Offset x="0" y="2240"/>
+<Offset x="8960" y="0"/>
+<Offset x="0" y="-2240"/>
+<Offset x="-8960" y="0"/>
+<Offset x="0" y="-8960"/>
+<Offset x="6720" y="0"/>
+<Offset x="0" y="2240"/>
+<Offset x="-4480" y="0"/>
+<Offset x="0" y="2240"/>
+<Offset x="6720" y="0"/>
+<Offset x="0" y="-4480"/>
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="-2240"/>
+<Offset x="0" y="-6720" style="internal"/>
+<Offset x="19040" y="0" style="xpbluehidden"/>
+<Offset x="19040" y="0"/>
+<Offset x="4480" y="-2240"/>
+<Offset x="16800" y="-16800"/>
+<Offset x="16800" y="-16800"/>
+<Offset x="-12480" y="15936"/>
+<Offset x="-13280" y="14304"/>
+<Offset x="-25760" y="25760"/>
+<Offset x="-4480" y="15680"/>
+<Offset x="-4480" y="11200"/>
+<Offset x="-6720" y="11200"/>
+<Offset x="-2240" y="8960"/>
+<Offset x="-4480" y="20160"/>
+<Offset x="-4480" y="15680"/>
+<Offset x="-6720" y="13440"/>
+<Offset x="-8960" y="10496"/>
+<Offset x="-17920" y="14144"/>
+<Offset x="-8960" y="6720"/>
+<Offset x="-6720" y="4480"/>
+<Offset x="-11200" y="11200"/>
+<Offset x="-2240" y="-2240" style="internal"/>
+<Offset x="0" y="-2240" style="xpbluehidden"/>
+<Offset x="-8960" y="0"/>
+<Offset x="0" y="-4480"/>
+<Offset x="6720" y="0"/>
+<Offset x="0" y="-2240"/>
+<Offset x="2240" y="0"/>
+<Offset x="0" y="-4480"/>
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="-2240"/>
+<Offset x="-8960" y="0"/>
+<Offset x="-2240" y="0" style="internal"/>
+<Offset x="-2240" y="0" style="xpbluehidden"/>
+<Offset x="0" y="6720"/>
+<Offset x="-6720" y="0"/>
+<Offset x="0" y="-6720"/>
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="15680"/>
+<Offset x="8960" y="0"/>
+<Offset x="0" y="-2240"/>
+<Offset x="2240" y="0"/>
+<Offset x="0" y="-4480"/>
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="-2240"/>
+<Offset x="2240" y="0"/>
+<Offset x="0" y="-6720"/>
+<Offset x="2240" y="0" style="internal"/>
+<Offset x="0" y="2240" style="xpbluehidden"/>
+<Offset x="8960" y="0"/>
+<Offset x="0" y="4480"/>
+<Offset x="-6720" y="0"/>
+<Offset x="0" y="2240"/>
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="4480"/>
+<Offset x="2240" y="0"/>
+<Offset x="0" y="2240"/>
+<Offset x="8960" y="0"/>
+<Offset x="2240" y="2240" style="internal"/>
+<Offset x="-8960" y="8960" style="xpbluehidden"/>
+<Offset x="-2240" y="6720"/>
+<Offset x="-2240" y="4480"/>
+<Offset x="-8960" y="17920"/>
+<Offset x="-6720" y="22400"/>
+<Offset x="-6720" y="15680"/>
+<Offset x="-4480" y="6720"/>
+<Offset x="-8960" y="28000"/>
+<Offset x="0" y="19040"/>
+<Offset x="2240" y="8960"/>
+<Offset x="2240" y="11200"/>
+<Offset x="13440" y="13440"/>
+<Offset x="4480" y="2240"/>
+<Offset x="15232" y="7168"/>
+<Offset x="20608" y="6272"/>
+<Offset x="26880" y="0"/>
+<Offset x="26880" y="0"/>
+<Offset x="26880" y="0"/>
+<Offset x="15936" y="-2688"/>
+<Offset x="22144" y="-6272"/>
+<Offset x="8960" y="-2240"/>
+<Offset x="19040" y="-2240"/>
+<Offset x="19040" y="2240"/>
+<Offset x="29120" y="0"/>
+<Offset x="6720" y="-2752"/>
+<Offset x="8960" y="-10688"/>
+<Offset x="6720" y="0" style="internal"/>
+<Offset x="0" y="15680" style="xpbluehidden"/>
+<Offset x="2240" y="0"/>
+<Offset x="0" y="-2240"/>
+<Offset x="2240" y="0"/>
+<Offset x="0" y="-4480"/>
+<Offset x="2240" y="0"/>
+<Offset x="0" y="4480"/>
+<Offset x="2240" y="0"/>
+<Offset x="0" y="2240"/>
+<Offset x="2240" y="0"/>
+<Offset x="0" y="-2240"/>
+<Offset x="2240" y="0" style="internal"/>
+<Offset x="2240" y="0" style="xpbluehidden"/>
+<Offset x="0" y="2240"/>
+<Offset x="6720" y="0"/>
+<Offset x="0" y="-2240"/>
+<Offset x="2240" y="0"/>
+<Offset x="0" y="-13440"/>
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="6720"/>
+<Offset x="-6720" y="0"/>
+<Offset x="0" y="-6720"/>
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="13440"/>
+<Offset x="-2240" y="0" style="internal"/>
+<Offset x="0" y="-13440" style="xpbluehidden"/>
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="8960"/>
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="-2240"/>
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="2240"/>
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="-8960"/>
+<Offset x="-2240" y="0"/>
+<Offset x="-6720" y="0" style="internal"/>
+<Offset x="6656" y="-11712" style="xpbluehidden"/>
+<Offset x="2304" y="-10688"/>
+<Offset x="2240" y="-6720"/>
+<Offset x="0" y="-23894"/>
+<Offset x="0" y="-23893"/>
+<Offset x="0" y="-23893"/>
+<Offset x="-6720" y="0"/>
+<Offset x="-2240" y="-2240"/>
+<Offset x="0" y="-6720"/>
+<Offset x="-3776" y="-11008"/>
+<Offset x="-2944" y="-4672"/>
+<Offset x="8960" y="-2240" style="internal"/>
+<Offset x="8960" y="0" style="xpbluehidden"/>
+<Offset x="0" y="-2240"/>
+<Offset x="2240" y="0"/>
+<Offset x="0" y="-4480"/>
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="-2240"/>
+<Offset x="2240" y="0"/>
+<Offset x="0" y="-6720"/>
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="6720"/>
+<Offset x="-6720" y="0"/>
+<Offset x="0" y="-6720"/>
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="15680"/>
+<Offset x="-8960" y="2240" style="internal"/>
+<Offset x="-4480" y="-6720" style="xpbluehidden"/>
+<Offset x="-2240" y="-2240"/>
+<Offset x="-4480" y="-2240"/>
+<Offset x="-29120" y="0"/>
+<Offset x="-17920" y="8960"/>
+<Offset x="-15680" y="15680"/>
+<Offset x="-6720" y="15680"/>
+<Offset x="-4480" y="4480"/>
+<Offset x="-8960" y="13440"/>
+<Offset x="-8960" y="8960"/>
+<Offset x="-4480" y="0"/>
+<Offset x="-2240" y="-2240"/>
+<Offset x="0" y="-4480"/>
+<Offset x="4544" y="-14208"/>
+<Offset x="8192" y="-14464"/>
+<Offset x="7424" y="-9408"/>
+<Offset x="2240" y="-4480"/>
+<Offset x="17920" y="-26880"/>
+<Offset x="4480" y="-6720"/>
+<Offset x="8960" y="-11200"/>
+<Offset x="8960" y="-13440"/>
+<Offset x="15680" y="-15680"/>
+<Offset x="17920" y="-15680"/>
+<Offset x="8960" y="-8960"/>
+<Offset x="17920" y="-8960"/>
+<Offset x="11200" y="-11200"/>
+<Offset x="8960" y="-22400"/>
+<Offset x="2240" y="0" style="internal"/>
+<Offset x="4480" y="0" style="xpbluehidden"/>
+<Offset x="0" y="-4480"/>
+<Offset x="2240" y="0"/>
+<Offset x="0" y="-4480"/>
+<Offset x="2240" y="0"/>
+<Offset x="0" y="8960"/>
+<Offset x="2240" y="0"/>
+<Offset x="0" y="-15680"/>
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="2240"/>
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="4480"/>
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="4480"/>
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="-11200"/>
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="15680"/>
+<Offset x="-2240" y="0" style="internal"/>
+<Offset x="0" y="-11200" style="xpbluehidden"/>
+<Offset x="-2240" y="-13440"/>
+<Offset x="-13440" y="-11200"/>
+<Offset x="-5312" y="-1664"/>
+<Offset x="-5888" y="-576"/>
+<Offset x="0" y="-2240"/>
+<Offset x="11200" y="2240"/>
+<Offset x="4480" y="2240"/>
+<Offset x="13440" y="11200"/>
+<Offset x="29120" y="17920"/>
+<Offset x="8960" y="4480"/>
+<Offset x="24512" y="11584"/>
+<Offset x="11072" y="10496"/>
+<Offset x="11456" y="7040"/>
+<Offset x="13440" y="0"/>
+<Offset x="0" y="6720" style="internal"/>
+<Offset x="0" y="15680" style="xpbluehidden"/>
+<Offset x="2240" y="0"/>
+<Offset x="0" y="-2240"/>
+<Offset x="2240" y="0"/>
+<Offset x="0" y="-4480"/>
+<Offset x="2240" y="0"/>
+<Offset x="0" y="4480"/>
+<Offset x="2240" y="0"/>
+<Offset x="0" y="2240"/>
+<Offset x="2240" y="0"/>
+<Offset x="0" y="-15680"/>
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="8960"/>
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="-2240"/>
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="2240"/>
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="-8960"/>
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="-6720" style="internal"/>
+<Offset x="19040" y="0" style="xpbluehidden"/>
+<Offset x="18016" y="-3648"/>
+<Offset x="16704" y="-14272"/>
+<Offset x="2240" y="-2240"/>
+<Offset x="4480" y="-13440"/>
+<Offset x="2240" y="-4480"/>
+<Offset x="4480" y="-6720"/>
+<Offset x="2240" y="-6720"/>
+<Offset x="0" y="-27627"/>
+<Offset x="0" y="-27627"/>
+<Offset x="0" y="-27626"/>
+<Offset x="-2240" y="-16800"/>
+<Offset x="0" y="-16800"/>
+<Offset x="-22400" y="-22400"/>
+<Offset x="-11200" y="-4480"/>
+<Offset x="-20160" y="-4480"/>
+<Offset x="-28672" y="0"/>
+<Offset x="-28672" y="0"/>
+<Offset x="-28672" y="0"/>
+<Offset x="-28672" y="0"/>
+<Offset x="-28672" y="0"/>
+<Offset x="-28672" y="0"/>
+<Offset x="-28672" y="0"/>
+<Offset x="-28672" y="0"/>
+<Offset x="-28672" y="0"/>
+<Offset x="-28672" y="0"/>
+<Offset x="-28672" y="0"/>
+<Offset x="-28672" y="0"/>
+<Offset x="-28672" y="0"/>
+<Offset x="-28672" y="0"/>
+<Offset x="-28672" y="0"/>
+<Offset x="-10048" y="7104"/>
+<Offset x="-7872" y="10816"/>
+<Offset x="0" y="29120"/>
+<Offset x="0" y="29120"/>
+<Offset x="-2240" y="0" style="internal"/>
+<Offset x="0" y="-26880" style="xpbluehidden"/>
+<Offset x="0" y="-26880"/>
+<Offset x="0" y="-26880"/>
+<Offset x="28373" y="0"/>
+<Offset x="28373" y="0"/>
+<Offset x="28373" y="0"/>
+<Offset x="28373" y="0"/>
+<Offset x="28373" y="0"/>
+<Offset x="28373" y="0"/>
+<Offset x="28373" y="0"/>
+<Offset x="28373" y="0"/>
+<Offset x="28373" y="0"/>
+<Offset x="28373" y="0"/>
+<Offset x="28373" y="0"/>
+<Offset x="28373" y="0"/>
+<Offset x="28374" y="0"/>
+<Offset x="28374" y="0"/>
+<Offset x="28374" y="0"/>
+<Offset x="28374" y="0"/>
+<Offset x="28374" y="0"/>
+<Offset x="28374" y="0"/>
+<Offset x="0" y="28980"/>
+<Offset x="0" y="28980"/>
+<Offset x="0" y="28980"/>
+<Offset x="0" y="28980"/>
+<Offset x="0" y="28980"/>
+<Offset x="0" y="28980"/>
+<Offset x="0" y="28980"/>
+<Offset x="0" y="28980"/>
+<Offset x="0" y="28980"/>
+<Offset x="0" y="28980"/>
+<Offset x="0" y="28980"/>
+<Offset x="0" y="28980"/>
+<Offset x="0" y="28980"/>
+<Offset x="0" y="28980"/>
+<Offset x="0" y="28980"/>
+<Offset x="0" y="28980"/>
+<Offset x="-29911" y="0"/>
+<Offset x="-29911" y="0"/>
+<Offset x="-29911" y="0"/>
+<Offset x="-29911" y="0"/>
+<Offset x="-29911" y="0"/>
+<Offset x="-29911" y="0"/>
+<Offset x="-29911" y="0"/>
+<Offset x="-29911" y="0"/>
+<Offset x="-29911" y="0"/>
+<Offset x="-29911" y="0"/>
+<Offset x="-29910" y="0"/>
+<Offset x="-29910" y="0"/>
+<Offset x="-29910" y="0"/>
+<Offset x="-29910" y="0"/>
+<Offset x="-29910" y="0"/>
+<Offset x="-29910" y="0"/>
+<Offset x="-29910" y="0"/>
+</Polygon>
+<Polygon x="51520" y="67200" style="xpblue">
+<Offset x="-2240" y="-2240"/>
+<Offset x="0" y="-2240" style="internal"/>
+<Offset x="11200" y="0" style="xpbluehidden"/>
+<Offset x="0" y="-2240"/>
+<Offset x="-4480" y="0"/>
+<Offset x="0" y="-13440"/>
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="13440"/>
+<Offset x="-4480" y="0"/>
+<Offset x="0" y="2240"/>
+<Offset x="0" y="2240" style="internal"/>
+<Offset x="-2240" y="-2240" style="xpbluehidden"/>
+<Offset x="0" y="-13440"/>
+<Offset x="6528" y="-3072"/>
+<Offset x="6912" y="-1408"/>
+<Offset x="15680" y="8960"/>
+<Offset x="26133" y="0"/>
+<Offset x="26133" y="0"/>
+<Offset x="26134" y="0"/>
+<Offset x="13440" y="-6720"/>
+<Offset x="2240" y="-2240"/>
+<Offset x="28124" y="0"/>
+<Offset x="28124" y="0"/>
+<Offset x="28124" y="0"/>
+<Offset x="28124" y="0"/>
+<Offset x="28124" y="0"/>
+<Offset x="28125" y="0"/>
+<Offset x="28125" y="0"/>
+<Offset x="28125" y="0"/>
+<Offset x="20509" y="1088"/>
+<Offset x="23296" y="3392"/>
+<Offset x="0" y="2240" style="internal"/>
+<Offset x="-6720" y="0" style="xpbluehidden"/>
+<Offset x="0" y="15680"/>
+<Offset x="8960" y="0"/>
+<Offset x="0" y="-2240"/>
+<Offset x="2240" y="0"/>
+<Offset x="0" y="-4480"/>
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="-2240"/>
+<Offset x="2240" y="0"/>
+<Offset x="0" y="-4480"/>
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="-2240"/>
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="-2240" style="internal"/>
+<Offset x="4480" y="2240" style="xpbluehidden"/>
+<Offset x="13440" y="11200"/>
+<Offset x="13440" y="22400"/>
+<Offset x="0" y="29120"/>
+<Offset x="-2240" y="8960"/>
+<Offset x="-6720" y="15680"/>
+<Offset x="-6720" y="15680"/>
+<Offset x="-8768" y="8256"/>
+<Offset x="-9152" y="704"/>
+<Offset x="-7104" y="-3264"/>
+<Offset x="-6336" y="-5696"/>
+<Offset x="-2240" y="-2240"/>
+<Offset x="-20160" y="-13440"/>
+<Offset x="-17920" y="-11200"/>
+<Offset x="-20160" y="-13440"/>
+<Offset x="-15680" y="-8960"/>
+<Offset x="-4480" y="-4480"/>
+<Offset x="-4480" y="-6720"/>
+<Offset x="-6720" y="-6720"/>
+<Offset x="-23520" y="0"/>
+<Offset x="-23520" y="0"/>
+<Offset x="-2240" y="8960"/>
+<Offset x="-2240" y="4480"/>
+<Offset x="-6720" y="6720"/>
+<Offset x="-6720" y="13440"/>
+<Offset x="0" y="16800"/>
+<Offset x="0" y="16800"/>
+<Offset x="8960" y="8960"/>
+<Offset x="11200" y="4480"/>
+<Offset x="2240" y="2240"/>
+<Offset x="-4480" y="11200"/>
+<Offset x="-8960" y="6720"/>
+<Offset x="-8960" y="4480"/>
+<Offset x="-15680" y="11200"/>
+<Offset x="-15680" y="17920"/>
+<Offset x="-15680" y="17920"/>
+<Offset x="-6720" y="6720"/>
+<Offset x="-8960" y="13440"/>
+<Offset x="-15680" y="20160"/>
+<Offset x="-4480" y="11200"/>
+<Offset x="-8960" y="13440"/>
+<Offset x="-4480" y="13440"/>
+<Offset x="-8960" y="15680"/>
+<Offset x="-10560" y="13760"/>
+<Offset x="-640" y="22080"/>
+<Offset x="256" y="22464"/>
+<Offset x="8704" y="11136"/>
+<Offset x="15680" y="6720"/>
+<Offset x="8960" y="2240"/>
+<Offset x="29120" y="0"/>
+<Offset x="15680" y="-6720"/>
+<Offset x="15680" y="-15680"/>
+<Offset x="6720" y="-8960"/>
+<Offset x="8960" y="-15680"/>
+<Offset x="11904" y="-8704"/>
+<Offset x="1536" y="-256"/>
+<Offset x="4480" y="11200"/>
+<Offset x="-4480" y="20160"/>
+<Offset x="-4480" y="15680"/>
+<Offset x="-10688" y="8448"/>
+<Offset x="-27392" y="512"/>
+<Offset x="-15680" y="2240"/>
+<Offset x="-15680" y="2240"/>
+<Offset x="-11200" y="2240"/>
+<Offset x="-8960" y="2240"/>
+<Offset x="-11200" y="2240"/>
+<Offset x="-17920" y="2240"/>
+<Offset x="-26880" y="2240"/>
+<Offset x="-8960" y="-2240"/>
+<Offset x="-11200" y="-6720"/>
+<Offset x="2240" y="-4480" style="internal"/>
+<Offset x="8960" y="0" style="xpbluehidden"/>
+<Offset x="0" y="-2240"/>
+<Offset x="-8960" y="0"/>
+<Offset x="0" y="-4480"/>
+<Offset x="6720" y="0"/>
+<Offset x="0" y="-2240"/>
+<Offset x="2240" y="0"/>
+<Offset x="0" y="-4480"/>
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="-2240"/>
+<Offset x="-8960" y="0"/>
+<Offset x="0" y="2240"/>
+<Offset x="8960" y="0"/>
+<Offset x="0" y="4480"/>
+<Offset x="-6720" y="0"/>
+<Offset x="0" y="2240"/>
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="4480"/>
+<Offset x="2240" y="0"/>
+<Offset x="0" y="2240"/>
+<Offset x="-2240" y="4480" style="internal"/>
+<Offset x="-6720" y="-6720" style="xpbluehidden"/>
+<Offset x="-6720" y="-8960"/>
+<Offset x="-2240" y="-11200"/>
+<Offset x="0" y="-4480"/>
+<Offset x="2240" y="-6720"/>
+<Offset x="4480" y="-6720"/>
+<Offset x="4480" y="-13440"/>
+<Offset x="6720" y="-22400"/>
+<Offset x="8960" y="-15680"/>
+<Offset x="20160" y="-20160"/>
+<Offset x="11200" y="-8960"/>
+<Offset x="13440" y="-8960"/>
+<Offset x="8960" y="-8960"/>
+<Offset x="6720" y="-8960"/>
+<Offset x="4480" y="-4480"/>
+<Offset x="4480" y="-13440"/>
+<Offset x="4480" y="-13440"/>
+<Offset x="2240" y="-13440"/>
+<Offset x="2240" y="-11200"/>
+<Offset x="4480" y="-11200"/>
+<Offset x="4480" y="-11200"/>
+<Offset x="8960" y="-17920"/>
+<Offset x="4480" y="-8960"/>
+<Offset x="4480" y="-4480"/>
+<Offset x="2240" y="0" style="internal"/>
+<Offset x="0" y="15680" style="xpbluehidden"/>
+<Offset x="2240" y="0"/>
+<Offset x="0" y="-6720"/>
+<Offset x="6720" y="0"/>
+<Offset x="0" y="6720"/>
+<Offset x="2240" y="0"/>
+<Offset x="0" y="-15680"/>
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="6720"/>
+<Offset x="-6720" y="0"/>
+<Offset x="0" y="-6720"/>
+<Offset x="-2240" y="0"/>
+<Offset x="-2240" y="0" style="internal"/>
+<Offset x="8960" y="-8960" style="xpbluehidden"/>
+<Offset x="16064" y="-10752"/>
+<Offset x="13056" y="-16128"/>
+<Offset x="4480" y="-6720"/>
+<Offset x="17920" y="-17920"/>
+<Offset x="0" y="-22400"/>
+<Offset x="4480" y="0" style="internal"/>
+<Offset x="2240" y="0" style="xpbluehidden"/>
+<Offset x="0" y="-6720"/>
+<Offset x="6720" y="0"/>
+<Offset x="0" y="6720"/>
+<Offset x="2240" y="0"/>
+<Offset x="4480" y="0" style="internal"/>
+<Offset x="2240" y="0" style="xpbluehidden"/>
+<Offset x="0" y="-6720"/>
+<Offset x="6720" y="0"/>
+<Offset x="0" y="6720"/>
+<Offset x="2240" y="0"/>
+<Offset x="0" y="-15680"/>
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="6720"/>
+<Offset x="-6720" y="0"/>
+<Offset x="0" y="-6720"/>
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="15680"/>
+<Offset x="-4480" y="0" style="internal"/>
+<Offset x="0" y="-15680" style="xpbluehidden"/>
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="6720"/>
+<Offset x="-6720" y="0"/>
+<Offset x="0" y="-6720"/>
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="15680"/>
+<Offset x="-4480" y="0" style="internal"/>
+<Offset x="0" y="-6720" style="xpbluehidden"/>
+<Offset x="-6720" y="-11200"/>
+<Offset x="-4480" y="-4480"/>
+<Offset x="-2240" y="-2240"/>
+<Offset x="-4480" y="-2240"/>
+<Offset x="-29120" y="0"/>
+<Offset x="-29120" y="0"/>
+<Offset x="-17920" y="17920"/>
+<Offset x="-17920" y="17920"/>
+<Offset x="-4480" y="0"/>
+<Offset x="-4480" y="-4480"/>
+<Offset x="-20160" y="-6720"/>
+<Offset x="-26880" y="0"/>
+<Offset x="-26880" y="0"/>
+<Offset x="-26880" y="0"/>
+<Offset x="-4480" y="-2240"/>
+<Offset x="-2240" y="-2240"/>
+</Polygon>
+<Polygon x="67200" y="280000" style="xpblue">
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="-4480"/>
+<Offset x="6720" y="0"/>
+<Offset x="0" y="4480"/>
+<Offset x="-4480" y="0"/>
+</Polygon>
+<Polygon x="85120" y="47040" style="xpblue">
+<Offset x="-2240" y="0"/>
+<Offset x="-2240" y="-2240"/>
+<Offset x="2240" y="-2240"/>
+<Offset x="21653" y="0"/>
+<Offset x="21653" y="0"/>
+<Offset x="21654" y="0"/>
+<Offset x="2240" y="2240"/>
+<Offset x="0" y="2240"/>
+<Offset x="-21654" y="0"/>
+<Offset x="-21653" y="0"/>
+<Offset x="-21653" y="0"/>
+</Polygon>
+<Polygon x="318080" y="309120" style="xpblue">
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="-4480"/>
+<Offset x="6720" y="0"/>
+<Offset x="0" y="4480"/>
+<Offset x="-4480" y="0"/>
+</Polygon>
+<Polygon x="333760" y="452480" style="xpblue">
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="-4480"/>
+<Offset x="6720" y="0"/>
+<Offset x="0" y="4480"/>
+<Offset x="-4480" y="0"/>
+</Polygon>
+<Polygon x="436800" y="64960" style="xpblue">
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="-4480"/>
+<Offset x="6720" y="0"/>
+<Offset x="0" y="4480"/>
+<Offset x="-4480" y="0"/>
+</Polygon>
+<Polygon x="436800" y="58240" style="xpblue">
+<Offset x="-2240" y="0"/>
+<Offset x="0" y="-4480"/>
+<Offset x="6720" y="0"/>
+<Offset x="0" y="4480"/>
+<Offset x="-4480" y="0"/>
+</Polygon>
+<Base x="267680" y="14560" team="9" dir="64"/>
+<Base x="272160" y="21280" team="9" dir="64"/>
+<Base x="276640" y="28000" team="9" dir="64"/>
+<Base x="281120" y="34720" team="9" dir="64"/>
+<Base x="287840" y="14560" team="9" dir="64"/>
+<Base x="292320" y="21280" team="9" dir="64"/>
+<Base x="296800" y="28000" team="9" dir="64"/>
+<Base x="301280" y="34720" team="9" dir="64"/>
+<Base x="308000" y="14560" team="9" dir="64"/>
+<Base x="312480" y="21280" team="9" dir="64"/>
+<Base x="316960" y="28000" team="9" dir="64"/>
+<Base x="321440" y="34720" team="9" dir="64"/>
+<Fuel x="84000" y="54880"/>
+<Fuel x="84000" y="45920"/>
+<Fuel x="86240" y="54880"/>
+<Fuel x="86240" y="45920"/>
+<Fuel x="88480" y="54880"/>
+<Fuel x="88480" y="45920"/>
+<Fuel x="90720" y="54880"/>
+<Fuel x="90720" y="45920"/>
+<Fuel x="92960" y="54880"/>
+<Fuel x="92960" y="45920"/>
+<Fuel x="95200" y="54880"/>
+<Fuel x="95200" y="45920"/>
+<Fuel x="97440" y="54880"/>
+<Fuel x="97440" y="45920"/>
+<Fuel x="99680" y="54880"/>
+<Fuel x="99680" y="45920"/>
+<Fuel x="101920" y="54880"/>
+<Fuel x="101920" y="45920"/>
+<Fuel x="104160" y="54880"/>
+<Fuel x="104160" y="45920"/>
+<Fuel x="106400" y="54880"/>
+<Fuel x="106400" y="45920"/>
+<Fuel x="108640" y="54880"/>
+<Fuel x="108640" y="45920"/>
+<Fuel x="110880" y="54880"/>
+<Fuel x="110880" y="45920"/>
+<Fuel x="113120" y="54880"/>
+<Fuel x="113120" y="45920"/>
+<Fuel x="115360" y="54880"/>
+<Fuel x="115360" y="45920"/>
+<Fuel x="117600" y="54880"/>
+<Fuel x="117600" y="45920"/>
+<Fuel x="119840" y="54880"/>
+<Fuel x="119840" y="45920"/>
+<Fuel x="122080" y="54880"/>
+<Fuel x="122080" y="45920"/>
+<Fuel x="124320" y="54880"/>
+<Fuel x="124320" y="45920"/>
+<Fuel x="126560" y="54880"/>
+<Fuel x="126560" y="45920"/>
+<Fuel x="128800" y="54880"/>
+<Fuel x="128800" y="45920"/>
+<Fuel x="131040" y="54880"/>
+<Fuel x="131040" y="45920"/>
+<Fuel x="133280" y="54880"/>
+<Fuel x="133280" y="45920"/>
+<Fuel x="135520" y="54880"/>
+<Fuel x="135520" y="45920"/>
+<Fuel x="137760" y="54880"/>
+<Fuel x="137760" y="45920"/>
+<Fuel x="140000" y="54880"/>
+<Fuel x="140000" y="45920"/>
+<Fuel x="142240" y="54880"/>
+<Fuel x="142240" y="45920"/>
+<Fuel x="144480" y="54880"/>
+<Fuel x="144480" y="45920"/>
+<Fuel x="146720" y="54880"/>
+<Fuel x="146720" y="45920"/>
+<Fuel x="148960" y="54880"/>
+<Fuel x="148960" y="45920"/>
+<Check x="227360" y="25760"/>
+<Check x="79520" y="92960"/>
+<Check x="229600" y="117600"/>
+<Check x="72800" y="352800"/>
+<Check x="243040" y="435680"/>
+<Check x="231840" y="368480"/>
+<Check x="202720" y="301280"/>
+<Check x="357280" y="137760"/>
+<Check x="484960" y="117600"/>
+<Check x="395360" y="25760"/>
+</XPilotMap>

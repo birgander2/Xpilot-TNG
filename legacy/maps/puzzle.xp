@@ -1,0 +1,110 @@
+mapwidth : 100
+mapheight : 100
+mapname : Puzzle
+mapauthor : Bretton Wade
+edgewrap : yes
+maxrobots : 2
+gravity : -0.2
+
+mapData: \multiline: EndOfMapdata
+                           q#                                q#s                             xxx#s  
+                          q#x                               q#s                              xx#s   
+                         q#xx                              q#s                               x#s    
+                        q#xxx                             q#s                                #s     
+                       q#xxxx                            q#s                                        
+                      q#xs ax                           q#s                                         
+                     q#xs   x                          q#s                                          
+                    q#xs    x                         q#s                                           
+                   q#xs     x                        q#s                                            
+                  q#xs      x                       q#s                                             
+                 q#xs       x                      q#s                                              
+                q#xs                              q#s                                               
+               q#xs                              q#s                                                
+              q#xs                          r   q#s                                                 
+             q#xs                          dxw q#s                       #w                         
+            q#xs                            axx#s                        a#w                        
+           q#xs              #w              axx                          a#w                       
+          q#xx               a#               axw                          a#w                      
+         q#xxxw                                axf                          a#w                     
+         #xxxxxxxxxx     _       _              c                            a#w             %      
+                         #w      #w                                           a#w                   
+                         a#      a#                                            a#w                  
+                                                                                a#w                 
+                                                                                 a#w                
+                             #w      #w                                           a#w               
+                             a#      a#                                            a#w              
+                                                                                    a#w             
+                                 _       _                                           a#w            
+                                 #w      #w                                           a#w           
+                                 a#      a#                                            a#w          
+                                                                                        a#w         
+                                                                                         a#w        
+                                     #w      #w                                           a#w       
+                                     a#      a#                                            a#w      
+                       r                            xxxxxxxxxx#               %             a#w     
+                      dxw                _               axxx#s                              a#w    
+                       axw               #w               xx#s                                a#w   
+                        xxw              a#              qx#s                                  a#w  
+                       q#xxw                            qx#s                                    a#w 
+                      q#s axf                          qx#s                                      a# 
+                     q#s   c                          qx#s                                          
+                    q#s                              qx#s                                           
+                   q#s                              qx#s                                            
+                  q#s                      x       qx#s                                             
+                 q#s                       x      qx#s                                              
+                q#s                        x     qx#s                                               
+               q#s                         x    qx#s                                                
+              q#s                          x   qx#s                                                 
+             q#s                           xw qx#s                                                  
+            q#s                            xxxx#s                                                   
+           q#s                             xxx#s                             q#                     
+          q#s                              xx#s                             q#x                     
+         q#s                               x#s                             q#xx                     
+        q#s                                #s                             q#xxx                     
+       q#s                                                               q#xxxx                     
+      q#s                                                               q#xs ax                     
+     q#s                                                               q#xs   x                     
+    q#s                                                               q#xs    x                     
+   q#s                                                               q#xs     x                     
+  q#s                                                               q#xs      x                     
+ q#s                                                               q#xs       x                     
+q#s                                                               q#xs                              
+#s                                                               q#xs                              q
+s                                                               q#xs                          r   q#
+                       #w                                      q#xs                          dxw q#s
+                       a#w                                    q#xs                            axx#s 
+                        a#w                                  q#xs              #w              axx  
+                         a#w                                q#xx               a#               axw 
+                          a#w                              q#xxxw                                axf
+                           a#w             %               #xxxxxxxxxx     _       _              c 
+                            a#w                                            #w      #w               
+                             a#w                                           a#      a#               
+                              a#w                                                                   
+                               a#w                                                                  
+                                a#w                                            #w      #w           
+                                 a#w                                           a#      a#           
+                                  a#w                                                               
+                                   a#w                                             _       _        
+                                    a#w                                            #w      #w       
+                                     a#w                                           a#      a#       
+                                      a#w                                                           
+                                       a#w                                                          
+                                        a#w                                            #w      #w   
+                                         a#w                                           a#      a#   
+  xxxxxxxxxx#               %             a#w                            r                          
+       axxx#s                              a#w                          dxw                _        
+        xx#s                                a#w                          axw               #w       
+       qx#s                                  a#w                          xxw              a#       
+      qx#s                                    a#w                        q#xxw                      
+     qx#s                                      a#                       q#s axf                     
+    qx#s                                                               q#s   c                      
+   qx#s                                                               q#s                           
+  qx#s                                                               q#s                            
+ qx#s                                                               q#s                      x      
+qx#s                                                               q#s                       x      
+x#s                                                               q#s                        x     q
+#s                                                               q#s                         x    qx
+s                                                               q#s                          x   qx#
+                                                               q#s                           xw qx#s
+                                                              q#s                            xxxx#s 
+EndOfMapdata

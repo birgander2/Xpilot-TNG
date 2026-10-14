@@ -1,0 +1,78 @@
+mapWidth:	150
+mapHeight:	70
+mapName:	Bomb
+mapAuthor:	Andy Skinner
+teamPlay:	yes
+itemMineProb:   6.40779e-08
+mapData: \multiline: EndofMapdata
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+x                                                                                                                                                    x
+x                                                                                                                                                    x
+x                                                                                                                                                    x
+x                                                                                                                                                    x
+x                                                                                                                                                    x
+x                                                                                                                                                    x
+x                                                                                                                                                    x
+x                                                                                                                                                    x
+x                                                                                                                                                    x
+x                                                                                                                                                    x
+x                                                                                          xxxxxxxxxxxxxxxxxxxxxxxx                                  x
+x                      xxxxxx   xxxxxxxx xxxxxxx                                           xxxxxxxxxxxxxxxxxxxxxxxxxxx                               x
+x                      xxxxxx  0xxxxxxxxxxxxxxxx                                           xxxxxxxxxxxxxxxxxxxxxxxxxxx                               x
+x                    xxxxxxxxxxxxxxxxxxxxxxxxxxx                                         0 xxxxxxxxxxxxxxxxxxxxxxxxxxx                               x
+x                    xxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                  xxxxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxx                             x
+x                  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                               xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx xx                           x
+x                 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                               xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                           x
+x                  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                               xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                           x
+x                 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                               xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                          x
+x                  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                               xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                          x
+x                  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                               xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                          x
+x                   xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                               xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                          x
+x                    xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                          x
+x                      xxxxxxxxxxxxxxxxxxxxxxxxxxx                                   xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                          x
+x                        xxxxxxxxxxxxx     xxxxxxx                                    xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                          x
+x                         xxxxxxxxxx       xxxxxxx                                      xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                          x
+x                                                                                         xx   x xxxxxxxxxxxxxxxxxxxxxx                              x
+x                                                                                           xxxxxxx xxxxxxxxxxxxxxxxx                                x
+x                                                                                                                                                    x
+x                                                                                                                                                    x
+x                                                                                                                                                    x
+x                                                                                                                                                    x
+x                                                                                                                                                    x
+x                                                                                                                                                    x
+x                                                                                                                                                    x
+x                                                                                                                                                    x
+x                                                                                                                                                    x
+x                                                                                                                                                    x
+x                                                                                                                                                    x
+x                                                                                                                                                    x
+x                                                                                                                                                    x
+x                                                                                                                                                    x
+x                                                                                                                                                    x
+x                                                                                                                                                    x
+x                                                                                                                                                    x
+x                                                                                                                                                    x
+x                                                                                                                                                    x
+x                                                                                                                                                    x
+x1                                                                                                                                                  2x
+xs                                                                                                                                                  ax
+x                                                                                                                                                    x
+x                                                                                                                                                    x
+x                                                                    xxxxxxxxx                                                                       x
+x1                !                                                  xxxxxxxxx                                                                      2x
+xs                !                                                  xxxxxxxxxxxxxxxxxx                                                             ax
+x                 !                                                  xxxxxxxxxxxxxxxxxx                                                              x
+x                 !!                                                 xxxxxxxxxxxxxxxxxx                                        !                     x
+x                 !!                                              xxxxxxxxxxxxxxxxxxxxx                                        !                     x
+x1                !!                                              xxxxxxxxxxxxxxxxxxxxx                                        !                    2x
+xs                !!                                              xxxxxxxxxxxxxxxxxxxxx                                        !                    ax
+x                 !!       !!                                 xxxxxxxxxxxxxxxxxxxxxxxxxx                                 !     !                     x
+x                 !!!!     !!                                 xxxxxxxxxxxxxxxxxxxxxxxxxx                                 !!    !                     x
+x                 !!!!     !!                                 xxxxxxxxxxxxxxxxxxxxxxxxxx                                 !!   !!!                    x
+x1               !!!!!     !!                                 xxxxxxxxxxxxxxxxxxxxxxxxxx                            !    !!  !!!!                   2x
+xs           !  !!!!!!     !!!                                xxxxxxxxxxxxxxxxxxxxxxxxxx                            !    !!  !!!!                   ax
+x           !!  !!!!!!  !  !!!    !                           xxxxxxxxxxxxxxxxxxxxxxxxxxx                           !!   !!  !!!!                    x
+x           !!  !!!!!! !!!!!!!  !!!!!                       xxxxxxxxxxxxxxxxxxxxxxxxxxxxx                          !!!!!!!!!!!!!!! !                 x
+x  ######## !!!!!!!!!!!!!!!!!! !!!!!!                       xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                   !!!!!!!!!!!!!!!!!!!!!!     ########   x
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+EndofMapdata

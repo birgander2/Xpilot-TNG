@@ -1,0 +1,152 @@
+# Created by xmapedit on Tue Jun  7 18:28:50 1994
+
+rawmode:no
+idlerun:yes
+itemenergypackprob:0.0005
+itemtankprob:0.0007
+itemwideangleprob:0.0003
+itemmissileprob:0.00009
+itemprobmult:0.00003
+itemecmprob:0.0007
+itemmineprob:0.00015
+itemcloakprob:0.0002
+itemsensorprob:0.0003
+itemrearshotprob:0
+playerwallbouncebrakefactor:0.6
+wallbouncefueldrainmult:0.3
+wallbouncedestroyitemprob:0.5
+distinguishmissles:yes
+allowshipshapes:yes
+minefusetime:180
+ecmsreprogrammines:yes
+identifymines:yes
+limitedlives:yes
+itemafterburnerprob:0.007
+itemlaserprob:0.002
+itememergencythrustprob:0.01
+itemtractorbeamprob:0.007
+itemautopilotprob:0.007
+playersonradar:yes
+limitedlives:yes
+allowshields:no
+targetkillteam:yes
+limitedlives:yes
+allowmodifiers:no
+allowclusters:yes
+minesonradar:yes
+nukesonradar:no
+allownukes:yes
+playerminimumstartfuel:400
+teamassign:yes
+teamimmunity:yes
+targetteamcollision:no
+treasurekillteam:no 
+treasurecollisiondestroys:no 
+treasurecollisionmaykill:yes
+shotswallbounce:no
+ballswallbounce:yes
+mineswallbounce:no
+itemswallbounce:yes
+missleswallbounce:yes
+sparkswallbounce:yes
+debriswallbounce:no
+objectwallbouncebrakefactor:0.85
+objectwallbouncelifefactor:0.25
+dropitemonkill:0.3
+initialautopilots:1
+initialafterburners:1
+maxmissilesperpack:1
+detonateitemonkillprob:0.8
+itememergencyshieldprob:0.000007
+
+limitedlives : yes
+mapwidth : 90
+mapheight : 70
+mapname : 2 Teams, All WAR!!
+mapauthor : I Kill You
+edgewrap : yes
+teamplay : yes
+oneplayeronly : no
+timing : no
+maxrobots : 0
+worldlives : 3
+limitedvisibility : no
+playershielding : no
+gravity : 0
+shotlife : 35
+maxplayershots : 10
+crashwithplayer : yes
+playerkillings : yes
+
+mapData: \multiline: EndOfMapdata
+            axxw                                             x                            
+qxxxxxxxxw   axxx                                            x                            
+xxxxs   axw                                                                               
+xs       axw                                                                              
+x         x#   xxxxw                                                                      
+x                 axw                                                                     
+x                  axw                                                                    
+x                   ax                              qx#xw                                 
+x    1         1     x                             xs  xxx#w                              
+     #         #xw   xw                                  axxxx                            
+     # !       xx#   xx                                                                   
+    q#         #xx   ax                                                                   
+    x#                #                                                                   
+    xx                     1          xw                                                  
+    ax                     #          axw                                                 
+     x                    qx           axw                                                
+     x                   q#x            axxw                x                             
+     x                1qxxxs              axxw             qx                             
+    qx                #xxs                 axxx           qxs                             
+    xx                xs                     ax           xx                              
+   q#s                x                       x           xs                              
+  qxs    !            xxw                    qx           x                               
+  xs    1             axxw                   xs           xw                              
+ q#    q##    *         axw                 qx            xxw                             
+ xs   qxxx   q#          ax                 xs            axxw                xw          
+ x    #xx#   xx           x                                axxx            xxxxx          
+ x    xxxx   #s     #     x                                 axx           qxxxxx          
+ x    axxxw1qx      x     x                                               xxxxxx          
+ xw    axxx#xx      x                                                    qxxxxxx          
+ axw    xx xx#      x                                                   xxxxxxxxx         
+  a#w   xx xxx      x                                                   xxxxxxxxxw        
+   xx   #x xxx     qx                                                   xxxxxxxxxxw       
+        xx x#s     xx                                xw                 xxxxxxxxxxx       
+        ax xs      xs                                axxw               xxxxxxxxxxx       
+         #xs       x                                  axxw              xxxxxxxxxxx       
+                   x                      qxxxxxxxxw   axxx             xxxxxxs           
+                   x                      xxxxs   axw                    xxxxs            
+                   x                      xs       axw                   xxxx             
+                                          x         x#    xxxw            axx             
+                                          x                 axw            xs             
+                                          x                  axw                          
+                                          x                   ax                          
+                                          x    2         2     x                          
+          qx#xw                                #         #xw   xw                         
+         xs  xxx#w                             # !       xx#   xx                         
+               axxxx                          q#         #xx   ax                         
+                                              x#                #                         
+                                              xx                     2                    
+                                              ax                     #                    
+                            x                  x                    qx                    
+                            xw                 x                   q#x                    
+                           qxxxx               x                2qxxxs                 xw 
+                           xxxxs              qx                #xxs                   axw
+w                          xxxxw qx           xx                xs                      ax
+xxw                x       xxxxxxxx          q#s                x                        a
+ axxw             qx       axxxxxxx         qxs    !            xxw                       
+  axxx           qxs        xxxxxxs         xs    2             axxw                      
+    ax           xx         axxxxx         q#    q##    *         axw                     
+     x           xs          xxxxx         xs   qxxx   q#          ax                     
+    qx           x           axxxx         x    #xx#   xx           x                     
+    xs           xw           xxxx         x    xxxx   #s     #     x                     
+   qx            xxw          axxxw        x    axxxw2qx      x     x                     
+   xs            axxw          xxxx        xw    axxx#xx      x                           
+                  axxx         axxx        axw    x   x#      x                           
+                   axx          xxx         a#w   xxx xx      x                           
+                                axxw         xx   #   xx     qx                           
+                                 sax              x xx#s     xx                           
+                                                  a   s      xs                           
+           xw                                      #xs       x                            
+           axxw                                              x                            
+EndOfMapdata

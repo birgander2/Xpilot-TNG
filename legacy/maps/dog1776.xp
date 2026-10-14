@@ -1,0 +1,107 @@
+# Created by xmapedit on Thu Jan 26 07:33:46 1995
+
+firerepeatrate:.2
+allowshields:no
+playerstartsshielded:no
+playerminimumstartfuel:100.0
+allownukes:false
+allowclusters:false
+allowmodifiers:false
+allowlasermodifiers:false
+movingitemprob:0.0
+dropitemonkillprob:0.5
+destroyitemincollisionprob:0.0
+itemprobmult:0.7
+maxitemdensity:0.00012
+playerwallbouncebrakefactor:0.2
+objectwallbouncebrakefactor:0.25
+allowplayercrashes:no
+maxshieldedwallbouncespeed:100
+maxunshieldedwallbouncespeed:100
+maxshieldedplayerwallbounceangle:180
+maxunshieldedplayerwallbounceangle:180
+itemenergypackprob:0
+itemtankprob:0
+itemecmprob:0
+itemmineprob:0
+itemmissileprob:0
+itemcloakprob:0
+itemsensorprob:0
+itemwideangleprob:0
+itemrearshotprob:0
+itemafterburnerprob:0
+itemtransporterprob:0
+itemlaserprob:0
+itememergencythrustprob:0
+itemtractorbeamprob:0
+itemautopilotprob:0
+itememergencyshieldprob:0
+roguemineprob:1
+rogueheatprob:1
+initialfuel:100
+
+mapwidth : 49
+mapheight : 50
+mapname : Dog 1776 Don't fire until you see the whites of their eyes...
+mapauthor : Andy Shull
+edgewrap : yes
+teamplay : no
+timing : no
+maxrobots : 4
+limitedvisibility : yes
+shotspeed : 10.0
+shotlife : 10
+maxplayershots : 1
+
+mapData: \multiline: EndOfMapdata
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+x                                               x
+x                                               x
+x                                               x
+x                                               x
+x                                               x
+x            )                                  x
+x                                   )           x
+x                                               x
+x                                               x
+x                                               x
+x                          )                    x
+x                                               x
+x                                               x
+x                                               x
+x                                               x
+x                                               x
+x       x     x # x    x # x     x              x
+x                              #   #            x
+x       #        #        #                     x
+x                              x                x
+x       x  )    x        x       x              x
+x                              #   #            x
+        #      #        #                        
+                               x   x             
+        x     x        x         #      )        
+x                                               x
+x                           )                   x
+x                                               x
+x                                               x
+x            )                                  x
+x                                               x
+x                                               x
+x                                               x
+x                                               x
+x                          )                    x
+x                                               x
+x                                               x
+x                                               x
+x            )                            )     x
+x                                               x
+x                                               x
+x                                               x
+x                                               x
+x                                               x
+x                                               x
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+x(x(x(x(x(x(x(x(x(x(x(x(x(x(x(x(x(x(x(x(x(x(x(x(x
+x_x_x_x_x_x_x_x_x_x_x_x_x_x_x_x_x_x_x_x_x_x_x_x_x
+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x
+EndOfMapdata

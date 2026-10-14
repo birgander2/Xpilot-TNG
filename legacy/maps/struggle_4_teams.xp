@@ -1,0 +1,94 @@
+
+limitedlives:yes
+playersonradar:no
+allowshields:no
+targetkillteam:yes
+
+itemProbMult :		0
+
+limitedlives : yes
+mapwidth : 100
+mapheight : 70
+mapname : Struggle 4 Teams
+mapauthor : Zaphod Beeblebrox
+edgewrap : yes
+teamplay : yes
+worldlives : 4
+limitedvisibility : yes
+playershielding : no
+gravity : -0.23
+shotlife : 80
+maxplayershots : 5
+
+mapData: \multiline: EndOfMapdata
+                                                                             xxx                    
+                                                                             axx                    
+                                                                              xx                    
+                                                                             qxs                    
+                                                                             xx                     
+                                                                             as                     
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                     qxxw          qxw                                                              
+               qxxw qxxxx          xxx                                                              
+              qxxxxxxxxxx          axs                                                              
+            qxxxxxxxxxxxs                                                                           
+         xwqxxxxxxxxxxxxw                        qxw          qxw                                   
+         axxxxxxxxxxxxxxx                        xxx         qxxx qxxw                              
+          axxxxxxxxxxxxs                         xxxw  qxxw xxxxxxxxxxxw                            
+            axxxxxxxxs                           xxxxxxxxxxxxxxxxxxxxxxxxwqxxxxw                    
+              axxxxs                             axxxxxxxxxxxxxxxxxxxxxxxxxxxxxx           qxxw     
+                                                    axs xxxxxxxxxxxxxxxxxxxxxxxs           xxxx     
+                                                        axxxxxxxxxxxxxxxxxxxxxs            axxs     
+        xw               qw                              axxxxxs                                    
+        xx               xxw                              axxxs                                     
+        axw             qxxx           qxx                 as                                       
+         xxw           qxxxx           xxs                                                          
+         xxxw 1     1 qxxxxx           xxw                                    qx                    
+         axxxx#xx!xx#xxxxxxx           axx                      xw  2     2  qxx                    
+          axxxxxxxxxxxxxxxxx            xx                      xxxx#xx!xx#xxxxs                    
+           xxxxxxxxxxxxxxxxx                                    xxxxxxxxxxxxxs                      
+           axxxxxxxxxxxxxxxs                                    xxxxxxxxxxxxx                       
+            xxxxxxxxxxxxs                                       axxxxxxxxxxxs                       
+            axxxxxxxxxxs                                         axxxxxxxxxs                        
+                   axxs                                               axxs                          
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                        qxxxxxxw    
+                                                                                     qxxxxxxxxxxxxxw
+w            qx                    qxxxw                                           qxxxxxxxxxxxxxxxx
+xxw          xx                  qxxxxxxxxxxxxw                                    xxxxxxxxxxxxxxxxx
+xxx          xs                 qxxxxxxxxxxxxxxxxxw                qw              xs    axxxxxxxs a
+axs          x                  axs     axxsaxxxxxxw               xx              x      axxxxxs   
+             xw                              axxxxxs               xxw                              
+             xx                                                    axx                              
+             axw                                                    xx                              
+              xx                                                    xx                              
+ qx                                                                 as                 xw           
+qxx                               qw                                                   xx           
+xxs                               axw  3     3qxxw                                     xxw 4     4 q
+xs                                 axxx#xx!xx#xxxx                                     axxx#xx!xx#xx
+x                                   xxxxxxxxxxxxxx                                      xxxxxxxxxxxx
+s                                   axxxxxxxxxxxxs                                       axxxxxxxxxx
+                                     axxxxxxxxxxx                                                   
+                                        axsaxxxs                                                    
+                  xw                                                                                
+                  xxx                                                                               
+                 qxxxw                                                                              
+                xxxxxxw                                                                             
+                xxxxxxxxxw                                                                          
+                axxxxxxxxx                                                                          
+                 xxxxxxxxx                                               qxxw                       
+                 axxxsaxs                                           qxxxxxxxxw                      
+                  axs                                              qxxxxxxxxxxxw                    
+                                                                  qxxs      axxxxw                  
+                                                            xxxw qxxs        xxxxxw                 
+                                                             xxxxxxs         xxxxxxw                
+                                                             xxs             xs   axw               
+                                                                             xw    axxxx            
+                                                                             xxw                    
+EndOfMapdata

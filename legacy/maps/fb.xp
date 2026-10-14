@@ -1,0 +1,209 @@
+shipMass:                                20.0
+shotMass:                                0.1
+shotSpeed:                               35.0
+shotLife:                                110
+fireRepeatRate:                          2
+robotsTalk:                              false
+robotsLeave:                             true
+robotLeaveLife:                          50
+robotLeaveScore:                         -90
+robotLeaveRatio:                         -5
+shotsGravity:                            true
+idleRun:                                 false
+noQuit:                                  false
+contactPort:                             15345
+allowPlayerBounces:                      yes
+allowPlayerKilling:                      yes
+shotsWallBounce:                         no
+ballsWallBounce:                         yes
+minesWallBounce:                         no
+itemsWallBounce:                         yes
+missilesWallBounce:                      no
+sparksWallBounce:                        no
+debrisWallBounce:                        no
+maxObjectWallBounceSpeed:                40
+maxShieldedWallBounceSpeed:              40
+maxUnshieldedWallBounceSpeed:            20
+maxShieldedPlayerWallBounceAngle:        90
+maxUnshieldedPlayerWallBounceAngle:      30
+playerWallBounceBrakeFactor:             0.89
+objectWallBounceBrakeFactor:             0.95
+objectWallBounceLifeFactor:              0.80
+wallBounceFuelDrainMult:                 1.0
+wallBounceDestroyItemProb:               0.0
+reportToMetaServer:                      yes
+limitedVisibility:                       no
+minVisibilityDistance:                   0.0
+maxVisibilityDistance:                   0.0
+teamAssign:                              yes
+teamImmunity:                            yes
+emcsReprogramMines:                      yes
+targetKillTeam:                          no
+targetTeamCollision:                     yes
+targetSync:                              no
+treasureKillTeam:                        no
+treasureCollisionDestroys:               yes
+treasureCollisionMayKill:                yes
+onePlayerOnly:                           no
+timing:                                  no
+edgeWrap:                                no
+edgeBounce:                              yes
+extraBorder:                             no
+framesPerSecond:                         14
+allowShipShapes:                         True
+playersOnRadar:                          True
+missilesOnRadar:                         True
+minesOnRadar:                            False
+nukesOnRadar:                            True
+treasuresOnRadar:                        True
+distinguishMissiles:                     True
+maxMissilesPerPack:                      4
+identifyMines:                           True
+shieldedItemPickup:                      False
+shieldedMining:                          False
+laserIsStunGun:                          False
+nukeMinSmarts:                           7
+nukeMinMines:                            4
+nukeClusterDamage:                       1.0
+mineFuseTime:                            0.0
+movingItemProb:                          0.2
+dropItemOnKillProb:                      0.5
+detonateItemOnKillProb:                  0.5
+destroyItemInCollisionProb:              0.0
+itemProbMult:                            1.0
+maxItemDensity:                          0.00012
+itemConcentratorRadius:                  10
+rogueHeatProb:                           1.0
+rogueMineProb:                           1.0
+itemEnergyPackProb:                      0.000005
+itemTankProb:                            0
+itemECMProb:                             0
+itemMineProb:                            0
+itemMissileProb:                         0
+itemCloakProb:                           0
+itemSensorProb:                          0
+itemWideangleProb:                       0
+itemRearshotProb:                        0
+itemAfterburnerProb:                     0.0001
+itemTransporterProb:                     0
+itemLaserProb:                           0
+itemEmergencyThrustProb:                 0
+itemTractorBeamProb:                     0.0005
+itemAutopilotProb:                       0
+itemEmergencyShieldProb:                 0
+initialFuel:                             1000
+initialTanks:                            0
+initialECMs:                             0
+initialMines:                            0
+initialMissiles:                         0
+initialCloaks:                           0
+initialSensors:                          0
+initialWideangles:                       0
+initialRearshots:                        0
+initialAfterburners:                     0
+initialTransporters:                     0
+initialLasers:                           0
+initialEmergencyThrusts:                 0
+initialTractorBeams:                     4
+initialAutopilots:                       0
+initialEmergencyShields:                 0
+limitedlives : yes
+mapwidth : 140
+mapheight : 80
+mapname : Ultimate Football
+mapauthor : The unbeatable team: Zaphod Beeblebrox and Spaceman Spiff
+edgewrap : no
+edgebounce : yes
+teamplay : yes
+maxrobots : 0
+worldlives : 4
+limitedvisibility : no
+allowshields: no
+gravity:                                 0
+maxplayershots : 1
+allowPlayerCrashes: no
+allowPlayerKilling : yes
+
+
+mapData: \multiline: EndOfMapdata
+                                                       xx      #########      xx                                                            
+                                                       xx                     xx                                                            
+                                                       xxw                   qxx                                                            
+                                                       xxx                   xxx                                                            
+                                                       axx                   xxs                                                            
+                                                        xx                   xx                                                             
+                                                        xx                   xx                                                             
+                                                        as                   as                                                             
+                                                                                                                                            
+                                                                                                                                            
+                                                            qxxxxw   qxxxxw                                                                 
+                                                            axxxxxxxxxxxxxs                                                                 
+                                                               axxxxxxxs                                                                    
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                                            
+1       +                                                                                                                          +       2
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                                            
+1       +                                                                                                                          +       2
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                                            
+*                                                                                                                                          *
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                                            
+1       +                                                                                                                          +       2
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                                            
+1       +                                                                                                                          +       2
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                                            
+                                                                                                                                            
+                                                               qxxxxxxxw                                                                    
+                                                            qxxxxxxxxxxxxxw                                                                 
+                                                            axxxxs   axxxxs                                                                 
+                                                                                                                                            
+                                                                                                                                            
+                                                        qw                   qw                                                             
+                                                        xx                   xx                                                             
+                                                        xx                   xx                                                             
+                                                       qxx                   xxw                                                            
+                                                       xxs                   axx                                                            
+                                                       xx                     xx                                                            
+                                                       xx                     xx                                                            
+                                                       xx      #########      xx                                                            
+EndOfMapdata

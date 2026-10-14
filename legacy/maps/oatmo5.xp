@@ -1,0 +1,81 @@
+# Created by xmapedit on Fri Dec  3 22:27:17 1993
+
+limitedlives:yes
+allowshields:no
+robotsleave:no
+playersonradar:no
+playerstartshielded:yes
+itemprobmult:0
+
+limitedlives : yes
+mapwidth : 60
+mapheight : 50
+mapname : Oatmo Team Tournament
+mapauthor : Fred Gruner (I Kill You)
+allowShields:           no
+playersOnRadar:         no
+playerStartShielded:    yes
+limitedlives:           yes
+robotsleave:            no
+itemProbMult:           0
+edgewrap : yes
+teamplay : yes
+maxrobots : 0
+worldlives : 4
+limitedvisibility : yes
+maxplayershots : 3
+crashwithplayer : yes
+playerkillings : yes
+gravity: 0
+mapData: \multiline: EndOfMapdata
+                                  x           axxxxxxxs     
+                                  xx_          xxxxxxs      
+                                   x#          xxxxxx       
+                                    xxx        axxxxx       
+                                     xxx        xxxxs       
+        9                  8         xxxx       xxxx        
+        #xw              qx#          xxxx      axxx        
+       qxxx             qxxxw         xxxxx      xxxw       
+      qxxxxw           qxxxxx          xxxxx     xxxx       
+      xxxxxx           xxxxxx           xxxxx    xxxx6      
+      xxxxxx          8xxxxxx            xxxx    axxx#w     
+      xxxxxx9         #xxxxxx             xxxx    axxxx     
+      xxxxxx#         xxxxxxx                      axxxw    
+       axxxxx         axxxxxs                       xxxxw   
+        xxxxs          xxxxs                        xxxxxw  
+                                                     axxxx  
+                                       7                    
+                                     xx#x                   
+                                     xxxxx                  
+                xxx                  xxxxxx                 
+                xxxw                 xxxxxxx                
+6               xxxxxw 5             xxxxxxxx               
+#               xxxxxxx#w             xxxxxxx              x
+xx              xxxxxxxxxxw           xxxxxxxx              
+xx             5xxxxxxxxxxxxw         xxxxxxxxx             
+ xx            #xxxxxxxxxxxxx         xxxxxxxxxx            
+ xxx           xxxxxxxxxxxxxs         xxxxxxxxxxx7          
+  xx           xxxxxxxxxxxxx          axxxxxxxxxx#          
+   xx           axxxxxxxxxxs              xxxxxxxx          
+   xx            axxxxxxxxx      xxxw        xxxxx          
+    xx               axxxxx      xxxx                       
+    xxx4                         xxxx                       
+    xxx#                         xxxs                       
+     xxx                                                    
+      xxx                                                   
+       xxx                            3                     
+        x                   4         #xxxxw  3             
+                          xx#          axxxxxx#xxxxx2       
+                            xx          xxxxxxxxxxxx#       
+                              x         xxxxxxxxxxxxx       
+                               x        xxxxxxxxxxxxx       
+                               x        xxxxxxxxxxxxxw      
+                                x       axxxxxxxxxxxxx      
+                                xx       xxxxxxxxxxxxx      
+   1            1                x       xxxxxxxxxxxxx      
+   #xxxxxxxxxxxx#xxxxxxxxxxxx    xx      xxxxxxxxxxxxx2     
+    xxxxxxxxxxxxxxxxxxxxxxxxx     x      axxxxxxxxxxxx#     
+            xxxxxxxxxxxxxxxx      x       xxxxxxxxxxxxx     
+                xxxxxxx           x        axxxxxxxxxxx     
+                                  x          axxxxxxxxx     
+EndOfMapdata

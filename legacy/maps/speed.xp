@@ -1,0 +1,133 @@
+# Created by /tmp/xmapedit on Mon Feb 14 22:48:05 1994
+# Grotesquely horrible gravitational effects, fuel starvation, funky speedup bits, lots of killing.
+mapwidth : 100
+mapheight : 100
+mapname : huge wadges of slick death from hell
+mapauthor : Alan 'Lawless' Porter
+edgewrap : no
+edgebounce : yes
+maxrobots : 2
+limitedvisibility : yes
+playershielding : yes
+gravity : 0.15
+gravitypoint : 50,50
+gravitypointsource : yes
+
+laserIsStunGun : yes
+
+itemEnergyPackProb :    1.2
+itemTankProb :          0.8
+itemMineProb :          0.1
+itemMissileProb :       0.3
+itemCloakProb :         0.05
+itemSensorProb :        0.05
+itemWideangleProb :     0.09
+itemRearshotProb :      0.15
+itemAfterburnerProb :   0.05
+itemTransporterProb :   0.2
+itemLaserProb :         0.08
+itemProbMult :          0.0000003
+
+mapData: \multiline: EndOfMapdata
+xxxxxxxxxxxxxxsxxxsxxs-   x >>>>>>>>>            xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs       
+xxxxxxxxxxxxx- sxx-ax     a                       axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs          
+xxxxxxxxxxxsaw  xx  s                               axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs             
+xxxxxxxxxxxw a  x                                    _  axxxxxxxxxxxxxxxxxxxxxxxxxs                 
+xxxxxxxxxxw-    x                                              > > > > > > >                        
+xxxxxxxxaxxw    x                                           BREAK ON THE WAY OUT                    
+xxxxxxxx- ax    a                                             OR DIE HORRIBLY                       
+xxxxxxxxxw                                                     < < < < < < <                        
+xxxxxxxxs                                                     axxxxs axxxxxxs                       
+xxxxxxxxx                                                              axxs                         
+xxxxxxxx-                                                                                           
+xxxxxxxx                                                                                            
+xxxxxxxxxw                                                                                          
+xxxxxxx-                                                                                           q
+xxxxxxxs                                                                                           x
+xxxxxx                                                                                             x
+xxxxxxw                                                                                            x
+xxxxxx                                                                                             x
+xxxxxx                                                                                             x
+xxxxxx                  )                                                                         qx
+xxxxxs                                                                                            xx
+xxxxx                                                                                             ax
+xxxxx                                                                                             qx
+xxxxx                                                                                             xx
+xxxxx                                                                                             xx
+xxxxx_                                                                                            xx
+xxxxs                                                                                             xx
+xxxx                                                                                             qxx
+xxxx                                                                                             xxx
+xxxs                                                                                             xxx
+xxx                                                                                              axx
+xxx                                                                                               xx
+xxx                                                                                               xx
+xxx_                                                                                              ax
+xxx                                                                                                x
+xxs                                                                                               _x
+xx                                                                                                 a
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                 _                                                  
+                                               qxxxxw                                               
+                                             qxxxxxxxxw                                             
+                                            xxxxxxxxxxxx                                            
+                                           qxxxxxxxxxxxxw                                           
+                                           xxxxxxxxxxxxxx                                           
+                                          qxxxxxxxxxxxxxxw                                          
+                                          xxxxxxx--xxxxxxx                                          
+                                         _xxxxxx----xxxxxx                                @         
+                                          xxxxxx----xxxxxx_                                         
+                                          xxxxxxx--xxxxxxx                                          
+                                          axxxxxxxxxxxxxxs                       @                  
+                                           xxxxxxxxxxxxxx                                           
+                                           axxxxxxxxxxxxs                                           
+                                           d#xxxxxxxxxxx                                            
+                                            caxxxxxxxxs                                             
+                                               axxxxs                                               
+                                                  _                                                 
+                                                                                                    
+                                                                                                    
+                                                                                       @            
+                                                                                                    
+                                                                                                    
+                        r          rqx                                                              
+                        x        qxxxx#w                                                            
+                      dxx#       axxxxx#                                                            
+                        #s        d#xxxs                                                            
+                                   ca##f                                                            
+                                                                                                    
+                                                                                                    
+w                   THE ONLY FUEL ON THE MAP                                                       q
+xxw                                                                                             qxxx
+xxx                                                                                           qxxxxx
+xxx                          #wr            r xw                                 qxw      qxxxxxxxxx
+xxxw      qxxw              xxx##          ##xxxxf                        qx<   >xxxxxxxxxxxxxxxxxxx
+xxxx>    <xxxxxf           dxxxxxw         axxx                        qxxxx<   >xxxxxxxxxxxxxxxxxxx
+xxxx>    <xxxxxw            a#xxxxw                              _   qxxxxxxw<  >xxxxxxxxxxxxxxxxxxx
+xxxx>    <xxxxxx             ca#xx#                             xxxxxxxxxxxxx<  >xxxxxxxxxxxxxxxxxxx
+xxxx     xxxxxxxxw  r           axxf                               axxxxxxxxx<  >axxxxxxxxxxxxxxxxxx
+xxxx     xxxxxxxxxw ##w                                                  axxx     xxxxxxxxxxxxxxxxxx
+xxxs     xxxxxxxxxxxxx#                                                    ax         ++++axxxxxxxxx
+xxx+     xxxxxxxxxxxxxxw                                                                 +++axxxxxxx
+xxx++    xxxxxxxxxxxxxxx                                               THIS ISNT SO        ++axxxxxx
+xxx++    xxxxxxxxxxxxxxxxwr                                           EASY BUT QUITE        ++axxxxx
+xxx++    axxxxxxxxxxxxxxxxx                                           POSSIBLE WATCH          +xxxxx
+xxx+++    xxxxxxxxxxxxxxxxxxx                                         THE SPEED YOU           +axxxx
+xxxx++    axxxxxxxxxxxxxxxxxs                                          COME OUT AT             +xxxx
+xxxx+++    axxxxxxxxxxxxxxs                     )                                      >>      +axxx
+xxxxx++     axxxxxxxxxxxs                                                     qx+     >  >      +xxx
+xxxxxx++      axxxxxx>>>                                                      xx+     >  >      +xxx
+xxxxxxx++                                                                    dxx+      >>       +xxx
+xxxxxxxx++      THIS IS EASY WHEN YOU                                         xx++              +xxx
+xxxxxxxxx+++   KNOW THE SPEED TO GO AT                                        axx+             ++xxx
+xxxxxxxxxx++++                                                                 ax++            ++xxx
+xxxxxxxxxxx++++++    <<<                                                        xx++          ++qxxx
+xxxxxxxxxxxxx+++++qxxxxxxxxxw                                                  qxx+++        +++xxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw   _                                           xxxxw++++++++++qxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                       qxxxxxxxw+++++qxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                         qxxw     qxxxxxxxxxxxxxxxxxxxxxxxxxxx
+EndOfMapdata
+

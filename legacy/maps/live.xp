@@ -1,0 +1,124 @@
+# Created by xmap on Fri Feb 11 19:04:29 1994
+
+limitedlives:yes
+limitedlives:yes
+limitedlives:yes
+
+limitedlives : yes
+mapwidth : 100
+mapheight : 100
+mapname : live and die
+mapauthor : Silk
+edgewrap : yes
+edgebounce : no
+teamplay : no
+oneplayeronly : no
+timing : no
+worldlives : 4
+gravitypointsource : no
+maxplayershots : 5
+crashwithplayer : yes
+playerkillings : yes
+
+mapData: \multiline: EndOfMapdata
+x                                         dxxw  xxxf      -                     axw                d
+x  qw                                dxxxxxxxxx  axw _     -                     x                 x
+x  x                                         dx   axx#xxxw   qx                  axw                
+x  xxx                                        axw      axxx qxx                   ax               q
+   xxxw                                        ax       axsdxxx                   qxw            dxs
+   xxxxx                   -                                axxw                  xxxs              
+dxwaxxxxw                                                    axs                   axf              
+ axwaxxxxw                                                   qxw                    xw              
+  xs axxs                                                   dxxxw                   xxw            q
+                                                              a#xf             -    axxw            
+               _                                                                     xxx        dx  
+          xxxxx#xxw  r                                                                xs            
+            axs  axwqxw                       -                                       x             
+ xx                 axxxxwqwqx                                 qx                     xw            
+ xx                  axxxxxxxsr                                xx                     xx            
+ xx                   axxs axxxxx                             dxs                     xxw           
+ xs                            ax         r                    a                      axxf          
+qx                                        xf                   q                       xs           
+xxf       )                              qx                   dx  w                    x           a
+ax                                       xx                    x  x                       _         
+ x                                       xx                    #fdx                      a#         
+                                        qxxw                   c                         qs         
+  x                                    dxxsx                                           axx         a
+  s                                      xqs                                            ax          
+f w                    )     >          qxxw                                             xw        x
+  xw                                    xxxxf                                            #x        a
+  xx                                    xxs                                                         
+  ax                                    #s                        #f                      qw        
+   xwqxw                                #                         s                      #xx        
+   xxxxs                         dxx                                              (      #xxw       
+     axw     _               r    xsq#f                                                   axx       
+      axxw  q#w qxxw     qxxxxxxwq#xs                                                      xx       
+      qxxxxxxxxxx#xxxf dxxxxsa###s                                w                        xxf      
+     qxs   axxxs        axx#  c c                                d#                        xs       
+     axw      c                                                   s                        xw       
+      axw d#                                                                               ax       
+       xx  #                                                                                x       
+      qxx                                                                                   x       
+   dxxxxs                                                        xw                         x       
+    axxs                                                                                    c       
+    qxs                   (                                                                  r      
+   qxs                                           r             xf                            x      
+  xxxw                                        r  x           r                               x      
+  axxc                                        xf       x  s  #f                                     
+   xx                                                  c     c                              r       
+   xs                                                                                      xx       
+   x                                                       >                               xxw      
+  qx                     <                  dxxf                                           xxxx     
+ xx#                    >                    cc                                           qxsas     
+qxxx                                                                                     qxx        
+xxxs                                 #                                                  #sax       d
+xxs                                                                                        x       q
+xxqxf                                                                                     qx       a
+axxx                                      #                                               xs        
+ axx                                                  x                                   aw        
+  xx                                                  c                                   qxw       
+   a  w                                                                                  qxxx       
+      axw_         <                                                                     xxxs       
+       xx#w         >                                                                  rqxxx        
+      qxxxx                                                                            xxxxs        
+      xxxx#                               (                                            xxsc         
+      axxxxw                                                                           #x           
+        c axf                                              (                           xs           
+           xw                                                                        r s            
+           xxwr                                                                     qxf             
+            axxw                                                                   qxxf             
+              ax                                                                  qxxs              
+               xw                                                                qxxs               
+    +          axw                                                              qxxs            )   
+                xx                                                             qxxs                 
+                a#                                                           qxxs                   
+                 xw                                                          xxs            r  r    
+         )       axxw                                                        xs             xxxx    
+                  axxf                                                  qx   c            _qxxxxw_  
+xw                 axw       r                                 qx      xxxf             xx#xxxxxx#xx
+xx                  xxxw r  qxw                                xxf     xs               axxxsaxsaxxs
+xx                    axxx  xs                                 as      c                qxxx  xwqxxx
+xx                     as   af    xxf    r  r            x   x                        xxxxxx  axxxxx
+xx  xx                                   xxxxw                                        axxxxx  qxxxxx
+xs  xxw                                  xxxs                                        xxxxxxs  xxxxxx
+s   xxxx                                 axs    xs                                   axxxsx   xxxxxx
+    xxs                                                        xxwq                   axsqxw  xxxxxx
+    xx                                                     qxwqxxs  xx                 xxxxx  xxxxxx
+w  qxxw                                                      dx x  dxx                qxxxxxf xxxxxx
+xw  axxw                                                     qxxxxxxxx                xxxxxx  xxsaxx
+xxw  xxxw                                             qxxxw qxs  axxxx                 c axx  xx  xx
+xxs  axxs       )           x     xw        qx   qxw qxxxxxxxs         dx                 axf xx  ax
+xs    xxw                   xw  _qxxw     qxxxw  axxxxs                                       xx   a
+c     xxxw       r r     xxwxxwq#xxxxw   qxxxxxxxwxxxx                            +            c    
+      axxxw  xw qxxxxxxwqxsxxxxxxxxxas  axxs axsaxs   ds                xxxx                        
+         c   xxxxxxxxxxsxxxxxxxxxxxs                                       x                        
+              c  axxxxs xs   axs                                           xx                       
+                   axs  c     c                                            ax                       
+                                                                            xw                      
+                                                                            axw                     
+                                                                            dxx                     
+                                                                             axw                    
+                                                                              xxx                   
+     +                                                                        axxw          +       
+                                           r                         -         axx                  
+EndOfMapdata

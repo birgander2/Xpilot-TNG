@@ -1,0 +1,89 @@
+# Created by xmapedit on Wed Dec  8 10:32:22 1993
+
+mapwidth : 40
+mapheight : 60
+mapname : Oatmo Team Tourney 2
+mapauthor : Fred Gruner (I Kill You)
+allowShields:           no
+playersOnRadar:         no
+playerStartShielded:    yes
+limitedlives:           yes
+robotsleave:            no
+itemProbMult:           0
+edgewrap : yes
+teamplay : yes
+maxrobots : 0
+worldlives : 4
+limitedvisibility : yes
+maxplayershots : 3
+crashwithplayer : yes
+playerkillings : yes
+limitedlives:yes
+allowshields:no
+robotsleave:no
+playersonradar:no
+playerstartshielded:yes
+itemprobmult:0
+
+mapData: \multiline: EndOfMapdata
+                            qx    qx    
+                           qxx    xx    
+                           xxs    xs    
+     x                    qxx    qx     
+     x                   qxxs   qxs     
+     x                   xxx    xx      
+     x                  qxxs    xs      
+w    x                  xxs    qx    qxx
+xx   x                 qxs     xs    xxx
+xx   x                qxx             ax
+xs   x               qxxs              a
+     x              qxxx                
+     x             qxxxs                
+     x             xxxs                 
+     x2           qxxs                  
+     x#          qxxx                   
+     ax         qxxs                    
+      x       qxxxs                  x  
+      x2      xxs            qx      x  
+      x#2                    xx      x  
+      ax#                    xx      x  
+       ax                   qxx      x  
+        x2                  xxx      x  
+        x#2                 xxs      x  
+        ax#                qxx       xw 
+         axw               xxx       xx 
+          xxw2            qxxs       ax 
+          axx#w2          xxx         x 
+            axx#         qxxx         x 
+                         xxxs         x 
+                        qxxx          x 
+                       qxxxx          x 
+                       xxxxx          x 
+                      qxxxxx          x 
+     3333            qxxxxxs          x 
+     ####3           xxxxxs           x 
+     xxxx#          qxxxxs            x 
+     xxxxx         qxxxxs             x 
+     xxxxs        qxxxxs              x 
+                  xxxxx               x 
+                 3xxxxs               x 
+                 #xxxs                x 
+                3xxxs                 x 
+               q#xxs                 qx 
+               xxxs                  xx 
+              qxxs                   xx 
+             qxxs                    xs 
+            qxxs                     x  
+           qxxs                      x  
+           xxs                       x  
+                      111            x  
+                     1###11         qx  
+                    1#xxx##         xx  
+                    #xxxxxx         xx  
+                    xxxxxxx         xs  
+                    xxxxxxx         x   
+                    xxxxxxs        qx   
+                    axxxxs         xx   
+                                   xs   
+                                   x    
+EndOfMapdata

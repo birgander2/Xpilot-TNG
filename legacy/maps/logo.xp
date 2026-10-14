@@ -1,0 +1,110 @@
+# Map converted by mapmapper
+# @(#)$Id: logo.map,v 1.2 1993/03/28 16:49:45 bjoerns Exp $ Version 1.0
+mapWidth:            100
+mapHeight:           100
+mapName:             The logo map --- a map with an appearance
+mapAuthor:           Tom Grydeland
+teamPlay:            no
+timing:              no
+mapData: \multiline: EndOfMapdata
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+x                                                                                                  x
+x                                                                                                  x
+x                                                                                                  x
+x                                                                                                  x
+x                                                                                                  x
+x                                                                                                  x
+x                                                                                                  x
+x                                                                                                  x
+x               qxxxxxxxxxxxxw       qxxxxxxxxxxxxw                                                x
+x              qxxxxxxxxxxxxxxw     qxxxxxxxxxxxxxxw                                               x
+x                 q#xxxxxxxxxxxw   qxxxxxxxx#w                                                     x
+x               _qxxxxxxxxxxxxxxw qxxxxxxxxxxxw   _                                                x
+x           qxxxxxxxxxxxxxxxxxxxxwaxxxxxxxxxxxxxxxxxxw                                             x
+x           xxxxxxxxxxxxxxxxxxxxxxwaxxxxxxxxxxxxxxxxxx                                             x
+x                  axxxxxxxxxxxxxxxwaxxxxxs                                                        x
+x                   axxxxxxxxxxxxxxxwaxxxs                                                         x
+x                    axxxxxxxxxxxxxxxwaxs                                                          x
+x                     axxxxxxxxxxxxxxxw                                                            x
+x           qxxxxxxxxxxxxxxxxxxxxxxxxx#xxxxxxxxxxxxxxxw                                            x
+x         qxs     xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx#xxxxxx                                            x
+x        qs       xs  axxxxxxxxxxxxxxxxxxxxxxxxxx                                                  x
+x        x        x    xxxxxxxxxxxxxxxxxxxxxxxxxx    _                                             x
+x        x        x    xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                           x
+x        xxxxx    xw  qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                           x
+x            x   #xxxxxxxxxxxxxxxxxxxxxxxxxxs                                                      x
+x            axxxxxxxxxxxxxxxxxxxxxxxxxxxxxs                                                       x
+x                                                                                                  x
+x                                                                                                  x
+x     xxxxxxxxxxxxxxxxw                                                                            x
+x     xxxxxxxxxxxxxxxxxw       qxxxxxxxxxxxxxxxxxxxxxxxx                                           x
+x           xxxxxxxxxxxxw     qxxxxxxxxxxxxxxxxxxxxxxxxx                                           x
+x       _   xxxxxxxxxxxxxw   qxxxxxxxxxxxxxxxxx#x                                                  x
+x     xxxxxx#xxxxxxxxxxxxxw qxxxxxxxxxxxxxxxxxxxx    _                                             x
+x     axxxxxxxxxxxxxxxxxxxsqxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                           x
+x                axxxxxxxsqxxxxxxxxxxxxxxxxxxxxxxxxxxxxs                                           x
+x                 axxxxxsqxxxxxxxxxxxxxs                                                           x
+x                  axxxsqxxxxxxxxxxxxxs                                                            x
+x                   axsqxxxxxxxxxxxxxs                                                             x
+x                     qxxxxxxxxxxxxxs                                                              x
+x       xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                                                   x
+x       axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx     axw                                                 x
+x              axxxxxxxxxxxxxxxxxxxxxs  ax       aw                                                x
+x            _  a#xxxxxxxxxxxxxxxxxxx    x        x                                                x
+x          axxxxxxxxxxxxxxxxxxxxxxxxx    x        x                                                x
+x           axxxxxxxxxxxxxxxxxxxxxxxxw  qx    xxxxx                                                x
+x                    axxxxxxxxxxxxxxxxxxxx   #x                                                    x
+x                     axxxxxxxxxxxxxxxxxxxxxxxs                                                    x
+x                                                                                                  x
+x                                                                                                  x
+x         qxxw                                                                                     x
+x        qs  aw   qx qxw qxw qx   qxxxw           qxxw                                             x
+x        x qs x    x x#x x#x  x   s x a           xs                                               x
+x        x aw x    x axx axx  x     x  qxw xqwqw  x qx                                             x
+x        aw  qs    x _ x   x  x     x  x#x xsxsx  xwqx                                             x
+x         axxs     x axs axs  x    qxw axs x x x  axxa                                             x
+x                                                                                                  x
+x                                                                                                  x
+x                                                                  >    >                          x
+x                                                              >             >                     x
+x                                                                                                  x
+x                                                          >                     >                 x
+x                                                                                                  x
+x                                                                   <   <                          x
+x                                                        >      <           <      >               x
+x                                                                r         r                       x
+x                                                               dxf       dxf                      x
+x                                                             <  c   >     c  <                    x
+x                                                       >                >          >              x
+x                                                                 >                                x
+x                                                                     ##       <                   x
+x                                                        >   <        ##  >                        x
+x                                                                 >                 >              x
+x                                                                              <                   x
+x                                                             <  r  >   >  r                       x
+x                                                        >      dxf       dxf                      x
+x                                                                c         c <      >              x
+x                                                               <                                  x
+x                                                          >               <                       x
+x                                                                  <    <        >                 x
+x                                                                                                  x
+x                                                             >                >                   x
+x                                                                                                  x
+xf                                                                >        >                       x
+x                                                                     >                            x
+x                                                                                                  x
+x                                                                                                  x
+x                                                                                                  x
+x                                                                                                  x
+x                                                                                                  x
+x                                                                                                  x
+x                                                                                                  x
+x                                                                                                  x
+x                                                                                                  x
+x                                                                                                  x
+x                                                                                                  x
+x                                                                                                  x
+x                                                                                                  x
+x                                                                                                  x
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+EndOfMapdata

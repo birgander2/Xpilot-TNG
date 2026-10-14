@@ -1,0 +1,90 @@
+# Created by xmapedit on Sun Oct 17 13:16:44 1993
+
+mapwidth : 79
+mapheight : 79
+mapname : The Arena
+mapauthor : PikkuOrava (Petri.Wessman@hut.fi)
+edgewrap : yes
+limitedvisibility : yes
+
+mapData: \multiline: EndOfMapdata
+#                  @    dxxxxxxxxxxxxxxxxxxxxxxxxxxxxxf                       #
+                        dxxxxxxxxxxxxxxxxxxxxxxxxxxxxxf                        
+                        qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                        
+                       qxxxxxxxxxxxxxxxxxxxs     axxxxxw      @                
+                     qxxxxxxxxxxxxxxxxxxxxs       axxxxxxw                     
+          @        qxxxxxxs   axxxxxxxxxs           axxxxxxw                   
+                  qxxxs        axxxxxxxs  (          xxxxxxxw                  
+                qxxxxs     (    axxxxxx              xxxxxxxxxw                
+               qxxxxs            axxxxx             qxxxxxxxxxxw               
+              qxxxxx              axxxxw    qxw  _ qxxxxs    axxw              
+            qxxxxxxxw              axxxs    axxxxxxxxxxx      axxxw            
+            xxxxxxxxx########xw              axxxxxxxxxx   (   axxxf     @     
+           qxxxxxxxxxxxxxxxxxxs                 axxxxxxxw       axxxf          
+          qxxxxxs axxxxxxxxs                       axxxxs        xxxxf        @
+         qxxxxxs ( axxxxxs                           axs        qxxxxw         
+        qxxxs                                                _ qxxxxxxw        
+       qxxxx                                              qxxxxxxxxxxxxw       
+       xxxxxw    _   qw                                   xxxxxxxs axxxx       
+      qxxxxxxxxxxxxxxxs                                   axxxxxs    axxw      
+     qxxxxxxxxxxxxxxs                                       xxxs      xxxw     
+     xxxs    axxxxs                                         axx       axxx    @
+    qxx        xxs                                           axw       xxxw    
+    xxs     ( qxs                                             axw _    axxx    
+   qxx       qxs                                               axxxw    xxxw   
+rrqxxx       xx                                                 xxxs    axxxwrr
+xxxxxx     _ xs                                                 axs      xxxxxx
+xxxxxx   qxxxx                                                           xxxxxx
+xxxxxx   axxxs                                                        (  xxxxxx
+xxxxxx     xx                 )                                   qxw   qxxxxxx
+xxxxxx    qxx                                                     xxxw  xxxxxxx
+xxxxxxw   xxs                                                     axxx  axxxxxx
+xxxxxxx   as                                                       xxx   xxxxxx
+xxxxxxx                                  )                         xxx   axxxxx
+xxxxxxxw                                                           axs     axxx
+xxxxxxxxw                                                                   xxx
+xxxxxxxxxxw                                                                 xxx
+xxxxxxxxxxs                                                         qxw    qxxx
+xxxxxxxxxs                              @                           xxxw   xxxx
+xxxxxxxs                                                            xxxs   xxxx
+xxs                          )                                      xxx    axxx
+xx(                                                                 xx#     #xx
+xx                                              )                   xx#     #xx
+xxw _                                                               xx#     #xx
+xxxxxw                                                              xx#     #xx
+xxxxxxw                                                             xx#     #xx
+xxxxxxx                                                            qxxx (   xxx
+xxxxxxx    qw                                                      xxxx    qxxx
+xxxxxxx    xxw                        )                            xxxxw  qxxxx
+xxxxxxx    xxs                                                    qxxxxxxxxxxxx
+xxxxxxx    xx                                                     axxxxxxxxxxxx
+xxxxxxx    xx                                                       axxxxxxxxxx
+xxxxxxx    xxw                                                       axxxxxxxxx
+xxxxxxxw   xxx                                                        axxxxxxxx
+xxxxxxxx   xxxw                                                        axxxxxxx
+ccaxxxxs   axxx                                                 qw      xxxxscc
+   axxx     axxw                                               qxs      xxxs   
+    xxx      xxxw                                             qxs       xxx    
+    axxw(    axxxw                                           qxs    (  qxxs    
+     xxx      xxxxw                                         qxs       qxxx     
+     axxw  _ qxxxxxw                                       qxs        xxxs     
+@     axxxxxxxxxxxxxw      @                              qxs         xxx      
+       xxxxxxxxxxxxxs                                    qxx          xx       
+       axxxxxxs                                         qxxxw _ qw _ qxs       
+        axxxxx   (                                     qxxxxxxxxxxxxxxs        
+         axxxx         qxw                             axxxxxxxxxxxxxs         
+          xxxxw        xxxxw                              axxxxxxxxxx          
+       @  axxxxw       xxxxxxxw                 qxxw (     xxxxxxxxxs          
+            xxxxw _    axxxxxxxxxw           qxxxxxx     _qxxxxxxxx            
+            axxxxxxw    axxxxxxxxxxxw     qxxxxxxxxx    qxxxxxxxxxs      @     
+              axxxxxw    axxxxxxxxxxxw   qxxxxxxxxxx    axxxxxxxs              
+               axxxxxw    axxx#####xxx   xxx#####xxs     axxxxxs               
+                axxxxxw     as     xxx   xxx              xxxxs                
+                  xxxxxw           axs   axs             qxxs                  
+           @       axxxxw     )        )               qxxxs                   
+                     axxxw                        qxxxxxxs                     
+                       axxxxxw(((((   (((   (((((qxxxxxs        @              
+                        axxxxxxxxxxxxxxxxxxxxxxxxxxxxxs                        
+                        dxxxxxxxxxxxxxxxxxxxxxxxxxxxxxf                        
+#                       dxxxxxxxxxxxxxxxxxxxxxxxxxxxxxf                       #
+EndOfMapdata

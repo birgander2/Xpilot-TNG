@@ -1,0 +1,203 @@
+# Created by xmapedit on Tue Mar 14 14:23:00 1995
+
+maxshieldedwallbouncespeed:65
+maxunshieldedwallbouncespeed:65
+maxshieldedplayerwallbounceangle:180
+maxunshieldedplayerwallbounceangle:165
+playerwallbouncebrakefactor:0.60
+allowclusters:no
+allowlasermodifiers:yes
+allowmodifiers:yes
+allownukes:no
+allowplayerbounces:no
+allowshipshapes:yes
+allowshields:no
+ballswallbounce:yes
+debriswallbounce:no
+destroyitemincollisionprob:0.3
+detonateitemonkillprob:0.5
+distinguishmissiles:yes
+dropitemonkillprob:0.5
+emcsreprogrammines:yes
+framespersecond:12
+identifymines:yes
+initialafterburners:2
+initialautopilots:0
+initialcloaks:0
+initialecms:1
+initialemergencyshields:0
+initialemergencythrusts:1
+initialfuel:1000
+initiallasers:1
+initialmines:0
+initialmissiles:0
+initialrearshots:0
+initialsensors:0
+initialtanks:0
+initialtransporters:0
+initialwideangles:0
+itemafterburnerprob:0.4
+itemautopilotprob:0.0
+itemcloakprob:0.01
+itemecmprob:0.8
+itememergencyshieldprob:0.2
+itememergencythrustprob:0.1
+itemenergypackprob:0.8
+itemlaserprob:0.8
+itemmineprob:0.8
+itemmissileprob:0.2
+itemprobmult:0.0008
+itemrearshotprob:0.02
+itemsensorprob:0.6
+itemtankprob:0.4
+itemtractorbeamprob:0.8
+itemtransporterprob:0.4
+itemwideangleprob:0.1
+itemswallbounce:no
+laserisstungun:no
+limitedlives:yes
+maxitemdensity:0.1
+maxmissilesperpack:1
+minefusetime:420
+minesonradar:yes
+missilesonradar:yes
+movingitemprob:0.2
+nukeminmines:3
+nukeminsmarts:3
+nukesonradar:yes
+playerminimumstartfuel:500
+playerstartsshielded:yes
+playersonradar:yes
+rogueheatprob:0.00
+roguemineprob:0.02
+shieldeditempickup:no
+shieldedmining:yes
+shotswallbounce:no
+sparkswallbounce:yes
+targetkillteam:yes
+targetteamcollision:no
+teamassign:yes
+teamimmunity:yes
+treasuresonradar:yes
+
+limitedlives : yes
+mapwidth : 100
+mapheight : 100
+mapname : Scramble for Victory, Scene 1, with Robots
+mapauthor : Lewis W. Beard
+edgewrap : yes
+edgebounce : no
+teamplay : yes
+oneplayeronly : no
+maxrobots : 2
+worldlives : 3
+limitedvisibility : yes
+playershielding : no
+gravity : 0.0
+maxplayershots : 12
+shotsgravity : yes
+crashwithplayer : yes
+playerkillings : yes
+
+mapData: \multiline: EndOfMapdata
+     x   x                               xx     x                qxxs                        x      
+     x                                   xx     x                xxx                         x      
+ xx                              qxw            x               qxxs                                
+                                 axs           xx           xxxxxxx     qxw                         
+       xx         qx                                        xxxxxs     qxxxxxx                      
+            xx    xs                                      xxxxxs     qxxxxxxxxxx                    
+                                                                    xxxxs     x                     
+   xx                                      xxx                      xxs                        #    
+                 3                      x#xxxx         xxxxw        ax                              
+         x       x                      xxxx           xxxxxx                                       
+         x                3                            axxxxx                                       
+                         xxx#w3                         xxxxx                                       
+                   q     xxxxxxxw                       xxxxx           4                       xx  
+ xx               qx     xxxxxxxxw                      xxxxs          qxxw                         
+                 qxx     xxxxxxxxxw                x    xxxx           xx#x                         
+          xx    qxxx     xxxxxxxxxxw               xx   xxxx           xxxx        xx        xx     
+               qxxxx     xxxxxxxxxxxw              xx     axw4         axxs        xx        xs     
+  xx           #xxxx     xxxxxxxxxxxx              xx      xxxw               x                 xx  
+               xxxxx     xxxxxxxxxxxx                      xxx#x              x                     
+              3xxxxx     xxxxxxxxxxxx3                     axxxx              x                     
+              xxxxs              (xxxx                      xxxs qxw          x                     
+              xxxx                xx#x               4           x#x          x                     
+              xxxx            qx  xxxx            q#xxw          axs          xx                    
+     xx       xxx            qxs   xxx            xxxxx                  xxxxxxxxxxxxxxxxxx         
+              xxx!          qxs   !xxx            xxxxx                     (xxxx !   x             
+              xxx           xs     xxx            axxxx                      #x#      x             
+              axxx                xxxs             xxxs                       x       x             
+               xxx                xxx              xxx                        x       x         #x  
+               xxxw          *   3xxx              axxw               4               x             
+               axx#xxxxxxxxxxxx#xxxxs               xxx#xw          qxxw              x             
+       qx       axxxxxxxxxxxxxxxxxxs                axxxxxw         xxx#              x             
+       xs        axxxxxxxxxxxxxxxxs                  axxxxxw        a#xs            * x             
+                  axxxxxxxxxxxxxxs                     axxxxw                       xxx             
+      x            axxxxxxxxxxxxs                     + axxxxw             q   w    xxx             
+                      axxxxxxs                         + axxxxxxw          x ! x 4  xxx             
+                                                      + + axxxxxx          xxxxxxxxxxxx             
+                                                       + + xxxxxx     4     xxxx                    
+                                                      + + +xxxxxs   axs     xxxx                    
+                                                           axxs             xxxx                    
+                                                                            xxxx                    
+                                                                             xx                     
+                               xxxxx                                          x                     
+                               xxxx#                                          x                     
+                                axx                                           x                     
+                                 xx                                           x                     
+                                 xx                                           x                     
+                                 xx                                           #                     
+                                 xx                                                                 
+                                 xx                                                                 
+                                 xxx                                                                
+           2                      xx                                                                
+           xx#xxxxxxxxxxx         xx                                                                
+           xxxxxxxxxxxxxx         xx                                                          qw    
+                  xxxxxxx        qxx                                                          as    
+                  xxxxxxx       qxx<                                                                
+                  xxxxxxx      qxx<                x  x    x                                        
+                  xs   (x     qxx<                                                                  
+                  x     x    qxx<     >xxxxx                                                        
+                  x     x   qxx+     >xxxxxxxxxxxx    x           qxxxxxxw                          
+               2 xx!    x  qxxx+    >xxs   xxxxxxxx            0qxxxxxxxxxxw             w          
+               xxxx     xxxx#xx+)  >xxs          ax x         qxxxxxxxxxxxxxxw                      
+    a         #xxxx     xxxxxxx++++xxs                        #xxxx#xxxxxxxxxx                      
+            2xxxxxxx    xxxxxxxxxxxxs                        qxxxs        (xxx0                     
+            xxxxxxxx    xxxxxxxxxxxs             x          qxxxx          axxxw                    
+            xxxxxxxx    xxxxxxxxxxs                 x       xxxxs           xx#x                    
+         xxxxxxxxxxx    xxxxxxxxxs                         0xxxs            axxx0                   
+         xxxxxxxxxxx    xxxxxxxxs                          xxxs              axxx                   
+         xxxs              axxxs                   x       #x        *         xx                   
+         xxx                xxx                            xx       qxw        xx                   
+         xxx                xxx                            xx!      x#x       !xx        a          
+         xxx                xxx                            xx       axs        xx              w    
+         xxx                xxx   2                        xxxxxw            xxxx                   
+         xxx            *  qxxxxxx#                        xxxxx#           xxxxx                   
+         xxx     xx    #xxxxxxxxxxx                        xxxxxxw         xxxxxx                   
+         xxx     xx    xxxxxxx                             axxxxxx        0xxxxxs                   
+         xxx     xs    xxxxxx                               xxxxxxw      xxxxxxx                    
+         xxx     x     xxxxx                                axxxxxx     qxxxxxxs          a         
+         xxx     x     xxxx                                  axxxxx     xxxxxxs                     
+         xxx     x!    #xx                                    xxxxx     xxxxxx                      
+         xxx     x     xxx                                    axxxx     xxxxxs                      
+         xxxx    x     xxx                                      axx     xxxs                        
+                 xw    xxx                                        a     #s                          
+                 xxx   xxx                                                                          
+                 xxxw2qxxx                                                                          
+                 xxxx#xxxx                                                                          
+                 xxxxxxxxx                                                                          
+                 xxxxxxxxx                                                         x    x           
+                 xxxxxxxxx                                                                          
+                                                                                                    
+                                                                                                    
+                                                                             0                      
+              2                                                              x                      
+              x                                                                            x        
+              x                                                                                     
+                    xx                      xx                                         x          x 
+     #                                      xxx                                             x       
+                                             xxxx                                           #       
+                                             #xxx                                                   
+                                              xxxx                  qxxx               x        xx  
+                                               xx                  qxxxs                            
+EndOfMapdata

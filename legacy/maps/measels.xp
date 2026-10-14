@@ -1,0 +1,138 @@
+# Created by xmapedit on Mon Aug 16 10:31:05 1993
+
+mapwidth : 100
+mapheight : 120
+mapname : Measels
+mapauthor : Andrew Scherpbier (turtle@kiwi.sdsu.edu)
+edgewrap : yes
+teamplay : no
+oneplayeronly : no
+limitedvisibility : no
+playershielding : yes
+losemass : yes
+shotsgravity : yes
+crashwithplayer : no
+playerkillings : yes
+
+mapData: \multiline: EndOfMapdata
+         d######f                                                                     d#####s       
+         d##++##f                                                                     d##scc        
+          a#####f                                                                      cc           
+           a###s                                                                                    
+            a#s                                                                                     
+             c                                                                                      
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                  rrrrr                                             
+                                                 q#####wr                          )                
+                                                d########w                                          
+                                                d###+#####w                                         
+                                                d###++++###f                                        
+                                                d###++####s                                         
+                                                 a##+###s                                           
+                                                 q#####s                                            
+                                                d######f                                            
+                      rrrr                       a####s                                             
+                     d####f                       cccc                                              
+                     d####w                                                                         
+                     d##+##f                                                                        
+                     d##+##f                                                                        
+                      a##+#f                                                                        
+                      d##+#f                                                                        
+                      q####f                                                                        
+                     d####s                                                                         
+                      cccc                                                                          
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                             -------
+                                                                                             -(((((-
+                                                                                             -(---(-
+                                                                                             -(---(-
+                                                                                             -(---(-
+                                                              r                              -(((((-
+                                                             q#wr                            -------
+                                     rr                     d####f                                  
+                                    d++f                    d####w                                  
+                                    d++f                    d##+##w                                 
+                                    d++f                    d##+###f                                
+                                    d++f                     a#++##w                                
+                                    d++f                     d######f                               
+                                    d++f                     d#####s                                
+                                    d++f                      cca##f                                
+                                    d++f                         cc                                 
+                                    d++f                                                            
+                                    d++f                                                            
+                                    d++f                                                            
+                                    d++f                                                            
+                                     cc                                                             
+            )                                                                                       
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                    +++    -                        
+                                                                    +++    -                        
+                                                                    +++    +                        
+                                                                    +++   ++                        
+                            rr                                      +++   ++                        
+                           q##w                                     +++   ++                        
+                          q####w                                     ++  +++                        
+                         d######w             -------                ++  +++    -                   
+                         q##+####f            -(((((-       --+      ++  ++   ++-                   
+                        d###++###w            -(---(-          ++++++++))+++++++                    
+                         a##++####f           -(---(-             ++++++++++++     ++               
+       rrrr              d##++###s            -(---(-                )++++)       +++               
+      d####f             d##++###f            -(((((-                )++++)      ++++               
+      q####wr            q##++###f            -------             ++++++++++++++++++                
+     d#+++###f          q###+####f                             ++++++++++++++++++++                 
+     d#+++##s          q###+###sc                           --+                                     
+     d#+++##f         d###+###s                                                                     
+     d##+##s           a#####s                                                                      
+     d#####f            a###s                                                                       
+      ccccc              ccc                                                                        
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                         rrr                        
+                                                                        q###f                       
+                                                                       d####w                       
+                                                                       q##+##f                      
+                                                                      d###+##f                      
+                                                                       a#####f                      
+                                                                        a###s                       
+                        )                                                ccc                        
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                  ---------------------                                             
+                              +                           +                                         
+                              +                           +                                         
+                              +   _ _ _ _ _ _ _ _ _ _ _   +                                         
+                                 q#####################w                                            
+                                 +xxxxxxxxxxxxxxxxxxxxx+                                  r         
+                                 +xxxxxxxxxxxxxxxxxxxxx+                                rq#w        
+                                 a#####################s                               q####f       
+           rrrr                                                                       d##++#f       
+          q####w                                                                      d#+++#w       
+EndOfMapdata

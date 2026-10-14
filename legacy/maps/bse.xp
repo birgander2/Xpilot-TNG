@@ -1,0 +1,217 @@
+# Created by xmapedit on Mon Mar 25 14:48:08 1996
+
+### Welcome to "Mad Cow Disease", the current BSE cover-up scandal as a
+### game of XPilot!
+### 
+### Team 1 plays the scientists, attempting to research the causes of BSE.
+### Team 2 plays the government ministers and bureaucrats attempting to
+### cover up the dangers of BSE to protect the agricultural industry.
+### 
+### The scientists must acquire an infected cow's brain for their
+### research.  They must do this by cutting through the skull ("targets")
+### of the mad cow in the center of the map, removing the brain
+### ("treasure") and taking it back to their lab. However, if they do
+### this, the true extent of BSE infection in British cows will be
+### revealed ... political disaster! The government must stop this
+### information getting out by harrassing the scientists, breaking into
+### the lab and destroying their research data ("targets"). If the
+### scientists do get hold of the cows brain, or even merely open the
+### skull, the government must put a stop to their work once and for all
+### by removing the scientists' research funding ("treasure").
+### 
+### 
+### Depending on your team, the safety of the British public or the career
+### of a Tory minister is in your hands... good luck
+
+
+mapWidth:               200
+mapHeight:              100
+mapName:                Mad Cow Disease
+mapAuthor:              Nat Pryce (np2@doc.ic.ac.uk)
+
+edgewrap:               no
+edgebounce:             yes
+timing:                 no
+limitedVisibility:      no
+onePlayerOnly:          no
+
+teamPlay:               yes
+teamAssign:             yes
+teamImmunity:           yes
+targetKillTeam:         yes
+treasureKillTeam:       yes
+targetCollision:        no
+treasureCollisionDestroys: no
+treasureUnshieldedCollisionKills: no
+
+allowPlayerKillings:    yes
+allowPlayerBounces:     yes
+allowPlayerCrashes:     yes
+allowShields:           no
+playerStartsShielded:   yes
+
+shotLife:               20
+loseMass:               yes
+shotsGravity:           yes
+shotsWallBounce:        no
+ballsWallBounce:        yes
+minesWallBounce:        no
+itemsWallBounce:        yes
+missilesWallBounce:     no
+sparksWallBounce:       no
+debrisWallBounce:       no
+
+maxShieldedWallBounceSpeed :            9999
+maxUnshieldedWallBounceSpeed :          9999
+maxShieldedPlayerWallBounceAngle :      180
+maxUnshieldedPlayerWallBounceAngle :    180
+playerWallBounceBrakeFactor:            0.6
+objectWallBounceBrakeFactor:            0.99
+objectWallBounceLifeFactor:             0.9
+
+gravity:                -0.1
+gravityAngle:           90
+gravityPoint:           0,0
+gravityPointSource:     no
+gravityClockwise:       no
+gravityAnticlockwise:   no
+
+allowNukes:             yes
+allowClusters:          yes
+allowModifiers:         yes
+
+movingItemProb:         1.0
+dropItemOnKillProb:     0.5
+detonateItemOnKillProb: 0.5
+destroyItemInCollisionProb: 0.0
+
+itemAfterburnerProb:    10
+itemEnergyPackProb:     10
+itemTankProb:           10
+itemMissileProb:        2
+itemECMProb:            10
+itemMineProb:           10
+itemCloakProb:          0.1
+itemSensorProb:         3
+itemWideangleProb:      10
+itemRearshotProb:       5
+itemTransporterProb:    10
+itemLaserProb:          2.5
+itemEmergencyThrustProb:20
+itemTractorBeamProb:    10
+itemEmergencyShieldProb:20
+itemAutoPilotProb:      10
+itemProbMult:           0.01
+itemConcentratorRadius: 5
+
+rogueMineProb:          0.0
+rogueHeatProb:          0.0
+mineFuseTime:           0.0
+
+initialFuel:            2000
+initialEmergencyShields: 1
+initialEmergencyThrusts: 1
+
+
+mapData: \multiline: EndOfMapdata
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+no                                                                                                                                                                                                      
+                                                                                                                                                                                         r              
+                                                                                                                                                                                         x              
+                                                                                                                                                                                        qxw             
+   bb      tbbbbby  bbbbby                                                                                                                                                              xxx             
+   bb      bbbbbbb  bbbbbb                                                                                                                                                             qxxxw            
+   bb      bb   bb  bb  bb                                                                                                                                                             xxxxx            
+   bb      bb   bb  bb  bb                                                                                                                                                            rxxxxxr           
+   bb      bbbbbbb  bbbbbh                                                                                                                                                            xxxxxxx           
+   bb      bbbbbbb  bbbbby                                                                                                                                                            x x x x           
+   bb      bb   bb  bb  bb                                                                                                                                                            x x x x           
+   bb      bb   bb  bb  bb                                                                                                                                                            x x x x           
+   bbbbbb  bb   bb  bbbbbb                                                                                                                                                            x x x x           
+   bbbbbb  bb   bb  bbbbbh                                                                                                                                                           xxxxxxxxx          
+                                                                                                                                                                                    qxxxxxxxxxw         
+                                                                                                                                                                                   qxxxxxxxxxxxw        
+   qxxxxxxxxxxxxxxxxxxxxxw                                                                                                                                                        qxxxxxxxxxxxxxw       
+  qxxxxxxxxxxxxxxxxxxxxxxxw                                                                                                                                                      qxxxxxxxxxxxxxxxw      
+ qxxxxxxxxxxxxxxxxxxxxxxxxxw                                                                                                                                                    qxxxxxxxxxxxxxxxxxw     
+ xxxxxxxxxxxxxxxxxxxxxxxxxxx                                                                                                                                                  rqx                 xwr   
+ xx       xx  *  xx       xx                                                                                                                                                  xxxxxxxxxxxxxxxxxxxxxxx   
+ xx       xx     xx       xx                                                                                                                                                  axxxxxxxxxxxxxxxxxxxxxs   
+ xx       xx     xx       xx                                                                                                                                                   x xsaxsaxs axsaxsax x    
+ xx       xx     xx       xx                                                                                                                                                   x x  x  x   x  x  x x    
+ xx       xx     xx       xx                                                                                                                                                   x x  x  x   x  x  x x    
+ xx       xx     xx       xx                                                                                                                                                   x x  x  x   x  x  x x    
+ xx       xx     xx       xx                                                                                                                                                   x x  x  x   x  x  x x    
+ xx       xx     xx       xx                                                                                                                                                 qxxxxxxxxxxxxxxxxxxxxxxxw  
+ xx       xx     xx       xx                                                                                                                                                 x   x               x   x  
+ xx       xx     xx       xx                                                                                                                                                 x x x    qxxxxxw    x x x  
+ xx       xx     xx       xx                                                                                                                                                 x x x   qs  x  aw   x x x  
+ xx       xx     xx       xx                                                                                                                                                 x x x  qs s b a aw  x x x  
+ xx       xx     xx       xx                                                                                                                                                 x x x qs    b    aw x x x  
+ xx       xx     xx       xx                                                                                                                                                 x x x x s   b   a x x x x  
+ xx       xx     xx       xx                                                                                             qf           dw                                     x x x x     b     x x x x  
+ xx       xx     xx       xx                                                                                            qs             aw                                    x x x xx    +bbb xx x x x  
+ xx                       xx                                                                                            x               x                                    x x x x           x x x x  
+ xx                       xx                                                                                            x               x                                    x x x x w       q x x x x  
+ xx                       xx                                                                                            xw             qx                                    x x x aw         qs x x x  
+ xx!1                   1!xx                                                                                            xxw  q!!!!!w  qxx                                    x x x  aw w   q qs  x x x  
+ xxxxxxxxxxx     xxxxxxxxxxx                                                                                            axxxxx!!!!!xxxxxs                                    x x x   aw  x  qs   x x x  
+ xxxxxxxxxxx     xxxxxxxxxxx                                                                                             axxxxxx*xxxxxxs                                     x x x    axxxxxs    x x x  
+ xx       xx     xx       xx                                                         q                                     axxxxbxxxxs                                       x   x               x   x  
+ xx       xx     xx       xx                                                        qs                                      x  xbx  x                                        xxxxxxxxxxxxxxxxxxxxxxxxx  
+ xx       xx     xx       xx                                                       qs                                       x (xbx( x                                        ax  x x x x x x x x x  xs  
+ xx       xx     xx       xx                                                       x                                        xxxxbxxxx                                         x  x x x x x x x x x  x   
+ xx       xx     xx       xx                                                       x                                        xxxxbxxxx                                         x  x x x x x x x x x  x   
+ xx       xx     xx       xx                                                       x                                        xxx   xxx                                        xxxxxxxxxxxxxxxxxxxxxxxxx  
+ xx       xx     xx       xx                                                       x                                       qaxx   xxs                                        x                       x  
+ xx       xx     xx       xx                                                       x                                      qxxxxxbxxx                                         xxxxxxxxxxxxxxxxxxxxxxxxx  
+ xx       xx     xx       xx                                                       x           qxxxxxxxw           qxxxxxxs  axxbxxs                                          x  x x x x x x x x x  x   
+ xx       xx     xx       xx                                                       xw        qxxxxxxxxxxxw       qxxxxxxxs    c c c                                           x  x x x x x x x x x  x   
+ xx       xx     xx       xx                                                       axw      qxxxxxxxxxxxxxxxxxxxxxxxxxxxs<>qwr r r rq                                         x  x x x x x x x x x  x   
+ xx       xx     xx       xx                                                        axw    qxxxxxxxs  axxxxxxxxxxs<<axxs<>qxaxxxxxxxs                                         x  x x x x x x x x x  x   
+ xx       xx     xx       xx                                                         axxxxxxxxxxxxs     axxxxxxxs<  <<<<>qxxsaxxxxxs                                          x  x x x x x x x x x  x   
+ xx       xx     xx       xx                                                          axxxxxxxxxxx   @   axxxxxx<      >qxxx                                                  x  x x x x x x x x x  x   
+ xx       xx     xx       xx                                                             axxxxxxxxw>      xxxxxxw<  %  >xxxx                                                  x  x x x x x x x x x  x   
+ xx                       xx                                                             >>>>>axxxs><     xxxxxxx<     >xxxx                                                  x  x x x x x x x x x  x   
+ xx                       xx                                                             <<<<<>axs><qw    xxxxxxs<     >xxxx                                                  x  x x x x x x x x x  x   
+ xx                       xx                                                             qxxxw<> ><qxxxxw axxxxs<>>>>>>qxxxx                                                  x  x x x x x x x x x  x   
+ xx!1                   1!xx                                                             xxxxx<   <xxxxxxw     <>qxxxxxxxxxx                                                  x  x x x x x x x x x  x   
+ xxxxxxxxxxx     xxxxxxxxxxx                                                             xxxxx<   <axxxxxxw     >xxxxxxxxxxx                                                  x  x x x x x x x x x  x   
+ xxxxxxxxxxx     xxxxxxxxxxx                                                             axxxs<    <xxxxxxx      axxxxxxxxxx                                                  x  x x x x x x x x x  x   
+ xx       xx     xx       xx                                                              xxx<  %  <xxxxxxx   @   xxxxxxxxxx                                                  x  x x x x x x x x x  x   
+ xx       xx     xx       xx                                                              xxxw<<<<<qxxxxxxxw      xxxxxxxxxx                                                  xxxxxxxxxxxxxxxxxxxxxxx   
+ xx       xx     xx       xx                                                              axxxxxxxxxxxxxxxxxw    qxxxxxxxxxx                                                  x  x x x x x x x x x  x   
+ xx       xx     xx       xx                                                               axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                  xxxxxxxxxxxxxxxxxxxxxxx   
+ xx       xx     xx       xx                                                                xxxxxxxxsxxxaxxxxxxxxxxs    axxx                                                  x  x x x x x x x x x  x   
+ xx       xx     xx       xx                                                               qxxxxxxxsxxxxx                xxxw                                                 x  x x x x x x x x x  x   
+ xx       xx     xx       xx                                                              qxxxxxxs  xxxxx                axxx                                                 x  x x x x x x x x x  x   
+ xx       xx     xx       xx                                                              xxxxxxs   axxxs                 xxx                                                 x  x x x x x x x x x  x   
+ xx       xx     xx       xx                                                              xxxxxs     # #                  xxx                                                 x  x x x x x x x x x  x   
+ xx       xx     xx       xx                                                              axxxxw     # #                  xxx                                                 x  x x x x x x x x x  x   
+ xx       xx     xx       xx                                                               axxxxw                         axx                                                 x  x x x x x x x x x  x   
+ xx       xx     xx       xx                                                                axxxx                          xx                                                 x  x x x x x x x x x  x   
+ xx       xx     xx       xx                                                                  axxw             @           xx                                                 x  x x x x x x x x x  x   
+ xx       xx     xx       xx                                                                   axxw                        xx                                                 x  x x x x x x x x x  x   
+ xx                       xx                                                                    axx                        xxw                                                x  x x x x x x x x x  x   
+ xx                       xx                                                                     axw                       xxx                                                x  x x x x x x x x x  x   
+ xx                       xx                                                                      xxw                      axxx                                               x  x x x x x x x x x  x   
+ xx!1                   1!xx                                                                      xxxx                      xxx                                               x  x x x x x x x x x  x   
+ xxxxxxxxxxx     xxxxxxxxxxx                                                                      xxxx                      xxx                                               xxxxxxxxxxxxxxxxxxxxxxx   
+ xxxxxxxxxxx     xxxxxxxxxxx                                                                    qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                                             x  x x x x x x x x x  x   
+ xx                       xx                                                                  qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                                         xxxxxxxxxxxxxxxxxxxxxxx   
+ xx                       xx                                                                qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                                     x  x x x x x x x x x  x   
+ xx                       xx                                                         qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                                 x  x x x x x x x x x  x   
+ xx                       xx                                                   qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                               x  x x x x x x x x x  x   
+ xx                       xx                                                 qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                              x  x x x x x x x x x  x   
+ xx                       xx                                               qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                            x  x x x x x x x x x  x   
+ xx                       xx                                           qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                           x  x x x x x x x x x  x   
+ xx                       xx                                        qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                         x  x x x x x x x x x  x   
+ xx                       xx                                    qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                        x  x x x x x x x x x  x   
+ xx                       xx                               qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                      x  x x x x x x x x x  x   
+ xx                                                qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                     x  x x x x x x x x x  x   
+ xx                                              qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                    x  x x x x x x x x x  x   
+ xx                                         qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                   x  x x x x x x x x x  x   
+ xx                                       qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw  2 2 2 2 2 2 2 2 x  x x x x x x x x x  x   
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+EndOfMapdata

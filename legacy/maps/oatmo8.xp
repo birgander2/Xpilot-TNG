@@ -1,0 +1,64 @@
+# Created by xmapedit on Sat Dec 18 00:38:54 1993
+
+mapwidth : 35
+mapheight : 40
+mapname : Oatmo Team Tourney 4
+mapauthor : Fred Gruner (I Kill You)
+limitedlives:yes
+allowshields:no
+robotsleave:no
+playersonradar:no
+playerstartshielded:yes
+itemprobmult:0
+edgewrap : yes
+teamplay : yes
+maxrobots : 0
+worldlives : 5
+limitedvisibility : yes
+gravity : 0
+maxplayershots : 1
+crashwithplayer : yes
+playerkillings : yes
+
+mapData: \multiline: EndOfMapdata
+                   qxxxxxxxxxxw8   
+                  qxxxxxxxxxxxx#   
+     66           xxxxxxxxxxxxxx   
+    6##           xxxxxxxxxxxxxx8  
+    #xxw  1       xxxxxxxxxxxs x#  
+    xxxxxx# 1     axxxxxxxxxxxxs   
+    xxxxxxxx#      xxxxxxxxxxxs    
+    axxxxxxxs      axxxxxx         
+     axxxxxx           axx         
+      xxxxxxw           axw        
+       axxxxxx  1        ax        
+       qxxxxxxw #         x        
+       xxxxxxxxxx         x4       
+       axs axxxxs         a#       
+           qxxxx           x4      
+          xxxxxxw          a#4     
+              axx           a#     
+        7       xw           xw    
+        #xxx    axw          ax    
+       7xxxx     ax           x    
+      7#xxs       a w         x    
+      #xxx          x5        x    
+      xxxx          a#5       x    
+      xxxs           a#5      x    
+      xxx             a#w          
+      xxs    9  9    9qxx          
+      xx     #wq#xw q#xxs          
+      xs     xxxxxxxxs             
+      x                            
+      x  2  2                      
+        q#wq#xw                    
+        xxxxxxxw 2                 
+        xxxxxxxxx#                 
+        xxxxxxxxxs                 
+        xxxxxxxs     3             
+        axxxxxx     q#w 3 3        
+         xxxxxs     xxxx#x#        
+           axxw     xxxxxxx        
+            axx     xxxxxxxw 8     
+                    xxxxxxxxx#     
+EndOfMapdata

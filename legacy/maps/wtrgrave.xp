@@ -1,0 +1,310 @@
+# Created by xplts/editors/edmapedit on Fri Jun 27 03:15:35 1997
+
+robotteam:0
+restrictrobots:true
+reserverobotteam:true
+cloakedexhaust:yes
+cloakedshield:yes
+cannonsmartness:1
+cannonspickupitems:no
+ecmsreprogramrobots:yes
+wreckagecollisionmaykill:yes
+gravityvisible:true
+wormholevisible:true
+itemconcentratorvisible:true
+allowsmartmissiles:True
+allowheatseekers:True
+allowtorpedoes:True
+maxminesperpack:2
+minelife:0
+missilelife:0
+baseminerange:5
+shotkillscoremult:1.0
+torpedokillscoremult:1.0
+smartkillscoremult:1.0
+heatkillscoremult:1.0
+clusterkillscoremult:1.0
+laserkillscoremult:1.0
+tankkillscoremult:0.44
+runoverkillscoremult:0.33
+ballkillscoremult:1.0
+explosionkillscoremult:0.33
+shovekillscoremult:0.5
+crashscoremult:0.33
+minescoremult:0.17
+itemdeflectorprob:0.00001
+itemhyperjumpprob:0.00001
+itemphasingprob:0.00001
+initialdeflectors:0
+initialhyperjumps:0
+initialphasings:0
+maxfuel:9533
+maxtanks:8
+maxecms:300
+maxmines:300
+maxmissiles:300
+maxcloaks:300
+maxsensors:300
+maxwideangles:300
+maxrearshots:300
+maxafterburners:15
+maxtransporters:300
+maxdeflectors:300
+maxphasings:300
+maxhyperjumps:300
+maxemergencythrusts:300
+maxlasers:5
+maxtractorbeams:4
+maxautopilots:300
+maxemergencyshields:300
+allowviewing:false
+rounddelay:0
+maxroundtime:0
+
+mapname : > Watery Grave (underwater combat)
+mapauthor : Vincent (www-personal.ksu.edu/~rohmon/xpmaps/)
+mapwidth : 150
+mapheight : 100
+extraborder : no
+edgewrap : yes
+edgebounce : yes
+losemass : no
+gravity : -0.12
+gravitypoint : 0,0
+gravityangle : 90
+gravitypointsource : no
+gravityclockwise : no
+gravityanticlockwise : no
+shotsgravity : yes
+limitedvisibility : no
+minvisibilitydistance : 0
+maxvisibilitydistance : 0
+shotswallbounce : no
+ballswallbounce : yes
+mineswallbounce : no
+itemswallbounce : yes
+missileswallbounce : no
+sparkswallbounce : yes
+debriswallbounce : no
+playerwallbouncebrakefactor : 0.2
+objectwallbouncebrakefactor : 0.5
+maxrobots : 3
+robotstalk : no
+robotsleave : yes
+robotleavelife : 50
+robotleavescore : -75
+robotleaveratio : -5
+allowshipshapes : yes
+shipmass : 25
+shotmass : 0.15
+shotspeed : 35
+shotlife : 20
+firerepeatrate : 1
+maxplayershots : 30
+maxoffensiveitems : 50
+maxdefensiveitems : 50
+loseitemdestroys : no
+initialfuel : 1750
+initialtanks : 0
+initialecms : 0
+initialmines : 0
+initialmissiles : 0
+initialcloaks : 1
+initialsensors : 2
+initialwideangles : 0
+initialrearshots : 0
+initialafterburners : 3
+initialtransporters : 0
+initiallasers : 0
+initialemergencythrusts : 0
+initialtractorbeams : 0
+initialautopilots : 0
+initialemergencyshields : 0
+allowshields : no
+shieldeditempickup : yes
+shieldedmining : yes
+playerstartsshielded : yes
+wallbouncefueldrainmult : 0.1
+wallbouncedestroyitemprob : 0
+maxshieldedwallbouncespeed : 200
+maxunshieldedwallbouncespeed : 100
+maxshieldedplayerwallbounceangle : 180
+maxunshieldedplayerwallbounceangle : 180
+destroyitemincollisionprob : 0
+dropitemonkillprob : 0.9
+detonateitemonkillprob : 0.1
+allownukes : no
+allowclusters : yes
+nukeclusterdamage : 2
+allowmodifiers : yes
+allowlasermodifiers : yes
+laserisstungun : no
+ecmsreprogrammines : yes
+missilesonradar : yes
+minesonradar : yes
+nukesonradar : yes
+distinguishmissiles : yes
+identifymines : yes
+minefusetime : 0
+maxmissilesperpack : 1
+nukeminsmarts : 4
+nukeminmines : 3
+movingitemprob : 0.75
+maxobjectwallbouncespeed : 1000
+objectwallbouncelifefactor : 0.99
+itemconcentratorradius : 1
+itemconcentratorprob : 1
+itemprobmult : 0.05
+maxitemdensity : 0.0001
+itemenergypackprob : 0.00001
+itemtankprob : 0.000001
+itemecmprob : 0.0001
+itemmineprob : 0.0001
+roguemineprob : 0.3
+itemmissileprob : 0.0001
+rogueheatprob : 0
+itemcloakprob : 0
+itemsensorprob : 0.0000001
+itemwideangleprob : 0.001
+itemrearshotprob : 0
+itemafterburnerprob : 0.0001
+itemtransporterprob : 0.0000001
+itemlaserprob : 0.00001
+itememergencythrustprob : 0.0000001
+itemtractorbeamprob : 0.00001
+itemautopilotprob : 0
+itememergencyshieldprob : 0.01
+oneplayeronly : no
+allowplayerkilling : yes
+allowplayercrashes : yes
+allowplayerbounces : yes
+limitedlives : no
+worldlives : 0
+playersonradar : yes
+teamplay : no
+teamassign : yes
+teamimmunity : yes
+reset : yes
+lockotherteam : yes
+targetkillteam : yes
+targetteamcollision : no
+targetsync : no
+treasurekillteam : no
+treasurecollisiondestroys : yes
+treasurecollisionmaykill : no
+treasuresonradar : yes
+timing : no
+racelaps : 3
+checkpointradius : 6
+friction : 0.025
+framespersecond : 12
+reporttometaserver : yes
+idlerun : yes
+noquit : yes
+gameduration : 0
+contactport : 15345
+denyhosts : no
+plockserver : no
+
+mapData: \multiline: EndOfMapdata
+                                                                                                                                                      
+                                                                                                                                                      
+                                                                                                                                                      
+                                                                                                                                                      
+                                                                                                                                                      
+                                                                                                                                                      
+                                                                                                                                                      
+                                                                                                                                                      
+                                                                                                                                                      
+                                                                                                                                                      
+                                                                                                                                                      
+                                                                                                                                                      
+                                                                                                                                                      
+                                                                                                                                                      
+                                                                                                                                                      
+                                                                                                                                                      
+                                                                                                                                                      
+                                                                                                                                                      
+                                                                                                                                                      
+                                                                                                                                                      
+                                                                                                  qxxxxxw                                             
+                                                                                                qxsk k maw                                            
+                                                                                               qsk      +x                                            
+                                                                                               x+       +x                                            
+                                                                                               xi  >   mqs                                            
+                                                                                               xi     +qs                                             
+                                                                                               si     mx                                              
+                                                                                               k     +qs                                              
+                                                                                            k        mx                                               
+                                                                                                      x                                               
+                                                                                                     +x                 qxxxxxw                       
+                                                                                           k         maw               qs     aw                      
+                                                                                                      mxw             qs       x                      
+                                                                                            k k        a+w           )x        aw                     
+                                                                                           qxxxwk      kaxxxw    qxxxxx         x                     
+                                                                                          qsk kaxw        ka+w qxs   as         xw                    
+                                                                                          k     mxk  k  k   axxs                ax                    
+                                                                                                 axxxxxxxxwk d   !               x                    
+                                                                                         k        k k  k  k   d  (!       %      x                    
+                                                                                                             d   !               x                    
+                                                                                            qwk           kqxsd                  x                    
+                                                                                            kaxxwk k    kqxs d    !              x                    
+                                                                                          k    axxxxwk+qxxsk  d   (!             x                    
+                                                                                                 k axxxsk    d    !  qxw         x                    
+                                                                                                     k     kqsd    qxs)x        qs                    
+                                                                                           mw             qxsd qxxxs   aw   qxxxs                     
+                                                                                            aw  k      kqxsk  qs        axxxs                         
+                                                                                          k  axxxw k  qxsk  iqs                                       
+                                                                                              k axxxxxs     qs                                        
+                                                                                         k         k       iaw                                        
+                                                                                          w                 +x                                        
+                                                                                          xm                +x                                        
+                                                                                          x                iqs                                        
+                                                                                          awk          k  qxs                                         
+                                                                                           aw+ k   k qxxxxxs                                          
+                                                                                            axxxxxxxxxxs                                              
+                                                      b                                                                                               
+                                                       b                                                                                              
+                                                       b                                                                                              
+                                                       b                                                                                              
+                                                       b                                                                                              
+                                                       b                                                                                              
+                                                       b                                                                                              
+                                                       b                                                                                              
+                                                       b    b            b                                                                            
+                                                       bbbbb              b                                                                           
+                                                  bbbbbb   b              b                                                                           
+                                                       b   b              b   b                                                                       
+                                                       b                  bbbb                                                                        
+                                                       b                bbb                                                                           
+                                                       b              bb  b                                                                           
+                                                       b               b  b                                                                           
+                                                       b                  b                                                                           
+                                                        b                 b                                                                           
+                                                        b                 b                                                                           
+                                                        b                 b                                                                           
+                                                        b        b        b                                                                           
+                                                        b    bbbb         b      b                                                                    
+                                                        bbbbb b           b bbbbb          q                                                          
+                                                     bbbb     b       bbbbbb   b          qs                                                          
+                                                bbbbb   b     b     bb    b    b         qs                                                           
+                                                    b   b                 b    b        qs                                                            
+                                                    b   b                 b            qs                                                             
+                                                        b                 b          qxs                                                              
+                                                        b              qxwb      qxxxxs                                                               
+                                          xw_  qxw      b            qxs  bqxxxxxs  x                                                                 
+                                          xaxxxs aw     b          qxs              b                                                                 
+                                          x       aw    b        qxs               qs                                                                 
+                                          x        axxxwb     qxxs                 x                                                                  
+                                          x             bqxxxxs                   qs                                                                  
+                                          b                               q!!x    x                                                                   
+                                          aw                            q!s  !    b                                                                   
+                                           aw                         q!s  % !   qs                                                                   
+                                            b                       q!s  % qxs  qs                                                                    
+                                            aw                     qs  %  qs    b                                                                     
+                                             aw                    !    q!s    qs                                                                     
+                                              abw                  !!x!!s     qs                                                                      
+                                                aw                           qs                                                                       
+                                                 aw                         qs                                                                        
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+EndOfMapdata

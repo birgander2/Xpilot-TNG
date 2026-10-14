@@ -1,0 +1,72 @@
+# Created by ./xmapedit on Wed Aug 11 09:41:37 1993
+
+# Map converted by mapmapper @(#)Version 1.0
+crashwithpayer:yes
+limitedlives:no
+
+mapwidth: 49
+mapheight: 50
+mapname: Cool2
+mapauthor: Mark Boyns
+edgewrap: yes
+edgebounce: yes
+teamplay: no
+oneplayeronly: no
+timing: no
+worldlives: 0
+limitedvisibility: no
+playershielding: yes
+playerkillings: yes
+
+mapData: \multiline: EndOfMapdata
+)     d#xxxxxxxxxx#xxxxxxxxxx#xxxxxxxxxxx#f     )
+       ccccccccccccccccccccccccccccccccccc       
+        _         _          _          _        
+                                                 
+                                                 
+                                                 
+r                                               r
+#f                                             d#
+xf_                                           _dx
+xf                                             dx
+xf                                             dx
+xf                                             dx
+xf                                             dx
+xf                                             dx
+xf                                             dx
+xf                                             dx
+xf                                             dx
+xf                                             dx
+#f_                                           _d#
+xf                                             dx
+xf                                             dx
+xf                      -                      dx
+xf                     ---                     dx
+xf                    -----                    dx
+xf                   --(((--                   dx
+xf                  ---(((---                  dx
+xf                   --(((--                   dx
+xf                    -----                    dx
+xf                     ---                     dx
+#f_                     -                     _d#
+xf                                             dx
+xf                                             dx
+xf                                             dx
+xf                                             dx
+xf                                             dx
+xf                                             dx
+xf                                             dx
+xf                                             dx
+xf                                             dx
+xf                                             dx
+xf                                             dx
+xf_                                           _dx
+#f                                             d#
+c                                               c
+                                                 
+                                                 
+                                                 
+        _         _          _          _        
+       rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr       
+)     d#xxxxxxxxxx#xxxxxxxxxx#xxxxxxxxxxx#f     )
+EndOfMapdata

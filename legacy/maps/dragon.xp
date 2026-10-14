@@ -1,0 +1,327 @@
+# Copyright © 1991-94 by Bjørn Stabell, Ken Ronny Schouten & Bert Gÿsbers.
+# XPilot 3.2.6 comes with ABSOLUTELY NO WARRANTY; for details see the
+# provided LICENSE file.
+
+
+# xpilots option dump
+# 
+# LIBDIR = /usr/local/dashbin/lib/xpilot/
+# DEFAULTS_FILE_NAME = /usr/local/dashbin/lib/xpilot/defaults
+# MAPDIR = /usr/local/dashbin/lib/xpilot/maps/
+# DEFAULT_MAP = globe.map
+# 
+shipMass:                                20.0
+shotMass:                                0.1
+shotSpeed:                               21.0
+shotLife:                                60
+fireRepeatRate:                          2
+# maxRobots:                               4
+robotsTalk:                              false
+robotsLeave:                             true
+robotLeaveLife:                          50
+robotLeaveScore:                         -90
+robotLeaveRatio:                         -5
+maxPlayerShots:                          256
+shotsGravity:                            true
+idleRun:                                 false
+noQuit:                                  false
+contactPort:                             15345
+motd:                                    /usr/local/dashbin/lib/xpilot/servermotd
+allowPlayerCrashes:                      yes
+allowPlayerBounces:                      yes
+allowPlayerKilling:                      yes
+allowShields:                            yes
+playerStartsShielded:                    yes
+shotsWallBounce:                         yes
+ballsWallBounce:                         yes
+minesWallBounce:                         no
+itemsWallBounce:                         yes
+missilesWallBounce:                      no
+sparksWallBounce:                        yes
+debrisWallBounce:                        no
+maxObjectWallBounceSpeed:                40
+maxShieldedWallBounceSpeed:              50
+maxUnshieldedWallBounceSpeed:            100
+maxShieldedPlayerWallBounceAngle:        90
+maxUnshieldedPlayerWallBounceAngle:      30
+playerWallBounceBrakeFactor:             0.20
+objectWallBounceBrakeFactor:             0.95
+objectWallBounceLifeFactor:              0.80
+wallBounceFuelDrainMult:                 1.0
+wallBounceDestroyItemProb:               0.25
+reportToMetaServer:                      yes
+limitedVisibility:                       no
+minVisibilityDistance:                   0.0
+maxVisibilityDistance:                   0.0
+limitedLives:                            no
+worldLives:                              0
+reset:                                   yes
+teamPlay:                                no
+teamAssign:                              yes
+teamImmunity:                            yes
+emcsReprogramMines:                      yes
+targetKillTeam:                          no
+targetTeamCollision:                     yes
+targetSync:                              no
+treasureKillTeam:                        no
+treasureCollisionDestroys:               yes
+treasureCollisionMayKill:                no
+onePlayerOnly:                           no
+timing:                                  no
+edgeWrap:                                no
+edgeBounce:                              yes
+extraBorder:                             no
+defaultsFileName:                        
+scoreTableFileName:                      
+framesPerSecond:                         12
+allowNukes:                              False
+allowClusters:                           False
+allowModifiers:                          False
+allowLaserModifiers:                     False
+allowShipShapes:                         True
+playersOnRadar:                          True
+missilesOnRadar:                         True
+minesOnRadar:                            True
+nukesOnRadar:                            True
+treasuresOnRadar:                        False
+distinguishMissiles:                     True
+maxMissilesPerPack:                      12
+identifyMines:                           True
+shieldedItemPickup:                      False
+shieldedMining:                          False
+laserIsStunGun:                          False
+nukeMinSmarts:                           7
+nukeMinMines:                            4
+nukeClusterDamage:                       1.0
+mineFuseTime:                            0.0
+movingItemProb:                          0.2
+dropItemOnKillProb:                      0.5
+detonateItemOnKillProb:                  0.5
+destroyItemInCollisionProb:              0.1
+itemProbMult:                            1.1
+maxItemDensity:                          0.00012
+itemConcentratorRadius:                  10
+rogueHeatProb:                           0.02
+rogueMineProb:                           1.0
+itemEnergyPackProb:                      0.9
+itemTankProb:                            0.9
+itemECMProb:                             0.9
+itemMineProb:                            0.9
+itemMissileProb:                         0.9
+itemCloakProb:                           0.9
+itemSensorProb:                          0.9
+itemWideangleProb:                       0.9
+itemRearshotProb:                        0.9
+itemAfterburnerProb:                     0.9
+itemTransporterProb:                     0.9
+itemLaserProb:                           0.9
+itemEmergencyThrustProb:                 0.9
+itemTractorBeamProb:                     0.9
+itemAutopilotProb:                       0.9
+itemEmergencyShieldProb:                 0.9
+initialFuel:                             1000
+initialTanks:                            0
+initialECMs:                             0
+initialMines:                            4
+initialMissiles:                         2
+initialCloaks:                           0
+initialSensors:                          0
+initialWideangles:                       0
+initialRearshots:                        0
+initialAfterburners:                     0
+initialTransporters:                     0
+initialLasers:                           0
+initialEmergencyThrusts:                 0
+initialTractorBeams:                     0
+initialAutopilots:                       0
+initialEmergencyShields:                 0
+gameDuration:                            0.0
+friction:                                0.0
+checkpointRadius:                        6.0
+raceLaps:                                3
+
+
+
+# Created by xmapedit on Sat Nov 19 13:20:03 1994
+
+# Map converted by mapmapper @(#)Version 1.0
+crashwithpayer:yes
+limitedlives:no
+
+mapwidth :                                  150
+mapheight :                                 150
+mapname :                                   The Blue Dragon
+mapauthor :                                 Ove Svensson, (ove@hh.se)
+edgewrap :                                  no
+teamplay :                                  no
+timing :                                    no
+worldlives :                                0
+limitedvisibility :                         yes
+playershielding :                           yes
+gravity:                                   -0.14
+gravityangle :                              90
+gravitypoint :                              0,0
+gravitypointsource :                        no
+gravityclockwise :                          no
+gravityanticlockwise :                      no
+shotmass :                                  0.1
+shotspeed :                                 21.0
+shotlife :                                  60
+maxplayershots :                            256
+shotsgravity :                              yes
+
+mapData: \multiline: EndOfMapdata
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx#xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs                   axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs                               axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs                                       axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs                                             axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs                                                   axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs                                                       axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs                                                           axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs                                                               axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs                                                                   axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs                                                                       axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs                                                                           axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs                                           qxw                               axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs                                             xxxw                                axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs                                              xx xw                                axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs                                                ax  xxw                                axxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxx xs                                                  x    xxw                               axxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxs                                                   axx    xw                               axxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxs                                                     xx   xaxw      qx                       axxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxs                                                      ax x    xxx   qxs                        axxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxs                                  qxxxxxxxw  xw xw      axxx     xw qxs                          axxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxs                                  qxs     axw ax ax        a w  xxxxxxs                            axxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxx#s                                  xxs       ax qx  xw     _ qxxx  sxxs                               axxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxs                                              xxxxwqxxw qxxxxxxxxxx xx                                 a#xxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxs                                       qxxxxxwqxqxxxxxxxxxxxxxsaxxxxxxxxxxxxw                            axxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxs                                       xx    axxxxx##x##xxxxs   qxxs axs    axxw                           axxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxs                                       xxxxw     axx##x##xs     qxs    x  xx  xaxw                           axxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxs                                       xxxxxxxw    xxxxxxxs     qxs     x x  xxx axw                           axxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxs                                              xxw   axxxxxs     qxs     qxw x x  x ax                            axxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxx                                              xxxx              qxxw   qxxxxxxxxxxxx x                             axxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxx                                         xxxxxxs    qx          qxxxxxxxxsxs    axx x xw                             xxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxs                                          xxxxxw   qxs         qxxs     xxs     qxx x ax                             axxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxx                                           axxxxxxxxxxw      qxxxsx     qxx      xxxx  xx        qxw                   axxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxs                                                   axxxw qxxxxsxxxxw   qxs      qxs  x qx     qxxxxxxxxw                xxxxxxxxxxxxxx
+xxxxxxxxxxxxxxs                                                      axxxxsx x x xxxxxxxs    qxxxsx  x xs    qxs    x ax                axxxxxxxxxxxxx
+xxxxxxxxxxxxxs                                                        xsxxxxxxxxxxs    x  qxxxxx  xxx qx    qxsx   xx  xw                axxxxxxxxxxxx
+xxxxxxxxxxxxx                                                         xw               xxxxs   x xx  qxs   qxs  xxxx   axw                xxxxxxxxxxxx
+xxxxxxxxxxxxs                                                         ax              qxs  x  xxxx qxxs  _qxs   x   xxxxxx                axxxxxxxxxxx
+xxxxxxxxxxxx                                                          qx             qxx  xx     qxxs   qxxxx xxxx  x  x x   qxxxx r       xxxxxxxxxxx
+xxxxxxxxxxxs                                                        qxxs          qxxxsx xxxxqxxxxs  qxxxs  xxx  xxxx  x xw  xs  x x       axxxxxxxxxx
+xxxxxxxxxxx                                                       xxxs        qxxxxs    x   xxs axw xxs x    x   qxxxxx  axw xxxxxxs r      xxxxxxxxxx
+xxxxxxxxxxs                                                                _qxxs   x   xx  qxs  qxxxxs   xxxxxxxqxs  axwxxaxxxs xx   xw     axxxxxxxxx
+xxxxxxxxxx                                                               qxxxx    xxxxx   qxsqxxxx  x   x  x x xxs    ax   axx  axw  ax      xxxxxxxxx
+xxxxxxxxxs                                                              qxs  xxxxx   x  qxxxxxxxx   xxxxx   x  xs      x         axw  x      axxxxxxxx
+xxxxxxxxx                                     r                       qxxx  xx  x  qxxxxxxxxx    x  x    x  x qx      qxxxxx      axw x       xxxxxxxx
+xxxxxxxxs                                _    xxw                    qxxs x x  qxxxxsxxxx  x   xxx xx   x  xxqxs     qxx x         axxx       axxxxxxx
+xxxxxxxx                               qxxxw   axw                  qxsx  x  qxxs  xx x  xxx  xxxxxxxx xxxxx xs      xxxxxw    qxxxw xx        xxxxxxx
+xxxxxxxs                              qxxxxx   qxx                 qxs xxxxxqxsxxxxx xxxxx xx x   x  xx  x  qx       axx ax qxxxs axxxs        axxxxxx
+xxxxxxx                              dxs xxx qxxxx                qxs xx   xxsxxx  xxx  xx   x   xx   x  xxqxs        ax qxxxxxx                xxxxxx
+xxxxxxx                          qxxw   qxxxxxs xx                xsxxx    xs   x  x  x  x  xx  xxx  x  qxxxs          c xxxsaxx                xxxxxx
+xxxxxxs                          xs xw  xs xxs qxs                x   x   qx  xx xx   xxxx xxxxxx  xxxqxxs   qxxxxxw     xxx  xs                axxxxx
+xxxxxx                           xxxxxw x  xs qxs                qx   xxxxxsxxxxxxx xxxx xxx   x   xxxxxx qxxxs   axxw   axxw xw                 xxxxx
+xxxxxx                          dxs xxxxx     xs             qxxxxsx xx  xs     x xxx x   x   xxxxxx qxxxxxs  xx   xaxxw   ax axf                xxxxx
+xxxxxs                              axxxs     xw           qxxx ax x xxx x      x xx   x xxxxxxxqxxxxxsx x   xxxx  x sax    c                    axxxx
+xxxxx                                xxx      xxw        qxxs xx xw xx  xxx  xxx  xxxxxxxxxxxxxxxs  x  x  x x   x   x xx                          xxxx
+xxxxx                           qxxxxxxx       axxxxxxw xxsx   x ax xx  xxxw x    qxxxxxxxxsxx  x   x  x  xx   xx  x   xw                         xxxx
+xxxxx                           xs x          xx x   xxxs  xx  xxxxxxxx x axxxxxxxxs  x     x    x  x  x   xxxx xxxx  xxxw                        xxxx
+xxxxs                           xxxxw    qx   x  xx x  x  xxx  xx x    xx  xxx   x    xx    x   xxxxxxxx xxx  xx  xx xxxxxw                       axxx
+xxxx                            xs axw  qxs   xxx x x  x xx  xxxx xw    x  x x   x   xx xx  xxxxx   x  xxx x    x xxx  xsax                        xxx
+xxxx                           dx   ax qxx   x  xxxxx   xx  xx x  axwxxxxxx  x  xxxxxx   xxxx   x  xx   x  xx   xxx xx x  x                        xxx
+xxxx                                 xxxxxxxwx   x  xxxxx x x  xx  axx   xxx xx x    x   x  x    xx  x  x   x xxx    xxxx xw                       xxx
+xxxx                                 xxxs  axxxw x  xx  x  xxx  xx qxxw xx x xxx     x  xx  xxx  x   xqxxs xxxx xx  xxxx xxx                       xxx
+xxxx                              dxw xx      axxxx x x x    xx qxxxsaxx   xxxx xxxxxxxxx xx   xx   qxxsaxxxw    x xx  x   x                       xxx
+xxxs                               axxxs         axxxx   xxxxxxxxs    xxxxxxx x  xxx   x x    qxxxxxxxs    axxw  xxx  xxxx x                       axx
+xxx                                                 axxxxxs           axx     x xx x   x xqxxxxs             axx xxxxxxx xxx                        xx
+xxx                                                                    axw    xx   x  x qxxxs                 xxx  x  xx   x                        xx
+xxx                                                                     xxwxxxx xxxx xxxxxs                   xx   xqxxs  qx                        xx
+xxx                                                                      axxxqxxxxxxxxs                       xs xxqxsx  qxs                        xx
+xxx                                                                       axxxxsaxxxs                        qxxx qxs xxxxs                         xx
+xxx                                                                                                          xx  qxsx  qxs                          xx
+xxx                                                                                                         qxw xxxxx qxs                           xx
+xxx                                                                                                        qxxxxxs  xxxs                            xx
+xxx                                                                                                      qxxxxsx    qxx                             xx
+xx#                                                                                                 qxxxxxxs   xx  qxs                              #x
+xxx                                                                                             qxxxxxxxx  xx xx xxxs                               xx
+xxx                                                                                          qxxxxx  x  xx   xx   xs                                xx
+xxx                                 x                                                    qxxxxsx  x  x    xxxxx  qx                                 xx
+xxx                                 xw                                                  qxxx   x  xxxxx xx x  xxxxx                                 xx
+xxx                                 xxw               qxxxxxxxxxw                      qxxs x  xx xx  xxxx x  qxxs                                  xx
+xxx                                 xxxw             qxs x    xxxw                    qxsx  xxxxxx  x x  x xxqxs                                    xx
+xxx                                 axxxw           qxx  x  xxxxxxxw                 qxs xxxx  xx   xxxx xxxxxs      _xx                            xx
+xxx                                  xs x          xxsxx xx x xxxxxxw               qxxx   xxx  xxxx x xxxs    xxxxxxxxx                            xx
+xxx                                  x  x         qxs xx xxxx xs  xxxw             qxxsx  x  xxx xxxxxxqxxw  xxxxxxx axwx                           xx
+xxxw                                 x xx        qxxx  x x  x xw qxxxxxw        qxxxs  xxxx  x   xxxxxxxxxxxxxs x  xx axwx                         qxx
+xxxx                                 xxxx        xs xxxxxxxxxx x xx xxwxxxw     xxsxx  x  xxxxxxqxxxxxxxxxxxx   x   x  axx                         xxx
+xxxx                                 xx xw      qx  x  x xx  x  xxx xxxxxw w   xxs  xxxx   xxxxxxxx    x    x   xxxxx   xx                         xxx
+xxxx                                 x  xx     qxs  x  x  x  x xx xxx  xaxwxx_xxxxx x   xxxx   xs       x    xxxx    xxxxxx      r                 xxx
+xxxx                                 xwx xw  qxxs xx  xqxxxxxxwx   xx  x axw xxxxxxx xx xx   xxx xxx xx xxxxxx xx  x   xxx   qxxxxw                xxx
+xxxx                                 ax  xxxxxx   xxxxqxs    axxw  xxx x  axxxxs  xx   xxx   xxx    x x x  xx    xqx   x x  qxxxs x                xxx
+xxxxw                                 x   x    xxxx  xxs       ax xx xx x xxaxxx xx xxxxxxxxx  x    xxxx  xxxxx xxxxxxx qx  xxxx  x               qxxx
+xxxxx                                 xw x xx  x x  qxs         xx    x xx x xxxx   x     xx   x   x   xxxx   xxxxsxxxx xs  axxxw xxw             xxxx
+xxxxx                                 axw xxxxxx xxqxx          axx  xxxx   x    x xxx   xx xx   xxx    xx    xxxsxx  xqx    xx xxs xxxxf         xxxx
+xxxxx                                  axxx    x  xxs            axxxx x x  x x  xx  xxxxx    xxx   xx  xxxxxxxxx x   qxs    ax   qxs x           xxxx
+xxxxxw                                  xx    xxxxxx              axw  x xxxxxx  x    x xx   xxqxxxxxxxxxxs xxs   xx qxs     qx   xs qxxxw       qxxxx
+xxxxxx                                  axxxxxxs                   axxw  x   xxxxxxxxx   xx qxxxs           xs  xxx xxs xxxxxxx   xxxxs xx       xxxxx
+xxxxxx                                                               axwxx  x   x   x    qxxxs              x  x    xs  axx  ax   axs  qxx       xxxxx
+xxxxxxw                                                               axxxw x  xxx  x qxxxx                 x  xx   x    xxxw      xwqxxxx      qxxxxx
+xxxxxxx                                                                  axxxxx  xxx qxsax                  x  xxxxxxw qxxs x     qxxxs axw     xxxxxx
+xxxxxxx                                                                    xxxxw  xxqxs  x                 xxxxx  qxxxxxs         xs     ax     xxxxxx
+xxxxxxxw                                                                  qxs axxxxxxx  qx                 xs  x  xs  x           x       x    qxxxxxx
+xxxxxxxx                                                               qxxxx  xxx      qxs                 xxxxxxxx   x           x       c    xxxxxxx
+xxxxxxxxw                                                             qxsxx xxxx      qxs                  x    x x xxx          qx           qxxxxxxx
+xxxxxxxxx                                                           qxxs xx    xxxxx qxs                   xx  x   xx      qx   qxs           xxxxxxxx
+xxxxxxxxxw                                                         qxx    x  xx x  qxxs                    axxxxx  x      qxxxxxxs           qxxxxxxxx
+xxxxxxxxxx                                                         xs x    xx xx  qxs                       xxw  xxxxx qxxxxxxxs            qxxxxxxxxx
+xxxxxxxxxxw                                                       qx  x   xx   x qxs                         axwxx   xxxs  xxxx             xxxxxxxxxx
+xxxxxxxxxxx                                                      xxs   xxxx    xqxs                           axxxxxxxx    xxxs             xxxxxxxxxx
+xxxxxxxxxxxw                                                   qxxx    x  xxx  qxs                                        qxxs             qxxxxxxxxxx
+xxxxxxxxxxxx                                                  qxx xxxxxx    xqxxs                                         xxx              xxxxxxxxxxx
+xxxxxxxxxxxxw                                               qxxx    xx     qxxs                                           xxx              xxxxxxxxxxx
+xxxxxxxxxxxxx                                               xs x    x xxxqxxs                                              axxxxxf        xxxxxxxxxxxx
+xxxxxxxxxxxxxw                                              x   xxxx   xxxs                                                              qxxxxxxxxxxxx
+xxxxxxxxxxxxxxw                                             xx  xx x qxxs                                                               qxxxxxxxxxxxxx
+xxxxxxxxxxxxxxx                                             xx xx   xxs                                                                 xxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxw                                            xxxxx  qxs                                                                 qxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxw                                          qx x xxxxx                                                                 qxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxx                                          xs x  xxs                                                                  xxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxw                                        qx xxx xs                                                                  qxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxw                                      qxxx  xxx                                                                  qxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxw                                     xs x   xx                                                                 qxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxw                                   qx  x qxxs                                                                qxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxx#w                            _qxw  xs  xqxs                                                                 qxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxw                          qxxxxw x   xxs                                                                 qxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxw                         xx  axxx  qxs                                                                 qxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxw                        xxx  axxw xx xxxw_                                                           q#xxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxw                       xxxw   axxxxxs axxw                                                         qxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxw                      xs xw           x x                                                        qxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxw                     x  axw        qxxxx                                                       qxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxw                    xw  ax      qxxs xxf                                                     qxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                   ax   x     xxx  qxs                                                     qxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                   c   xw     axw xs                                                     qxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                      ax      axw                                                      qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                    qxxxw xxw xxw                                                  qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                   xxxxxxxxxw ax                                                 qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                 xxs xxxs xxxx                                               qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw               qxs  axx   xxs                                              qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw          dxxxs   qxs  qxs                                             qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw              xxxs  xxs                                            qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw            c     c                                             qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                                                            qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                                                       qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                                                   qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                                             qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                                       qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                               qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                   qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx#xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+EndOfMapdata
+
+
+

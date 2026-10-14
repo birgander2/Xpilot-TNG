@@ -1,0 +1,118 @@
+# Map converted by mapmapper @(#)Version 1.2
+
+mapWidth:            100
+mapHeight:           100
+mapName:             Endless Space
+mapAuthor:           Bill Alford
+crashWithPayer:      yes
+playerKillings:      yes
+playerShielding:     yes
+limitedVisibility:   yes
+teamPlay:            no
+timing:              no
+onePlayerOnly:       no
+limitedLives:        no
+worldLives:          0
+edgeWrap:            yes
+mapData: \multiline: EndOfMapdata
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+           qw                       qw                       qw                       qw            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+       _   xx   _               _   xx   _               _   xx   _               _   xx   _        
+   qxxxxxxx##xxxxxxxw       qxxxxxxx##xxxxxxxw       qxxxxxxx##xxxxxxxw       qxxxxxxx##xxxxxxxw    
+   axxxxxxx##xxxxxxxs       axxxxxxx##xxxxxxxs       axxxxxxx##xxxxxxxs       axxxxxxx##xxxxxxxs    
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           as       @               as       @               as       @               as       @    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+           qw                       qw                       qw                       qw            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+       _   xx   _               _   xx   _               _   xx   _               _   xx   _        
+   qxxxxxxx##xxxxxxxw       qxxxxxxx##xxxxxxxw       qxxxxxxx##xxxxxxxw       qxxxxxxx##xxxxxxxw    
+   axxxxxxx##xxxxxxxs       axxxxxxx##xxxxxxxs       axxxxxxx##xxxxxxxs       axxxxxxx##xxxxxxxs    
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           as       @               as       @               as       @               as       @    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+           qw                       qw                       qw                       qw            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+       _   xx   _               _   xx   _               _   xx   _               _   xx   _        
+   qxxxxxxx##xxxxxxxw       qxxxxxxx##xxxxxxxw       qxxxxxxx##xxxxxxxw       qxxxxxxx##xxxxxxxw    
+   axxxxxxx##xxxxxxxs       axxxxxxx##xxxxxxxs       axxxxxxx##xxxxxxxs       axxxxxxx##xxxxxxxs    
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           as       @               as       @               as       @               as       @    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+           qw                       qw                       qw                       qw            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+       _   xx   _               _   xx   _               _   xx   _               _   xx   _        
+   qxxxxxxx##xxxxxxxw       qxxxxxxx##xxxxxxxw       qxxxxxxx##xxxxxxxw       qxxxxxxx##xxxxxxxw    
+   axxxxxxx##xxxxxxxs       axxxxxxx##xxxxxxxs       axxxxxxx##xxxxxxxs       axxxxxxx##xxxxxxxs    
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           xx                       xx                       xx                       xx            
+           as       @               as       @               as       @               as       @    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+EndOfMapdata

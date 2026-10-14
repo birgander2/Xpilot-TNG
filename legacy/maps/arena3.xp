@@ -1,0 +1,123 @@
+# Created by xmapedit on Sat Aug 14 16:04:48 1993
+
+# Map converted by mapmapper @(#)Version 1.0
+crashwithpayer:yes
+limitedlives:no
+
+mapwidth : 100
+mapheight : 100
+mapname : Arena
+mapauthor : Dave Lemke and Kevin Kelleher
+edgewrap : no
+edgebounce : yes
+teamplay : no
+oneplayeronly : no
+timing : no
+worldlives : 0
+limitedvisibility : yes
+playershielding : yes
+crashwithplayer : yes
+playerkillings : yes
+
+mapData: \multiline: EndOfMapdata
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                              xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                              xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                              xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                              xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxx(xxx(xxx(xxx(xxx(xxxxxxxx                              xxxxxxx(xxx(xxx(xxx(xxx(xxxxxxxxxxxxxx
+xxxxxxx xxx xxx xxx xxx xxxxxxx#                              #xxxxxx xxx xxx xxx xxx xxxxxxxxxxxxxx
+xxxxxxx_xxx_xxx_xxx_xxx_xxxxxxx#                              #xxxxxx_xxx_xxx_xxx_xxx_xxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                              xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                              xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                              axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                               axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs                                    axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxx#xxxs                                          axxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxs                                                     axxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxs                                                             axxxxxxxxxxxxxxxx
+xxxxxxxxxxxxs                                                                           axxxxxxxxxxx
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                  @                                                 
+                                                                                                    
+         )                                                                            )             
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                  )                                                 
+                                                                                                    
+                                                                                                    
+                                      )                                                             
+    qxx##xxxw                                                 )                                     
+ xxxxxxxxxxxxxxxw                                                                                   
+qxxxxxxxxxxxxxxxxw                                                                                  
+xxxxxxxxxxxxxxxxxxw                                                                                q
+xxxxxxxxxxxxxxxxxxxw                                                                            qxxx
+xxxxxxxxxxxxxxxxxxxxw                                                                          #xxxx
+xxxxxxxxxxxxxxxxxxxxxx                                                                         #xxxx
+xxxxxxxxxxxxxxxxxxxxxxw                                                                         axxx
+xxxxxxxxxxxxxxxxxxxxxxx                                                                          axx
+xxxxxxxxxxxxxxxxxxxxxxxw                                                                          xx
+xxxxxxxxxxxxxxxxxxxxxxxxw             )                                                           ax
+xxxxxxxxxxxxxxxxxxxxxxxx#                                                                          #
+xxxxxxxxxxxxxxxxxxxxxxxx#                                                                          #
+xxxxxxxxxxxxxxxxxxxxxxxxs                                     )                                    x
+xxxxxxxxxxxxxxxxxxxxxxxs                                                                           a
+axxxxxxxxxxxxxxxxxxxxxs                           )                                                 
+ axxxxxxxxxxxxxxxxxxxs                                                                              
+  axxxxxxxxxxxxxxxxxs                                                                               
+   axxxxxxxxxxxxxxxs                                                                                
+      axx##xxxs                                                                                     
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+         )                                                                              )           
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                  @                                                 
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+xxxx##xxxxw                                                                                       qx
+xxxxxxxxxxxxxxxxw                                                                           qxxxxxxx
+xxxxxxxxxxxxxxxxxw                                                          qxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxw                                                      qxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxw                                                   qxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxw                                                 qxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxw                                               qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxw                                             qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxw                                           qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxw                                         qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxw                                       qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxw                                     qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxw                                   qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxw                                  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                                 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                                xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+EndOfMapdata

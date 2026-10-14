@@ -1,0 +1,285 @@
+# Created by xplts/editors/edmapedit on Sat Dec  6 03:27:28 1997
+
+robotteam:0
+restrictrobots:true
+reserverobotteam:true
+cloakedexhaust:no
+cloakedshield:yes
+cannonsmartness:1
+cannonspickupitems:no
+ecmsreprogramrobots:yes
+wreckagecollisionmaykill:yes
+gravityvisible:true
+wormholevisible:true
+itemconcentratorvisible:true
+allowsmartmissiles:True
+allowheatseekers:True
+allowtorpedoes:True
+maxminesperpack:2
+minelife:0
+missilelife:0
+baseminerange:5
+shotkillscoremult:1.0
+torpedokillscoremult:1.0
+smartkillscoremult:1.0
+heatkillscoremult:1.0
+clusterkillscoremult:1.0
+laserkillscoremult:1.0
+tankkillscoremult:0.44
+runoverkillscoremult:0.33
+ballkillscoremult:1.0
+explosionkillscoremult:0.33
+shovekillscoremult:0.5
+crashscoremult:0.33
+minescoremult:0.17
+itemdeflectorprob:0.00001
+itemhyperjumpprob:0
+itemphasingprob:0
+initialdeflectors:0
+initialhyperjumps:0
+initialphasings:0
+maxfuel:9533
+maxtanks:8
+maxecms:300
+maxmines:300
+maxmissiles:300
+maxcloaks:300
+maxsensors:300
+maxwideangles:300
+maxrearshots:300
+maxafterburners:15
+maxtransporters:300
+maxdeflectors:300
+maxphasings:300
+maxhyperjumps:300
+maxemergencythrusts:300
+maxlasers:5
+maxtractorbeams:4
+maxautopilots:300
+maxemergencyshields:300
+allowviewing:false
+rounddelay:0
+maxroundtime:0
+
+mapname : > Basic Maneuvering (practice map)
+mapauthor : Vincent (www-personal.ksu.edu/~rohmon/xpmaps/)
+mapwidth : 100
+mapheight : 75
+extraborder : no
+edgewrap : no
+edgebounce : yes
+losemass : no
+gravity : 0
+gravitypoint : 0,0
+gravityangle : 90
+gravitypointsource : no
+gravityclockwise : no
+gravityanticlockwise : no
+shotsgravity : no
+limitedvisibility : no
+minvisibilitydistance : 0
+maxvisibilitydistance : 0
+shotswallbounce : no
+ballswallbounce : yes
+mineswallbounce : no
+itemswallbounce : yes
+missileswallbounce : no
+sparkswallbounce : yes
+debriswallbounce : no
+playerwallbouncebrakefactor : 0.5
+objectwallbouncebrakefactor : 0.7
+maxrobots : 6
+robotstalk : no
+robotsleave : yes
+robotleavelife : 50
+robotleavescore : -75
+robotleaveratio : -5
+allowshipshapes : yes
+shipmass : 20
+shotmass : 0.1
+shotspeed : 35
+shotlife : 15
+firerepeatrate : 1
+maxplayershots : 10
+maxoffensiveitems : 50
+maxdefensiveitems : 50
+loseitemdestroys : no
+initialfuel : 9533
+initialtanks : 0
+initialecms : 0
+initialmines : 0
+initialmissiles : 0
+initialcloaks : 0
+initialsensors : 0
+initialwideangles : 0
+initialrearshots : 0
+initialafterburners : 5
+initialtransporters : 0
+initiallasers : 0
+initialemergencythrusts : 0
+initialtractorbeams : 0
+initialautopilots : 5
+initialemergencyshields : 0
+allowshields : no
+shieldeditempickup : yes
+shieldedmining : yes
+playerstartsshielded : yes
+wallbouncefueldrainmult : 0.1
+wallbouncedestroyitemprob : 0
+maxshieldedwallbouncespeed : 200
+maxunshieldedwallbouncespeed : 100
+maxshieldedplayerwallbounceangle : 180
+maxunshieldedplayerwallbounceangle : 180
+destroyitemincollisionprob : 0
+dropitemonkillprob : 0.9
+detonateitemonkillprob : 0.1
+allownukes : no
+allowclusters : no
+nukeclusterdamage : 2
+allowmodifiers : yes
+allowlasermodifiers : yes
+laserisstungun : no
+ecmsreprogrammines : yes
+missilesonradar : yes
+minesonradar : yes
+nukesonradar : yes
+distinguishmissiles : yes
+identifymines : yes
+minefusetime : 0
+maxmissilesperpack : 2
+nukeminsmarts : 4
+nukeminmines : 3
+movingitemprob : 1.0
+maxobjectwallbouncespeed : 1000
+objectwallbouncelifefactor : 0.99
+itemconcentratorradius : 10
+itemconcentratorprob : 1
+itemprobmult : 0
+maxitemdensity : 0.0001
+itemenergypackprob : 0.0000001
+itemtankprob : 0.0000001
+itemecmprob : 0.0000001
+itemmineprob : 0.0000001
+roguemineprob : 0
+itemmissileprob : 0.0000001
+rogueheatprob : 0
+itemcloakprob : 0.0000001
+itemsensorprob : 0.0000001
+itemwideangleprob : 0.0000001
+itemrearshotprob : 0.0000001
+itemafterburnerprob : 0.0000001
+itemtransporterprob : 0.0000001
+itemlaserprob : 0.0000001
+itememergencythrustprob : 0.0000001
+itemtractorbeamprob : 0.0000001
+itemautopilotprob : 0.0000001
+itememergencyshieldprob : 0.0000001
+oneplayeronly : no
+allowplayerkilling : yes
+allowplayercrashes : yes
+allowplayerbounces : yes
+limitedlives : no
+worldlives : 0
+playersonradar : yes
+teamplay : no
+teamassign : yes
+teamimmunity : yes
+reset : yes
+lockotherteam : yes
+targetkillteam : yes
+targetteamcollision : no
+targetsync : no
+treasurekillteam : no
+treasurecollisiondestroys : yes
+treasurecollisionmaykill : no
+treasuresonradar : yes
+timing : yes
+racelaps : 3
+checkpointradius : 8
+friction : 0
+framespersecond : 12
+reporttometaserver : no
+idlerun : yes
+noquit : yes
+gameduration : 0
+contactport : 15345
+denyhosts : no
+plockserver : no
+
+mapData: \multiline: EndOfMapdata
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxLxxxxxxx
+xsaxxxs       axxxs  axs         axxxxxxxxxs  axxs   axxs  axs   axxxxxsaxxs       axxxx(((((((((xxx
+x   as                              axxxxxs                         axx             xxxs(((((((((axx
+x                                   qxxxxxw                          xx            qxxs(((((((((((xx
+xw                                  xxxxxxx                          xxw          qxxs            ax
+xx                                  axxxsax                          axx          xxx              x
+xs        G      qw                  as   x                           xx          xxs              x
+x                ax                       xw                          ax          xs              qx
+xw                xw                      ax                           xw        qx               xx
+xx                axw                      x                     J     xxw       xx               ax
+xxw                xx                      xw                          xxx       xs                x
+xxxw               axw                     axw                        qxxx      qx                 x
+xxxxxw              axw               H     xs                        axxx     qxs                 x
+xxxxxx               xx         qw          xw             qw           ax     xx                 qx
+xxxxxx               xxw        xx          xx             ax           qxw    xs                qxx
+xxxxxs              qxxxw       xxw        qxx              x           xxxw  qxw                xxx
+xsaxxw            qxxsaxxw      xxx        axxw             xw          axxx  xxx               qxxx
+x  axxxw          ax   axx     qxxs          ax             ax           axs  xxs               xxxx
+x   axxx                axw    xxx            x              x            xw  xx                xxxx
+xw   axx    xw           axw  qxxx            xw             xw          qxxwqxs               qxxxx
+xx    xxw  qxs            axxxxsas            xxw           qxx          axxxxx                xxxxx
+xs    axxxxxs             qxxxxw              axxw          axx           axxxx                axxxx
+x     qxxxxs              axxxxs               xxx           axw           xxxx                 xxxx
+x    qxxxxx                axxs                axs            xx           xxxx                qxxxx
+x   qxxxxxs                 xxw                 x             xx           axxx               qxxsax
+xwqxxs  ax                 qxxxw                xw            axw           xxxw              axx  x
+xxxxx    xw                xxxxxxw              xx             axw          xxxx               xx  x
+xs as    axw              qxsaxxxs              xx             qxxw         axxs               xs  x
+x         xxw             xxw axxw              as             axxs                   K       qx   x
+x         axs             axs  axxw                             axw                          qxx   x
+x                               axxw                             xxw                        qxxs   x
+x                                axxw                   I        xxs                        xxx    x
+xw                                axx                            xx                         xxs    x
+xx                                 xx                            xx                         xxw    x
+xs                                 xxw       qw         qw      qxx                         axxw   x
+x                                  axxw     qxxw  qxw  qxxwqxw qxxxw     qxwqxxxw   qxw qxw qxxxw qx
+x             xw                     axw  qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+x             ax     qx               xxxxxxs  axxxxxs axxxxs  axxxs  axs axs axxs  axs  axxs     ax
+x              xw    xs               axxxxs                     as    x       as                  x
+xw             axw  qx                qxxxs                            x                           x
+xx              xx  xs                xxxx                             xw                          x
+xxw             xxwqx                 xxxs                             xx                         qx
+xxx             axxxs                qxs                              qxs                         xx
+xxx              axx                qxs                               xx             A           qxx
+xxx               as               qxx                               qxx                         xxx
+xxs                         qwqxxxxxxx                             qxxxxw                        axx
+xs    qxxw         F        xxxxxs  as                             axxxxxw                        xx
+xw   qxxxxx                                                           axxx                        ax
+xxxxxxxxxs                                   C                         xxs                         x
+xxs   as                                             xw               qxs                          x
+xx                             x                     xxxxxw           xxw           qxw            x
+xx                   qxw      qx                        xxx           xxx           xxx            x
+xs                   xxs      as                        axs           axs           axx            x
+x         qx         ax                                 qx             x            qxs            x
+x         axw                                qw         xx             x            xxw            x
+x      xw  as                               qxx         ax            qx            axx           qx
+xw     ax                                   axs          xw          qxxw            xx           xx
+xx      x                                                xxw         axxxw           xx           ax
+xx     qx                                               qxxx          xxxx           xs           qx
+xs     as          qxw           qx                    qxxxs          xxxs           x            xx
+x                  xxx          xxs                    xxxs           axs            x            ax
+x                  xxx          xs                     xxx                           x             x
+xw          qxxw   axx                                 axx                           x             x
+xx          xsas    as                           qw     ax                           x             x
+xx                                              qxx      x                           x   ty   ty   x
+xs    qw                                 qw     axs      x                           xw tbby tbby qx
+xw    as                                 xx              xw                         qxx  bb   bb  xx
+xx                          qw           as       E      xx            B            xxx  bb   bb  ax
+xx                          xx                           xx                         xxs  bb   bb   x
+xs   D                     qxs                           xs                         ax             x
+x                          xx                            x                           x             x
+x          qw              xx                            x                          qx             x
+x          xxxw           qxx    qxxw             qw     x               qxxw      qxx $ $ $ $ $ $ x
+xw     qxwqxxxxw  qxwqxw qxxxw  qxxxxxxw  qxxxxwqxxxwqxwqxw  qxxxxxxw   qxxxxw qxwqxxxw_)_)_)_)_)_qx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+EndOfMapdata

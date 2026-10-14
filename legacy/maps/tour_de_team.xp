@@ -1,0 +1,95 @@
+# Tour de Team    kristifu@ifi.uio.no    11/1 1994
+
+limitedlives:yes
+allowshields:no
+robotsleave:no
+playersonradar:no
+playerstartshielded:yes
+itemprobmult:0
+targetkillteam: yes
+
+limitedlives : yes
+mapwidth : 80
+mapheight :60
+mapname : Tour de Team
+mapauthor : Kristian Fuglevik
+allowShields:           no
+playersOnRadar:         no
+playerStartShielded:    yes
+limitedlives:           yes
+robotsleave:            no
+itemProbMult:           0
+edgewrap : yes
+teamplay : yes
+maxrobots : 0
+worldlives : 4
+limitedvisibility : yes
+maxplayershots : 4
+crashwithplayer : yes
+playerkillings : yes
+
+
+
+
+mapData: \multiline: EndOfMapdata
+                                                                                
+            qxw                                                                 
+            xxx                                                                 
+            xxx                         qxxxxw                                  
+           qxxxw                        xxxxxx                                  
+      xxxxxxxxxx                        xxxxxx                                  
+              xx                        axxxxx                                  
+              xx                        xxxxxw                                  
+              !x                        xxxxxs                                  
+              xx                        qxxxxx                               x  
+    1  1   1  xx                    xxxxxxxxxxw                              x  
+xxxx#xx#xxx#xxxx                             xx                              xxx
+xxxxxxxxxxxxxxxx                             xx                              axx
+  xxxxxxxxxxxxxx                             !x                                 
+  axxxxxxxxxxxxs            x                xx                                 
+     axxxxx                 x        2  2  2 xx                                 
+      xxxxxw                xxxxxxxxx#xx#xx#xxxxx#                              
+      xxxxxx                axxxxxxxxxxxxxxxxxxxxs                              
+    #xxxxxxx                        axxxxxxxxs                                  
+    xxxxxxs                          axxxxxxs                                   
+    axxxxs                            axxxs                                     
+     axxs                              axs                                      
+      xx                                                                        
+                                                             qxxw               
+                                                             xxxxxxw            
+                                                             axxxxxx            
+                                                              axxxxs            
+                                                                                
+                                                                                
+                          qx#xw                                                 
+                          axxxs                                                 
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                xxxxxxxxxxxxxxxw                 xxxxxxxxxxxxxxxxxw             
+                              xx                                 xx             
+                              xx                                 xx             
+                              !x                                 !x             
+       x                      xx       x                         xx             
+       x           3  3   3   xx       x            4    4    4  xx             
+       xxxxxxxxxxxx#xx#xxx#xxxxx       xxxxxxxxxxxxx#xxxx#xxxx#xxxxxx           
+       axxxxxxxxxxxxxxxxxxxxxxxs       axxxxxxxxxxxxxxxxxxxxxxxxxxxxs           
+               axxxxxs                           axxxxxxxxxxxxs                 
+                                                    axxxxxs                     
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                          qxw                                   
+                                        qxxxxx                                  
+                                      qxxxxxxs                                  
+                                      axxs                                      
+                                                                                
+                                                                                
+EndOfMapdata

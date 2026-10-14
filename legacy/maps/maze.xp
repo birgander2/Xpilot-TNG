@@ -1,0 +1,350 @@
+# Created by /u1/se96/se96ph/xpilot/xmapedit on Fri Apr 11 19:12:49 1997
+
+mapwidth : 200
+mapheight : 200
+mapname : A very crap maze
+mapauthor : spudgfsh
+edgebounce : no
+teamplay : no
+oneplayeronly : yes
+timing : no
+maxrobots : 2
+worldlives : 0
+limitedvisibility : no
+shipmass : 7
+gravity : 0
+gravityangle : 90
+gravitypoint : 100,100
+gravitypointsource : no
+gravityclockwise : yes
+gravityanticlockwise : no
+shotmass : 0.1
+shotspeed : 25
+shotlife : 60
+losemass : yes
+maxplayershots : 100
+shotsgravity : yes
+crashwithplayer : yes
+playerkillings : yes
+firerepeatrate : 2
+robotstalk : no
+robotsleave : yes
+robotleavelife : 5
+robotleavescore : -25
+robotleaveratio : -5
+idlerun : no
+noquit : yes
+contactport : 15345
+allowplayercrashes : yes
+allowplayerbounces : yes
+allowplayerkilling : yes
+allowshields : no
+playerstartsshielded : yes
+shotswallbounce : no
+ballswallbounce : yes
+mineswallbounce : no
+itemswallbounce : yes
+missileswallbounce : no
+sparkswallbounce : no
+debriswallbounce : no
+maxobjectwallbouncespeed : 3000
+maxshieldedwallbouncespeed : 2000
+maxunshieldedwallbouncespeed : 1000
+maxshieldedplayerwallbounceangle : 180
+maxunshieldedplayerwallbounceangle : 180
+playerwallbouncebrakefactor : 0.6
+objectwallbouncebrakefactor : 0.95
+objectwallbouncelifefactor : 0.8
+wallbouncefueldrainmult : 1
+wallbouncedestroyitemprob : 0
+reporttometaserver : yes
+denyhosts : no
+minvisibilitydistance : 0
+maxvisibilitydistance : 0
+limitedlives : no
+reset : yes
+teamassign : yes
+teamimmunity : yes
+ecmsreprogrammines : yes
+targetkillteam : no
+targetteamcollision : yes
+targetsync : no
+treasurekillteam : no
+treasurecollisiondestroys : no
+treasurecollisionmaykill : no
+friction : 0.001
+edgewrap : yes
+extraborder : no
+framespersecond : 16
+allownukes : yes
+allowclusters : yes
+allowmodifiers : yes
+allowlasermodifiers : yes
+allowshipshapes : yes
+playersonradar : yes
+missilesonradar : yes
+minesonradar : no
+nukesonradar : yes
+treasuresonradar : yes
+distinguishmissiles : yes
+maxmissilesperpack : 2
+identifymines : yes
+shieldeditempickup : no
+shieldedmining : no
+laserisstungun : no
+nukeminsmarts : 5
+nukeminmines : 5
+nukeclusterdamage : 1
+minefusetime : 0
+movingitemprob : 1
+dropitemonkillprob : 1
+detonateitemonkillprob : 0.01
+destroyitemincollisionprob : 0
+itemprobmult : 1
+maxitemdensity : 1e-10
+itemconcentratorradius : 10
+rogueheatprob : 0
+roguemineprob : 0
+itemenergypackprob : 4.00132e-08
+itemtankprob : 2.04029e-08
+itemecmprob : 6.09243e-08
+itemmineprob : 6.04078e-08
+itemmissileprob : 1.2e-06
+itemcloakprob : 1e-09
+itemsensorprob : 1.60596e-09
+itemwideangleprob : 1.70371e-09
+itemrearshotprob : 1.94386e-09
+itemafterburnerprob : 2.07462e-08
+itemtransporterprob : 3.0606e-08
+itemlaserprob : 2.5606e-08
+itememergencythrustprob : 3.0606e-08
+itemtractorbeamprob : 2.07462e-08
+itemautopilotprob : 1.0606e-08
+itememergencyshieldprob : 1.0606e-08
+initialfuel : 2600
+initialtanks : 0
+initialecms : 0
+initialmines : 0
+initialmissiles : 0
+initialcloaks : 0
+initialsensors : 0
+initialwideangles : 0
+initialrearshots : 0
+initialafterburners : 0
+initialtransporters : 0
+initiallasers : 0
+initialemergencythrusts : 0
+initialtractorbeams : 0
+initialautopilots : 0
+initialemergencyshields : 0
+gameduration : 0
+checkpointradius : 6
+racelaps : 3
+lockotherteam : yes
+loseitemdestroys : no
+maxoffensiveitems : 20
+maxdefensiveitems : 20
+plockserver : no
+
+mapData: \multiline: EndOfMapdata
+                       b                                                              b                                                                                                 b               
+               )       b                                                              b                                                                                                 b               
+                       b                                                              b                                                                                                 b               
+                       b                                                           b  b  b                                                                                              b               
+bbbbbbbbbbbbbbbbbbbbbbbb                                                            b b b                                                                                               bbbbbbbbbbbbbbbb
+                                                                                     bbb                                                                                                                
+                           xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx  b    xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                   
+                           x                                                       x       x                                                                                        x                   
+                           x                                                       x       x                                                                                        x                   
+                           x                                                       x       x                                                                                        x                   
+                           x                                                       x       x                                                                                        x                   
+                           x                                                       x       x                                                                                        x                   
+                           x                                                       x       x                                                                                        x                   
+                           x                                                       x       x                                                                                        x                   
+                           x                                                       x       x                                                                                        x                   
+                           x                                                       x       x                                                                                        x                   
+                           x                                                       x       x                                                                                        x                   
+                           x                                                       x       x                                                                                        x                   
+                           x        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                                                                               x                   
+                           x                                        x                                     xxxxxxxxxxxxxxxx        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx          x                   
+                           x                                        x                                     x      _       x        x                                      x          x                   
+                           x                                        x                                     x      $       x        x                                      x          x                   
+                           x                                        x                                     x              x        x                                      x          x                   
+                           x                                        x                                     x              x        x      (                               x          x                   
+                           x                                        x                                     x              x        x                                      x          x                   
+                           x                                        x                                     x              x        x                                      x          x                   
+                           x                                        x                                     x              x        x                                      x          x                   
+                           x                                        x                                     x              x        x                                      x          x                   
+                           x                                        x                                     x              x        x                                      x          x                   
+                           x                                        x                                     x          (   x        x                                      x          x                   
+                           xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx              x        x                                      x          x                   
+                                                                                                                         x        x  _                                   x          x                   
+                                                                                                                         x        xxxxxxxxxxxxxxxxxxxxxxxxxxxxx          x          x                   
+                            b                                                                                            x                                               x          x                   
+                             b                                                                                           x                                               x          x                   
+                              b                                                                                          x                                               x          x                   
+                  bbbbbbbbbbbbbb                                                                                         x                                               x          x                   
+                              b                                                                                          x                                               x          x                   
+                             b                                                                                           x                                               x          x                   
+                            b                                                                                            x                                               x          x                   
+                                                                                                                         x                                               x          x                   
+                               _                                                                                         x                                               x          x                   
+                           xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx         x                                               x          x                   
+                           x                                              x                                              x                                               x          x                   
+                           x                                              x                                              x        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx          x                   
+                           x                                              x                                              x        x                                      x          x                   
+                           x                                          (   x   (                                          x        x                                      x          x                   
+                           x                                              x                                              x        x                                      x          x                   
+                           x                                              x                                              x        x                                      x          x                   
+                           x                                              x                                              x        x                                      x          x                   
+                           x                                              x                                              x        x                                      x          x                   
+                           x                                              x                                              x        x                                      x          x                   
+                           x                                              x                                              x        x                                      x          x                   
+                           x                                           _  x _                                            x        x                                      x          x                   
+                           x        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx        x                                      x          x                   
+                           x                            x                                x                                        x                                      x          x                   
+                           x                            x                                x                                        x         xxxxxxxxxxxxxxxxx            x          x                   
+                           x                            x                                x                                        x         x      _        x            x          x                   
+                           x                        (   x                                x                                        x         x      $        x            x          x                   
+                           x                            x                                x                                        x         x               x            x          x                   
+                           x                            x                                x                                        x         x               x            x          x                   
+                           x                            x                                x                                        x         x               x            xxxxxxxxxxxx                   
+                           x                            x                                x                                        x         x               x                                           
+                           x                            x                                x                                        x         x               x                                           
+                           x                        _   x                                x                                        x         x               x                      b                    
+                           xxxxxxxxxxx       xxxxxxxxxxxx            xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx            x        x         x               x                     b                     
+                           x                                                              ##################x            x        x         x               x                    b                      
+                           x                                                                               #x            x        x         x               x                   bbbbbbbbbbbbb           
+                           x                                                                               #x            x        x         x    (          x                    b                      
+                           x                                                                               #x            x        x         x               x                     b                     
+                           x                                                                               #x            x        x         x               x                      b                    
+                           x                                                                           @   #x            x        x         x               x                   _                       
+                           x                                                                               #x            x                  x               xxxxxxxxxxxxxxxxxxxxxxxxx                   
+                           x                                                                 #######       #x            x                  x                                       x                   
+                           x                                                                 #     #       #x            x                  x                                       x                   
+                           x            xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx#       #     #       #x            x                  x                                       x                   
+                           x                    x                                   x#       #  @  #       #x            x                  x                                       x                   
+                           x                    x                                   x#       #     #       #x            x                  x                                       x                   
+                           x                    x  (                                x#       #######       #x            x                  x                                       x                   
+                           x                    x                                   x#                     #x            x                  x                                       x                   
+                           x                    x                                   x#                      x            x        x         x                                       x                   
+                           x                    x                                   x#                      x            x        x         x                                       x                   
+                           x                    x                                   x#   @                  x            x        x         x                                       x                   
+                           x                    x                                   x#                      x            x        x         x                                       x                   
+                           x                    x                                   x#                      x            x        x         x                                       x                   
+                           x                    x                                   x#################      x            x        x         x                                       x                   
+                           x                    x                                   xxxxxxxxxxxxxxxxxx      x            x        x         x                                       x                   
+                           x                    x _                                                         x            x        x         xxxxxxxxxxxxxxxxxxxxxxxxxxxxx           x                   
+                           xxxxxxxxxxxxxx       xxxxxxxxxxxxxxxxxxxxxxxxxxx                                 x            x        x                                     x           x                   
+                           x                                                                                x            x        x                                     x           x                   
+                           x                                                                                x            x        x                                     x           x                   
+                           x                                                                                x            x        x                                     x           x                   
+                           x                                                                                x            x        x                                     x           x                   
+                           x                                                                                x            x        x                                     x           x                   
+                           x                                                                    xxxxxxxxxxxxx            x        x                                     x           x                   
+                           x                                                                    x    _      x            x        x                                     x           x                   
+                           x        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx           x    $      x            x        x                                     x           x                   
+                           x                                                        x           x           x            x        x                                     x           x                   
+                           x                                                        x           x           x            x        x                                     x           x                   
+                           x                                                        x           x           x            x        x                                     x           x                   
+                           x                                                        x           x           x            x        x                                _    x           x                   
+                           x                                                        x                       x            x        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx           x                   
+                           x                                                        x                       x            x                                              x           x                   
+                           x                                                        x                       x            x                                              x           x                   
+                           x                                                        x                       x            x                                              x           x                   
+                           x                                                        x                       x            x                                              x           x                   
+                           x                                                        x                       x            x                                              x           x                   
+                           x                                                        x                   (   x            x                                              x           x                   
+                           x        xxxxxxxxxxxxxxxxxxx        x         x          x                       x            x                                              x           x                   
+                           x        x                          x         x          x                       x            x                                              x           x                   
+                           x        x                          x         x          x           xxxxxxxxxxxxx            x                                              x           x                   
+                           x        x                          x         x          x                                    x                                              x           x                   
+                           x        x                          x         x          x                                    x                                              x           x                   
+                           x        x                          x         x          x                                    x                                              x           x                   
+                           x        x                          x         x          x                                    xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx        x           x                   
+                           x        x                          x         x          x                                    x                                              x           x                   
+                           x        x                          x         x          x                                    x                                              x           x                   
+                           x        x              x           x         x          x                                    x                                              x           x                   
+                           x        x              x           x         x          x                                    x                                              x           x                   
+                           x        x              x           x         x          x           xxxxxxxxxxxxx            x                                              x           x                   
+                           x        x              x           x      (  x        ( x           x      _    x            x                                              x           x                   
+                           x        x              x           x         x          x           x      $    x            x                                              x           x                   
+                           x        x              x           x         x          x           x           x            x                                              x           x                   
+                           x        x              x           x   _     x   _      x           x           x            x                                              x           x                   
+                           x        x (            x           xxxxxxxxxxxxxxxxxxxxxx           x           x            x                                              x           x                   
+                           x        x              x                                            x           x            x                                              x           x                   
+                           x        x              x                                            x           x            x            xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx           x                   
+                           x        x              x                                            x           x            x                                              x           x                   
+                           x        x              x                                            x           x            x                                              x           x                   
+                           x        x              x                                            x           x            x                                      (       x           x                   
+                           x        x              x                                            x           x            x                                              x           x                   
+                           x        x              x                                            x           x            x                                              x           x                   
+                           x        x              x                                            x           x            x                                              x           x                   
+                           x        x              x                                            x           x            x                                              x           x                   
+                           x        x     _        x                                            x           x            x                                              x           x                   
+                           x        xxxxxxxxxxxxxxxx        xxxxxxxxxxxxxxxxxxxxxxxxx           x           x            x                                              x           x                   
+                           x        x                                               x           x           x            x                                              x           x                   
+                           x        x                                               x           x           x            x                                              x           x                   
+                           x        x                                               x           x           x            x                                           _  x           x                   
+                           x        x                                               x           x           x            xxxxxxxxxxxxxxxxxxxxxxxxxxx         xxxxxxxxxxxx           x                   
+                           x        x                                           (   x           x           x            x                                   x                      x                   
+                           x        x                                               x           x           x            x                                   x                      x                   
+                           x        x                                               x           x           x            x                                   x                      x                   
+                           x        x        x                                      x           x           x            x                                   x                      x                   
+                           x        x        x                                      x           x           x            x                                   x                      x                   
+                           x        x        x                                      x           x           x            x                                   x                      x                   
+                           x        x        x                                      x           x           x            x                                   x                      x                   
+                           x        x        x                                      x           x           x            x                                   x                      x                   
+                           x        x        x                                _     x           x           x            x                                   x                      x                   
+                           x        x        x          xxxxxxxxxxxxxxxxxxxxxxxxxxxxx           x           x            x                                   x                      x                   
+                           x        x        x                                      x           x           x            x         xxxxxxxxxxxxxxxxxxxxxxxxxxx          x           x                   
+                           x        x        x                                      x           x           x            x                                              x           x                   
+                           x                 x                                      x           x           x            x                                              x           x                   
+                           x                 x                                      x           x           x            x                                              x           x                   
+                           x                 x                                      x           x           x            x                                              x           x                   
+                           x                 x                                      x           x           x            x                                              x           x                   
+                           x                 x                                      x           x           x            x                                              x           x                   
+                           x                 x                                      x           x           x            x                                              x           x                   
+                           x                 x                                      x           x           x            x                                              x           x                   
+                           x                 x                                      x           x           x            x                                              x           x                   
+                           x        x        x                                      x           x           x            xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx           x                   
+                           x        x        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx        x           x           x                                                                       x                   
+                           x        x        x                                                              x                                                                       x                   
+                           x (      x        x                                                              x                                                                       x                   
+                           x        x        x  (                                                           x                                                                       x                   
+                           x        x        x                                                              x                                                                       x                   
+                           x        x   b    x                                                              x                                                                       x                   
+                           x        x  bbb   x                                                              x                                                                       x                   
+                           x        x b b b  x                                                              x                                                                       x                   
+                           x   _    xb  b  b x    _                                                         x                                                                       x                   
+                           xxxxxxxxxx   b    xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                   
+                                        b                                                                                                                                                               
+                                        b                                                                                                                                                               
+                                        b                                                                                                                                                               
+                                        b                                                                                                                                                               
+                                        b                                                                                                                                                               
+                                        b                                                                                                                                                               
+bbbbbbbbbbbbbbbbbbbbbbbb                b                                                                                                                                               bbbbbbbbbbbbbbbb
+                       b                                                                                                                                                                b               
+                       b                                                                                                                                                                b               
+                       b                                                                                                                                                                b               
+                       b                                                                                                                                                                b               
+                       b                                                                                                                                                                b               
+                       b                                                                                                                                                                b               
+                       b                                                                                                                                                                b               
+             )         b                                                                                                                                                                b         )     
+                       b                                                                                                                                                                b               
+                       b                                                                                                                                                                b               
+                       b                                                                                                                                                                b               
+                       b                                                                                                                                                                b               
+                       b                                                                                                                                                                b               
+                       b                                                                                                                                                                b               
+                       b                                                                                                                                                                b               
+                       b                                                                                                                                                                b               
+                       b                                                                                                                                                                b               
+                       b                                                              b                                                                                                 b               
+                       b                                                              b                                                                                                 b               
+                       b                                                              b                                                                                                 b               
+                       b                                                              b                                                                                                 b       )       
+                       b                                                              b                                                                                                 b               
+EndOfMapdata

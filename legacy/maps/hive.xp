@@ -1,0 +1,89 @@
+# Map converted by mapmapper @(#)Version 1.0
+
+mapWidth:            108
+mapHeight:           72
+mapName:             The Hive
+mapAuthor:           Charlie Panek
+crashWithPayer:      yes
+playerKillings:      yes
+playerShielding:     yes
+limitedVisibility:   yes
+teamPlay:            no
+timing:              no
+onePlayerOnly:       no
+limitedLives:        no
+worldLives:          0
+mapData: \multiline: EndOfMapdata
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxs       axs                  xs       ax                   xs       ax                   xxxs      ax
+xxxxxxs                           qxs         axw                xs         axw               qxxxx        x
+xxxxxs                           qxs           axw                           ax              qxxxxx        x
+xxxxs                            xs             axw                                         qxxxxxx        x
+xxxs                                             axw                                       qxxxxxxx        x
+xxs                  xw                           axw       qx                        _   qxxxxxxxx        x
+xs                   axxxxxxxxw                    axxxxxxxxxs                    xxxx#xxxxxxxxxxxx        x
+xw         @         qxxxxxxxxxw                    xxxxxxxxxw                   qxxxxxxxxxxxxxxxxx        x
+xxw                 qxs       axw                           axw                 qxs                        x
+xxxw               qxs         axw                           axw               qxs    +                    x
+xxxxw             qxs           ax              qx            axw             qxs                          x
+xxxxxw           qxs                           qxs             axw           qxs              xxxxx        x
+xxxxxxw         qxs                           qxs               axw         qxs                #xxx        x
+xxxxxxxw   _   qxs                           qxs                 axw       qxs                  xxx        x
+xxxxxxxxxxx#xxxxs                    xxxxxxxxxs                   axx    xxxs         @         axx        x
+xxxxxxxxxxxxxxxxw                    xxxxxxxxx                     xx    xxxw                   qxx        x
+xxxxxxxs       axw                  +                                      axw                  xxx        x
+xxxxxxs    -    axw                                                         axw                #xxx        x
+xxxxxs           axw                                                         axw             qxxxxx        x
+xxxxs             axw                                                         axw           qxxxxxx        x
+xx#                axw                                                         axw    -    qxxxxxxx        x
+x#                  axw        +                                                axw       qxxxxxxxx        x
+x                    axxxxxxxxx                     d##f               @         axxxxxxxxxxxxxxxxx        x
+x          @         qxxxxxxxxx                     d#f                          qxxxxxxxxxxxxxxxxx        x
+x#                  qxs                                                         qxs       axxxxxxxx        x
+xx#                qxs                                                          xs         axxxxxxx        x
+xxxxw             qxs                                                                       axxxxxx        x
+xxxxxw           qxs              xw                                                         axxxxx        x
+xxxxxxw    +    qxs               axw                                                         axxxx        x
+xxxxxxxw       qxs                 axw                            xw       qx                              x
+xxxxxxxxxxxxxxxxs                   axxxf                         axxxxxxxxxs                              x
+xxxxxxxxxxxxxxxxw                   qxxx                          qxxxxxxxxxw                              x
+xxxxxxxs   c   ax                  qxs                            xs c   c axw                 qxxx        x
+xxxxxxs                           qxs                                       axw               qxxxx        x
+xxxxxs                           qxs            xw                           axw             qxxxxx        x
+xxxxs                           qxs             axw                           axw           qxxxxxx        x
+xxxs                xw         qxs               axf         dx                axw         qxxxxxxx        x
+xxs                 axw       qxs                 axw   _   qxs                 axw   _   qxxxxxxxx        x
+xs                   axxxx    xs                   axxxxxxxxxs                   axxxxxxxxxxxxxxxxx        x
+xw                   qxxxx    xw                   qxxxxxxxxs                    qxxxxxxxxxxxxxxxxx        x
+xxw                 qxs       axw                  xs                           qxs       axxxxxxxx        x
+xxxw               qxs         axw                                             qxs         axxxxxxx        x
+xxxxw             qxs           axw                                           qxs           axxxxxx        x
+xxxxxw           qxs             axw                                         qxs             axxxxx        x
+xxxxxxw         qxs               axw                            xw         qxs               axxxx        x
+xxxxxxxw       qxs                 axw       qx                  axw       qxs                 axxx        x
+xxxxxxxxxx   xxxs                   axxx   xxxs                   axx     xxs         @         axx        x
+xxxxxxxxxx   xxxw                   qxxx   axxw                   qxx     xxw                   qxx        x
+xxxxxxxs       axw                 qxs       axw                 qxs       axw                 qxxx        x
+xxxxxxs         axw               qxs         axw               qxs         axw               qxxxx        x
+xxxxxs           axw             qxs           axw             qxs           axw             qxxxxx        x
+xxxxs             axw           qxs             axw           qxs             axw           qxxxxxx        x
+xxxs               axw         qxs               axw         qxs               axw         qxxxxxxx        x
+xxs                 axw       qxs                 axw   _   qxs                 axw        xxxxxxxx        x
+xs                   ax   qx##xs                   axxxxxxxxxs                   axxxx    dxxxxxxxx        x
+xw                   qx   xxxxxw                   qxxxxxxxxxw                   qxxxx    dxxxxxxxx        x
+xxw                 qxs       axw                  xs   c   axw                  xs        xxxxxxxx        x
+xxxw               qxs         ax                            ax                  <         axxxxxxx        x
+xxxxw             qxs                                                                       axxxxxx        x
+xxxxxw           qxs                           qx                                            axxxxx        x
+xxxxxxw         qxs                           qxs                                             axxxx        x
+xxxxxxxw  _    qxs                           qxs                            >                  axxx        x
+xxxxxxxxxx#xxxxxs                    xxxxrxxxxs                    xxxxxxxxx                    axx        x
+xxxxxxxxxxxxxxxx                    qxxxxxxxxxw         _         qxxxxxxxxxw                   qxx        x
+xxxxxxxxxxxxxxxx     xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx#xxxxxxxxxxxxxxxxxxxxxxxxxxxx     xxxxxxxxx        x
+xxxxxxxxxxxxxxxx                                                                                           x
+xxxxxxxxxxxxxxxx                                                                                           x
+xxxxxxxxxxxxxxxx                                                                                           x
+xxxxxxxxxxxxxxxx                                                                                          qx
+xxxxxxxxxxxxxxxx                                                                                          ax
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx        x
+EndOfMapdata

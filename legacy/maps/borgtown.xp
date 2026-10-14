@@ -1,0 +1,162 @@
+# Created by xmapedit on Tue Aug  3 16:52:37 1993
+
+mapwidth: 150
+mapheight: 150
+mapname: Borgtown
+mapauthor: Clovis Applegate
+edgewrap: yes
+edgebounce: yes
+oneplayeronly: yes
+
+mapData: \multiline: EndOfMapdata
+                                                                                                                                                      
+           r                                                                                                                                          
+  xxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                                                                                       
+  xxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                                                                                       
+  xxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                                                                                       
+  xxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                                                             xxxxxxx                   
+  xxxxxxxxxxxxxxxxxxxxxxxxxxxxx        xx                                                                                   xxxxxxx                   
+                                       xx                                                                                   xxxxxxx                   
+                                       xx                             xxx                                                   xxxxxxx                   
+                                       #x                             xxx                                                   xxxxxxx                   
+                                       xx                             xxx                     x                             xxxxxxx                   
+                                       xx         xxxxxxx             xxx                     x                             xxxxxxx                   
+   r                                   xx         xxxxxxx             xxx                     x                             xxxxxxx                   
+  #x#                                  xx         xxxxxxx             xxx                     x                              x                        
+ dxxxf                                 xx         xxxxxxx             xxx                     x                              x                        
+  #x#                                  xx                             xxx                     x                              x                        
+   c                                   xx                             xxx                     x                              x                        
+                                       xx                             xxx                     x                              x                        
+                                       xx                             xxx                     x                              x                        
+                            x          xx            x                xxx      (              x                              x                        
+                  r         x          xx            x                xxx                     x                              x                        
+                xxxxxxxxxxxxxx         xx            x                xxx                     x                              x                        
+                            #          xx            x                xxx                                                    x                        
+                            x          xx            x                                                                       x                        
+                            x          xx                                                                                    x                        
+                            x          xx                                                                                    x           r            
+                            x          xx                                                                                    x          #x#           
+                            x          xx                                                                                    x         dxxxf          
+                            x          xx                                                                                    x          #x#           
+                            x          xx                                                                                    x           c            
+         r                  x          xx                                                                                    x                        
+        #x#                 x          xx                                                                                    x                        
+       dxxxf                x          xx                                                                                    x                        
+        #x#                 x                                                                                                x                        
+         c                  x                                                                                                x                        
+                            x                        xx#                                                                     x                        
+                            x                        xxx                                                                     x          r             
+                            x                        xxx                   x_xxxxxxxxxxx                                     x         #x#            
+                            x                        xxx                   xxxxxxxxxxxxx                                     x        dxxxf           
+                            x                        xxx                   xxxxxxxxxxxxx                                     x         #x#            
+                            x                        xxx                                                                     x          c             
+                            x                        xxx                                                                     x                        
+             x_xxxxxxxxxxxxxxxxx_xxxxxxxxxxxxxxxxxx  xxx                                                              xxxx_xxxxx                      
+             xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx  xxx                                                               xxxxxxxxx                      
+             xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx#  xxx                                                               xxxxxxxxx                      
+xxx_xxx#                    x    xxx                 xxx                                                         xxx   xxxxxxxxx                      
+xxxxxxxx                    x    xxx                 xxx          #                                              xxxx   xxxxxxxx                      
+xxxxxxxx                         xxx                 xxx                                                         xxxx                                 
+xxxxxxxx                         xxx                 xxx                                            (            xxxxx                                
+xxxxxxxx                         xxx                 xxx                                                         xxxxx                                
+xxxxxxxx                         xxx                 xxx                                                         xxxxx                                
+xxxxxxxx                         xxx                 xxx                                                         xxxxx                                
+   xxxxx                         xxx                 xxx                                                         xxxxx                                
+   xxxxx                         xxx                 xxx                                                                                              
+   xxxxx                         xxx                 xxx                                                                                              
+   xxxxx                         xxx                 xxx                                                         xxxxx                                
+   xxxxx                         xxx                 xxx                                                         xxxxx                                
+   xxxxx                         xxx                 xxx                                                         xxxxx                                
+   xxxxx                         xxx           #xxxxxxxxxxxx_xxxxxxxxxxxxxxxxxxxxxxxx                            xxxxx                                
+   xxxxx                         xxx           xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                                 
+    x                            xxx           xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                                 
+                                 xxx                 xxx                                                         xxxxx                                
+                                 xxx                 xxx                                                         xxxxx                                
+                                 xxx                 xxx                                                         xxxxx                        -       
+                                 xxx                 xxx                                                         xxxxx                        -   +   
+                                 xxx                 xxx                                                         xxxxx                        -   +   
+                                 xxx                 xxx                                                         xxxxx                        -   +   
+                                 xxx                 xxx                                                         xxxxx                        -   +   
+                                 xxx                 xxx                                                         xxxxx                        -   +   
+            xx                   xx#                 xxx                                _                        xxxxx                        -   +   
+            xx                                       xxx                       xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                        -   +   
+            xx                                       xxx                       xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                        -   +   
+            xx                                       xxx                       xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                        -   +   
+            xx                                       xxx                       xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                            -   +   
+            xx                                       xxx                       xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                            -   +   
+            xx                                       xxx                       xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                            -   +   
+    x       xx                                       xxx                       xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                            -   +   
+    x       xx                                       xxx                       xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                            -   +   
+    x       xx       x     x                         xxx                                                                                      -   +   
+  xxxxx_xxxxxxxxxxxxxx    xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                                          -   +   
+  xxxxxxxxxxxxxxxxxxxx    xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                                                                          -   +   
+    x       xx      cx     x                         xxxc                                                                                     -   +   
+    x       xx       x     x                         xxx                                                                                      -   +   
+    x       xx       x     x                                                                                                                  -   +   
+    x       cc       x     x                                                                                                                  -   +   
+    x                x     x                                           _                                                                      -   +   
+    x                x     x                                         xxxxx                                                                    -   +   
+    x                                                                xxxxx                                                                    -   +   
+    x                                                                xxxxx                                                                        +  -
+    x                                                                                                                                             +  -
+    x                                                                                                                    xxxxxxxxxx               +  -
+    x                                                                                                                    xxxxxxxxxx               +  -
+    x                                                                                                                    xxxxxxxxxx               +  -
+    x                                                                                                                    xxxxxxxxxx               +  -
+    x                                                                                                                    xxxxxxxxxx               +  -
+    x                                                                                                                    xxxxxxxxxx               +  -
+    x                                                                                                                    xxxxxxxxxx               +  -
+    x                                                                                                                    xxxxxxxxxx               +  -
+    c                                                                                                                    xxxxxxxxxx               +  -
+                                                                                                                         xxxxxxxxxx               +  -
+                                                                                                                         xxxxxxxxxx               +  -
+                                                                                                                         xxxxxxxxxx               +  -
+                                                                                                                       xxxxxxxxxxxx               +  -
+                                                                                                                       xxxxxxxxxxxx               +  -
+                                                                                                                       xxxxxxx                    +  -
+                                                                                                                         xxxxx                    +  -
+                                                                                                                         xxxxx   xx               +  -
+                                                                                                                         xxxxx   xx               +  -
+                                                                                                                         xxxxx   xx               +  -
+                                                                                                                         xxxxx   xx               +  -
+                                                                                                                         xxxxx   xx               +  -
+                                                                                                                         xxxxx   xx               +  -
+                                                                                                                         xxxxx   xx               +  -
+                                                                                                                         xxxxx   xx               +  -
+                                                                                                                         xxxxx   xx               +  -
+                                                                                                                         xxxxx   xx               +  -
+                                                                                                                         xxxxx   xx               +  -
+                                                                                                                         xxxxx   xx               +  -
+                                                                                                                         xxxxx   xx                   
+                                                                                                                         xxxxx   xx                   
+                                                                                                                         xxxxx   xx                   
+                                                                                                                         xxxxx   xx                   
+                                                                                                                         xxxxx   xx                   
+                                                                                                                         xxxxx   xx                   
+                                                                                                                         xxxxx   xx                   
+                                                                                                                         #xxxx   xx                   
+                                                                                                                         xxxxx   xx                   
+                                                                                                                         xxxxx  xxx                   
+                                                                                                                         xxxxx   xx                   
+                                                                                                                         xxxxx   xx                   
+                xxxxxxxxxxxx#                                                                                            xxxxx   xx                   
+               dxxxxxxxxxxxxxf                                                                                           xxxx#   xx                   
+                xxxxxxxxxxxxxf                                                                                           xxxxx   xx                   
+                #xxxxxxxxxxxx                                                                                            xxxxx   xx                   
+                                                                                                                         xxxxx   xx                   
+                                                                                                                         xxxxx   xxxxxx               
+                                                                                                                         xxxxx  xxxxxxx               
+                                                      r                                                                  xxxxx   xxxxxx               
+                  r                                  #x#                                                               xxxxxxx   xxxxxxxxx            
+                 #x#                                dxxxf                                                              xxxxxxx   xxxxxxxxx            
+                dxxxf                                #x#                                                               xxxxxxx   xxxxxxxxx            
+                 #x#                                  c   r                                                            xxxxxxx   xxxxxxxxx            
+                  c                                      #x#                                                           xxxxxxx   xxxxxxxxx            
+                                                        dxxxf            xxxxxxxxxxxxxxxxxxxxxx#xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   xxxxxxxxx            
+                                                         #x#             xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   xxxxxxxxx            
+                                                          c   r          xxxxxxxxxxxxxxxxxxxxxxxx                   xxxxxxxxxx   xxxxxxxxx            
+                                                             #x#         xxxxxxxxxxxxxxxxxxxxxxxx                                                     
+                                                            dxxxf        xxxxxxxxxxxxxxxxxxxxxxxx  )                                                  
+                                          rr                 #x#        dxxxxxxxxxxxxxxxxxxxxxxxx                                                     
+                                          xx                  c          xxxxxxxxxxxxxxxxxxxxxxxx                   xxxxxxxxxxxxxxxxxxxxxx            
+EndOfMapdata

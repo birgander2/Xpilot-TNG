@@ -1,0 +1,297 @@
+# Created by xplts/editors/edmapedit on Fri Sep  5 04:10:14 1997
+
+robotteam:0
+restrictrobots:true
+reserverobotteam:true
+cloakedexhaust:no
+cloakedshield:yes
+cannonsmartness:1
+cannonspickupitems:no
+ecmsreprogramrobots:yes
+wreckagecollisionmaykill:yes
+gravityvisible:true
+wormholevisible:true
+itemconcentratorvisible:true
+allowsmartmissiles:no
+allowheatseekers:True
+allowtorpedoes:True
+maxminesperpack:2
+minelife:0
+missilelife:0
+baseminerange:5
+shotkillscoremult:1.0
+torpedokillscoremult:1.0
+smartkillscoremult:1.0
+heatkillscoremult:1.0
+clusterkillscoremult:1.0
+laserkillscoremult:1.0
+tankkillscoremult:0.44
+runoverkillscoremult:0.33
+ballkillscoremult:1.0
+explosionkillscoremult:0.33
+shovekillscoremult:0.5
+crashscoremult:0.33
+minescoremult:0.17
+itemdeflectorprob:0.00001
+itemhyperjumpprob:0
+itemphasingprob:0
+initialdeflectors:0
+initialhyperjumps:0
+initialphasings:0
+maxfuel:9533
+maxtanks:8
+maxecms:300
+maxmines:300
+maxmissiles:300
+maxcloaks:300
+maxsensors:300
+maxwideangles:300
+maxrearshots:300
+maxafterburners:15
+maxtransporters:300
+maxdeflectors:300
+maxphasings:300
+maxhyperjumps:300
+maxemergencythrusts:300
+maxlasers:5
+maxtractorbeams:4
+maxautopilots:300
+maxemergencyshields:300
+allowviewing:false
+rounddelay:0
+maxroundtime:0
+
+mapname : > Christmas at Ground Zero! (ho ho ho)
+mapauthor : Vincent (www-personal.ksu.edu/~rohmon/xpmaps/)
+mapwidth : 100
+mapheight : 90
+extraborder : no
+edgewrap : no
+edgebounce : yes
+losemass : no
+gravity : 0
+gravitypoint : 0,0
+gravityangle : 90
+gravitypointsource : no
+gravityclockwise : no
+gravityanticlockwise : no
+shotsgravity : no
+limitedvisibility : no
+minvisibilitydistance : 0
+maxvisibilitydistance : 0
+shotswallbounce : no
+ballswallbounce : yes
+mineswallbounce : yes
+itemswallbounce : yes
+missileswallbounce : yes
+sparkswallbounce : yes
+debriswallbounce : yes
+playerwallbouncebrakefactor : 0.4
+objectwallbouncebrakefactor : 0.9
+robotstalk : no
+robotsleave : yes
+robotleavelife : 50
+robotleavescore : -90
+robotleaveratio : -5
+allowshipshapes : yes
+shotmass : 0.2
+shotspeed : 35
+shotlife : 17
+firerepeatrate : 1
+maxplayershots : 30
+maxoffensiveitems : 50
+maxdefensiveitems : 50
+loseitemdestroys : no
+initialfuel : 2700
+initialtanks : 1
+initialecms : 5
+initialmines : 2
+initialmissiles : 2
+initialcloaks : 0
+initialsensors : 0
+initialwideangles : 0
+initialrearshots : 0
+initialafterburners : 5
+initialtransporters : 0
+initiallasers : 0
+initialemergencythrusts : 0
+initialtractorbeams : 0
+initialautopilots : 2
+initialemergencyshields : 0
+allowshields : no
+shieldeditempickup : yes
+shieldedmining : yes
+playerstartsshielded : yes
+wallbouncefueldrainmult : 0.2
+wallbouncedestroyitemprob : 0
+maxshieldedwallbouncespeed : 150
+maxunshieldedwallbouncespeed : 75
+maxshieldedplayerwallbounceangle : 180
+maxunshieldedplayerwallbounceangle : 180
+destroyitemincollisionprob : 0
+dropitemonkillprob : 0.9
+detonateitemonkillprob : 0.1
+allownukes : yes
+allowclusters : yes
+nukeclusterdamage : 2
+allowmodifiers : yes
+allowlasermodifiers : yes
+laserisstungun : no
+ecmsreprogrammines : yes
+missilesonradar : yes
+minesonradar : yes
+nukesonradar : yes
+distinguishmissiles : yes
+identifymines : yes
+minefusetime : 0
+maxmissilesperpack : 2
+nukeminsmarts : 1
+nukeminmines : 2
+movingitemprob : 1
+maxobjectwallbouncespeed : 1000
+objectwallbouncelifefactor : 0.99
+itemconcentratorradius : 10
+itemconcentratorprob : 1
+itemprobmult : 0.04
+maxitemdensity : 0.009
+itemenergypackprob : 0
+itemtankprob : 0
+itemecmprob : 0
+itemmineprob : 0.0001
+roguemineprob : 0
+itemmissileprob : 0.0001
+rogueheatprob : 0
+itemcloakprob : 0.00000001
+itemsensorprob : 0.0000001
+itemwideangleprob : 0.00009
+itemrearshotprob : 0
+itemafterburnerprob : 0
+itemtransporterprob : 0
+itemlaserprob : 0.00001
+itememergencythrustprob : 0
+itemtractorbeamprob : 0
+itemautopilotprob : 0
+itememergencyshieldprob : 0.00001
+oneplayeronly : no
+allowplayerkilling : yes
+allowplayercrashes : yes
+allowplayerbounces : yes
+limitedlives : no
+playersonradar : yes
+teamplay : yes
+teamassign : yes
+teamimmunity : yes
+reset : yes
+lockotherteam : yes
+targetkillteam : yes
+targetteamcollision : no
+targetsync : no
+treasurekillteam : no
+treasurecollisiondestroys : yes
+treasurecollisionmaykill : no
+treasuresonradar : yes
+timing : no
+racelaps : 3
+checkpointradius : 6
+friction : 0
+framespersecond : 12
+reporttometaserver : yes
+idlerun : yes
+noquit : yes
+gameduration : 0
+contactport : 15345
+denyhosts : no
+plockserver : no
+
+mapData: \multiline: EndOfMapdata
+++++qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw++++
+++qxs                                                                                          axw++
++qs           ###   ###    #####       ###   ###    #####       ###   ###    #####               aw+
++x            # #   # #   #     #      # #   # #   #     #      # #   # #   #     #               x+
+qs            # #   # #  #  ###  #     # #   # #  #  ###  #     # #   # #  #  ###  #              aw
+x             # #   # #  # #   # #     # #   # #  # #   # #     # #   # #  # #   # #               x
+x             # #   # #  # #   # #     # #   # #  # #   # #     # #   # #  # #   # #               x
+x             # ##### #  # #   # #     # ##### #  # #   # #     # ##### #  # #   # #               x
+x             #       #  # #   # #     #       #  # #   # #     #       #  # #   # #               x
+x             # ##### #  # #   # #     # ##### #  # #   # #     # ##### #  # #   # #               x
+x             # #   # #  # #   # #     # #   # #  # #   # #     # #   # #  # #   # #               x
+x             # #   # #  # #   # #     # #   # #  # #   # #     # #   # #  # #   # #               x
+x             # #   # #  #  ###  #     # #   # #  #  ###  #     # #   # #  #  ###  #               x
+x             # #   # #   #     #      # #   # #   #     #      # #   # #   #     #                x
+x             ###   ###    #####       ###   ###    #####       ###   ###    #####                 x
+x                                               w  s                                               x
+x                                                                                                  x
+x                                                x%                                                x
+x                                          a     xx     s                                          x
+x                                             %  xx                                                x
+x                                             xxxxxxxx                                             x
+x                                              xxxxxx%                                             x
+x                                               xxxx                                               x
+x                                           w  xx  xx  w                                           x
+x                                             %x ! !x                                              x
+x                                               ! ! %                                              x
+x                                              ! ! !                                               x
+x                                               !!!!                                               x
+x                                             !! !! !                                              x
+x                                               !!! !                                              x
+x                                               !!! !                                              x
+x                                           !  ! !! ! !!                                           x
+x                                             ! !!!! ! !!                                          x
+x                                         !  ! ! !! ! !                                            x
+x                                             ! !!!                                                x
+x                                           ! ! !!!   !                                            x
+x                                          !  !  !! ! !                                            x
+x                                           ! ! !!!! ! !                                           x
+x                                        ! !! ! !!!  ! ! !                                         x
+x                                            ! ! !!! !   !                                         x
+x                                      !    ! ! !!! ! !    !                                       x
+x                                     !      ! ! !!! !                                             x
+x                                          ! ! ! !!! !                                             x
+x                                           !  ! !! ! ! !                                          x
+x                                        !  !   !!! ! ! !                                          x
+x                                       !  !  !!!!!   ! ! !                                        x
+x                                      !  ! ! !  !!  ! ! !                                         x
+x                                    !!  !!   ! !!! ! !  ! !                                       x
+x                                   !!  !    ! ! !!! ! !                                           x
+x                                        !! ! ! !!! ! ! !                                          x
+x                                        ! ! ! ! !!! ! ! !                                         x
+x                                       ! ! ! ! !!!  !  ! !!                                       x
+x                                           !  ! !!! !  !   !                                      x
+x                                         ! !   !!! ! ! !   !                                      x
+x                                         ! ! !! !!  ! ! ! !  !                                    x
+x                                       !  ! ! ! !!  ! ! ! ! !!                                    x
+x                                        ! ! ! ! !!!! ! ! ! ! !!!                                  x
+x                                      !! ! ! !  !! ! ! ! ! ! !! !                                 x
+x                                    ! ! ! ! !  !!! ! !  ! ! !    !                                x
+x                                      ! ! ! ! ! !!   !   ! ! !                                    x
+x                                  ! ! ! ! !! ! !!!  ! !! ! ! !                                    x
+x                                 ! !   ! !!! ! !!! ! ! ! ! ! !                                    x
+x                                       ! ! !! ! !!! !   ! ! ! !                                   x
+x                                  ! ! ! ! ! ! ! !! ! !  ! !    !                                  x
+x                                     !! ! !    !!!! ! !  ! !   !   !                              x
+x                                    !!!! ! !  ! !! ! ! ! ! ! ! ! ! !!                             x
+x                                  ! ! ! ! ! ! ! !!! ! ! !   ! ! !                                 x
+x                                !  ! ! ! ! ! ! !!! ! ! ! ! ! ! ! !                                x
+x                                ! !  ! ! ! ! !  !! ! ! ! ! ! ! ! !                                x
+x                               !   !!  ! ! !   !!! ! ! ! ! ! ! !   !                              x
+x                              !  ! ! ! ! ! !  !xx x ! ! ! ! ! ! !    !                            x
+x                                ! !   !    ! !   x    ! ! ! ! !   ! !! !                          x
+x                                 !   ! !   ! !  x x ! ! !! ! !      !  !                          x
+x                               !   !  !  !  ! !x x  !  !!!   ! ! !                                x
+x                              !!            ! ! x       ! !   ! !   !!                            x
+x                              !         !    !  x x               !  !                            x
+x                                       !       x x    !                                           x
+x                                            !  x x                                                x
+x                     t                     !    x x                         y                     x
+x                     b                         x                            b                     x
+x                     gy  th                     x x                    gy  th                     x
+x                      gbh                      x x                       gbh                      x
+x                       b                        x x                       b                       x
+x                  !!!!!b!!!!!           x  x  x   x  x x  x          !!!!!b!!!!!                  x
+x           gt     !    b    !            x  x x  x  x   x            !    b    !     yh           x
+x           hy     !    b    !             x  x  x  x  x  x           !    b    !     tg           x
+aw        !!!!!!   !    b    !            x x  x  x x x  x            !    b    !   !!!!!!        qs
++aw       !    !   !    b    !               x  x x    x  x           !    b    !   !    !       qs+
+++aw      ! ** !   !1  1b 1  !             xx  x   x x x x            !  2 b2  2!   ! ** !      qs++
++++axxxxxxxxxxxxxxxx#xx#xx#xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx#xx#xx#xxxxxxxxxxxxxxxxs+++
+EndOfMapdata

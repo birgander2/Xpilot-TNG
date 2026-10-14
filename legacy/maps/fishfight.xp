@@ -1,0 +1,71 @@
+mapWidth:            65 
+mapHeight:           51
+mapName:             Fishfight
+mapAuthor:           Jon Moore
+teamPlay:            no
+timing:              no
+shotLife:       30
+fireRepeat:     0
+maxPlayerShots: 3
+allowPlayerCrashes:     no
+allowPlayerBounces:     yes
+allowShields:           no
+shotsWallBounce:        no
+maxShieldedWallBounceSpeed:     50
+maxShieldedPlayerWallBounceAngle: 180
+maxUnshieldedWallBounceSpeed:   50
+maxUnshieldedPlayerWallBounceAngle:     180
+itemProbMult:       10.0
+mapData: \multiline: EndOfMapdata
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xx_xxx_xxx_xxx_xxx_xxx_xxx_xxx_xxx_xxx_xxx_xxx_xxx_xxx_xxx_xxx_xx
+xx$xxx$xxx$xxx$xxx$xxx$xxx$xxx$xxx$xxx$xxx$xxx$xxx$xxx$xxx$xxx$xx
+xx(xxx(xxx(xxx(xxx(xxx(xxx(xxx(xxx(xxx(xxx(xxx(xxx(xxx(xxx(xxx(xx
+xx-xxx-xxx-xxx-xxx-xxx-xxx-xxx-xxx-xxx-xxx-xxx-xxx-xxx-xxx-xxx-xx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+x                                                               x
+x                                                               x
+x                                                               x
+x                                                               x
+x               )            )              )                   x
+x                                                               x
+x                                                               x
+x                                                               x
+x                                                               x
+x                    #               #                          x
+x                                                               x
+x                                                               x
+x                                                               x
+x              )             )               )                  x
+x                                                               x
+x                                                               x
+x                                                               x
+x                                    #                          x
+x                     #                                         x
+x                                                               x
+x                                                               x
+x                                                               x
+x              )             )               )                  x
+x                                                               x
+x                                                               x
+x                                                               x
+x                                                               x
+x                     #             #                           x
+x                                                               x
+x                                                               x
+x                                                               x
+x              )            )                 )                 x
+x                                                               x
+x                                                               x
+x                                                               x
+x                     #                                         x
+x                                     #                         x
+x                                                               x
+x                                                               x
+x             )             )                 )                 x
+x                                                               x
+x                                                               x
+x                                                               x
+x                                                               x
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+EndOfMapdata

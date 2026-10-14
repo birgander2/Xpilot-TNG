@@ -1,0 +1,54 @@
+# Created by xmapedit on Tue Nov 23 19:47:01 1993
+
+mapwidth : 150
+mapheight : 40
+mapname : Tunnel
+mapauthor : Fred Gruner (I Kill You)
+edgewrap : yes
+edgebounce : no
+playershielding : yes
+crashwithplayer : yes
+playerkillings : yes
+
+mapData: \multiline: EndOfMapdata
+     <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<                                                                                                               
+     <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<                                                                                                               
+     <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<                                                                                                               
+                                                                                                                                                      
+     >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>                                                                                                               
+     >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>                                                                                                               
+     >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>                                                                                                               
+                                                                                                                                                      
+                                                                                                                                                      
+                                                                                                                                                      
+                                                                                                                                                      
+                                                                                                                                                      
+                                                                                                                                                      
+                                                                                                                                                      
+                                                                                                                                                      
+                                      qxxxxxxxxxxxxxxxxxxxxxxxw                                                                                       
+xxxxxxxxxxxxxxxxxxxxxw              qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw                 qxxxw     ___          __                               qxxxx
+sccaxxxxxxxxxxxxxxxxxxxxxxxxw     qxxxxxs                  axxxxxxxxxxxxxxxxxxxxxxxw    qxxxxxxxxxx###xxw  __qxx##xw              __  qxxxxxxxxxxxxxxx
+    cccccaxxxxxxxxxxxxxxxxxxxxxxxxxxxxs                      axxxxxxxxxxxxxxxxxxxxxxxxxxxxxscccccccccaxxxxx##xxxxxxxw  __        q##xxxxxxxs          
+          cccccccccccccccccccccccccccc                                     cccccccccccccccc           ccccccccccccaxxxx##xw__qxxxxxxs                 
+                                                                                                                        axx##xxs                      
+                                                                                                                                                      
+                                                                                                                                                      
+                                                                                                                                                      
+                                                                                                                                                      
+                                                                                                                                                      
+                                                                                                                                                      
+                                                                                                                                                      
+                                                                                                                                                      
+                                                                                                                                                      
+                                                                                                                                                      
+                                                                                                                                                      
+     <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<                                                                                                               
+     <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<                                                                                                               
+     <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<                                                                                                               
+                                                                                                                                                      
+     >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>                                                                                                               
+     >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>                                                                                                               
+     >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>                                                                                                               
+                                                                                                                                                      
+EndOfMapdata

@@ -1,0 +1,121 @@
+# Created by xmapedit on Tue Oct 17 21:22:15 1995
+
+mapwidth : 100
+mapheight : 100
+mapname : The Aviary II
+mapauthor : Parrot (mods by Lews Therin)
+edgewrap : yes
+edgebounce : no
+teamplay : no
+oneplayeronly : no
+timing : no
+maxrobots : 4
+limitedvisibility : no
+playershielding : no
+gravity : -0.4
+gravitypointsource : no
+crashwithplayer : yes
+playerkillings : yes
+
+mapData: \multiline: EndOfMapdata
+                                                          x           x                           x 
+                                                          x           x   )  x                   dx 
+                                                          x                  x                    x 
+                                                          x           xxxxxxxx                    x 
+                                                          x                                       x 
+                                                          x                                       x 
+                             _                            x                                 xxxxxxx 
+                             #x                           xxxxxxxxxxxxxxxxxxxxxxxxx         x       
+                         xxxx                                                               x       
+                        xx                                                                 x        
+                      xx                                                                   x        
+                     xx                                                                    x   -    
+                    xx                                                                     x        
+                    x                                                                      x        
+                  xx                                                                      xx      x 
+                  x                                                                       x      xx 
+                 x                                                                       xx      xx 
+                x                                                                        x       xx 
+               xx                                                                       x       x x 
+               x                                                                        x      x  x 
+              xx                                                                      xx      xx  x 
+              x                                                                      x        x   x 
+             x                                                                      xxf      xx   x 
+             x                                                                             dxx    x 
+             x                                                                              x     x 
+             x                                                                             x      x 
+            xx                                                                            xx      x 
+            x                                                                                     x 
+            x                                                                                     x 
+            x                                                                                     x 
+                                                                                                  x 
+                          (                                                                       x 
+                                                                                                  x 
+                                                                                                  x 
+                                                                                                  x 
+                                                                                                  x 
+                                                                                                  x 
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                xxxxx                  (                            
+                                                    x                                               
+                                               x    xx                                              
+                                               x  x  xx                                           _ 
+                                              x     _xx                                           # 
+                                              x     #xxf                                          x 
+                                              x    xxxx                                           x 
+                                              x    x xx                                           x 
+                                              xxxxx  ax                                           x 
+                                            _ xs      s                                           x 
+                                            #xs qxx                                               x 
+                                            xx qxxxx                                              x 
+                                           xxx axxxx                                              x 
+                                           xxxw   ax                                              x 
+                                          xxxxxxxx xx                                             x 
+                                          xs       xx                                             x 
+                                          x       qxx                                             x 
+                                         xx      qxx                                     xxxx     x 
+                                         xs      xx                                    xxxx       x 
+                                         x      qxx                                   xx          x 
+                                        xx     qxx                                  xxx             
+                                        xs    qx                                   xx               
+                                       xx    qxx                                   x                
+                                      xxs   qxx                                   xx                
+                                      x_   qxx                                   xx                 
+                                     xx#xxxxx                                   xx                  
+                                     xxxxxxxx                                  xx                   
+                                    xxxc  xx                                   x                  x 
+                                   xx     xx                                 xx                   x 
+                                  x       xx                                 x                    x 
+        x                        x        x                                 xx                    x 
+        x                                 xw                                xx                    x 
+        x                                                                    xx                   x 
+        x                                                                    xx                   x 
+        x                                                                     xx                  x 
+         x                                                                    xx                  x 
+         xx                                                                    xx                 x 
+          x                                                                   _xx                 x 
+           ###                                                                #x                  x 
+             #xx                                                             xx                   x 
+               xx                                                           xx                    x 
+                x                                                           x                     x 
+                x                                                          xx                     x 
+                x                                                         xx                      x 
+                 x                                                        xx                      x 
+                 x                                                        xx                      x 
+                  xxx                                                     xx                      x 
+                     ####                       (                         xx                      x 
+                         xx                                               xx                      x 
+                           xxxx                                           xx                      x 
+                               x                                          xx                      x 
+                                                                          xx                      x 
+                                                                          xx                      x 
+                                                                          xx                      x 
+                                                                          xx                      x 
+                                                                          xx                      x 
+                                                                          xx                      x 
+                                                                          xx                      x 
+ _                                                                     _  xx                   _  x 
+x#xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx           x#xxxxxx     xxxxxxxxxxxx#xxxx
+EndOfMapdata
