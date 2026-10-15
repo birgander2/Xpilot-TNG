@@ -76,7 +76,9 @@ void ClientProfile::Load(const char* shipshapes_path) {
 
     // preselect the ship configured in ~/.xpilotrc (full definitions are matched by their name)
     ship_names = ReadShipShapeNames(shipshapes_path);
-    const std::string rc_shape = ShipShapeName(ReadXpilotrcValue("shipShape"));
+    // ~/.xpilotrc holds either a full definition "(NM:...)(SH:...)" or just a ship name
+    std::string rc_shape = ReadXpilotrcValue("shipShape");
+    if (std::string nm = ShipShapeName(rc_shape); !nm.empty()) rc_shape = nm;
     auto it = std::find(ship_names.begin(), ship_names.end(), rc_shape);
     if (it != ship_names.end()) ship_choice = int(it - ship_names.begin());
 }
