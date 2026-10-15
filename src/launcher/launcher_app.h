@@ -122,6 +122,7 @@ private:
     int sel_port_ = 0;
     bool custom_selected_ = false;    // the custom address box is the active choice
     int local_port_ = 0;              // 0 = pick a free port automatically
+    bool local_meta_ = false;         // list the local game at the meta server
 
     // server mode settings (kept across map changes, persisted)
     int server_port_ = 0;
