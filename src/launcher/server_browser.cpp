@@ -246,7 +246,6 @@ void ServerSearch::Start() {
     if (thread_.joinable()) thread_.join();
     cancel_ = false;
     busy_ = true;
-    started_ = true;
     SetMessage(kind_ == Kind::Lan ? "Searching the local network ..." : "Contacting meta servers ...");
     thread_ = std::thread([this] {
         if (kind_ == Kind::Lan) RunLan();

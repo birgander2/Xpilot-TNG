@@ -7,6 +7,8 @@
 #include <vector>
 #include "map_preview.h"
 
+constexpr int kDefaultServerPort = 15345;   // SERVER_PORT of the game server
+
 enum class LaunchMode { Local, Server };
 
 // Holds the effective server options shown in the GUI.
@@ -28,8 +30,6 @@ public:
 
     // Switches to a map: discards all GUI edits and loads the map's values.
     void SelectMap(const MapInfo& map);
-    // Discards all GUI edits for the current map.
-    void ResetAll();
 
     // --- typed access by canonical option name (case-insensitive) ---------
     bool Known(const std::string& key) const;
@@ -45,9 +45,8 @@ public:
 
     bool IsModified(const std::string& key) const;   // differs from baseline+map
     void Reset(const std::string& key);
-    int ModifiedCount() const;
 
-    // Options defined by the current map file, in original spelling/order of the file.
+    // Options defined by the current map file, in original spelling (sorted by name).
     const std::vector<std::pair<std::string, std::string>>& MapOptions() const { return map_raw_; }
     // Canonical option name for a (possibly aliased) key, or "" if unknown to the server.
     std::string Canonical(const std::string& key) const;
@@ -60,7 +59,7 @@ public:
 
     // Port helpers
     static bool IsPortFree(int port);
-    static int FindFreePort(int start_port = 15345);
+    static int FindFreePort(int start_port = kDefaultServerPort);
 
 private:
     struct Entry {

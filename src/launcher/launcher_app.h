@@ -75,7 +75,6 @@ private:
     void StartServerMode();
     void ApplyServerModeSettings(OptionsManager& opts) const;
     std::string ServerCommandLine() const;
-    void JoinNetworkGame();
     void JoinServer(const std::string& host, int port);
     void PlaySelectedNetwork();
     bool NetworkTarget(std::string* host, int* port) const;
@@ -102,7 +101,6 @@ private:
     bool baseline_ok_ = false;
 
     Screen screen_ = Screen::Menu;
-    Screen prev_screen_ = Screen::Menu;
     PlayKind play_kind_ = PlayKind::None;
     bool launching_ = false;          // local game: waiting for server / client
     bool quit_ = false;

@@ -55,20 +55,25 @@ std::string ReadXpilotrcValue(const char* wanted) {
     return result;
 }
 
-// Ship names ("NM:" fields) from a shipshapes file, in file order
+// Name ("NM:" / "name:" field) of a ship shape definition, empty if there is none
+std::string ShipShapeName(const std::string& shape) {
+    size_t p = shape.find("(NM:");
+    if (p == std::string::npos) p = shape.find("(name:");
+    if (p == std::string::npos) return "";
+    size_t b = shape.find(':', p) + 1, e = shape.find(')', b);
+    if (e == std::string::npos) return "";
+    b = shape.find_first_not_of(' ', b);
+    return (b == std::string::npos || b >= e) ? "" : shape.substr(b, e - b);
+}
+
+// Ship names from a shipshapes file, in file order
 std::vector<std::string> ReadShipShapeNames(const char* path) {
     std::vector<std::string> names;
     std::ifstream in(path);
     std::string line;
     while (std::getline(in, line)) {
-        size_t p = line.find("(NM:");
-        if (p == std::string::npos) p = line.find("(name:");
-        if (p == std::string::npos) continue;
-        size_t b = line.find(':', p) + 1, e = line.find(')', b);
-        if (e == std::string::npos) continue;
-        b = line.find_first_not_of(' ', b);
-        if (b == std::string::npos || b >= e) continue;
-        names.push_back(line.substr(b, e - b));
+        std::string name = ShipShapeName(line);
+        if (!name.empty()) names.push_back(name);
     }
     return names;
 }
@@ -100,6 +105,25 @@ std::string ShellQuote(const std::string& a) {
         else q += c;
     }
     return q + "'";
+}
+
+// "<bin> <args...>" for display and copying; the binary is shown relative to the working directory.
+std::string CommandLine(const std::string& bin, const std::vector<std::string>& args) {
+    std::error_code ec;
+    std::string cmd = fs::relative(bin, fs::current_path(ec), ec).string();
+    if (ec || cmd.empty() || cmd.rfind("..", 0) == 0) cmd = bin;   // keep absolute outside the tree
+    if (cmd.find('/') == std::string::npos && fs::exists(cmd)) cmd = "./" + cmd;
+    for (const auto& a : args) cmd += ' ' + ShellQuote(a);
+    return cmd;
+}
+
+bool GreenButton(const char* label, const ImVec2& size) {
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.15f, 0.55f, 0.25f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.20f, 0.70f, 0.30f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.10f, 0.45f, 0.20f, 1.0f));
+    bool clicked = ImGui::Button(label, size);
+    ImGui::PopStyleColor(3);
+    return clicked;
 }
 
 bool AnyPopupOpen() { return ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId); }
@@ -160,13 +184,7 @@ void LauncherApp::Init() {
 
     // ship shape choices; preselect the one configured in ~/.xpilotrc (full definitions are matched by NM:)
     ship_names_ = ReadShipShapeNames("lib/shipshapes.txt");
-    std::string rc_shape = ReadXpilotrcValue("shipShape");
-    size_t nm = rc_shape.find("(NM:");
-    if (nm == std::string::npos) nm = rc_shape.find("(name:");
-    if (nm != std::string::npos) {
-        size_t b = rc_shape.find_first_not_of(' ', rc_shape.find(':', nm) + 1), e = rc_shape.find(')', nm);
-        rc_shape = (b != std::string::npos && e != std::string::npos && b < e) ? rc_shape.substr(b, e - b) : "";
-    }
+    const std::string rc_shape = ShipShapeName(ReadXpilotrcValue("shipShape"));
     auto it = std::find(ship_names_.begin(), ship_names_.end(), rc_shape);
     if (it != ship_names_.end()) ship_choice_ = int(it - ship_names_.begin());
     if (!baseline_ok_)
@@ -181,7 +199,7 @@ void LauncherApp::Init() {
     }
     process_mgr_.AddLog("LAUNCHER", std::to_string(maps_.size()) + " maps found.");
 
-    if (server_port_ <= 0) server_port_ = OptionsManager::FindFreePort(15345);
+    if (server_port_ <= 0) server_port_ = OptionsManager::FindFreePort();
 }
 
 void LauncherApp::DesiredWindowSize(int* w, int* h) const {
@@ -203,7 +221,6 @@ void LauncherApp::RequestQuit() {
 // ============================================================================
 
 void LauncherApp::GoTo(Screen s) {
-    prev_screen_ = screen_;
     screen_ = s;
     focus_first_ = true;
     if (s == Screen::Menu) {
@@ -271,7 +288,7 @@ void LauncherApp::StartLocalGame(bool force) {
     }
     const MapInfo& map = maps_[selected_map_idx_];
 
-    int port = local_port_ > 0 ? local_port_ : OptionsManager::FindFreePort(15345);
+    int port = local_port_ > 0 ? local_port_ : OptionsManager::FindFreePort();
     // our own server on that port is stopped by LaunchLocalGame, so it doesn't count as "in use"
     const bool replaces_own = process_mgr_.IsServerRunning() && port == running_port_;
     if (!replaces_own && !OptionsManager::IsPortFree(port)) {
@@ -306,26 +323,18 @@ std::string LauncherApp::ServerCommandLine() const {
     if (selected_map_idx_ < 0) return {};
     OptionsManager tmp = options_mgr_;   // preview only, don't touch the real option set
     ApplyServerModeSettings(tmp);
-    int port = server_port_ > 0 ? server_port_ : 15345;
-    auto rel = [](const std::string& path) {
-        std::error_code ec;
-        std::string r = fs::relative(path, fs::current_path(ec), ec).string();
-        return (ec || r.empty() || r.rfind("..", 0) == 0) ? path : r;   // keep absolute outside the tree
-    };
+    int port = server_port_ > 0 ? server_port_ : kDefaultServerPort;
     auto args = tmp.BuildServerArgs(LaunchMode::Server, maps_[selected_map_idx_].full_path, port, true);
     for (size_t i = 0; i + 1 < args.size(); i++)
         if (args[i] == "-mapFileName") args[i + 1] = maps_[selected_map_idx_].filename;   // server searches lib/maps itself
-    std::string cmd = rel(server_bin_path_);
-    if (cmd.find('/') == std::string::npos && fs::exists(cmd)) cmd = "./" + cmd;
-    for (const auto& a : args) cmd += ' ' + ShellQuote(a);
-    return cmd;
+    return CommandLine(server_bin_path_, args);
 }
 
 void LauncherApp::StartServerMode() {
     if (selected_map_idx_ < 0) return;
     const MapInfo& map = maps_[selected_map_idx_];
 
-    int port = server_port_ > 0 ? server_port_ : OptionsManager::FindFreePort(15345);
+    int port = server_port_ > 0 ? server_port_ : OptionsManager::FindFreePort();
     if (!OptionsManager::IsPortFree(port)) {
         banner_ = "Port " + std::to_string(port) + " is already in use.";
         return;
@@ -346,11 +355,6 @@ void LauncherApp::StartServerMode() {
     server_started_ = std::chrono::steady_clock::now();
     play_kind_ = PlayKind::None;
     GoTo(Screen::ServerRunning);
-}
-
-void LauncherApp::JoinNetworkGame() {
-    banner_.clear();
-    GoTo(Screen::NetworkBrowser);
 }
 
 void LauncherApp::JoinServer(const std::string& host, int port) {
@@ -611,7 +615,7 @@ void LauncherApp::RenderMenu() {
     ImGui::TextDisabled("%s", ver.c_str());
 
     if (local) GoTo(Screen::LocalSetup);
-    else if (join) JoinNetworkGame();
+    else if (join) { banner_.clear(); GoTo(Screen::NetworkBrowser); }
     else if (server) GoTo(server_active ? Screen::ServerRunning : Screen::ServerSetup);
     else if (quit) RequestQuit();
 }
@@ -952,12 +956,8 @@ void LauncherApp::RenderActionBar(bool server_mode) {
     bool have_map = selected_map_idx_ >= 0;
     bool busy = launching_;
     ImGui::BeginDisabled(!have_map || busy);
-    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.15f, 0.55f, 0.25f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.20f, 0.70f, 0.30f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.10f, 0.45f, 0.20f, 1.0f));
     const char* label = server_mode ? "LAUNCH SERVER" : (busy ? "STARTING..." : "PLAY");
-    bool go = ImGui::Button(label, ImVec2(bw, bh));
-    ImGui::PopStyleColor(3);
+    bool go = GreenButton(label, ImVec2(bw, bh));
     ImGui::EndDisabled();
 
     if (go) {
@@ -1050,7 +1050,7 @@ void LauncherApp::RenderServerList(const char* id, ServerSearch& search) {
         if (ImGui::IsItemHovered() && !e.author.empty()) ImGui::SetTooltip("Version %s, map by %s", e.version.c_str(), e.author.c_str());
         ImGui::SameLine(0, 0);
         ImGui::TextUnformatted(e.host.c_str());
-        if (e.port != 15345) { ImGui::SameLine(0, 0); ImGui::TextDisabled(":%d", e.port); }
+        if (e.port != kDefaultServerPort) { ImGui::SameLine(0, 0); ImGui::TextDisabled(":%d", e.port); }
         ImGui::TableNextColumn();
         ImGui::TextUnformatted(e.map.c_str());
         ImGui::TableNextColumn();
@@ -1144,11 +1144,7 @@ void LauncherApp::RenderNetworkBrowser() {
     const bool can_play = have_target;
     ImGui::PushStyleVar(ImGuiStyleVar_DisabledAlpha, 0.85f);   // stay close to the other green buttons while no server is chosen
     ImGui::BeginDisabled(!can_play);
-    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.15f, 0.55f, 0.25f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.20f, 0.70f, 0.30f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.10f, 0.45f, 0.20f, 1.0f));
-    bool play = ImGui::Button("PLAY", ImVec2(bw, bh));
-    ImGui::PopStyleColor(3);
+    bool play = GreenButton("PLAY", ImVec2(bw, bh));
     ImGui::EndDisabled();
     ImGui::PopStyleVar();
     if ((play || enter) && can_play) PlaySelectedNetwork();
@@ -1162,7 +1158,7 @@ bool LauncherApp::NetworkTarget(std::string* host, int* port) const {
         *port = sel_port_;
     } else {
         *host = manual_addr_;
-        *port = 15345;
+        *port = kDefaultServerPort;
         size_t colon = host->rfind(':');
         if (colon != std::string::npos && host->find(':') == colon) {
             *port = std::atoi(host->c_str() + colon + 1);
@@ -1173,12 +1169,7 @@ bool LauncherApp::NetworkTarget(std::string* host, int* port) const {
 }
 
 std::string LauncherApp::ClientCommandLine(const std::string& host, int port) const {
-    std::error_code ec;
-    std::string cmd = fs::relative(client_bin_path_, fs::current_path(ec), ec).string();
-    if (ec || cmd.empty() || cmd.rfind("..", 0) == 0) cmd = client_bin_path_;   // keep absolute outside the tree
-    if (cmd.find('/') == std::string::npos && fs::exists(cmd)) cmd = "./" + cmd;
-    for (const auto& a : BuildClientArgs(port, host)) cmd += ' ' + ShellQuote(a);
-    return cmd;
+    return CommandLine(client_bin_path_, BuildClientArgs(port, host));
 }
 
 void LauncherApp::PlaySelectedNetwork() {

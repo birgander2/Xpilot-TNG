@@ -32,7 +32,6 @@ public:
 
     void Start();
     bool Busy() const { return busy_; }
-    bool Started() const { return started_; }
     std::vector<ServerEntry> Snapshot() const;
     std::string Message() const;
 
@@ -45,7 +44,6 @@ private:
     Kind kind_;
     std::thread thread_;
     std::atomic<bool> busy_{false};
-    std::atomic<bool> started_{false};
     std::atomic<bool> cancel_{false};
     mutable std::mutex mtx_;
     std::vector<ServerEntry> servers_;

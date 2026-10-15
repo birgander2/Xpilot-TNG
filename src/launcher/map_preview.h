@@ -12,7 +12,6 @@ struct MapInfo {
     std::string author;
     int width = 0;
     int height = 0;
-    int num_polygons = 0;
     int num_bases = 0;
     int num_cannons = 0;
     bool is_xp2 = true;
