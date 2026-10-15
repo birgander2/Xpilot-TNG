@@ -89,6 +89,19 @@ void StatusDot(const ImVec4& col) {
     ImGui::SameLine();
 }
 
+// Quotes a command line argument for POSIX shells (the text is meant to be pasted into one).
+std::string ShellQuote(const std::string& a) {
+    if (!a.empty() && a.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+                                          "_@%+=:,./-") == std::string::npos)
+        return a;
+    std::string q = "'";
+    for (char c : a) {
+        if (c == '\'') q += "'\\''";
+        else q += c;
+    }
+    return q + "'";
+}
+
 bool AnyPopupOpen() { return ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId); }
 
 bool HotkeyPressed(ImGuiKey key) {
@@ -179,8 +192,7 @@ void LauncherApp::DesiredWindowSize(int* w, int* h) const {
 
 void LauncherApp::RequestQuit() {
     if (process_mgr_.IsServerRunning() && !local_shutdown_pending_) {
-        open_quit_popup_ = true;
-        if (screen_ == Screen::Playing) return; // window is hidden, finish playing first
+        open_quit_popup_ = true;   // shown once the window is visible again if a game is running
         return;
     }
     quit_ = true;
@@ -211,7 +223,10 @@ void LauncherApp::GoTo(Screen s) {
                 if (maps_[i].filename == "ndh.xp2") { idx = static_cast<int>(i); break; }
         }
         if (idx < 0 && !maps_.empty()) idx = 0;
-        if (idx >= 0) SelectMap(idx);
+        if (idx < 0) return;
+        // Same map as before: keep the edits made in the GUI.
+        if (idx == selected_map_idx_) (s == Screen::ServerSetup ? last_map_server_ : last_map_local_) = maps_[idx].filename;
+        else SelectMap(idx);
     }
 }
 
@@ -257,7 +272,9 @@ void LauncherApp::StartLocalGame(bool force) {
     const MapInfo& map = maps_[selected_map_idx_];
 
     int port = local_port_ > 0 ? local_port_ : OptionsManager::FindFreePort(15345);
-    if (!OptionsManager::IsPortFree(port)) {
+    // our own server on that port is stopped by LaunchLocalGame, so it doesn't count as "in use"
+    const bool replaces_own = process_mgr_.IsServerRunning() && port == running_port_;
+    if (!replaces_own && !OptionsManager::IsPortFree(port)) {
         banner_ = "Port " + std::to_string(port) + " is already in use. Choose another one under Advanced > Network.";
         return;
     }
@@ -300,11 +317,7 @@ std::string LauncherApp::ServerCommandLine() const {
         if (args[i] == "-mapFileName") args[i + 1] = maps_[selected_map_idx_].filename;   // server searches lib/maps itself
     std::string cmd = rel(server_bin_path_);
     if (cmd.find('/') == std::string::npos && fs::exists(cmd)) cmd = "./" + cmd;
-    for (const auto& a : args) {
-        cmd += ' ';
-        if (a.find_first_of(" \t\"'") != std::string::npos) cmd += "'" + a + "'";
-        else cmd += a;
-    }
+    for (const auto& a : args) cmd += ' ' + ShellQuote(a);
     return cmd;
 }
 
@@ -318,8 +331,9 @@ void LauncherApp::StartServerMode() {
         return;
     }
 
-    ApplyServerModeSettings(options_mgr_);
-    auto args = options_mgr_.BuildServerArgs(LaunchMode::Server, map.full_path, port);
+    OptionsManager opts = options_mgr_;   // server-only settings must not leak into later local games
+    ApplyServerModeSettings(opts);
+    auto args = opts.BuildServerArgs(LaunchMode::Server, map.full_path, port);
     banner_.clear();
     if (!process_mgr_.StartServer(server_bin_path_, args)) {
         banner_ = "The server could not be started. See log.";
@@ -413,11 +427,12 @@ void LauncherApp::Update() {
     if (local_shutdown_pending_) {
         if (!process_mgr_.IsServerRunning()) {
             local_shutdown_pending_ = false;
-        } else if (process_mgr_.HumanCount() > 0) {
-            local_shutdown_pending_ = false; // somebody else is playing: keep the server
         } else if (std::chrono::steady_clock::now() > local_shutdown_deadline_) {
-            process_mgr_.AddLog("LAUNCHER", "Nobody is left on the local server, stopping it.");
-            process_mgr_.StopServer();
+            // Count only after the grace period: our own "[leave]" may still be on its way.
+            if (process_mgr_.HumanCount() == 0) {
+                process_mgr_.AddLog("LAUNCHER", "Nobody is left on the local server, stopping it.");
+                process_mgr_.StopServer();
+            }   // else: somebody else is playing, keep the server
             local_shutdown_pending_ = false;
         }
     }
@@ -1142,18 +1157,19 @@ void LauncherApp::RenderNetworkBrowser() {
 // Host/port of the current choice (selected row or custom address)
 bool LauncherApp::NetworkTarget(std::string* host, int* port) const {
     if (!custom_selected_ && !sel_ip_.empty()) {
-        *host = sel_host_.empty() ? sel_ip_ : sel_host_;
+        // meta server data is untrusted: a name starting with '-' would be read as a client option
+        *host = (sel_host_.empty() || sel_host_[0] == '-') ? sel_ip_ : sel_host_;
         *port = sel_port_;
-        return true;
+    } else {
+        *host = manual_addr_;
+        *port = 15345;
+        size_t colon = host->rfind(':');
+        if (colon != std::string::npos && host->find(':') == colon) {
+            *port = std::atoi(host->c_str() + colon + 1);
+            host->resize(colon);
+        }
     }
-    *host = manual_addr_;
-    *port = 15345;
-    size_t colon = host->rfind(':');
-    if (colon != std::string::npos && host->find(':') == colon) {
-        *port = std::atoi(host->c_str() + colon + 1);
-        host->resize(colon);
-    }
-    return !host->empty() && *port > 0 && *port < 65536;
+    return !host->empty() && (*host)[0] != '-' && *port > 0 && *port < 65536;
 }
 
 std::string LauncherApp::ClientCommandLine(const std::string& host, int port) const {
@@ -1161,11 +1177,7 @@ std::string LauncherApp::ClientCommandLine(const std::string& host, int port) co
     std::string cmd = fs::relative(client_bin_path_, fs::current_path(ec), ec).string();
     if (ec || cmd.empty() || cmd.rfind("..", 0) == 0) cmd = client_bin_path_;   // keep absolute outside the tree
     if (cmd.find('/') == std::string::npos && fs::exists(cmd)) cmd = "./" + cmd;
-    for (const auto& a : BuildClientArgs(port, host)) {
-        cmd += ' ';
-        if (a.find_first_of(" \t\"'") != std::string::npos) cmd += "'" + a + "'";
-        else cmd += a;
-    }
+    for (const auto& a : BuildClientArgs(port, host)) cmd += ' ' + ShellQuote(a);
     return cmd;
 }
 
