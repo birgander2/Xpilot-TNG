@@ -129,6 +129,9 @@ private:
     int server_max_players_ = 0;
     char server_greeting_[128] = "";
     bool server_meta_ = true;
+    char server_host_[128] = "";      // serverHost: public name reported to the meta server
+    int server_cport_start_ = 0;      // clientPortStart/End: UDP port range per player (0 = random)
+    int server_cport_end_ = 0;
     std::string running_map_title_;
     std::string running_map_file_;
     int running_port_ = 0;
