@@ -7,8 +7,9 @@
 #include "map_preview.h"
 #include "options_model.h"
 #include "process_manager.h"
+#include "server_browser.h"
 
-enum class Screen { Menu, LocalSetup, ServerSetup, ServerRunning, Playing };
+enum class Screen { Menu, LocalSetup, ServerSetup, ServerRunning, NetworkBrowser, Playing };
 
 struct ImFont;
 
@@ -42,6 +43,9 @@ private:
     void RenderMenu();
     void RenderSetup(bool server_mode);
     void RenderServerRunning();
+    void RenderNetworkBrowser();
+    void RenderServerList(const char* id, ServerSearch& search);
+    void RenderIdentityRow();
     void RenderHeader(const char* title, bool show_back);
     void RenderBanner();
     void RenderQuitPopup();
@@ -64,9 +68,18 @@ private:
     // actions
     void GoTo(Screen s);
     void SelectMap(int idx);
-    void StartLocalGame();
+    void StartLocalGame(bool force = false);
+    void JoinRunningServer();
+    std::vector<std::string> BuildClientArgs(int port, const std::string& host = "localhost") const;
+    void RenderRunningServerPopup();
     void StartServerMode();
+    void ApplyServerModeSettings(OptionsManager& opts) const;
+    std::string ServerCommandLine() const;
     void JoinNetworkGame();
+    void JoinServer(const std::string& host, int port);
+    void PlaySelectedNetwork();
+    bool NetworkTarget(std::string* host, int* port) const;
+    std::string ClientCommandLine(const std::string& host, int port) const;
     void StopEverything();
     void FinishPlaying(int client_exit_code);
     std::string FindRoot() const;
@@ -93,6 +106,7 @@ private:
     PlayKind play_kind_ = PlayKind::None;
     bool launching_ = false;          // local game: waiting for server / client
     bool quit_ = false;
+    bool open_running_popup_ = false;
     bool open_quit_popup_ = false;
     bool focus_first_ = true;
     std::string banner_;
@@ -102,7 +116,16 @@ private:
 
     // client session overrides (empty/auto = use ~/.xpilotrc)
     char name_override_[64] = "";
-    int team_choice_ = -1;            // -1 = auto
+    std::string xpilotrc_name_;       // nickname read from ~/.xpilotrc
+    std::vector<std::string> ship_names_;  // names from lib/shipshapes.txt
+    int ship_choice_ = -1;            // index into ship_names_, -1 = leave to ~/.xpilotrc
+    ServerSearch lan_search_{ServerSearch::Kind::Lan};
+    ServerSearch internet_search_{ServerSearch::Kind::Internet};
+    char manual_addr_[128] = "";
+    std::string sel_ip_;              // selected server row (ip + port), empty = none
+    std::string sel_host_;            // name to connect with (hostname if the server has one)
+    int sel_port_ = 0;
+    bool custom_selected_ = false;    // the custom address box is the active choice
     int local_port_ = 0;              // 0 = pick a free port automatically
 
     // server mode settings (kept across map changes, persisted)

@@ -212,6 +212,11 @@ std::string OptionsManager::Get(const std::string& key) const {
     return it == current_.end() ? "" : it->second;
 }
 
+bool OptionsManager::IsBool(const std::string& key) const {
+    auto it = base_.find(Lower(key));
+    return it != base_.end() && it->second.is_bool;
+}
+
 bool OptionsManager::GetBool(const std::string& key, bool def) const {
     std::string v = Get(key);
     return v.empty() ? def : ParseBool(v, def);
@@ -284,7 +289,7 @@ int OptionsManager::ModifiedCount() const { return static_cast<int>(touched_.siz
 // --- launch ----------------------------------------------------------------
 
 std::vector<std::string> OptionsManager::BuildServerArgs(LaunchMode mode, const std::string& map_path,
-                                                         int port) const {
+                                                         int port, bool minimal) const {
     // key (lower) -> argument vector; ordered so the command line is deterministic
     std::map<std::string, std::vector<std::string>> opts;
 
@@ -300,15 +305,21 @@ std::vector<std::string> OptionsManager::BuildServerArgs(LaunchMode mode, const 
     }
 
     // Mode specific options (always set explicitly, independent of defaults/map).
-    opts["contactport"] = {"-contactPort", std::to_string(port)};
+    // In minimal mode (display only) values equal to the baseline are left out.
+    auto is_default = [&](const std::string& lc, const std::string& value) {
+        return minimal && base_.count(lc) && SameValue(value, base_.at(lc).value);
+    };
+    if (!is_default("contactport", std::to_string(port)))
+        opts["contactport"] = {"-contactPort", std::to_string(port)};
     if (base_.count("noquit")) {
-        if (mode == LaunchMode::Local) opts["noquit"] = {"+noQuit"};   // quit when everybody left
-        else opts["noquit"] = {"-noQuit"};                             // keep running until stopped
+        bool keep_running = (mode == LaunchMode::Server);   // local: quit when everybody left
+        if (!is_default("noquit", keep_running ? "true" : "false"))
+            opts["noquit"] = {keep_running ? "-noQuit" : "+noQuit"};
     }
-    if (mode == LaunchMode::Local && base_.count("reporttometaserver"))
-        opts["reporttometaserver"] = {"+reportToMetaServer"};
-    else if (mode == LaunchMode::Server && base_.count("reporttometaserver"))
-        emit("reporttometaserver", Get("reportToMetaServer"));
+    if (base_.count("reporttometaserver")) {
+        std::string v = (mode == LaunchMode::Local) ? "true" : Get("reportToMetaServer");
+        if (!is_default("reporttometaserver", v)) emit("reporttometaserver", v);
+    }
 
     std::vector<std::string> args;
     if (!map_path.empty()) {

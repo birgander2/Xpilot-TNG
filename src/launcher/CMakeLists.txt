@@ -25,6 +25,7 @@ add_executable(xpilot-tng-launcher
     map_preview.cpp
     options_model.cpp
     process_manager.cpp
+    server_browser.cpp
     ${IMGUI_SOURCES}
 )
 

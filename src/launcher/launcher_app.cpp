@@ -4,8 +4,13 @@
 
 #include <algorithm>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <filesystem>
+#include <fstream>
+
+#include <pwd.h>
+#include <unistd.h>
 
 namespace fs = std::filesystem;
 
@@ -22,6 +27,57 @@ const ImVec4 kBad(1.00f, 0.40f, 0.40f, 1.00f);
 
 void CopyTo(char* dst, size_t cap, const std::string& s) {
     std::snprintf(dst, cap, "%s", s.c_str());
+}
+
+// Value of "xpilot.<wanted>: ..." in ~/.xpilotrc (empty if unavailable)
+std::string ReadXpilotrcValue(const char* wanted) {
+    const char* home = std::getenv("HOME");
+    if (!home || !*home) return "";
+    std::ifstream in(std::string(home) + "/.xpilotrc");
+    std::string line, result;
+    auto trim = [](std::string& t) {
+        size_t b = t.find_first_not_of(" \t\r\n");
+        size_t e = t.find_last_not_of(" \t\r\n");
+        t = b == std::string::npos ? "" : t.substr(b, e - b + 1);
+    };
+    while (std::getline(in, line)) {
+        if (line.size() < 7 || strncasecmp(line.c_str(), "xpilot", 6) != 0) continue;
+        if (line[6] != '.' && line[6] != '*') continue;
+        size_t colon = line.find(':');
+        if (colon == std::string::npos) continue;
+        std::string key = line.substr(7, colon - 7), val = line.substr(colon + 1);
+        trim(key);
+        if (strcasecmp(key.c_str(), wanted) != 0) continue;
+        val = val.substr(0, val.find(';'));
+        trim(val);
+        result = val; // last definition wins
+    }
+    return result;
+}
+
+// Ship names ("NM:" fields) from a shipshapes file, in file order
+std::vector<std::string> ReadShipShapeNames(const char* path) {
+    std::vector<std::string> names;
+    std::ifstream in(path);
+    std::string line;
+    while (std::getline(in, line)) {
+        size_t p = line.find("(NM:");
+        if (p == std::string::npos) p = line.find("(name:");
+        if (p == std::string::npos) continue;
+        size_t b = line.find(':', p) + 1, e = line.find(')', b);
+        if (e == std::string::npos) continue;
+        b = line.find_first_not_of(' ', b);
+        if (b == std::string::npos || b >= e) continue;
+        names.push_back(line.substr(b, e - b));
+    }
+    return names;
+}
+
+// Login name of the current account (empty if unavailable)
+std::string CurrentUserName() {
+    if (const passwd* pw = getpwuid(getuid())) return pw->pw_name;
+    const char* user = std::getenv("USER");
+    return user ? user : "";
 }
 
 void StatusDot(const ImVec4& col) {
@@ -76,6 +132,9 @@ std::string LauncherApp::ResolveBinaryPath(const std::string& bin_name) const {
 }
 
 void LauncherApp::Init() {
+    xpilotrc_name_ = ReadXpilotrcValue("name");
+    CopyTo(name_override_, sizeof(name_override_),
+           xpilotrc_name_.empty() ? CurrentUserName() : xpilotrc_name_);
     root_dir_ = FindRoot();
     if (!root_dir_.empty()) {
         std::error_code ec;
@@ -85,6 +144,18 @@ void LauncherApp::Init() {
     client_bin_path_ = ResolveBinaryPath("xpilot-tng-client");
 
     baseline_ok_ = options_mgr_.LoadBaseline(server_bin_path_, "lib/defaults.txt");
+
+    // ship shape choices; preselect the one configured in ~/.xpilotrc (full definitions are matched by NM:)
+    ship_names_ = ReadShipShapeNames("lib/shipshapes.txt");
+    std::string rc_shape = ReadXpilotrcValue("shipShape");
+    size_t nm = rc_shape.find("(NM:");
+    if (nm == std::string::npos) nm = rc_shape.find("(name:");
+    if (nm != std::string::npos) {
+        size_t b = rc_shape.find_first_not_of(' ', rc_shape.find(':', nm) + 1), e = rc_shape.find(')', nm);
+        rc_shape = (b != std::string::npos && e != std::string::npos && b < e) ? rc_shape.substr(b, e - b) : "";
+    }
+    auto it = std::find(ship_names_.begin(), ship_names_.end(), rc_shape);
+    if (it != ship_names_.end()) ship_choice_ = int(it - ship_names_.begin());
     if (!baseline_ok_)
         process_mgr_.AddLog("LAUNCHER", "Could not read server defaults (" + server_bin_path_ +
                                             " -dump). Option editing is limited.");
@@ -101,7 +172,8 @@ void LauncherApp::Init() {
 }
 
 void LauncherApp::DesiredWindowSize(int* w, int* h) const {
-    if (screen_ == Screen::Menu) { *w = 560; *h = 560; }
+    if (screen_ == Screen::Menu) { *w = 560; *h = 480; }
+    else if (screen_ == Screen::NetworkBrowser) { *w = 900; *h = 700; }
     else { *w = 1120; *h = 740; }
 }
 
@@ -124,6 +196,10 @@ void LauncherApp::GoTo(Screen s) {
     focus_first_ = true;
     if (s == Screen::Menu) {
         banner_.clear();
+    }
+    if (s == Screen::NetworkBrowser) {
+        lan_search_.Start();        // full refresh on every visit (no-op while a scan is still running)
+        internet_search_.Start();
     }
     if (s == Screen::LocalSetup || s == Screen::ServerSetup) {
         const std::string& want = (s == Screen::LocalSetup) ? last_map_local_ : last_map_server_;
@@ -148,8 +224,36 @@ void LauncherApp::SelectMap(int idx) {
     else last_map_local_ = map.filename;
 }
 
-void LauncherApp::StartLocalGame() {
+std::vector<std::string> LauncherApp::BuildClientArgs(int port, const std::string& host) const {
+    std::vector<std::string> client_args;
+    const std::string player_name = name_override_[0] ? std::string(name_override_) : xpilotrc_name_;
+    if (!player_name.empty()) { client_args.push_back("-name"); client_args.push_back(player_name); }
+    if (ship_choice_ >= 0 && ship_choice_ < int(ship_names_.size())) {
+        client_args.push_back("-shipShape");
+        client_args.push_back(ship_names_[ship_choice_]);
+    }
+    client_args.push_back("-port");
+    client_args.push_back(std::to_string(port));
+    client_args.push_back(host);
+    return client_args;
+}
+
+void LauncherApp::JoinRunningServer() {
+    banner_.clear();
+    if (!process_mgr_.StartClient(client_bin_path_, BuildClientArgs(running_port_))) {
+        banner_ = "The client could not be started (" + client_bin_path_ + ").";
+        return;
+    }
+    play_kind_ = PlayKind::Network;   // we don't own the shutdown of this server
+    GoTo(Screen::Playing);
+}
+
+void LauncherApp::StartLocalGame(bool force) {
     if (selected_map_idx_ < 0 || launching_) return;
+    if (!force && process_mgr_.IsServerRunning() && !local_shutdown_pending_) {
+        open_running_popup_ = true;
+        return;
+    }
     const MapInfo& map = maps_[selected_map_idx_];
 
     int port = local_port_ > 0 ? local_port_ : OptionsManager::FindFreePort(15345);
@@ -160,12 +264,7 @@ void LauncherApp::StartLocalGame() {
 
     auto server_args = options_mgr_.BuildServerArgs(LaunchMode::Local, map.full_path, port);
 
-    std::vector<std::string> client_args;
-    if (name_override_[0]) { client_args.push_back("-name"); client_args.push_back(name_override_); }
-    if (team_choice_ >= 0) { client_args.push_back("-team"); client_args.push_back(std::to_string(team_choice_)); }
-    client_args.push_back("-port");
-    client_args.push_back(std::to_string(port));
-    client_args.push_back("localhost");
+    auto client_args = BuildClientArgs(port);
 
     banner_.clear();
     force_log_open_ = false;
@@ -178,6 +277,36 @@ void LauncherApp::StartLocalGame() {
     process_mgr_.LaunchLocalGame(server_bin_path_, server_args, client_bin_path_, client_args);
 }
 
+// Server mode settings live outside of the per-map option set.
+void LauncherApp::ApplyServerModeSettings(OptionsManager& opts) const {
+    if (server_max_players_ > 0) opts.SetInt("playerLimit", server_max_players_);
+    if (server_greeting_[0]) opts.Set("greeting", server_greeting_);
+    opts.SetBool("reportToMetaServer", server_meta_);
+}
+
+std::string LauncherApp::ServerCommandLine() const {
+    if (selected_map_idx_ < 0) return {};
+    OptionsManager tmp = options_mgr_;   // preview only, don't touch the real option set
+    ApplyServerModeSettings(tmp);
+    int port = server_port_ > 0 ? server_port_ : 15345;
+    auto rel = [](const std::string& path) {
+        std::error_code ec;
+        std::string r = fs::relative(path, fs::current_path(ec), ec).string();
+        return (ec || r.empty() || r.rfind("..", 0) == 0) ? path : r;   // keep absolute outside the tree
+    };
+    auto args = tmp.BuildServerArgs(LaunchMode::Server, maps_[selected_map_idx_].full_path, port, true);
+    for (size_t i = 0; i + 1 < args.size(); i++)
+        if (args[i] == "-mapFileName") args[i + 1] = maps_[selected_map_idx_].filename;   // server searches lib/maps itself
+    std::string cmd = rel(server_bin_path_);
+    if (cmd.find('/') == std::string::npos && fs::exists(cmd)) cmd = "./" + cmd;
+    for (const auto& a : args) {
+        cmd += ' ';
+        if (a.find_first_of(" \t\"'") != std::string::npos) cmd += "'" + a + "'";
+        else cmd += a;
+    }
+    return cmd;
+}
+
 void LauncherApp::StartServerMode() {
     if (selected_map_idx_ < 0) return;
     const MapInfo& map = maps_[selected_map_idx_];
@@ -188,11 +317,7 @@ void LauncherApp::StartServerMode() {
         return;
     }
 
-    // Server mode settings live outside of the per-map option set.
-    if (server_max_players_ > 0) options_mgr_.SetInt("playerLimit", server_max_players_);
-    if (server_greeting_[0]) options_mgr_.Set("greeting", server_greeting_);
-    options_mgr_.SetBool("reportToMetaServer", server_meta_);
-
+    ApplyServerModeSettings(options_mgr_);
     auto args = options_mgr_.BuildServerArgs(LaunchMode::Server, map.full_path, port);
     banner_.clear();
     if (!process_mgr_.StartServer(server_bin_path_, args)) {
@@ -210,8 +335,12 @@ void LauncherApp::StartServerMode() {
 
 void LauncherApp::JoinNetworkGame() {
     banner_.clear();
-    // No server address: the client shows its own server browser (welcome screen).
-    if (!process_mgr_.StartClient(client_bin_path_, {})) {
+    GoTo(Screen::NetworkBrowser);
+}
+
+void LauncherApp::JoinServer(const std::string& host, int port) {
+    banner_.clear();
+    if (!process_mgr_.StartClient(client_bin_path_, BuildClientArgs(port, host))) {
         banner_ = "The client could not be started (" + client_bin_path_ + ").";
         return;
     }
@@ -315,6 +444,7 @@ void LauncherApp::RenderUI() {
         case Screen::LocalSetup:    RenderSetup(false); break;
         case Screen::ServerSetup:   RenderSetup(true); break;
         case Screen::ServerRunning: RenderServerRunning(); break;
+        case Screen::NetworkBrowser: RenderNetworkBrowser(); break;
         case Screen::Playing:       break;
     }
 
@@ -323,11 +453,17 @@ void LauncherApp::RenderUI() {
         open_quit_popup_ = false;
     }
     RenderQuitPopup();
+    if (open_running_popup_) {
+        ImGui::OpenPopup("Server already running");
+        open_running_popup_ = false;
+    }
+    RenderRunningServerPopup();
 
     // Esc = back one level
     if (!AnyPopupOpen() && !ImGui::GetIO().WantTextInput && ImGui::IsKeyPressed(ImGuiKey_Escape, false) &&
         !launching_) {
-        if (screen_ == Screen::LocalSetup || screen_ == Screen::ServerSetup || screen_ == Screen::ServerRunning)
+        if (screen_ == Screen::LocalSetup || screen_ == Screen::ServerSetup || screen_ == Screen::ServerRunning ||
+            screen_ == Screen::NetworkBrowser)
             GoTo(Screen::Menu);
     }
 
@@ -350,6 +486,8 @@ void LauncherApp::RenderHeader(const char* title, bool show_back) {
         if (ImGui::Button(back, ImVec2(80, 0)) && !launching_) GoTo(Screen::Menu);
         ImGui::SameLine();
     }
+    // centered in the window, independent of the back button
+    ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize(title).x) * 0.5f);
     ImGui::TextColored(kAccent, "%s", title);
     ImGui::Separator();
     ImGui::Spacing();
@@ -430,27 +568,23 @@ void LauncherApp::RenderMenu() {
     }
     bool local = menu_button("local", "Start Local Game", "Play against bots on this machine");
     bool join = menu_button("join", "Join Network Game", "Browse LAN and internet servers");
-    bool server = menu_button("server", "Launch Server", "Host a game for other players");
+    const bool server_active = process_mgr_.IsServerRunning() && !local_shutdown_pending_;
+    char server_sub[256] = "";
+    if (server_active) {
+        int humans = process_mgr_.HumanCount();
+        snprintf(server_sub, sizeof server_sub, "Server %s  -  %s  -  %d player%s",
+                 process_mgr_.IsServerReady() ? "running" : "starting",
+                 running_map_file_.c_str(), humans, humans == 1 ? "" : "s");
+    }
+    bool server = server_active
+        ? menu_button("server", "Manage Running Server", server_sub)
+        : menu_button("server", "Launch Server", "Host a game for other players");
     bool quit = menu_button("quit", "Quit", "");
 
     local |= HotkeyPressed(ImGuiKey_L);
     join |= HotkeyPressed(ImGuiKey_J);
     server |= HotkeyPressed(ImGuiKey_S);
     quit |= HotkeyPressed(ImGuiKey_Q);
-
-    if (process_mgr_.IsServerRunning() && !local_shutdown_pending_) {
-        ImGui::Dummy(ImVec2(0, 6));
-        ImGui::SetCursorPosX(x0);
-        StatusDot(process_mgr_.IsServerReady() ? kGood : kWarn);
-        int humans = process_mgr_.HumanCount();
-        ImGui::Text("Server %s on port %d  -  %s  -  %d player%s",
-                    process_mgr_.IsServerReady() ? "running" : "starting", running_port_,
-                    running_map_file_.c_str(), humans, humans == 1 ? "" : "s");
-        ImGui::SetCursorPosX(x0 + 22);
-        if (ImGui::SmallButton("Manage")) GoTo(Screen::ServerRunning);
-        ImGui::SameLine();
-        if (ImGui::SmallButton("Stop")) process_mgr_.StopServer();
-    }
 
     // footer
     ImGui::SetCursorPosY(ImGui::GetWindowHeight() - 32);
@@ -462,7 +596,7 @@ void LauncherApp::RenderMenu() {
 
     if (local) GoTo(Screen::LocalSetup);
     else if (join) JoinNetworkGame();
-    else if (server) GoTo(Screen::ServerSetup);
+    else if (server) GoTo(server_active ? Screen::ServerRunning : Screen::ServerSetup);
     else if (quit) RequestQuit();
 }
 
@@ -563,6 +697,25 @@ bool LauncherApp::OptFloat(const char* label, const char* key, float lo, float h
     return changed;
 }
 
+void LauncherApp::RenderIdentityRow() {
+    ImGui::SetNextItemWidth(190);
+    ImGui::InputTextWithHint("Name", "(account name)", name_override_, sizeof(name_override_));
+    ImGui::SameLine(0, 24);
+    ImGui::SetNextItemWidth(190);
+    const char* ship_label = ship_choice_ >= 0 && ship_choice_ < int(ship_names_.size())
+                                 ? ship_names_[ship_choice_].c_str() : "(from .xpilotrc)";
+    if (ImGui::BeginCombo("Ship shape", ship_label)) {
+        if (ImGui::Selectable("(from .xpilotrc)", ship_choice_ < 0)) ship_choice_ = -1;
+        for (int i = 0; i < int(ship_names_.size()); ++i) {
+            ImGui::PushID(i);
+            if (ImGui::Selectable(ship_names_[i].c_str(), ship_choice_ == i)) ship_choice_ = i;
+            if (ship_choice_ == i && ImGui::IsWindowAppearing()) ImGui::SetItemDefaultFocus();
+            ImGui::PopID();
+        }
+        ImGui::EndCombo();
+    }
+}
+
 void LauncherApp::RenderQuickSettings(bool server_mode) {
     ImGui::SetNextItemOpen(quick_open_, ImGuiCond_Always);
     quick_open_ = ImGui::CollapsingHeader("Quick settings");
@@ -573,20 +726,7 @@ void LauncherApp::RenderQuickSettings(bool server_mode) {
     // mode specific row
     ImGui::PushItemWidth(190);
     if (!server_mode) {
-        ImGui::InputTextWithHint("Name", "(from .xpilotrc)", name_override_, sizeof(name_override_));
-        ImGui::SameLine(0, 24);
-        const char* team_label = team_choice_ < 0 ? "Auto" : nullptr;
-        char buf[16];
-        if (!team_label) { std::snprintf(buf, sizeof(buf), "Team %d", team_choice_); team_label = buf; }
-        ImGui::SetNextItemWidth(110);
-        if (ImGui::BeginCombo("Team", team_label)) {
-            if (ImGui::Selectable("Auto", team_choice_ < 0)) team_choice_ = -1;
-            for (int t = 0; t < 10; ++t) {
-                std::snprintf(buf, sizeof(buf), "Team %d", t);
-                if (ImGui::Selectable(buf, team_choice_ == t)) team_choice_ = t;
-            }
-            ImGui::EndCombo();
-        }
+        RenderIdentityRow();
     } else {
         ImGui::SetNextItemWidth(110);
         ImGui::InputInt("Port", &server_port_, 0, 0);
@@ -685,6 +825,7 @@ void LauncherApp::RenderAdvanced(bool server_mode) {
                 OptInt("Bot team", "robotTeam", 0, 9);
                 ImGui::PopItemWidth();
                 OptBool("Restrict bots to their team", "restrictRobots");
+                OptBool("Smartbots may use lasers", "smartRobotsLaser", "Allow smart robots to collect and fire lasers");
                 OptBool("Bots talk", "robotsTalk");
                 OptBool("Bots may leave", "robotsLeave");
                 ImGui::EndTabItem();
@@ -710,6 +851,9 @@ void LauncherApp::RenderAdvanced(bool server_mode) {
                     ImGui::EndDisabled();
                     if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
                         ImGui::SetTooltip("Not a server option - read from the map file only.");
+                } else if (options_mgr_.IsBool(canon)) {
+                    bool b = options_mgr_.GetBool(canon);
+                    if (ImGui::Checkbox("##v", &b)) options_mgr_.SetBool(canon, b);
                 } else if (ImGui::InputText("##v", buf, sizeof(buf))) {
                     options_mgr_.Set(canon, buf);
                 }
@@ -763,6 +907,19 @@ void LauncherApp::RenderActionBar(bool server_mode) {
     ImGui::Separator();
     ImGui::Spacing();
 
+    if (server_mode) {
+        // read-only InputText so the command can be selected and copied
+        std::string cmd = ServerCommandLine();
+        ImGui::AlignTextToFramePadding();
+        ImGui::TextDisabled("Command");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(-70);
+        ImGui::InputText("##servercmd", cmd.data(), cmd.size() + 1, ImGuiInputTextFlags_ReadOnly);
+        ImGui::SameLine();
+        if (ImGui::Button("Copy")) ImGui::SetClipboardText(cmd.c_str());
+        ImGui::Spacing();
+    }
+
     StatusDot(process_mgr_.IsServerRunning() ? (process_mgr_.IsServerReady() ? kGood : kWarn)
                                              : ImVec4(0.5f, 0.5f, 0.5f, 1));
     ImGui::Text("Server: %s", process_mgr_.IsServerRunning() ? (process_mgr_.IsServerReady() ? "ready" : "starting") : "stopped");
@@ -797,7 +954,7 @@ void LauncherApp::RenderSetup(bool server_mode) {
     RenderHeader(server_mode ? "LAUNCH SERVER" : "START LOCAL GAME", true);
     RenderBanner();
 
-    const float bar_h = 60;
+    const float bar_h = server_mode ? 96 : 60;
     ImVec2 avail = ImGui::GetContentRegionAvail();
 
     ImGui::BeginChild("LeftPanel", ImVec2(340, avail.y - bar_h), ImGuiChildFlags_Borders);
@@ -827,6 +984,194 @@ void LauncherApp::RenderSetup(bool server_mode) {
 
     RenderActionBar(server_mode);
     focus_first_ = false;
+}
+
+// ============================================================================
+// network browser
+// ============================================================================
+
+void LauncherApp::RenderServerList(const char* id, ServerSearch& search) {
+    const std::vector<ServerEntry> servers = search.Snapshot();
+    const std::string msg = search.Message();
+
+    if (search.Busy()) {
+        ImGui::TextDisabled("%s", msg.c_str());
+    } else if (servers.empty()) {
+        ImGui::TextColored(kWarn, "%s", msg.c_str());
+        return;
+    }
+    if (servers.empty()) return;
+
+    const ImGuiTableFlags tf = ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerH |
+                               ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingStretchProp;
+    if (!ImGui::BeginTable(id, 6, tf, ImVec2(0, ImGui::GetContentRegionAvail().y))) return;
+    ImGui::TableSetupScrollFreeze(0, 1);
+    ImGui::TableSetupColumn("Server", ImGuiTableColumnFlags_WidthStretch, 2.0f);
+    ImGui::TableSetupColumn("Map", ImGuiTableColumnFlags_WidthStretch, 2.0f);
+    ImGui::TableSetupColumn("Players", ImGuiTableColumnFlags_WidthFixed, 64);
+    ImGui::TableSetupColumn("Teams", ImGuiTableColumnFlags_WidthFixed, 54);
+    ImGui::TableSetupColumn("Status", ImGuiTableColumnFlags_WidthStretch, 1.0f);
+    ImGui::TableSetupColumn("Ping", ImGuiTableColumnFlags_WidthFixed, 56);
+    ImGui::TableHeadersRow();
+
+    for (size_t i = 0; i < servers.size(); ++i) {
+        const ServerEntry& e = servers[i];
+        ImGui::PushID(int(i));
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+        ImGui::AlignTextToFramePadding();
+        const std::string& addr = e.ip.empty() ? e.host : e.ip;
+        const bool selected = (addr == sel_ip_ && e.port == sel_port_);
+        if (ImGui::Selectable("##row", selected,
+                              ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap |
+                                  ImGuiSelectableFlags_AllowDoubleClick)) {
+            sel_ip_ = addr;
+            sel_host_ = e.host.empty() ? addr : e.host;
+            sel_port_ = e.port;
+            custom_selected_ = false;
+            if (ImGui::IsMouseDoubleClicked(0)) PlaySelectedNetwork();
+        }
+        if (ImGui::IsItemHovered() && !e.author.empty()) ImGui::SetTooltip("Version %s, map by %s", e.version.c_str(), e.author.c_str());
+        ImGui::SameLine(0, 0);
+        ImGui::TextUnformatted(e.host.c_str());
+        if (e.port != 15345) { ImGui::SameLine(0, 0); ImGui::TextDisabled(":%d", e.port); }
+        ImGui::TableNextColumn();
+        ImGui::TextUnformatted(e.map.c_str());
+        ImGui::TableNextColumn();
+        ImGui::Text("%d/%d", e.players, e.bases);
+        ImGui::TableNextColumn();
+        if (e.teambases > 0) ImGui::Text("%d", e.teambases);
+        ImGui::TableNextColumn();
+        ImGui::TextUnformatted(e.status.c_str());
+        ImGui::TableNextColumn();
+        if (e.ping_ms < 0) ImGui::TextDisabled("-");
+        else ImGui::TextColored(e.ping_ms < 80 ? kGood : (e.ping_ms < 250 ? kWarn : kBad), "%d", e.ping_ms);
+        ImGui::PopID();
+    }
+    ImGui::EndTable();
+}
+
+void LauncherApp::RenderNetworkBrowser() {
+    RenderHeader("JOIN NETWORK GAME", true);
+    RenderBanner();
+
+    RenderIdentityRow();
+    ImGui::Spacing();
+
+    // boxes fit their content (message line or table) up to a maximum number of server rows, then scroll
+    const ImGuiStyle& st = ImGui::GetStyle();
+    const float row_h = ImGui::GetFrameHeight() + st.CellPadding.y * 2;
+    auto box_height = [&](const ServerSearch& search, size_t max_rows) {
+        const size_t n = search.Snapshot().size();
+        const float content = n == 0 ? ImGui::GetTextLineHeight() : row_h * float(std::min(n, max_rows) + 1);
+        return st.WindowPadding.y * 2 + 2 + ImGui::GetTextLineHeight() + st.ItemSpacing.y * 3 + 1 + content;
+    };
+    const float lan_h = box_height(lan_search_, 4);
+    const float custom_h = st.WindowPadding.y * 2 + 2 + ImGui::GetTextLineHeight() + st.ItemSpacing.y * 3 + 1 +
+                           ImGui::GetFrameHeight();
+    auto section = [&](const char* title, const char* id, ServerSearch& search, float height) {
+        ImGui::BeginChild(id, ImVec2(0, height), ImGuiChildFlags_Borders);
+        ImGui::TextColored(kAccent, "%s", title);
+        ImGui::SameLine(ImGui::GetWindowWidth() - 100);
+        ImGui::BeginDisabled(search.Busy());
+        if (ImGui::SmallButton("Refresh")) search.Start();
+        ImGui::EndDisabled();
+        ImGui::Separator();
+        RenderServerList(id, search);
+        ImGui::EndChild();
+    };
+    section("Local network", "lan", lan_search_, lan_h);
+    // Internet box: fixed size, fills everything down to the custom address / command rows and the bottom-anchored PLAY
+    const float play_top = ImGui::GetWindowHeight() - 38 - 10;
+    const float below_h = custom_h + st.ItemSpacing.y * 8 + 1 + ImGui::GetFrameHeight();
+    const float net_h = std::max(box_height(internet_search_, 3), play_top - ImGui::GetCursorPosY() - below_h);
+    section("Internet", "internet", internet_search_, net_h);
+
+    // custom address: a box like the server lists, highlighted while it is the active choice
+    bool enter = false;
+    {
+        ImGui::PushStyleColor(ImGuiCol_Border, custom_selected_ ? kAccent : st.Colors[ImGuiCol_Border]);
+        ImGui::BeginChild("custom", ImVec2(0, custom_h), ImGuiChildFlags_Borders);
+        ImGui::PopStyleColor();
+        ImGui::TextColored(kAccent, "Custom address");
+        ImGui::Separator();
+        ImGui::SetNextItemWidth(-1);
+        enter = ImGui::InputTextWithHint("##manual", "host or host:port", manual_addr_, sizeof(manual_addr_),
+                                         ImGuiInputTextFlags_EnterReturnsTrue);
+        if (ImGui::IsItemActive() || ImGui::IsItemEdited()) {   // using the field selects it
+            custom_selected_ = true;
+            sel_ip_.clear();
+            sel_port_ = 0;
+        }
+        ImGui::EndChild();
+    }
+
+    ImGui::Separator();
+    ImGui::Spacing();
+    // read-only InputText so the command can be selected and copied
+    std::string target_host;
+    int target_port = 0;
+    const bool have_target = NetworkTarget(&target_host, &target_port);
+    std::string cmd = have_target ? ClientCommandLine(target_host, target_port) : std::string();
+    ImGui::AlignTextToFramePadding();
+    ImGui::TextDisabled("Command");
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(-70);
+    ImGui::InputText("##clientcmd", cmd.data(), cmd.size() + 1, ImGuiInputTextFlags_ReadOnly);
+    ImGui::SameLine();
+    ImGui::BeginDisabled(!have_target);
+    if (ImGui::Button("Copy")) ImGui::SetClipboardText(cmd.c_str());
+    ImGui::EndDisabled();
+    ImGui::Spacing();
+    const float bw = 240, bh = 38;
+    ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - bw - 14, ImGui::GetWindowHeight() - bh - 10));
+    const bool can_play = have_target;
+    ImGui::PushStyleVar(ImGuiStyleVar_DisabledAlpha, 0.85f);   // stay close to the other green buttons while no server is chosen
+    ImGui::BeginDisabled(!can_play);
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.15f, 0.55f, 0.25f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.20f, 0.70f, 0.30f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.10f, 0.45f, 0.20f, 1.0f));
+    bool play = ImGui::Button("PLAY", ImVec2(bw, bh));
+    ImGui::PopStyleColor(3);
+    ImGui::EndDisabled();
+    ImGui::PopStyleVar();
+    if ((play || enter) && can_play) PlaySelectedNetwork();
+}
+
+// Host/port of the current choice (selected row or custom address)
+bool LauncherApp::NetworkTarget(std::string* host, int* port) const {
+    if (!custom_selected_ && !sel_ip_.empty()) {
+        *host = sel_host_.empty() ? sel_ip_ : sel_host_;
+        *port = sel_port_;
+        return true;
+    }
+    *host = manual_addr_;
+    *port = 15345;
+    size_t colon = host->rfind(':');
+    if (colon != std::string::npos && host->find(':') == colon) {
+        *port = std::atoi(host->c_str() + colon + 1);
+        host->resize(colon);
+    }
+    return !host->empty() && *port > 0 && *port < 65536;
+}
+
+std::string LauncherApp::ClientCommandLine(const std::string& host, int port) const {
+    std::error_code ec;
+    std::string cmd = fs::relative(client_bin_path_, fs::current_path(ec), ec).string();
+    if (ec || cmd.empty() || cmd.rfind("..", 0) == 0) cmd = client_bin_path_;   // keep absolute outside the tree
+    if (cmd.find('/') == std::string::npos && fs::exists(cmd)) cmd = "./" + cmd;
+    for (const auto& a : BuildClientArgs(port, host)) {
+        cmd += ' ';
+        if (a.find_first_of(" \t\"'") != std::string::npos) cmd += "'" + a + "'";
+        else cmd += a;
+    }
+    return cmd;
+}
+
+void LauncherApp::PlaySelectedNetwork() {
+    std::string host;
+    int port = 0;
+    if (NetworkTarget(&host, &port)) JoinServer(host, port);
 }
 
 // ============================================================================
@@ -900,6 +1245,30 @@ void LauncherApp::RenderServerRunning() {
 // ============================================================================
 // popups
 // ============================================================================
+
+void LauncherApp::RenderRunningServerPopup() {
+    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    if (!ImGui::BeginPopupModal("Server already running", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) return;
+    int humans = process_mgr_.HumanCount();
+    ImGui::Text("A server is already running on port %d (%d player%s connected).", running_port_, humans,
+                humans == 1 ? "" : "s");
+    if (!running_map_title_.empty()) ImGui::Text("Map: %s", running_map_title_.c_str());
+    ImGui::Text("Relaunching will stop it and disconnect everybody.");
+    ImGui::Spacing();
+    if (ImGui::Button("Join current game", ImVec2(160, 0))) {
+        ImGui::CloseCurrentPopup();
+        JoinRunningServer();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Relaunch new game", ImVec2(160, 0))) {
+        ImGui::CloseCurrentPopup();
+        StartLocalGame(true);
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Cancel", ImVec2(100, 0)) || ImGui::IsKeyPressed(ImGuiKey_Escape))
+        ImGui::CloseCurrentPopup();
+    ImGui::EndPopup();
+}
 
 void LauncherApp::RenderQuitPopup() {
     ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));

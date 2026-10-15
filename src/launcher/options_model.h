@@ -34,6 +34,7 @@ public:
     // --- typed access by canonical option name (case-insensitive) ---------
     bool Known(const std::string& key) const;
     std::string Get(const std::string& key) const;
+    bool IsBool(const std::string& key) const;
     bool GetBool(const std::string& key, bool def = false) const;
     int GetInt(const std::string& key, int def = 0) const;
     double GetFloat(const std::string& key, double def = 0.0) const;
@@ -53,8 +54,9 @@ public:
 
     // Server command line (without binary). Includes -map and all modified options
     // plus mode specific options, so changes made in the GUI always take effect.
+    // minimal: omit mode specific options that equal the baseline (for display only).
     std::vector<std::string> BuildServerArgs(LaunchMode mode, const std::string& map_path,
-                                             int port) const;
+                                             int port, bool minimal = false) const;
 
     // Port helpers
     static bool IsPortFree(int port);
