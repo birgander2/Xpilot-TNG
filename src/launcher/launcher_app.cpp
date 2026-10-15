@@ -75,6 +75,11 @@ void LauncherApp::Init() {
     baseline_ok_ = options_mgr_.LoadBaseline(server_bin_path_, "lib/defaults.txt");
 
     profile_.Load("lib/shipshapes.txt");
+    if (baseline_ok_) {   // network settings of lib/defaults.txt are the starting point
+        CopyTo(server_host_, sizeof(server_host_), options_mgr_.Get("serverHost"));
+        server_cport_start_ = options_mgr_.GetInt("clientPortStart");
+        server_cport_end_ = options_mgr_.GetInt("clientPortEnd");
+    }
     if (!baseline_ok_)
         process_mgr_.AddLog("LAUNCHER", "Could not read server defaults (" + server_bin_path_ +
                                             " -dump). Option editing is limited.");
@@ -193,6 +198,10 @@ void LauncherApp::ApplyServerModeSettings(OptionsManager& opts) const {
     if (server_max_players_ > 0) opts.SetInt("playerLimit", server_max_players_);
     if (server_greeting_[0]) opts.Set("greeting", server_greeting_);
     opts.SetBool("reportToMetaServer", server_meta_);
+    // always set: an empty/zero value must also be able to override defaults.txt
+    opts.Set("serverHost", server_host_);
+    opts.SetInt("clientPortStart", server_cport_start_);
+    opts.SetInt("clientPortEnd", server_cport_end_);
 }
 
 std::string LauncherApp::ServerCommandLine() const {
@@ -213,6 +222,12 @@ void LauncherApp::StartServerMode() {
     int port = server_port_ > 0 ? server_port_ : OptionsManager::FindFreePort();
     if (!OptionsManager::IsPortFree(port)) {
         banner_ = "Port " + std::to_string(port) + " is already in use.";
+        return;
+    }
+
+    if ((server_cport_start_ > 0) != (server_cport_end_ > 0) || server_cport_start_ > server_cport_end_ ||
+        server_cport_start_ > 65535 || server_cport_end_ > 65535) {
+        banner_ = "Invalid client port range: set both ends (start <= end, max 65535) or leave both at 0.";
         return;
     }
 
@@ -761,15 +776,41 @@ void LauncherApp::RenderAdvanced(bool server_mode) {
             ImGui::EndChild();
             ImGui::EndTabItem();
         }
-        if (!server_mode && ImGui::BeginTabItem("Network")) {
+        if (ImGui::BeginTabItem("Network")) {
             ImGui::Spacing();
-            ImGui::SetNextItemWidth(140);
-            ImGui::InputInt("Server port (0 = automatic)", &local_port_, 0, 0);
-            if (local_port_ < 0) local_port_ = 0;
-            ImGui::TextDisabled("A free port is chosen automatically when this is 0.");
-            ImGui::Spacing();
-            ImGui::Checkbox("Report to meta server", &local_meta_);
-            if (ImGui::IsItemHovered()) ImGui::SetTooltip("Lists this game in the public server list (off by default).");
+            if (server_mode) {
+                ImGui::SetNextItemWidth(300);
+                ImGui::InputTextWithHint("Public host name", "(automatic)", server_host_, sizeof(server_host_));
+                if (ImGui::IsItemHovered())
+                    ImGui::SetTooltip("Name reported to the meta server (serverHost).\n"
+                                      "Set this to your external host name when you are behind a router.");
+                ImGui::SetNextItemWidth(110);
+                ImGui::InputInt("Client ports from", &server_cport_start_, 0, 0);
+                ImGui::SameLine();
+                ImGui::SetNextItemWidth(110);
+                ImGui::InputInt("to", &server_cport_end_, 0, 0);
+                if (ImGui::IsItemHovered())
+                    ImGui::SetTooltip("UDP port range for the connections of players (clientPortStart/End).\n"
+                                      "0 = random ports, which cannot be forwarded by a router.");
+                server_cport_start_ = std::clamp(server_cport_start_, 0, 65535);
+                server_cport_end_ = std::clamp(server_cport_end_, 0, 65535);
+                const int port = server_port_ > 0 ? server_port_ : kDefaultServerPort;
+                if (server_cport_start_ > 0 && server_cport_end_ >= server_cport_start_)
+                    ImGui::TextDisabled("Forward UDP %d and UDP %d-%d to this machine.", port, server_cport_start_,
+                                        server_cport_end_);
+                else if (server_cport_start_ > 0 || server_cport_end_ > 0)
+                    ImGui::TextColored(kWarn, "Set both ends of the port range (start <= end).");
+                else
+                    ImGui::TextDisabled("Behind a router, set a port range and forward it (see doc/HOWTO-INTERNET-SERVER.md).");
+            } else {
+                ImGui::SetNextItemWidth(140);
+                ImGui::InputInt("Server port (0 = automatic)", &local_port_, 0, 0);
+                if (local_port_ < 0) local_port_ = 0;
+                ImGui::TextDisabled("A free port is chosen automatically when this is 0.");
+                ImGui::Spacing();
+                ImGui::Checkbox("Report to meta server", &local_meta_);
+                if (ImGui::IsItemHovered()) ImGui::SetTooltip("Lists this game in the public server list (off by default).");
+            }
             ImGui::EndTabItem();
         }
         ImGui::EndTabBar();
