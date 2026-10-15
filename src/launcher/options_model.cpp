@@ -38,6 +38,7 @@ const std::map<std::string, std::string>& Aliases() {
         {"teams", "teamplay"},
         {"map", "mapfilename"},
         {"lives", "worldlives"},
+        {"reportmeta", "reporttometaserver"},
     };
     return a;
 }
@@ -317,7 +318,7 @@ std::vector<std::string> OptionsManager::BuildServerArgs(LaunchMode mode, const 
             opts["noquit"] = {keep_running ? "-noQuit" : "+noQuit"};
     }
     if (base_.count("reporttometaserver")) {
-        std::string v = (mode == LaunchMode::Local) ? "true" : Get("reportToMetaServer");
+        std::string v = (mode == LaunchMode::Local) ? "false" : Get("reportToMetaServer");
         if (!is_default("reporttometaserver", v)) emit("reporttometaserver", v);
     }
 

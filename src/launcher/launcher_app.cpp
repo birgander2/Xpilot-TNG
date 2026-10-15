@@ -274,6 +274,7 @@ void LauncherApp::StartLocalGame(bool force) {
     running_map_title_ = map.title;
     running_map_file_ = map.filename;
     running_port_ = port;
+    server_started_ = std::chrono::steady_clock::now();
     process_mgr_.LaunchLocalGame(server_bin_path_, server_args, client_bin_path_, client_args);
 }
 
