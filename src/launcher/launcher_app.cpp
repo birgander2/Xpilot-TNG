@@ -2,15 +2,13 @@
 
 #include <imgui.h>
 
+#include "ui_helpers.h"
+
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
-#include <fstream>
-
-#include <pwd.h>
-#include <unistd.h>
 
 namespace fs = std::filesystem;
 
@@ -27,109 +25,6 @@ const ImVec4 kBad(1.00f, 0.40f, 0.40f, 1.00f);
 
 void CopyTo(char* dst, size_t cap, const std::string& s) {
     std::snprintf(dst, cap, "%s", s.c_str());
-}
-
-// Value of "xpilot.<wanted>: ..." in ~/.xpilotrc (empty if unavailable)
-std::string ReadXpilotrcValue(const char* wanted) {
-    const char* home = std::getenv("HOME");
-    if (!home || !*home) return "";
-    std::ifstream in(std::string(home) + "/.xpilotrc");
-    std::string line, result;
-    auto trim = [](std::string& t) {
-        size_t b = t.find_first_not_of(" \t\r\n");
-        size_t e = t.find_last_not_of(" \t\r\n");
-        t = b == std::string::npos ? "" : t.substr(b, e - b + 1);
-    };
-    while (std::getline(in, line)) {
-        if (line.size() < 7 || strncasecmp(line.c_str(), "xpilot", 6) != 0) continue;
-        if (line[6] != '.' && line[6] != '*') continue;
-        size_t colon = line.find(':');
-        if (colon == std::string::npos) continue;
-        std::string key = line.substr(7, colon - 7), val = line.substr(colon + 1);
-        trim(key);
-        if (strcasecmp(key.c_str(), wanted) != 0) continue;
-        val = val.substr(0, val.find(';'));
-        trim(val);
-        result = val; // last definition wins
-    }
-    return result;
-}
-
-// Name ("NM:" / "name:" field) of a ship shape definition, empty if there is none
-std::string ShipShapeName(const std::string& shape) {
-    size_t p = shape.find("(NM:");
-    if (p == std::string::npos) p = shape.find("(name:");
-    if (p == std::string::npos) return "";
-    size_t b = shape.find(':', p) + 1, e = shape.find(')', b);
-    if (e == std::string::npos) return "";
-    b = shape.find_first_not_of(' ', b);
-    return (b == std::string::npos || b >= e) ? "" : shape.substr(b, e - b);
-}
-
-// Ship names from a shipshapes file, in file order
-std::vector<std::string> ReadShipShapeNames(const char* path) {
-    std::vector<std::string> names;
-    std::ifstream in(path);
-    std::string line;
-    while (std::getline(in, line)) {
-        std::string name = ShipShapeName(line);
-        if (!name.empty()) names.push_back(name);
-    }
-    return names;
-}
-
-// Login name of the current account (empty if unavailable)
-std::string CurrentUserName() {
-    if (const passwd* pw = getpwuid(getuid())) return pw->pw_name;
-    const char* user = std::getenv("USER");
-    return user ? user : "";
-}
-
-void StatusDot(const ImVec4& col) {
-    ImDrawList* dl = ImGui::GetWindowDrawList();
-    ImVec2 p = ImGui::GetCursorScreenPos();
-    float h = ImGui::GetTextLineHeight();
-    dl->AddCircleFilled(ImVec2(p.x + 6, p.y + h * 0.5f), 5.0f, ImGui::ColorConvertFloat4ToU32(col));
-    ImGui::Dummy(ImVec2(16, h));
-    ImGui::SameLine();
-}
-
-// Quotes a command line argument for POSIX shells (the text is meant to be pasted into one).
-std::string ShellQuote(const std::string& a) {
-    if (!a.empty() && a.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-                                          "_@%+=:,./-") == std::string::npos)
-        return a;
-    std::string q = "'";
-    for (char c : a) {
-        if (c == '\'') q += "'\\''";
-        else q += c;
-    }
-    return q + "'";
-}
-
-// "<bin> <args...>" for display and copying; the binary is shown relative to the working directory.
-std::string CommandLine(const std::string& bin, const std::vector<std::string>& args) {
-    std::error_code ec;
-    std::string cmd = fs::relative(bin, fs::current_path(ec), ec).string();
-    if (ec || cmd.empty() || cmd.rfind("..", 0) == 0) cmd = bin;   // keep absolute outside the tree
-    if (cmd.find('/') == std::string::npos && fs::exists(cmd)) cmd = "./" + cmd;
-    for (const auto& a : args) cmd += ' ' + ShellQuote(a);
-    return cmd;
-}
-
-bool GreenButton(const char* label, const ImVec2& size) {
-    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.15f, 0.55f, 0.25f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.20f, 0.70f, 0.30f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.10f, 0.45f, 0.20f, 1.0f));
-    bool clicked = ImGui::Button(label, size);
-    ImGui::PopStyleColor(3);
-    return clicked;
-}
-
-bool AnyPopupOpen() { return ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId); }
-
-bool HotkeyPressed(ImGuiKey key) {
-    return !ImGui::GetIO().WantTextInput && !AnyPopupOpen() && ImGui::IsKeyPressed(key, false);
 }
 
 } // namespace
@@ -169,9 +64,6 @@ std::string LauncherApp::ResolveBinaryPath(const std::string& bin_name) const {
 }
 
 void LauncherApp::Init() {
-    xpilotrc_name_ = ReadXpilotrcValue("name");
-    CopyTo(name_override_, sizeof(name_override_),
-           xpilotrc_name_.empty() ? CurrentUserName() : xpilotrc_name_);
     root_dir_ = FindRoot();
     if (!root_dir_.empty()) {
         std::error_code ec;
@@ -182,11 +74,7 @@ void LauncherApp::Init() {
 
     baseline_ok_ = options_mgr_.LoadBaseline(server_bin_path_, "lib/defaults.txt");
 
-    // ship shape choices; preselect the one configured in ~/.xpilotrc (full definitions are matched by NM:)
-    ship_names_ = ReadShipShapeNames("lib/shipshapes.txt");
-    const std::string rc_shape = ShipShapeName(ReadXpilotrcValue("shipShape"));
-    auto it = std::find(ship_names_.begin(), ship_names_.end(), rc_shape);
-    if (it != ship_names_.end()) ship_choice_ = int(it - ship_names_.begin());
+    profile_.Load("lib/shipshapes.txt");
     if (!baseline_ok_)
         process_mgr_.AddLog("LAUNCHER", "Could not read server defaults (" + server_bin_path_ +
                                             " -dump). Option editing is limited.");
@@ -256,23 +144,9 @@ void LauncherApp::SelectMap(int idx) {
     else last_map_local_ = map.filename;
 }
 
-std::vector<std::string> LauncherApp::BuildClientArgs(int port, const std::string& host) const {
-    std::vector<std::string> client_args;
-    const std::string player_name = name_override_[0] ? std::string(name_override_) : xpilotrc_name_;
-    if (!player_name.empty()) { client_args.push_back("-name"); client_args.push_back(player_name); }
-    if (ship_choice_ >= 0 && ship_choice_ < int(ship_names_.size())) {
-        client_args.push_back("-shipShape");
-        client_args.push_back(ship_names_[ship_choice_]);
-    }
-    client_args.push_back("-port");
-    client_args.push_back(std::to_string(port));
-    client_args.push_back(host);
-    return client_args;
-}
-
 void LauncherApp::JoinRunningServer() {
     banner_.clear();
-    if (!process_mgr_.StartClient(client_bin_path_, BuildClientArgs(running_port_))) {
+    if (!process_mgr_.StartClient(client_bin_path_, profile_.BuildArgs(running_port_))) {
         banner_ = "The client could not be started (" + client_bin_path_ + ").";
         return;
     }
@@ -298,7 +172,7 @@ void LauncherApp::StartLocalGame(bool force) {
 
     auto server_args = options_mgr_.BuildServerArgs(LaunchMode::Local, map.full_path, port);
 
-    auto client_args = BuildClientArgs(port);
+    auto client_args = profile_.BuildArgs(port);
 
     banner_.clear();
     force_log_open_ = false;
@@ -359,7 +233,7 @@ void LauncherApp::StartServerMode() {
 
 void LauncherApp::JoinServer(const std::string& host, int port) {
     banner_.clear();
-    if (!process_mgr_.StartClient(client_bin_path_, BuildClientArgs(port, host))) {
+    if (!process_mgr_.StartClient(client_bin_path_, profile_.BuildArgs(port, host))) {
         banner_ = "The client could not be started (" + client_bin_path_ + ").";
         return;
     }
@@ -719,17 +593,18 @@ bool LauncherApp::OptFloat(const char* label, const char* key, float lo, float h
 
 void LauncherApp::RenderIdentityRow() {
     ImGui::SetNextItemWidth(190);
-    ImGui::InputTextWithHint("Name", "(account name)", name_override_, sizeof(name_override_));
+    ImGui::InputTextWithHint("Name", "(account name)", profile_.name, sizeof(profile_.name));
     ImGui::SameLine(0, 24);
     ImGui::SetNextItemWidth(190);
-    const char* ship_label = ship_choice_ >= 0 && ship_choice_ < int(ship_names_.size())
-                                 ? ship_names_[ship_choice_].c_str() : "(from .xpilotrc)";
+    auto& ships = profile_.ship_names;
+    int& choice = profile_.ship_choice;
+    const char* ship_label = choice >= 0 && choice < int(ships.size()) ? ships[choice].c_str() : "(from .xpilotrc)";
     if (ImGui::BeginCombo("Ship shape", ship_label)) {
-        if (ImGui::Selectable("(from .xpilotrc)", ship_choice_ < 0)) ship_choice_ = -1;
-        for (int i = 0; i < int(ship_names_.size()); ++i) {
+        if (ImGui::Selectable("(from .xpilotrc)", choice < 0)) choice = -1;
+        for (int i = 0; i < int(ships.size()); ++i) {
             ImGui::PushID(i);
-            if (ImGui::Selectable(ship_names_[i].c_str(), ship_choice_ == i)) ship_choice_ = i;
-            if (ship_choice_ == i && ImGui::IsWindowAppearing()) ImGui::SetItemDefaultFocus();
+            if (ImGui::Selectable(ships[i].c_str(), choice == i)) choice = i;
+            if (choice == i && ImGui::IsWindowAppearing()) ImGui::SetItemDefaultFocus();
             ImGui::PopID();
         }
         ImGui::EndCombo();
@@ -1169,7 +1044,7 @@ bool LauncherApp::NetworkTarget(std::string* host, int* port) const {
 }
 
 std::string LauncherApp::ClientCommandLine(const std::string& host, int port) const {
-    return CommandLine(client_bin_path_, BuildClientArgs(port, host));
+    return CommandLine(client_bin_path_, profile_.BuildArgs(port, host));
 }
 
 void LauncherApp::PlaySelectedNetwork() {
