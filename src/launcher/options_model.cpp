@@ -196,14 +196,6 @@ void OptionsManager::SelectMap(const MapInfo& map) {
     for (auto& [k, v] : map_values_) current_[k] = v;
 }
 
-void OptionsManager::ResetAll() {
-    for (const auto& k : touched_) {
-        auto m = map_values_.find(k);
-        current_[k] = (m != map_values_.end()) ? m->second : base_[k].value;
-    }
-    touched_.clear();
-}
-
 bool OptionsManager::Known(const std::string& key) const { return !Canonical(key).empty(); }
 
 std::string OptionsManager::Get(const std::string& key) const {
@@ -284,8 +276,6 @@ void OptionsManager::Reset(const std::string& key) {
         Reset("limitedLives");
     }
 }
-
-int OptionsManager::ModifiedCount() const { return static_cast<int>(touched_.size()); }
 
 // --- launch ----------------------------------------------------------------
 

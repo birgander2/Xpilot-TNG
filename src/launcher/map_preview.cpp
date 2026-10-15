@@ -297,7 +297,6 @@ bool MapScanner::LoadXP2Map(MapInfo& info, SDL_Renderer* renderer) {
     }
     XML_ParserFree(parser);
 
-    info.num_polygons = static_cast<int>(ctx.polygons.size());
     info.num_bases = static_cast<int>(ctx.bases.size());
     info.num_cannons = static_cast<int>(ctx.cannons.size());
 

@@ -30,7 +30,6 @@ public:
     bool IsServerRunning() const { return server_running_; }
     // True once the server printed "Server runs at ..." (it accepts clients).
     bool IsServerReady() const { return server_ready_; }
-    pid_t GetServerPid() const { return server_pid_; }
     const std::vector<PlayerInfo>& GetPlayers() const { return players_; }
     int HumanCount() const;
 
@@ -38,12 +37,10 @@ public:
     bool StartClient(const std::string& binary_path, const std::vector<std::string>& args);
     void StopClient();
     bool IsClientRunning() const { return client_running_; }
-    pid_t GetClientPid() const { return client_pid_; }
 
     // Starts the server, waits until it is ready, then starts the client.
     void LaunchLocalGame(const std::string& server_bin, const std::vector<std::string>& server_args,
                          const std::string& client_bin, const std::vector<std::string>& client_args);
-    bool IsLaunchPending() const { return pending_client_launch_; }
     void CancelLaunch();
 
     // Call once per frame.
