@@ -170,7 +170,9 @@ void LauncherApp::StartLocalGame(bool force) {
         return;
     }
 
-    auto server_args = options_mgr_.BuildServerArgs(LaunchMode::Local, map.full_path, port);
+    OptionsManager opts = options_mgr_;   // local-only settings stay out of the shared option set
+    opts.SetBool("reportToMetaServer", local_meta_);
+    auto server_args = opts.BuildServerArgs(LaunchMode::Local, map.full_path, port);
 
     auto client_args = profile_.BuildArgs(port);
 
@@ -765,6 +767,9 @@ void LauncherApp::RenderAdvanced(bool server_mode) {
             ImGui::InputInt("Server port (0 = automatic)", &local_port_, 0, 0);
             if (local_port_ < 0) local_port_ = 0;
             ImGui::TextDisabled("A free port is chosen automatically when this is 0.");
+            ImGui::Spacing();
+            ImGui::Checkbox("Report to meta server", &local_meta_);
+            if (ImGui::IsItemHovered()) ImGui::SetTooltip("Lists this game in the public server list (off by default).");
             ImGui::EndTabItem();
         }
         ImGui::EndTabBar();

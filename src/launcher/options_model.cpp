@@ -308,7 +308,7 @@ std::vector<std::string> OptionsManager::BuildServerArgs(LaunchMode mode, const 
             opts["noquit"] = {keep_running ? "-noQuit" : "+noQuit"};
     }
     if (base_.count("reporttometaserver")) {
-        std::string v = (mode == LaunchMode::Local) ? "false" : Get("reportToMetaServer");
+        std::string v = Get("reportToMetaServer");   // set by the caller, the launcher decides per mode
         if (!is_default("reporttometaserver", v)) emit("reporttometaserver", v);
     }
 
