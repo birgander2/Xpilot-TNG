@@ -32,6 +32,7 @@ extern struct options {
     int		maxSmartRobots;
     int		minSmartRobots;
     int		smartRobotLevel;
+    bool	smartRobotsLaser;
     char	*robotFile;
     int		robotsTalk;
     int		robotsLeave;

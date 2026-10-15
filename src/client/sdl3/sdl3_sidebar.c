@@ -1485,6 +1485,11 @@ void SDL3_Render_UI_Overlays(void)
     if (active_viewer.active) {
         Render_Viewer_Window();
     }
+
+    /* 4. Talk / Message Window if open */
+    if (clData.talking) {
+        SDL3_Render_Talk_Window();
+    }
 }
 
 /* =========================================================================
@@ -1667,7 +1672,7 @@ bool SDL3_UI_Handle_Mouse_Down(int x, int y, int button)
     }
 
     /* 4. Check Sidebar (x < SIDEBAR_WIDTH) */
-    if (x < SIDEBAR_WIDTH) {
+    if (show_sidebar && x < SIDEBAR_WIDTH) {
         /* Top 3 buttons: QUIT, ABOUT, MENU */
         if (y >= BTN_ROW_Y && y < BTN_ROW_Y + BTN_ROW_H) {
             if (x < 84) {
@@ -1978,7 +1983,7 @@ bool SDL3_UI_Handle_Mouse_Wheel(int x, int y, float wheel_y)
             return true;
         }
     }
-    if (config_mapped && x < SIDEBAR_WIDTH && y >= SCORE_Y_OFFSET && config_max_pages > 1) {
+    if (show_sidebar && config_mapped && x < SIDEBAR_WIDTH && y >= SCORE_Y_OFFSET && config_max_pages > 1) {
         if (wheel_y < 0) {
             config_page = (config_page + 1) % config_max_pages;
         } else if (wheel_y > 0) {

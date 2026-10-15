@@ -729,6 +729,11 @@ static void Player_collides_with_item(player_t *pl, itemobject_t *item)
     int old_have;
     enum Item item_index = (enum Item) item->item_type;
 
+    if (item_index == ITEM_LASER && !options.smartRobotsLaser && Player_is_smartbot(pl)) {
+	Delta_mv(OBJ_PTR(pl), OBJ_PTR(item));
+	return;
+    }
+
     if (IsOffensiveItem(item_index)) {
 	int off_items = CountOffensiveItems(pl);
 

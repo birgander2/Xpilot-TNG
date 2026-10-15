@@ -996,6 +996,8 @@ static void Smart_scan_environment(player_t *pl,
 
 	    if (itype == ITEM_AUTOPILOT || itype == ITEM_PHASING)
 		continue;
+	    if (!options.smartRobotsLaser && itype == ITEM_LASER)
+		continue;
 	    if (pl->item[itype] >= world->items[itype].limit)
 		continue;
 	    if ((IsDefensiveItem(itype) && CountDefensiveItems(pl) >= options.maxDefensiveItems)
@@ -1276,7 +1278,8 @@ static void Smart_engage_enemy(player_t *pl, player_t *enemy, double enemy_dist,
 	return;
 
     /* Precision Laser Pulse */
-    if (pl->item[ITEM_LASER] > pl->num_pulses
+    if (options.smartRobotsLaser
+	&& pl->item[ITEM_LASER] > pl->num_pulses
 	&& pl->fuel.sum + ED_LASER > my_data->fuel_l3
 	&& enemy_dist < options.pulseSpeed * options.pulseLife) {
 	if (Smart_compute_lead_dir(pl, enemy->pos, enemy->vel, options.pulseSpeed,

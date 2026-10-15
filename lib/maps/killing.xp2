@@ -1,4 +1,6 @@
-<XPilotMap version="1.2">
+<XPilotMap version="1.2"
+           description="Classical Death Match"
+           launcherpos="30">
 <GeneralOptions>
 <Option name="mapwidth" value="4375"/>
 <Option name="mapheight" value="4375"/>
@@ -11,7 +13,8 @@
 <Option name="edgebounce" value="yes"/>
 <Option name="teamplay" value="no"/>
 <Option name="maxrobots" value="3"/>
-<Option name="maxsmartrobots" value="3"/>
+<Option name="maxsmartrobots" value="1"/>
+<Option name="smartRobotsLaser" value="no"/>
 <Option name="shipmass" value="7"/>
 <Option name="friction" value="0"/>
 <Option name="initialafterburners" value="1"/>
@@ -83,8 +86,8 @@
 <Option name="extraborder" value="no"/>
 <Option name="allownukes" value="yes"/>
 <Option name="allowclusters" value="yes"/>
-<Option name="allowheatseekers" value="no"/>
-<Option name="allowsmartmissiles" value="no"/>
+<Option name="allowheatseekers" value="yes"/>
+<Option name="allowsmartmissiles" value="yes"/>
 <Option name="allowmodifiers" value="yes"/>
 <Option name="allowlasermodifiers" value="yes"/>
 <Option name="allowshipshapes" value="yes"/>

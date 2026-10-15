@@ -445,6 +445,9 @@ typedef struct {
 extern client_data_t	clData;
 
 extern bool		newbie;
+extern bool		fullScreen;
+extern bool		show_sidebar;
+extern int		playfield_x;
 extern char		*geometry;
 extern xp_args_t	xpArgs;
 extern Connect_param_t	connectParam;

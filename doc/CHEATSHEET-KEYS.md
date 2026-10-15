@@ -96,11 +96,20 @@ Pointer (mouse) defaults: **Button 1 = Fire shot**, **Button 2 / 3 = Thrust**, B
 | `KP 8` | keyToggleOwnedItems | Owned-items list on HUD |
 | `KP 9` | keyToggleMessages | Show/hide messages |
 | `U` | keyIdMode | Show real names (user mode) |
-| `F11` | keyToggleFullScreen / keyToggleRadarScore | Toggle fullscreen (also bound to radar/score toggle) |
 | `Print` | keyPrintMessagesStdout | Dump messages to stdout |
 | `KP 5` | keyToggleRecord | Toggle session recording |
 | `KP Enter` | keyPointerControl | Toggle pointer (mouse) control |
 | – (unbound) | keyToggleSound | Toggle sound |
+
+## Display & View
+
+| Key | Option | Action |
+|---|---|---|
+| `F11` | keyToggleFullScreen | Toggle between windowed mode and fullscreen |
+| `F12` | keyToggleRadarScore | Toggle sidebar (radar & scoreboard) on/off to expand playfield |
+
+> **Display Tip:** Combining `F11` (Fullscreen) and `F12` (Hide Sidebar) provides a completely borderless, edge-to-edge playfield across your entire monitor.
+> These can also be passed as client startup flags (`-fullScreen`, `-showSidebar false`) or configured in `~/.xpilotrc` (`fullScreen: true`, `showSidebar: false`).
 
 ## Chat & dialogs
 
@@ -113,4 +122,4 @@ Pointer (mouse) defaults: **Button 1 = Fire shot**, **Button 2 / 3 = Thrust**, B
 | `Esc` | keyExit | Exit mouse mode / quit client |
 | `Y` / `N` | keyYes / keyNo | Answer client questions |
 
-> **Note:** several defaults overlap (`F` for refuel/repair/connect, arrows for lock vs. talk cursor, `F11` for two actions); the context decides which fires.
+> **Note:** several defaults overlap (`F` for refuel/repair/connect, arrows for lock vs. talk cursor); the context decides which fires.

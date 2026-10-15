@@ -32,6 +32,7 @@ xp_args_t xpArgs;
 Connect_param_t connectParam;
 
 bool	newbie;
+bool	fullScreen = false;
 int	baseWarningType;	/* Which type of base warning you prefer */
 int	maxCharsInNames;
 int	hudRadarDotSize;	/* Size for hudradar dot drawing */

@@ -346,6 +346,27 @@ static option_desc opts[] = {
 	OPT_ORIGIN_ANY | OPT_VISIBLE
     },
     {
+	"smartRobotsLaser",
+	"smartLaser",
+	"true",
+	&options.smartRobotsLaser,
+	valBool,
+	tuner_dummy,
+	"Are smart robots allowed to collect and fire laser pulses?\n"
+	"When false, smart robots will neither pick up nor use lasers.\n",
+	OPT_ORIGIN_ANY | OPT_VISIBLE
+    },
+    {
+	"smartRobotsUseLaser",
+	"allowSmartLaser",
+	"true",
+	&options.smartRobotsLaser,
+	valBool,
+	tuner_dummy,
+	"Alias for smartRobotsLaser.\n",
+	OPT_ORIGIN_ANY | OPT_VISIBLE
+    },
+    {
 	"robotFile",
 	"robotFile",
 	NULL,

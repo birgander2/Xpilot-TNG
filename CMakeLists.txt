@@ -1,14 +1,17 @@
 cmake_minimum_required(VERSION 3.25)
-project(xpilot-tng VERSION 5.0.1 LANGUAGES C)
+project(xpilot-tng VERSION 5.0.1 LANGUAGES C CXX)
 
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 # Options
 option(BUILD_SERVER "Build the xpilot-tng-server" ON)
 option(BUILD_CLIENT_SDL3 "Build modern SDL3 client (xpilot-tng-client)" ON)
+option(BUILD_LAUNCHER "Build modern Dear ImGui / SDL3 frontend launcher (xpilot-tng-launcher)" ON)
 option(FETCH_SDL3 "Download and build SDL3 / SDL3_ttf if not installed on system" OFF)
 
 # Compiler Definitions & Flags
@@ -273,6 +276,18 @@ if(BUILD_CLIENT_SDL3)
                         "    Arch Linux:      sudo pacman -S sdl3 sdl3_ttf\n"
                         "  Alternatively, re-run CMake with automatic download:\n"
                         "    cmake -B build -DFETCH_SDL3=ON")
+    endif()
+endif()
+
+# -------------------------------------------------------------
+# Modern Dear ImGui / SDL3 Launcher Target
+# -------------------------------------------------------------
+if(BUILD_LAUNCHER)
+    if(TARGET SDL3::SDL3)
+        message(STATUS "SDL3 found! Enabling modern launcher (xpilot-tng-launcher).")
+        add_subdirectory(src/launcher)
+    else()
+        message(WARNING "SDL3 not found on system. Launcher (xpilot-tng-launcher) skipped.")
     endif()
 endif()
 

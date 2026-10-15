@@ -1269,7 +1269,7 @@ xp_option_t key_options[] = {
 
     XP_KEY_OPTION(
 	"keyToggleRadarScore",
-	"F11",
+	"F12",
 	KEY_TOGGLE_RADAR_SCORE,
 	"Toggles the radar and score windows on and off.\n"),
 
@@ -1416,7 +1416,7 @@ xp_option_t key_options[] = {
 
     XP_KEY_OPTION(
 	"keySendMsg12",
-	"",
+	"", /* F12 is keyToggleRadarScore now */
 	KEY_MSG_12,
 	"Sends the talkmessage stored in msg12.\n"),
 

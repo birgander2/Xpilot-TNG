@@ -91,6 +91,10 @@ Open a new terminal and fire up the client:
 ./xpilot-tng-client localhost -name Maverick
 ```
 
+*Helpful client options:*
+- `-fullScreen`: Start directly in fullscreen mode.
+- `-showSidebar false`: Hide the sidebar (radar & scores) to start with a full-window playfield.
+
 ... and **BOOM!** You are strapped into the cockpit of your starfighter, surrounded by asteroids, fueling bases, and trigger-happy bots!
 
 ---
@@ -111,6 +115,8 @@ XPilot models **Newtonian space physics and inertia**. When you hit the thruster
 | **d** | **ECM (Electronic Jammer)** | Scrambles enemy radar, HUDs, and missile tracking. |
 | **p** | **Phasing Device** | Pass right through solid rock walls — just don't run out of energy while inside a mountain! |
 | **f** | **Refuel** | Hover near a green fuel depot. An empty tank means you're just target practice. |
+| **F11** | **Fullscreen Toggle** | Switch between windowed mode and fullscreen. |
+| **F12** | **Sidebar Toggle** | Toggle the left sidebar (radar & scoreboard) on/off to expand the playfield across the entire screen. |
 | **Escape** | **Pause / Menu** | When your boss or professor suddenly walks into the room. |
 
 📚 **Complete Controls & Weapons Reference:**

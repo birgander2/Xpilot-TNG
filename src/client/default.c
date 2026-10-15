@@ -1362,6 +1362,21 @@ xp_option_t default_options[] = {
 	"Is sound enabled? (set to false to mute client).\n"),
 #endif
 
+    XP_BOOL_OPTION(
+	"fullScreen",
+	false,
+	&fullScreen,
+	NULL,
+	XP_OPTFLAG_CONFIG_DEFAULT,
+	"Start the game in fullscreen mode.\n"),
+
+    XP_BOOL_OPTION(
+	"showSidebar",
+	true,
+	&show_sidebar,
+	NULL,
+	XP_OPTFLAG_CONFIG_DEFAULT,
+	"Show the sidebar containing the radar and scoreboard.\n"),
 };
 
 void Store_default_options(void)

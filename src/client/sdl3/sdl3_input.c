@@ -173,7 +173,18 @@ void SDL3_Process_Events(void)
             }
             break;
 
+        case SDL_EVENT_TEXT_INPUT:
+            if (clData.talking) {
+                SDL3_Talk_Handle_Text_Input(evt.text.text);
+            }
+            break;
+
         case SDL_EVENT_KEY_DOWN:
+            if (clData.talking) {
+                if (SDL3_Talk_Handle_Key_Down(evt.key.key, evt.key.mod)) {
+                    break;
+                }
+            }
             if (!evt.key.repeat) {
                 Keyboard_button_pressed((xp_keysym_t)evt.key.key);
             }
@@ -186,6 +197,12 @@ void SDL3_Process_Events(void)
         case SDL_EVENT_MOUSE_BUTTON_DOWN: {
             int x = (int)evt.button.x;
             int y = (int)evt.button.y;
+
+            if (clData.talking) {
+                if (SDL3_Talk_Handle_Mouse_Down(x, y, evt.button.button)) {
+                    break;
+                }
+            }
 
             if (!clData.pointerControl) {
                 /* Mouse steering is currently OFF: check UI / Sidebar / Popups first */

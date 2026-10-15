@@ -83,17 +83,25 @@ void Platform_specific_pointer_control_set_state(bool on)
 void Platform_specific_talk_set_state(bool on)
 {
     clData.talking = on;
+    SDL3_Talk_Set_State(on);
 }
 
 void Toggle_fullscreen(void)
 {
     if (tng_window) {
         Uint32 flags = SDL_GetWindowFlags(tng_window);
-        SDL_SetWindowFullscreen(tng_window, (flags & SDL_WINDOW_FULLSCREEN) ? 0 : 1);
+        SDL_SetWindowFullscreen(tng_window, !(flags & SDL_WINDOW_FULLSCREEN));
     }
 }
 
-void Toggle_radar_and_scorelist(void) {}
+void Toggle_radar_and_scorelist(void)
+{
+    show_sidebar = !show_sidebar;
+    playfield_x = show_sidebar ? PLAYFIELD_BASE_X : 0;
+    draw_width = top_width - playfield_x;
+    Check_view_dimensions();
+    Config_resize();
+}
 
 void Record_toggle(void) {}
 

@@ -623,6 +623,8 @@ void Do_general_transporter(int id, clpos_t pos,
     /* choose item type to steal */
     for (i = 0; i < 50; i++) {
 	item = (int)(rfrac() * NUM_ITEMS);
+	if (!options.smartRobotsLaser && item == ITEM_LASER && pl && Player_is_smartbot(pl))
+	    continue;
 	if (victim->item[item]
 	    || (item == ITEM_TANK && victim->fuel.num_tanks)
 	    || (item == ITEM_FUEL && victim->fuel.sum))

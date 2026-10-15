@@ -1092,6 +1092,14 @@ static int Handle_login(connection_t *connp, char *errmsg, size_t errsize)
 	xpprintf("%s spectator %s (%d) starts.\n", showtime(), pl->name,
 		 NumSpectators);
 
+    xpprintf("[join] %s|%s|%s|%d|%d\n",
+	     pl->name,
+	     pl->hostname[0] ? pl->hostname : "localhost",
+	     pl->rectype < 2 ? "player" : "spectator",
+	     pl->team,
+	     pl->id);
+    fflush(stdout);
+
     /*
      * Tell him about himself first.
      */

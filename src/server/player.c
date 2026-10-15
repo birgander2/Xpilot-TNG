@@ -445,6 +445,9 @@ void Player_init_items(player_t *pl)
 	    pl->item[i] = world->items[i].initial;
     }
 
+    if (!options.smartRobotsLaser && Player_is_smartbot(pl))
+	pl->item[ITEM_LASER] = 0;
+
     Player_init_fuel(pl, (double)world->items[ITEM_FUEL].initial);
 
     /*
@@ -1339,6 +1342,9 @@ void Delete_player(player_t *pl)
     object_t *obj;
     team_t *teamp = Team_by_index(pl->team);
 
+    xpprintf("[leave] %s|%d\n", pl->name, id);
+    fflush(stdout);
+
     /* call before important player structures are destroyed */
     Leave_alliance(pl);
 
@@ -1514,6 +1520,9 @@ void Add_spectator(player_t *pl)
 void Delete_spectator(player_t *pl)
 {
     int i, ind = GetInd(pl->id);
+
+    xpprintf("[leave] %s|%d\n", pl->name, pl->id);
+    fflush(stdout);
 
     NumSpectators--;
     /* Swap leaver last */

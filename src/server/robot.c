@@ -896,6 +896,13 @@ static void Robot_create(bool want_smart)
 		 showtime(), robot->name, NumPlayers, robot->username,
 		 robot->home_base->ind);
 
+    xpprintf("[join] %s|%s|bot|%d|%d\n",
+	     robot->name,
+	     robot->hostname[0] ? robot->hostname : "bot",
+	     robot->team,
+	     robot->id);
+    fflush(stdout);
+
     if (NumPlayers == 1) {
 	if (options.maxRoundTime > 0)
 	    roundtime = options.maxRoundTime * FPS;

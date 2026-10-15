@@ -9,6 +9,8 @@ SDL_Window   *tng_window = NULL;
 SDL_Renderer *tng_renderer = NULL;
 unsigned      top_width = DEF_TOP_WIDTH;
 unsigned      top_height = DEF_TOP_HEIGHT;
+bool          show_sidebar = true;
+int           playfield_x = PLAYFIELD_BASE_X;
 bool          tng_running = true;
 
 int SDL3_Init_Window(int w, int h)
@@ -18,21 +20,37 @@ int SDL3_Init_Window(int w, int h)
         return -1;
     }
 
-    if (w >= PLAYFIELD_X + 200) top_width = w;
+    playfield_x = show_sidebar ? PLAYFIELD_BASE_X : 0;
+    if (w >= playfield_x + 200) top_width = w;
     if (h >= 400) top_height = h;
-    draw_width = top_width - PLAYFIELD_X;
+    draw_width = top_width - playfield_x;
     draw_height = top_height;
+
+    Uint32 window_flags = SDL_WINDOW_RESIZABLE;
+    if (fullScreen) {
+        window_flags |= SDL_WINDOW_FULLSCREEN;
+    }
 
     tng_window = SDL_CreateWindow(
         "XPilot TNG Client",
         top_width,
         top_height,
-        SDL_WINDOW_RESIZABLE
+        window_flags
     );
 
     if (!tng_window) {
         fprintf(stderr, "Failed to create SDL3 window: %s\n", SDL_GetError());
         return -1;
+    }
+
+    if (fullScreen) {
+        int actual_w = 0, actual_h = 0;
+        if (SDL_GetWindowSize(tng_window, &actual_w, &actual_h) && actual_w > 0 && actual_h > 0) {
+            top_width = actual_w;
+            top_height = actual_h;
+            draw_width = top_width - playfield_x;
+            draw_height = top_height;
+        }
     }
 
     tng_renderer = SDL_CreateRenderer(tng_window, NULL);
@@ -143,8 +161,10 @@ void Paint_frame(void)
     }
 
     /* 8. Render Left Sidebar (256x256 Radar, Buttons, Scoreboard or Config) */
-    SDL_SetRenderClipRect(tng_renderer, NULL);
-    SDL3_Render_Sidebar();
+    if (show_sidebar) {
+        SDL_SetRenderClipRect(tng_renderer, NULL);
+        SDL3_Render_Sidebar();
+    }
 
     /* 9. Render UI Overlays (MENU pulldown, ABOUT window, KEYS/MOTD viewer) */
     SDL3_Render_UI_Overlays();

@@ -139,6 +139,11 @@ typedef struct robot_data {
     void	*private_data;		/* robot type private data */
 } robot_data_t;
 
+static inline bool Player_is_smartbot(player_t *pl)
+{
+    return (Player_is_robot(pl) && pl->robot_data_ptr != NULL && pl->robot_data_ptr->is_smart);
+}
+
 /*
  * The private robot instance data for the default robot.
  */

@@ -27,7 +27,8 @@
 #define SIDEBAR_WIDTH       256
 #define RADAR_HEIGHT        256
 #define BORDER_WIDTH        2
-#define PLAYFIELD_X         (SIDEBAR_WIDTH + BORDER_WIDTH) /* 258 */
+#define PLAYFIELD_BASE_X    (SIDEBAR_WIDTH + BORDER_WIDTH) /* 258 */
+#define PLAYFIELD_X         playfield_x
 #define DEF_TOP_WIDTH       (1280 + 2)
 #define DEF_TOP_HEIGHT      1024
 #define BUTTON_HEIGHT       24
@@ -57,6 +58,8 @@ extern SDL_Window   *tng_window;
 extern SDL_Renderer *tng_renderer;
 extern unsigned      top_width, top_height;
 extern unsigned      draw_width, draw_height;
+extern bool          show_sidebar;
+extern int           playfield_x;
 extern Connect_param_t connectParam;
 extern xp_args_t     xpArgs;
 extern bool          tng_running;
@@ -167,6 +170,13 @@ const char *Xp_keysym_to_string(xp_keysym_t ks);
 
 /* Input */
 void SDL3_Process_Events(void);
+
+/* Talk / Message Window */
+void SDL3_Talk_Set_State(bool on);
+bool SDL3_Talk_Handle_Key_Down(SDL_Keycode key, SDL_Keymod mod);
+bool SDL3_Talk_Handle_Text_Input(const char *text);
+bool SDL3_Talk_Handle_Mouse_Down(int x, int y, int button);
+void SDL3_Render_Talk_Window(void);
 
 /* Audio */
 int  SDL3_Init_Audio(void);

@@ -48,6 +48,7 @@ Smartbots can be enabled via command-line arguments or server defaults files (`d
 | `maxSmartRobots` | `-smartRobots` | `0` | Maximum number of smart learning robots active in the game. |
 | `minSmartRobots` | `-minSmartRobots` | `-1` | Minimum number of smart robots kept in the server (`-1` = follow `maxSmartRobots`). |
 | `smartRobotLevel` | `-smartLevel` | `75` | Global skill and intelligence level (**1 to 100**). Controls aiming precision, pathfinding depth, and reaction times. |
+| `smartRobotsLaser` | `-smartRobotsLaser` / `-smartLaser` | `true` | When `false`, Smartbots will neither pick up nor use laser pulses. |
 
 ### Example Startup Commands
 
