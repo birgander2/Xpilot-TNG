@@ -52,8 +52,17 @@ namespace {
 
 // Forks and execs; returns pid (or -1) and the read end of a combined stdout/stderr pipe.
 pid_t Spawn(const std::string& bin, const std::vector<std::string>& args, int* read_fd) {
+    // O_CLOEXEC: the child must not inherit the launcher's other pipes. dup2() below clears it
+    // on stdout/stderr only.
     int pipefd[2];
-    if (pipe(pipefd) < 0) return -1;
+    if (pipe2(pipefd, O_CLOEXEC) < 0) return -1;
+
+    // Everything that allocates happens before fork(): the launcher has search threads, so the
+    // child may only call async-signal-safe functions.
+    std::vector<char*> argv;
+    argv.push_back(const_cast<char*>(bin.c_str()));
+    for (const auto& a : args) argv.push_back(const_cast<char*>(a.c_str()));
+    argv.push_back(nullptr);
 
     pid_t pid = fork();
     if (pid < 0) {
@@ -63,19 +72,16 @@ pid_t Spawn(const std::string& bin, const std::vector<std::string>& args, int* r
     }
     if (pid == 0) {
         setpgid(0, 0); // own process group so Stop can signal the whole tree
-        close(pipefd[0]);
+        signal(SIGPIPE, SIG_DFL); // the launcher ignores it, the children should not inherit that
         dup2(pipefd[1], STDOUT_FILENO);
         dup2(pipefd[1], STDERR_FILENO);
-        close(pipefd[1]);
-
-        std::vector<char*> argv;
-        argv.push_back(const_cast<char*>(bin.c_str()));
-        for (const auto& a : args) argv.push_back(const_cast<char*>(a.c_str()));
-        argv.push_back(nullptr);
         execvp(bin.c_str(), argv.data());
-        std::cerr << "execvp failed: " << strerror(errno) << std::endl;
+        static const char msg[] = "execvp failed\n";
+        ssize_t ignored = write(STDERR_FILENO, msg, sizeof msg - 1);
+        (void)ignored;
         _exit(127);
     }
+    setpgid(pid, pid); // also from the parent side, so Terminate() cannot race the child
     close(pipefd[1]);
     fcntl(pipefd[0], F_SETFL, O_NONBLOCK);
     *read_fd = pipefd[0];

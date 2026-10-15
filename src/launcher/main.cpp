@@ -170,6 +170,7 @@ int main(int argc, char* argv[]) {
     ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
     ImGui_ImplSDLRenderer3_Init(renderer);
 
+    {   // scope: ~LauncherApp frees the map textures, which needs the renderer to still exist
     LauncherApp app(window, renderer, app_dir);
     app.SetFonts(fonts);
     app.Init();
@@ -228,6 +229,7 @@ int main(int argc, char* argv[]) {
         SDL_RenderClear(renderer);
         ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
         SDL_RenderPresent(renderer);
+    }
     }
 
     ImGui_ImplSDLRenderer3_Shutdown();
