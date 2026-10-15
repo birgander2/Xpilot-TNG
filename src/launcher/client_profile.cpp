@@ -79,6 +79,7 @@ void ClientProfile::Load(const char* shipshapes_path) {
     // ~/.xpilotrc holds either a full definition "(NM:...)(SH:...)" or just a ship name
     std::string rc_shape = ReadXpilotrcValue("shipShape");
     if (std::string nm = ShipShapeName(rc_shape); !nm.empty()) rc_shape = nm;
+    rc_has_ship = !rc_shape.empty();
     auto it = std::find(ship_names.begin(), ship_names.end(), rc_shape);
     if (it != ship_names.end()) ship_choice = int(it - ship_names.begin());
 }

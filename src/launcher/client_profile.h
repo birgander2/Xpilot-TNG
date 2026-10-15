@@ -16,7 +16,8 @@ public:
     // Bound to the GUI.
     char name[64] = "";                 // empty = use the ~/.xpilotrc nickname
     std::vector<std::string> ship_names;  // names from lib/shipshapes.txt
-    int ship_choice = -1;               // index into ship_names, -1 = leave to ~/.xpilotrc
+    int ship_choice = -1;               // index into ship_names, -1 = no -shipShape argument
+    bool rc_has_ship = false;           // ~/.xpilotrc defines a ship (else the client uses its built-in one)
 
 private:
     std::string rc_name_;               // nickname read from ~/.xpilotrc

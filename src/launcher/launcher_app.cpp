@@ -598,9 +598,11 @@ void LauncherApp::RenderIdentityRow() {
     ImGui::SetNextItemWidth(190);
     auto& ships = profile_.ship_names;
     int& choice = profile_.ship_choice;
-    const char* ship_label = choice >= 0 && choice < int(ships.size()) ? ships[choice].c_str() : "(from .xpilotrc)";
+    // -1 passes no ship: the client then uses ~/.xpilotrc or, without it, its built-in default ship
+    const char* none_label = profile_.rc_has_ship ? "(from .xpilotrc)" : "(client default)";
+    const char* ship_label = choice >= 0 && choice < int(ships.size()) ? ships[choice].c_str() : none_label;
     if (ImGui::BeginCombo("Ship shape", ship_label)) {
-        if (ImGui::Selectable("(from .xpilotrc)", choice < 0)) choice = -1;
+        if (ImGui::Selectable(none_label, choice < 0)) choice = -1;
         for (int i = 0; i < int(ships.size()); ++i) {
             ImGui::PushID(i);
             if (ImGui::Selectable(ships[i].c_str(), choice == i)) choice = i;
