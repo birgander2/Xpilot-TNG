@@ -22,6 +22,8 @@ set(IMGUI_SOURCES
 add_executable(xpilot-tng-launcher
     main.cpp
     launcher_app.cpp
+    client_profile.cpp
+    ui_helpers.cpp
     map_preview.cpp
     options_model.cpp
     process_manager.cpp

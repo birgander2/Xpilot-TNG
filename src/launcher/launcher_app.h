@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <SDL3/SDL.h>
+#include "client_profile.h"
 #include "map_preview.h"
 #include "options_model.h"
 #include "process_manager.h"
@@ -70,7 +71,6 @@ private:
     void SelectMap(int idx);
     void StartLocalGame(bool force = false);
     void JoinRunningServer();
-    std::vector<std::string> BuildClientArgs(int port, const std::string& host = "localhost") const;
     void RenderRunningServerPopup();
     void StartServerMode();
     void ApplyServerModeSettings(OptionsManager& opts) const;
@@ -113,10 +113,7 @@ private:
     std::string last_map_local_, last_map_server_;
 
     // client session overrides (empty/auto = use ~/.xpilotrc)
-    char name_override_[64] = "";
-    std::string xpilotrc_name_;       // nickname read from ~/.xpilotrc
-    std::vector<std::string> ship_names_;  // names from lib/shipshapes.txt
-    int ship_choice_ = -1;            // index into ship_names_, -1 = leave to ~/.xpilotrc
+    ClientProfile profile_;
     ServerSearch lan_search_{ServerSearch::Kind::Lan};
     ServerSearch internet_search_{ServerSearch::Kind::Internet};
     char manual_addr_[128] = "";
