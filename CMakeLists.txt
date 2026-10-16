@@ -223,6 +223,7 @@ set(CLIENT_SOURCES
     src/client/gfx2d.c
     src/client/mapdata.c
     src/client/messages.c
+    src/client/newbie.c
     src/client/meta.c
     src/client/netclient.c
     src/client/paint.c

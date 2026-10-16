@@ -628,6 +628,9 @@ void LauncherApp::RenderIdentityRow() {
         }
         ImGui::EndCombo();
     }
+    ImGui::SameLine(0, 24);
+    ImGui::Checkbox("Newbie mode", &profile_.newbie);
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Show help messages for new players");
 }
 
 void LauncherApp::RenderQuickSettings(bool server_mode) {

@@ -137,6 +137,7 @@ void  SDL3_Render_Textured_Polygon(const SDL_FPoint *points, int count, SDL_Text
 void  SDL3_Draw_Item_Icon(int item_type, float x, float y, int color_idx);
 void  Gui_paint_item_symbol(int type, int x, int y, int color_idx);
 void  Add_HUD_message(const char *message);
+void  Add_HUD_message_timed(const char *message, double seconds);
 void  Del_HUD_message(void);
 void  Paint_recording(void);
 

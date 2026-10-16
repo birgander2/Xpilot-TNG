@@ -387,13 +387,21 @@ void Del_HUD_message(void)
     have_hudmsg = false;
 }
 
-void Add_HUD_message(const char *message)
+static Uint64 hudmsg_expires = 0;       /* SDL ticks, 0 = stays until deleted */
+
+void Add_HUD_message_timed(const char *message, double seconds)
 {
     if (!message)
         return;
 
     strlcpy(hudmsg, message, sizeof(hudmsg));
     have_hudmsg = true;
+    hudmsg_expires = seconds > 0.0 ? SDL_GetTicks() + (Uint64)(seconds * 1000.0) : 0;
+}
+
+void Add_HUD_message(const char *message)
+{
+    Add_HUD_message_timed(message, 0.0);
 }
 
 void Paint_recording(void)
@@ -511,6 +519,8 @@ void Paint_HUD(void)
     Paint_lock(hud_pos_x, hud_pos_y);
 
     /* Draw "alert" messages */
+    if (have_hudmsg && hudmsg_expires && SDL_GetTicks() >= hudmsg_expires)
+        have_hudmsg = false;
     if (have_hudmsg) {
         float width = SDL3_Text_Width(hudmsg);
         SDL3_Draw_Text(hudmsg,

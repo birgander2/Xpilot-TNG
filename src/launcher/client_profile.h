@@ -18,6 +18,7 @@ public:
     std::vector<std::string> ship_names;  // names from lib/shipshapes.txt
     int ship_choice = -1;               // index into ship_names, -1 = no -shipShape argument
     bool rc_has_ship = false;           // ~/.xpilotrc defines a ship (else the client uses its built-in one)
+    bool newbie = true;                 // newbie help; preset from ~/.xpilotrc, else the client default (true)
 
 private:
     std::string rc_name_;               // nickname read from ~/.xpilotrc
