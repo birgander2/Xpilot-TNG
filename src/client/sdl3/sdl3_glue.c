@@ -107,9 +107,8 @@ void Record_toggle(void) {}
 
 void Add_alert_message(const char *msg, double timeout)
 {
-    (void)timeout;
     if (msg)
-        Add_HUD_message(msg);
+        Add_HUD_message_timed(msg, timeout);
 }
 
 void Clear_alert_messages(void)

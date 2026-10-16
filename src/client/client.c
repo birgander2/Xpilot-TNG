@@ -1572,6 +1572,7 @@ int Handle_end(long server_loops)
 
 int Handle_self_items(u_byte *newNumItems)
 {
+    Newbie_check_items(newNumItems);
     memcpy(numItems, newNumItems, NUM_ITEMS * sizeof(u_byte));
     return 0;
 }
@@ -1590,6 +1591,7 @@ static void update_status(int status)
 	    Reset_shields();
     }
 
+    Newbie_status(BIT(status, OLD_PLAYING|OLD_PAUSE|OLD_GAME_OVER) == OLD_PLAYING);
     old_status = status;
 }
 
@@ -1614,6 +1616,9 @@ int Handle_self(int x, int y, int vx, int vy, int newHeading,
     lock_dir = newLockBearing;
     nextCheckPoint = newNextCheckPoint;
     autopilotLight = newAutopilotLight;
+    Newbie_check_items(newNumItems);
+    Newbie_check_fuel(newFuelSum);
+    Newbie_frame();
     memcpy(numItems, newNumItems, NUM_ITEMS * sizeof(u_byte));
     fuelCurrent = newCurrentTank;
     if (newFuelSum > fuelSum && selfVisible)

@@ -1,6 +1,7 @@
 #include "client_profile.h"
 
 #include <algorithm>
+#include <cctype>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -82,6 +83,11 @@ void ClientProfile::Load(const char* shipshapes_path) {
     rc_has_ship = !rc_shape.empty();
     auto it = std::find(ship_names.begin(), ship_names.end(), rc_shape);
     if (it != ship_names.end()) ship_choice = int(it - ship_names.begin());
+
+    // newbie help: ~/.xpilotrc wins, otherwise the client default (true) stays
+    std::string rc_newbie = ReadXpilotrcValue("newbie");
+    for (char& c : rc_newbie) c = char(std::tolower((unsigned char)c));
+    if (rc_newbie == "false" || rc_newbie == "no" || rc_newbie == "off" || rc_newbie == "0") newbie = false;
 }
 
 std::vector<std::string> ClientProfile::BuildArgs(int port, const std::string& host) const {
@@ -92,6 +98,8 @@ std::vector<std::string> ClientProfile::BuildArgs(int port, const std::string& h
         args.push_back("-shipShape");
         args.push_back(ship_names[ship_choice]);
     }
+    args.push_back("-newbie");
+    args.push_back(newbie ? "true" : "false");
     args.push_back("-port");
     args.push_back(std::to_string(port));
     args.push_back(host);
