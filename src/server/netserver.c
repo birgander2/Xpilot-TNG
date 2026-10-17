@@ -714,7 +714,13 @@ int Setup_connection(char *user, char *nick, char *dpy, int team,
     connp->version = version;
     Feature_init(connp);
     connp->start = main_loops;
-    connp->magic = /*randomMT() +*/ my_port + sock.fd + team + main_loops;
+    {
+	unsigned magic = 0;
+
+	if (Get_random_bytes(&magic, sizeof(magic)) == -1)
+	    magic = randomMT() + my_port + sock.fd + team + main_loops;
+	connp->magic = magic;
+    }
     connp->id = NO_ID;
     connp->timeout = LISTEN_TIMEOUT;
     connp->last_key_change = 0;
@@ -779,6 +785,15 @@ static int Handle_listening(connection_t *connp)
 	else if (n != 0)
 	    Destroy_connection(connp, "read first packet error");
 	return n;
+    }
+    if (!playback && strcmp(sock_get_last_addr(&connp->r.sock), connp->addr)) {
+	/*
+	 * The first packet must come from the address that queued up for
+	 * this connection, otherwise anyone who knows the (public) user and
+	 * nick names and guesses the port could hijack the login.
+	 */
+	Sockbuf_clear(&connp->r);
+	return 0;
     }
     connp->r.len = n;
     connp->his_port = sock_get_last_portRec(&connp->r.sock);
