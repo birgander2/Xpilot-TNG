@@ -193,7 +193,7 @@ void xpinfo(const char *fmt, ...)
 
     va_start(ap, fmt);
 
-    vsprintf(s, fmt, ap);
+    vsnprintf(s, sizeof(s), fmt, ap);
 
     Win_show_error(s);
 
@@ -207,7 +207,7 @@ void error(const char *fmt, ...)
 
     va_start(ap, fmt);
 
-    vsprintf(s, fmt, ap);
+    vsnprintf(s, sizeof(s), fmt, ap);
 
     Win_show_error(s);
 
@@ -221,7 +221,7 @@ void warn(const char *fmt, ...)
 
     va_start(ap, fmt);
 
-    vsprintf(s, fmt, ap);
+    vsnprintf(s, sizeof(s), fmt, ap);
 
     Win_show_error(s);
 
@@ -235,7 +235,7 @@ void fatal(const char *fmt, ...)
 
     va_start(ap, fmt);
 
-    vsprintf(s, fmt, ap);
+    vsnprintf(s, sizeof(s), fmt, ap);
 
     Win_show_error(s);
 
@@ -251,7 +251,7 @@ void dumpcore(const char *fmt, ...)
 
     va_start(ap, fmt);
 
-    vsprintf(s, fmt, ap);
+    vsnprintf(s, sizeof(s), fmt, ap);
 
     Win_show_error(s);
 

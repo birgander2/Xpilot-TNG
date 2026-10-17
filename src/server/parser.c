@@ -207,6 +207,7 @@ static void Parser_dump_all(char *progname)
  *
  * This is called when a client requests
  * to see the current server parameter list.
+ * buf must hold MSG_LEN bytes; longer values are truncated.
  */
 int Parser_list_option(int *ind, char *buf)
 {
@@ -226,28 +227,28 @@ int Parser_list_option(int *ind, char *buf)
 
     switch (opts[i].type) {
     case valInt:
-	sprintf(buf, "%s:%d", opts[i].name, *(int *)opts[i].variable);
+	snprintf(buf, MSG_LEN, "%s:%d", opts[i].name, *(int *)opts[i].variable);
 	break;
     case valReal:
-	sprintf(buf, "%s:%g", opts[i].name, *(double *)opts[i].variable);
+	snprintf(buf, MSG_LEN, "%s:%g", opts[i].name, *(double *)opts[i].variable);
 	break;
     case valBool:
-	sprintf(buf, "%s:%s", opts[i].name,
+	snprintf(buf, MSG_LEN, "%s:%s", opts[i].name,
 		*(bool *)opts[i].variable ? "yes" : "no");
 	break;
     case valIPos:
-	sprintf(buf, "%s:%d,%d", opts[i].name,
+	snprintf(buf, MSG_LEN, "%s:%d,%d", opts[i].name,
 		((ipos_t *)opts[i].variable)->x,
 		((ipos_t *)opts[i].variable)->y);
 	break;
     case valString:
-	sprintf(buf, "%s:%s", opts[i].name, *(char **)opts[i].variable);
+	snprintf(buf, MSG_LEN, "%s:%s", opts[i].name, *(char **)opts[i].variable);
 	break;
     case valList:
 	{
 	    list_t list = *(list_t *)opts[i].variable;
 
-	    sprintf(buf, "%s:", opts[i].name);
+	    snprintf(buf, MSG_LEN, "%s:", opts[i].name);
 	    if (list) {
 		list_iter_t iter;
 
@@ -492,13 +493,13 @@ int Get_option_value(const char *name, char *value, size_t size)
 
     switch (opt->type) {
     case valInt:
-	sprintf(value, "%d", *((int *)opt->variable));
+	snprintf(value, size, "%d", *((int *)opt->variable));
 	break;
     case valReal:
-	sprintf(value, "%g", *((double *)opt->variable));
+	snprintf(value, size, "%g", *((double *)opt->variable));
 	break;
     case valBool:
-	sprintf(value, "%s", *((bool *)opt->variable) ? "true" : "false");
+	snprintf(value, size, "%s", *((bool *)opt->variable) ? "true" : "false");
 	break;
     case valString:
 	if (*((char **)opt->variable) == NULL)
@@ -506,7 +507,7 @@ int Get_option_value(const char *name, char *value, size_t size)
 	strlcpy(value, *((char **)opt->variable), size);
 	break;
     case valIPos:
-	sprintf(value, "%d, %d",
+	snprintf(value, size, "%d, %d",
 		((ipos_t *)opt->variable)->x,
 		((ipos_t *)opt->variable)->y);
 	break;

@@ -50,7 +50,7 @@ void Fix_user_name(char *name)
     if (strlen(name) > MAX_NAME_LEN - 1)
 	name[MAX_NAME_LEN - 1] = 0;
     if (!*name) {
-	strlcpy(name, "X", sizeof(name));
+	strlcpy(name, "X", MAX_NAME_LEN);
 	return;
     }
     str = (unsigned char *) name;
@@ -152,7 +152,7 @@ void Fix_host_name(char *name)
 	name[MAX_HOST_LEN - 1] = 0;
     str = (unsigned char *) name;
     if (!is_alpha_numeric(*str)) {
-	strlcpy(name, "xxx.xxx", sizeof(name));
+	strlcpy(name, "xxx.xxx", MAX_HOST_LEN);
 	return;
     }
     for (; *str; str++) {
