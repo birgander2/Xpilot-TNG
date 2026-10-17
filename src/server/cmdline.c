@@ -3650,6 +3650,33 @@ static option_desc opts[] = {
 	OPT_COMMAND | OPT_DEFAULTS | OPT_VISIBLE
     },
     {
+	"contactRateBurst",
+	"contactBurst",
+	"10",
+	&options.contactRateBurst,
+	valInt,
+	tuner_dummy,
+	"Number of status and option list requests a single IP address may\n"
+	"send to the contact port in a burst.  Only these requests are\n"
+	"limited, since only their replies are much larger than the request\n"
+	"and could be abused to flood a third party with forged addresses.\n"
+	"Joining the game is never limited.  Loopback and private network\n"
+	"addresses are exempt.  Setting this to 0 disables the limit.\n",
+	OPT_COMMAND | OPT_DEFAULTS | OPT_VISIBLE
+    },
+    {
+	"contactRatePerSec",
+	"contactRate",
+	"2",
+	&options.contactRatePerSec,
+	valInt,
+	tuner_dummy,
+	"Number of status and option list requests per second a single IP\n"
+	"address is allowed on average once its burst is used up.\n"
+	"See contactRateBurst.\n",
+	OPT_COMMAND | OPT_DEFAULTS | OPT_VISIBLE
+    },
+    {
 	"playerLimit",
 	"playerLimit",
 	"0",

@@ -187,6 +187,87 @@ static int Kick_paused_players(int team)
 }
 
 
+/*
+ * Per source address rate limit for requests with replies that are much
+ * bigger than the request itself (status, option list).  Without it the
+ * contact port can be used to reflect traffic to forged source addresses.
+ * The table is direct mapped; a collision just resets the bucket.
+ */
+#define RATE_SLOTS	1024
+
+static struct {
+    char	addr[INET6_ADDRSTRLEN];
+    long	tokens;		/* in milli-tokens */
+    long long	last_ms;
+} rate_table[RATE_SLOTS];
+
+static bool Is_local_addr(const char *a)
+{
+    int b;
+
+    if (!strncmp(a, "127.", 4) || !strncmp(a, "10.", 3)
+	|| !strncmp(a, "192.168.", 8) || !strcmp(a, "::1")
+	|| !strncasecmp(a, "fe80:", 5) || !strncasecmp(a, "fc", 2)
+	|| !strncasecmp(a, "fd", 2))
+	return true;
+    if (!strncmp(a, "172.", 4) && (b = atoi(a + 4)) >= 16 && b <= 31)
+	return true;
+    return false;
+}
+
+static bool Contact_rate_ok(const char *addr)
+{
+    struct timespec ts;
+    long long now_ms;
+    unsigned h = 2166136261u;
+    const char *p;
+    long burst = options.contactRateBurst, rate = options.contactRatePerSec;
+    int i;
+
+    if (burst <= 0 || Is_local_addr(addr))
+	return true;
+    if (rate < 0)
+	rate = 0;
+
+    for (p = addr; *p; p++)
+	h = (h ^ (unsigned char)*p) * 16777619u;
+    i = h % RATE_SLOTS;
+
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    now_ms = (long long)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+
+    if (strcmp(rate_table[i].addr, addr)) {
+	strlcpy(rate_table[i].addr, addr, sizeof(rate_table[i].addr));
+	rate_table[i].tokens = burst * 1000;
+	rate_table[i].last_ms = now_ms;
+    } else {
+	long long refill = (now_ms - rate_table[i].last_ms) * rate;
+
+	if (refill > 0) {
+	    rate_table[i].tokens += (long)MIN(refill, burst * 1000LL);
+	    if (rate_table[i].tokens > burst * 1000)
+		rate_table[i].tokens = burst * 1000;
+	}
+	rate_table[i].last_ms = now_ms;
+    }
+    if (rate_table[i].tokens < 1000)
+	return false;
+    rate_table[i].tokens -= 1000;
+    return true;
+}
+
+/* Allow a log message about dropped packets at most every 10 seconds. */
+static bool Log_throttle_ok(void)
+{
+    static time_t last;
+    time_t now = time(NULL);
+
+    if (now - last < 10)
+	return false;
+    last = now;
+    return true;
+}
+
 static int Reply(char *host_addr, int port)
 {
     int i, result = -1;
@@ -282,9 +363,9 @@ void Contact(int fd, void *arg)
     ibuf.len = bytes;
 
     strlcpy(host_addr, sock_get_last_addr(&contactSocket), sizeof(host_addr));
-    xpprintf("%s Checking Address:(%s)\n",showtime(),host_addr);
     if (Check_address(host_addr)) {
-	xpprintf("%s Host blocked!:(%s)\n",showtime(),host_addr);
+	if (Log_throttle_ok())
+	    xpprintf("%s Host blocked!:(%s)\n",showtime(),host_addr);
 	return;
     }
     
@@ -330,6 +411,14 @@ void Contact(int fd, void *arg)
     }
 
     my_magic = Version_to_magic(version);
+
+    if ((reply_to == REPORT_STATUS_pack || reply_to == OPTION_LIST_pack)
+	&& !Contact_rate_ok(host_addr)) {
+	if (Log_throttle_ok())
+	    xpprintf("%s Rate limit exceeded for %s, dropping requests.\n",
+		     showtime(), host_addr);
+	return;
+    }
 
     status = SUCCESS;
 

@@ -301,6 +301,8 @@ extern struct options {
     int		maxPauseTime;
     int		maxIdleTime;
     int		maxClientsPerIP;
+    int		contactRateBurst;
+    int		contactRatePerSec;
 
     int		playerLimit;
     int		playerLimit_orig;
