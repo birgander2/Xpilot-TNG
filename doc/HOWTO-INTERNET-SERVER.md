@@ -275,3 +275,70 @@ in the GUI.
 * Do not run the server as `root`.
 * To keep specific addresses out, use the server option `denyHosts` (list of addresses,
   optionally with a network mask).
+
+### Built-in protections
+
+| Option | Default | Effect |
+| --- | --- | --- |
+| `contactRateBurst` / `contactRatePerSec` | 10 / 2 | Per-IP limit for status and option-list requests on the contact port. Their replies are much larger than the request, so without a limit the server could be abused to flood third parties with forged source addresses. Joining the game is never limited. `contactRateBurst 0` disables the limit. |
+| `contactRateLocalExempt` | on | Loopback and private addresses (10.x, 172.16-31.x, 192.168.x) are not limited. Turn it off with `+contactRateLocalExempt` if all players arrive through a proxy or NAT with a private address. |
+| `maxClientsPerIP` | 4 | Maximum simultaneous clients from one address. |
+| `contactAdmin` | off | Privileged contact-port requests (lock, shutdown, kick, set option) are refused. They were only protected by a user name check from `127.0.0.1`, which any local user can fake. Use `/password` and `/set` in game instead. |
+| `denyHosts` | empty | Addresses (optionally `addr/mask`) that get no service at all. |
+
+Further behavior worth knowing:
+
+* Three wrong `/password` attempts from one address kick the player and lock that address
+  out of `/password` for five minutes, also across reconnects. Chat commands count towards
+  the flood protection.
+* A client must contact the login port from the same address it queued with.
+* Choose a strong `password`, preferably in the password file (`passwordFileName`) instead of
+  on the command line, where other users of the machine can see it.
+
+### Running as an unprivileged, sandboxed service (systemd)
+
+```ini
+# /etc/systemd/system/xpilot-tng-server.service
+[Unit]
+Description=XPilot TNG server
+After=network-online.target
+
+[Service]
+ExecStart=/usr/local/bin/xpilot-tng-server -map /usr/local/share/xpilot-tng/maps/mymap.xp2 -noQuit
+DynamicUser=yes
+StateDirectory=xpilot-tng
+WorkingDirectory=/var/lib/xpilot-tng
+Restart=on-failure
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallFilter=@system-service
+CapabilityBoundingSet=
+
+[Install]
+WantedBy=multi-user.target
+```
+
+The server only needs to write its state (rank file, smartbot brain) into `StateDirectory`.
+Adjust the paths to your installation and check `journalctl -u xpilot-tng-server` after the
+first start.
+
+### Testing your build
+
+Security regression tests and a parser fuzzer live in `tests/`. They need a sanitizer build:
+
+```sh
+cmake -S . -B build-asan -DSANITIZE=ON -DHARDENING=OFF -DBUILD_TESTS=ON \
+      -DBUILD_CLIENT_SDL3=OFF -DBUILD_LAUNCHER=OFF
+cmake --build build-asan -j
+ctest --test-dir build-asan --output-on-failure
+```
