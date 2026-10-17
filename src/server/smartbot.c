@@ -6,7 +6,7 @@
  * Features:
  * - Adjustable intelligence/skill level via options.smartRobotLevel (1-100)
  *   or per-robot /msg commands.
- * - Exact quadratic ballistic lead prediction (with velocity, gravity, wrap).
+ * - Exact quadratic ballistic lead prediction (with velocity, wrap).
  * - Multi-object CPA (Closest Point of Approach) threat scanner & potential
  *   field obstacle avoidance.
  * - Fast block-grid A* pathfinding for complex maps, fuel runs, and CTF.
@@ -26,6 +26,7 @@
 #define SMART_BRAIN_SUBDIR	"xpilot-tng"
 #define SMART_BRAIN_MAGIC	0x58505342U /* "XPSB" */
 #define SMART_BRAIN_VERSION	1U
+#define SMART_BRAIN_SAVE_SECS	300	/* periodic save interval */
 
 /*
  * High-level tactical actions selected by the RL Q-learning controller
@@ -81,6 +82,7 @@ typedef struct smart_shared_brain {
 
 static smart_shared_brain_t	SharedBrain;
 static bool			BrainInitialized = false;
+static bool			BrainDirty = false;
 static int			RoundCounter = 0;
 
 /*
@@ -129,10 +131,16 @@ typedef struct robot_smart_data {
     int			last_astar_tick;
     clpos_t		patrol_pos;
     int			patrol_timer;
+
+    int			turn_budget;		/* Remaining turn (in dir units) this tick */
+
+    int			threat_timer;		/* Keeps the RL threat bit set for a while */
+    int			episode_deaths;		/* Deaths already counted as episodes */
+    bool		genes_sampled;
+    bool		cut_thrust;		/* Heat seeker nearby: coast this tick */
 } robot_smart_data_t;
 
 static double	Visibility_distance;
-static double	Max_enemy_distance;
 
 /*
  * Prototypes for smartbot methods.
@@ -212,6 +220,8 @@ static void Smart_brain_save(void)
 {
     FILE *fp;
     const char *path;
+    char tmp[PATH_MAX + 8];
+    bool ok;
 
     if (!BrainInitialized)
 	return;
@@ -219,11 +229,19 @@ static void Smart_brain_save(void)
     path = Smart_brain_path(true);
     if (!path)
 	path = SMART_BRAIN_FILE;
-    fp = fopen(path, "wb");
-    if (fp) {
-	fwrite(&SharedBrain, sizeof(SharedBrain), 1, fp);
-	fclose(fp);
-    }
+
+    /* Write to a temporary file and rename, so a crash never corrupts the brain */
+    snprintf(tmp, sizeof(tmp), "%s.tmp", path);
+    fp = fopen(tmp, "wb");
+    if (!fp)
+	return;
+    ok = (fwrite(&SharedBrain, sizeof(SharedBrain), 1, fp) == 1);
+    if (fclose(fp) != 0)
+	ok = false;
+    if (ok && rename(tmp, path) == 0)
+	BrainDirty = false;
+    else
+	remove(tmp);
 }
 
 static void Smart_brain_init(void)
@@ -271,6 +289,9 @@ static void Smart_brain_init(void)
 	    && loaded.magic == SMART_BRAIN_MAGIC
 	    && loaded.version == SMART_BRAIN_VERSION) {
 	    SharedBrain = loaded;
+	    /* Old files blended the -1e9 sentinel into the record; reset it */
+	    if (SharedBrain.best_episode_reward < -1e6)
+		SharedBrain.best_episode_reward = -1e9;
 	    if (options.logRobots)
 		xpprintf("%s Smartbot brain loaded (%llu episodes, %llu kills).\n",
 			 showtime(),
@@ -357,8 +378,8 @@ static void Smart_rl_step(player_t *pl, int next_state)
 	reward -= 10.0 * deaths_delta;
 	SharedBrain.total_deaths += deaths_delta;
     }
-    /* Small survival bonus when alive */
-    reward += 0.02;
+    /* Small survival bonus per decision step (about once per second) */
+    reward += 0.05;
 
     my_data->accumulated_reward += reward;
     my_data->episode_reward += reward;
@@ -375,9 +396,10 @@ static void Smart_rl_step(player_t *pl, int next_state)
 	SharedBrain.q_table[my_data->current_state][my_data->current_tactic] += alpha * td_error;
     }
     my_data->accumulated_reward = 0.0;
+    BrainDirty = true;
 
     /* Select next tactic using epsilon-greedy scaled by smartRobotLevel */
-    eps = 0.04 + (100 - eff_level) * 0.0045;
+    eps = my_data->learning_enabled ? 0.02 + (100 - eff_level) * 0.0015 : 0.0;
     best_a = 0;
     for (a = 1; a < NUM_SMART_TACTICS; a++) {
 	if (SharedBrain.q_table[next_state][a] > SharedBrain.q_table[next_state][best_a])
@@ -390,33 +412,43 @@ static void Smart_rl_step(player_t *pl, int next_state)
 	my_data->current_tactic = best_a;
 
     my_data->current_state = next_state;
-    my_data->tactic_timer = 10;
+    my_data->tactic_timer = FPS;	/* re-decide about once per second */
 }
 
 static void Smart_evolve_genes_on_respawn(player_t *pl)
 {
     robot_smart_data_t *my_data = Robot_smart_get_data(pl);
+    bool died = (pl->deaths > my_data->episode_deaths);
 
-    if (pl->deaths > 0)
+    /* An episode ends with a death; round starts and other respawns do not count */
+    if (died) {
+	my_data->episode_deaths = pl->deaths;
 	SharedBrain.total_episodes++;
+	BrainDirty = true;
 
-    if (my_data->learning_enabled && pl->deaths > 0 && SharedBrain.total_episodes > 1) {
-	if (my_data->episode_reward > SharedBrain.best_episode_reward) {
-	    /* Soft update of best genes towards successful episode genes */
-	    SharedBrain.best_episode_reward =
-		0.8 * SharedBrain.best_episode_reward + 0.2 * my_data->episode_reward;
-	    SharedBrain.best_genes.preferred_combat_dist =
-		0.7 * SharedBrain.best_genes.preferred_combat_dist + 0.3 * my_data->genes.preferred_combat_dist;
-	    SharedBrain.best_genes.evade_weight =
-		0.7 * SharedBrain.best_genes.evade_weight + 0.3 * my_data->genes.evade_weight;
-	    SharedBrain.best_genes.wall_weight =
-		0.7 * SharedBrain.best_genes.wall_weight + 0.3 * my_data->genes.wall_weight;
-	    SharedBrain.best_genes.aggression_bias =
-		0.7 * SharedBrain.best_genes.aggression_bias + 0.3 * my_data->genes.aggression_bias;
-	    SharedBrain.best_genes.speed_factor =
-		0.7 * SharedBrain.best_genes.speed_factor + 0.3 * my_data->genes.speed_factor;
+	if (my_data->learning_enabled && SharedBrain.total_episodes > 1) {
+	    if (my_data->episode_reward > SharedBrain.best_episode_reward) {
+		/* Soft update of best genes towards successful episode genes */
+		SharedBrain.best_episode_reward = my_data->episode_reward;
+		SharedBrain.best_genes.preferred_combat_dist =
+		    0.7 * SharedBrain.best_genes.preferred_combat_dist + 0.3 * my_data->genes.preferred_combat_dist;
+		SharedBrain.best_genes.evade_weight =
+		    0.7 * SharedBrain.best_genes.evade_weight + 0.3 * my_data->genes.evade_weight;
+		SharedBrain.best_genes.wall_weight =
+		    0.7 * SharedBrain.best_genes.wall_weight + 0.3 * my_data->genes.wall_weight;
+		SharedBrain.best_genes.aggression_bias =
+		    0.7 * SharedBrain.best_genes.aggression_bias + 0.3 * my_data->genes.aggression_bias;
+		SharedBrain.best_genes.speed_factor =
+		    0.7 * SharedBrain.best_genes.speed_factor + 0.3 * my_data->genes.speed_factor;
+	    } else {
+		/* Let the record fade so a single lucky episode cannot lock the genes forever */
+		SharedBrain.best_episode_reward -= 0.02 * ABS(SharedBrain.best_episode_reward);
+	    }
 	}
+    } else if (my_data->genes_sampled) {
+	return;		/* same episode continues, keep genes and reward */
     }
+    my_data->genes_sampled = true;
 
     /* Sample slightly mutated genes around SharedBrain.best_genes */
     my_data->genes = SharedBrain.best_genes;
@@ -435,9 +467,6 @@ static void Smart_evolve_genes_on_respawn(player_t *pl)
     }
 
     my_data->episode_reward = 0.0;
-
-    if ((SharedBrain.total_episodes % 10) == 0)
-	Smart_brain_save();
 }
 
 /* =========================================================================
@@ -452,11 +481,25 @@ static bool Smart_empty_space_for_ball(int bx, int by)
     return (shape_is_inside(pos.cx, pos.cy, BALL_BIT, NULL, &filled_wire, 0) == NO_GROUP);
 }
 
+/*
+ * Per-block passability cache.  The block test costs four is_inside() calls and
+ * is hit hundreds of times per bot and tick (rays, line of sight, A*).  Results
+ * that do not depend on the asking player are kept for one second, so changing
+ * targets still show up.  Blocks touching wormholes or targets are never cached.
+ */
+#define PASS_FREE	1U
+#define PASS_SOLID	2U
+
+static uint32_t	*PassCache;
+static int	PassCacheW, PassCacheH;
+
 static bool Smart_block_passable(player_t *pl, int bx, int by)
 {
     int group, cx, cy, i, j;
     int delta = BLOCK_CLICKS / 4;
     hitmask_t hitmask = NONBALL_BIT;
+    uint32_t epoch, *slot;
+    bool special = false;
 
     if (BIT(world->rules->mode, WRAP_PLAY)) {
 	bx = WRAP_XBLOCK(bx);
@@ -464,6 +507,17 @@ static bool Smart_block_passable(player_t *pl, int bx, int by)
     }
     if (bx < 0 || bx >= world->x || by < 0 || by >= world->y)
 	return false;
+
+    if (PassCache == NULL || PassCacheW != world->x || PassCacheH != world->y) {
+	free(PassCache);
+	PassCache = calloc((size_t)world->x * world->y, sizeof(*PassCache));
+	PassCacheW = world->x;
+	PassCacheH = world->y;
+    }
+    slot = PassCache ? &PassCache[(size_t)by * world->x + bx] : NULL;
+    epoch = (uint32_t)(frame_loops / FPS) + 1;
+    if (slot && (*slot >> 2) == epoch && (*slot & 3U))
+	return (*slot & 3U) == PASS_FREE;
 
     cx = BLOCK_CENTER(bx);
     cy = BLOCK_CENTER(by);
@@ -478,15 +532,25 @@ static bool Smart_block_passable(player_t *pl, int bx, int by)
 	    group = is_inside(pos.cx, pos.cy, hitmask, NULL);
 	    if (group != NO_GROUP) {
 		group_t *gp = groupptr_by_id(group);
-		if (gp != NULL && gp->type == WORMHOLE && gp->mapobj_ind == pl->wormHoleDest)
-		    group = NO_GROUP;
-		else if (gp != NULL && !options.targetTeamCollision && gp->type == TARGET && gp->team == pl->team)
-		    group = NO_GROUP;
+		if (gp != NULL && gp->type == WORMHOLE) {
+		    special = true;
+		    if (gp->mapobj_ind == pl->wormHoleDest)
+			group = NO_GROUP;
+		} else if (gp != NULL && gp->type == TARGET) {
+		    special = true;
+		    if (!options.targetTeamCollision && gp->team == pl->team)
+			group = NO_GROUP;
+		}
 	    }
-	    if (group != NO_GROUP)
+	    if (group != NO_GROUP) {
+		if (!special && slot)
+		    *slot = (epoch << 2) | PASS_SOLID;
 		return false;
+	    }
 	}
     }
+    if (!special && slot)
+	*slot = (epoch << 2) | PASS_FREE;
     return true;
 }
 
@@ -541,6 +605,108 @@ typedef struct astar_node {
     float	g, f;
     bool	closed;
 } astar_node_t;
+
+/*
+ * A* working storage: a binary heap (lazy deletion) for the open list and a
+ * generation-stamped grid mapping blocks to node slots, so neither the open
+ * list nor the visited set is ever scanned linearly.
+ */
+#define ASTAR_HEAP_MAX	(ASTAR_MAX_NODES * 8)
+
+typedef struct astar_heap_entry {
+    float	f;
+    int16_t	idx;
+} astar_heap_entry_t;
+
+static astar_heap_entry_t	AstarHeap[ASTAR_HEAP_MAX];
+static int			AstarHeapN;
+static uint32_t			*AstarStamp;
+static int16_t			*AstarSlot;
+static uint32_t			AstarGen;
+static int			AstarW, AstarH;
+
+static void Smart_astar_push(float f, int idx)
+{
+    int i;
+
+    if (AstarHeapN >= ASTAR_HEAP_MAX)
+	return;
+    i = AstarHeapN++;
+    while (i > 0) {
+	int parent = (i - 1) / 2;
+	if (AstarHeap[parent].f <= f)
+	    break;
+	AstarHeap[i] = AstarHeap[parent];
+	i = parent;
+    }
+    AstarHeap[i].f = f;
+    AstarHeap[i].idx = (int16_t)idx;
+}
+
+static int Smart_astar_pop(void)
+{
+    astar_heap_entry_t last;
+    int top = AstarHeap[0].idx;
+    int i = 0;
+
+    last = AstarHeap[--AstarHeapN];
+    while (AstarHeapN > 0) {
+	int child = 2 * i + 1;
+	if (child >= AstarHeapN)
+	    break;
+	if (child + 1 < AstarHeapN && AstarHeap[child + 1].f < AstarHeap[child].f)
+	    child++;
+	if (AstarHeap[child].f >= last.f)
+	    break;
+	AstarHeap[i] = AstarHeap[child];
+	i = child;
+    }
+    if (AstarHeapN > 0)
+	AstarHeap[i] = last;
+    return top;
+}
+
+/* Wrap-aware straight-line distance between two blocks. */
+static float Smart_astar_h(int bx, int by, blkpos_t goal)
+{
+    double hdx = goal.bx - bx;
+    double hdy = goal.by - by;
+
+    if (BIT(world->rules->mode, WRAP_PLAY)) {
+	if (hdx > world->x / 2) hdx -= world->x;
+	if (hdx < -world->x / 2) hdx += world->x;
+	if (hdy > world->y / 2) hdy -= world->y;
+	if (hdy < -world->y / 2) hdy += world->y;
+    }
+    return (float)LENGTH(hdx, hdy);
+}
+
+static bool Smart_astar_prepare(void)
+{
+    if (AstarStamp == NULL || AstarW != world->x || AstarH != world->y) {
+	free(AstarStamp);
+	free(AstarSlot);
+	AstarStamp = calloc((size_t)world->x * world->y, sizeof(*AstarStamp));
+	AstarSlot = malloc((size_t)world->x * world->y * sizeof(*AstarSlot));
+	AstarW = world->x;
+	AstarH = world->y;
+	AstarGen = 0;
+	if (AstarStamp == NULL || AstarSlot == NULL) {
+	    free(AstarStamp);
+	    free(AstarSlot);
+	    AstarStamp = NULL;
+	    AstarSlot = NULL;
+	    AstarW = AstarH = 0;
+	    return false;
+	}
+    }
+    if (++AstarGen == 0) {	/* generation wrapped: clear stale stamps */
+	memset(AstarStamp, 0, (size_t)AstarW * AstarH * sizeof(*AstarStamp));
+	AstarGen = 1;
+    }
+    AstarHeapN = 0;
+    return true;
+}
 
 static clpos_t Smart_find_open_corridor_target(player_t *pl)
 {
@@ -631,37 +797,26 @@ static clpos_t Smart_find_next_waypoint(player_t *pl, clpos_t goal_pos)
     max_expand = 250 + (eff_level * (ASTAR_MAX_NODES - 260)) / 100;
     LIMIT(max_expand, 250, ASTAR_MAX_NODES - 8);
 
+    if (!Smart_astar_prepare())
+	return Smart_find_open_corridor_target(pl);
+
     nodes[0].bx = start_blk.bx;
     nodes[0].by = start_blk.by;
     nodes[0].parent = -1;
     nodes[0].g = 0.0f;
-    {
-	double hdx = goal_blk.bx - start_blk.bx;
-	double hdy = goal_blk.by - start_blk.by;
-	if (BIT(world->rules->mode, WRAP_PLAY)) {
-	    if (hdx > world->x / 2) hdx -= world->x;
-	    if (hdx < -world->x / 2) hdx += world->x;
-	    if (hdy > world->y / 2) hdy -= world->y;
-	    if (hdy < -world->y / 2) hdy += world->y;
-	}
-	best_h = (float)LENGTH(hdx, hdy);
-    }
+    best_h = Smart_astar_h(start_blk.bx, start_blk.by, goal_blk);
     nodes[0].f = best_h;
     nodes[0].closed = false;
     num_nodes = 1;
+    AstarStamp[(size_t)start_blk.by * world->x + start_blk.bx] = AstarGen;
+    AstarSlot[(size_t)start_blk.by * world->x + start_blk.bx] = 0;
+    Smart_astar_push(best_h, 0);
 
-    while (num_nodes < max_expand) {
-	int cur = -1;
-	float min_f = 1e30f;
+    while (AstarHeapN > 0 && num_nodes < max_expand) {
+	int cur = Smart_astar_pop();
 
-	for (i = 0; i < num_nodes; i++) {
-	    if (!nodes[i].closed && nodes[i].f < min_f) {
-		min_f = nodes[i].f;
-		cur = i;
-	    }
-	}
-	if (cur < 0)
-	    break;
+	if (nodes[cur].closed)
+	    continue;
 
 	if (nodes[cur].bx == goal_blk.bx && nodes[cur].by == goal_blk.by) {
 	    best_idx = cur;
@@ -672,7 +827,7 @@ static clpos_t Smart_find_next_waypoint(player_t *pl, clpos_t goal_pos)
 	for (dir = 0; dir < 8; dir++) {
 	    int nbx = nodes[cur].bx + dx8[dir];
 	    int nby = nodes[cur].by + dy8[dir];
-	    int existing = -1;
+	    size_t cell;
 	    float ng, nh, nf;
 
 	    if (BIT(world->rules->mode, WRAP_PLAY)) {
@@ -681,10 +836,7 @@ static clpos_t Smart_find_next_waypoint(player_t *pl, clpos_t goal_pos)
 	    }
 	    if (nbx < 0 || nbx >= world->x || nby < 0 || nby >= world->y)
 		continue;
-
-	    if (!(nbx == goal_blk.bx && nby == goal_blk.by)
-		&& !Smart_block_passable(pl, nbx, nby))
-		continue;
+	    cell = (size_t)nby * world->x + nbx;
 
 	    /* Avoid cutting diagonal corners through walls */
 	    if (dir >= 4) {
@@ -694,35 +846,27 @@ static clpos_t Smart_find_next_waypoint(player_t *pl, clpos_t goal_pos)
 	    }
 
 	    ng = nodes[cur].g + cost8[dir];
-	    for (i = 0; i < num_nodes; i++) {
-		if (nodes[i].bx == nbx && nodes[i].by == nby) {
-		    existing = i;
-		    break;
-		}
-	    }
-	    if (existing >= 0) {
+	    if (AstarStamp[cell] == AstarGen) {
+		int existing = AstarSlot[cell];
 		if (ng < nodes[existing].g) {
 		    nh = nodes[existing].f - nodes[existing].g;
 		    nodes[existing].g = ng;
 		    nodes[existing].f = ng + nh;
 		    nodes[existing].parent = cur;
+		    nodes[existing].closed = false;
+		    Smart_astar_push(nodes[existing].f, existing);
 		}
 		continue;
 	    }
+
+	    if (!(nbx == goal_blk.bx && nby == goal_blk.by)
+		&& !Smart_block_passable(pl, nbx, nby))
+		continue;
+
 	    if (num_nodes >= max_expand)
 		break;
 
-	    {
-		double hdx = goal_blk.bx - nbx;
-		double hdy = goal_blk.by - nby;
-		if (BIT(world->rules->mode, WRAP_PLAY)) {
-		    if (hdx > world->x / 2) hdx -= world->x;
-		    if (hdx < -world->x / 2) hdx += world->x;
-		    if (hdy > world->y / 2) hdy -= world->y;
-		    if (hdy < -world->y / 2) hdy += world->y;
-		}
-		nh = (float)LENGTH(hdx, hdy);
-	    }
+	    nh = Smart_astar_h(nbx, nby, goal_blk);
 	    nf = ng + nh;
 	    nodes[num_nodes].bx = nbx;
 	    nodes[num_nodes].by = nby;
@@ -730,6 +874,9 @@ static clpos_t Smart_find_next_waypoint(player_t *pl, clpos_t goal_pos)
 	    nodes[num_nodes].g = ng;
 	    nodes[num_nodes].f = nf;
 	    nodes[num_nodes].closed = false;
+	    AstarStamp[cell] = AstarGen;
+	    AstarSlot[cell] = (int16_t)num_nodes;
+	    Smart_astar_push(nf, num_nodes);
 
 	    if (nh < best_h && ng >= 2.0f) {
 		best_h = nh;
@@ -790,8 +937,8 @@ static clpos_t Smart_find_next_waypoint(player_t *pl, clpos_t goal_pos)
 
 /*
  * Computes exact intercept direction to hit 'target' with a projectile of speed
- * 'proj_speed' fired from 'pl'. Accounts for relative velocity, gravity, and
- * skill-level jitter.
+ * 'proj_speed' fired from 'pl'. Accounts for relative velocity and skill-level
+ * jitter; gravity is not modelled.
  */
 static bool Smart_compute_lead_dir(player_t *pl, clpos_t target_pos, vector_t target_vel,
 				   double proj_speed, int *out_dir, double *out_intercept_time)
@@ -870,27 +1017,40 @@ static bool Smart_compute_lead_dir(player_t *pl, clpos_t target_pos, vector_t ta
 }
 
 /*
- * Smooth / Instant ship orientation controller depending on skill level.
+ * Maximum turn per tick (in dir units, RES = full circle) for a skill level.
+ * Bots turn at a bounded rate like a human with a mouse; the budget is shared
+ * by all steering calls of one tick, so aiming and flying cannot both turn
+ * the ship by the full amount.
+ */
+static int Smart_max_turn_per_tick(int eff_level)
+{
+    return 3 + (eff_level * 9) / 100;
+}
+
+/* Absolute angular difference of two directions, 0 .. RES/2. */
+static int Smart_dir_error(int a, int b)
+{
+    int d = MOD2(a - b, RES);
+
+    return (d > RES / 2) ? RES - d : d;
+}
+
+/*
+ * Rate-limited ship orientation controller.
  */
 static void Smart_steer_to_dir(player_t *pl, int desired_dir)
 {
     robot_smart_data_t *my_data = Robot_smart_get_data(pl);
-    int eff_level = Smart_get_effective_level(my_data);
     int delta = MOD2(desired_dir - pl->dir, RES);
-    int target_dir;
+    int step;
 
-    if (eff_level >= 70) {
-	target_dir = MOD2(desired_dir, RES);
-    } else {
-	double max_step = 4.0 + (eff_level / 70.0) * 24.0;
-	if (delta <= RES / 2) {
-	    int step = MIN(delta, (int)max_step);
-	    target_dir = MOD2(pl->dir + step, RES);
-	} else {
-	    int step = MIN(RES - delta, (int)max_step);
-	    target_dir = MOD2(pl->dir - step, RES);
-	}
-    }
+    if (delta > RES / 2)
+	delta -= RES;
+    step = delta;
+    LIMIT(step, -my_data->turn_budget, my_data->turn_budget);
+    if (step == 0)
+	return;
+    my_data->turn_budget -= ABS(step);
 
     /*
      * Immediately rotate via Turn_player(pl, true) so polygon wall collision
@@ -900,7 +1060,7 @@ static void Smart_steer_to_dir(player_t *pl, int desired_dir)
     pl->turnresistance = 0;
     pl->turnacc = 0;
     pl->turnvel = 0;
-    Player_set_float_dir(pl, (double)target_dir);
+    Player_set_float_dir(pl, (double)MOD2(pl->dir + step, RES));
     pl->wanted_float_dir = pl->float_dir;
     Turn_player(pl, true);
 }
@@ -929,6 +1089,7 @@ static void Smart_scan_environment(player_t *pl,
 
     repulse_vec->x = 0.0;
     repulse_vec->y = 0.0;
+    my_data->cut_thrust = false;
     *need_shield_now = false;
     *high_threat = false;
     *best_item_i = NO_IND;
@@ -1016,21 +1177,20 @@ static void Smart_scan_environment(player_t *pl,
 	    continue;
 
 	if (obj->type == OBJ_BALL
-	    && !WITHIN(my_data->last_thrown_ball, my_data->robot_count, 3 * FPS))
+	    && !WITHIN(my_data->robot_count, my_data->last_thrown_ball, 3 * FPS))
 	    SET_BIT(pl->used, USES_CONNECTOR);
 
 	rx = WRAP_DX(CLICK_TO_PIXEL(obj->pos.cx - pl->pos.cx));
 	ry = WRAP_DY(CLICK_TO_PIXEL(obj->pos.cy - pl->pos.cy));
 	dist_sq = rx * rx + ry * ry;
 
-	/* Evaluate beneficial items up to 1.8x Visibility_distance (including around corners!) */
+	/* Evaluate beneficial items within view range only */
 	if (obj->type == OBJ_ITEM) {
 	    itemobject_t *item = ITEM_PTR(obj);
 	    int itype = item->item_type;
 	    double val = 2.0;
-	    bool has_los;
 
-	    if (dist_sq > sqr(Visibility_distance * 1.8))
+	    if (dist_sq > sqr(Visibility_distance))
 		continue;
 	    dist = sqrt(dist_sq);
 
@@ -1058,13 +1218,16 @@ static void Smart_scan_environment(player_t *pl,
 		val = 4.2;
 	    }
 
-	    has_los = Smart_has_line_of_sight(pl, pl->pos, obj->pos, false);
+	    /* Only pay for the line-of-sight test if the item could still win */
 	    {
-		double los_mult = has_los ? 1.75 : 1.0;
-		double score = (val * los_mult * 220.0) / (dist + 40.0);
-		if (score > *best_item_score) {
-		    *best_item_score = score;
-		    *best_item_i = j;
+		double base = (val * 220.0) / (dist + 40.0);
+		if (base * 1.75 > *best_item_score) {
+		    double score = base * (Smart_has_line_of_sight(pl, pl->pos, obj->pos, false)
+					   ? 1.75 : 1.0);
+		    if (score > *best_item_score) {
+			*best_item_score = score;
+			*best_item_i = j;
+		    }
 		}
 	    }
 	    continue;
@@ -1139,7 +1302,7 @@ static void Smart_scan_environment(player_t *pl,
 	    else if (obj->type == OBJ_MINE && dist < ECM_DISTANCE / 2)
 		Fire_ecm(pl);
 	    else if (obj->type == OBJ_HEAT_SHOT && dist < 8 * BLOCK_SZ) {
-		Thrust(pl, false);
+		my_data->cut_thrust = true;	/* enforced at the end of Smart_fly_towards */
 		if (pl->fuel.num_tanks > 0 && pl->fuel.sum > my_data->fuel_l1)
 		    Tank_handle_detach(pl);
 	    }
@@ -1228,6 +1391,10 @@ static void Smart_fly_towards(player_t *pl, clpos_t target_pos, double desired_s
 	    Thrust(pl, false);
 	}
     }
+
+    /* Heat seekers home in on exhaust: coast instead of thrusting */
+    if (my_data->cut_thrust)
+	Thrust(pl, false);
 }
 
 /* =========================================================================
@@ -1244,12 +1411,9 @@ static bool Smart_detect_ship(player_t *pl, player_t *ship)
     distance = Wrap_length(ship->pos.cx - pl->pos.cx,
 			   ship->pos.cy - pl->pos.cy) / CLICK;
 
-    /* On maps with radar / unlimited visibility, bots can detect uncloaked ships up to Max_enemy_distance */
-    if (pl->visibility[GetInd(ship->id)].canSee) {
-	double max_range = BIT(world->rules->mode, LIMITED_VISIBILITY)
-			   ? Visibility_distance : Max_enemy_distance;
-	return (distance <= max_range);
-    }
+    /* Bots see no further than a human's view range, even without limited visibility */
+    if (pl->visibility[GetInd(ship->id)].canSee)
+	return (distance <= Visibility_distance);
 
     if (distance > Visibility_distance)
 	return false;
@@ -1268,13 +1432,14 @@ static bool Smart_detect_ship(player_t *pl, player_t *ship)
 }
 
 static void Smart_engage_enemy(player_t *pl, player_t *enemy, double enemy_dist,
+			       bool has_los, bool urgent_dodge,
 			       int *out_aim_dir, bool *has_aim_dir)
 {
     robot_smart_data_t *my_data = Robot_smart_get_data(pl);
     int eff_level = Smart_get_effective_level(my_data);
     int lead_dir;
+    int aim_tol = 2 + (100 - eff_level) / 25;	/* firing tolerance in dir units */
     double intercept_t = 0.0;
-    bool has_los;
 
     *has_aim_dir = false;
 
@@ -1292,8 +1457,6 @@ static void Smart_engage_enemy(player_t *pl, player_t *enemy, double enemy_dist,
 	&& enemy_dist < TRANSPORTER_DISTANCE
 	&& pl->fuel.sum > -ED_TRANSPORTER)
 	Do_transporter(pl);
-
-    has_los = Smart_has_line_of_sight(pl, pl->pos, enemy->pos, false);
 
     /* Missile Firing (Smart missiles can curve around obstacles; Heat/Torpedo when closer) */
     if (pl->item[ITEM_MISSILE] > 0
@@ -1326,10 +1489,11 @@ static void Smart_engage_enemy(player_t *pl, player_t *enemy, double enemy_dist,
 				   &lead_dir, &intercept_t)) {
 	    *out_aim_dir = lead_dir;
 	    *has_aim_dir = true;
-	    if ((my_data->robot_count & 1) == 0) {
+	    if (!urgent_dodge)
 		Smart_steer_to_dir(pl, lead_dir);
+	    if ((my_data->robot_count & 1) == 0
+		&& Smart_dir_error(pl->dir, lead_dir) <= aim_tol)
 		SET_BIT(pl->used, HAS_LASER);
-	    }
 	    return;
 	}
     }
@@ -1345,10 +1509,11 @@ static void Smart_engage_enemy(player_t *pl, player_t *enemy, double enemy_dist,
 	    int fire_cadence = (eff_level >= 70) ? 2 : (eff_level >= 40 ? 3 : 4);
 	    *out_aim_dir = lead_dir;
 	    *has_aim_dir = true;
-	    if ((my_data->robot_count % fire_cadence) == 0) {
+	    if (!urgent_dodge)
 		Smart_steer_to_dir(pl, lead_dir);
+	    if ((my_data->robot_count % fire_cadence) == 0
+		&& Smart_dir_error(pl->dir, lead_dir) <= aim_tol)
 		SET_BIT(pl->used, HAS_SHOT);
-	    }
 	}
     }
 }
@@ -1441,7 +1606,7 @@ static bool Smart_handle_ctf(player_t *pl, vector_t repulse_vec,
 		if (!ours && ball->id == NO_ID) {
 		    double d = Wrap_length(ball->pos.cx - pl->pos.cx,
 					   ball->pos.cy - pl->pos.cy) / CLICK;
-		    if (d < loose_ball_dist) {
+		    if (d < loose_ball_dist && d <= Visibility_distance) {
 			loose_ball_dist = d;
 			loose_ball_i = i;
 		    }
@@ -1483,19 +1648,12 @@ int Robot_smart_setup(robot_type_t *type_ptr)
 static void Robot_smart_round_tick(void)
 {
     double min_visibility = 256.0;
-    double min_enemy_distance = 512.0;
 
     Visibility_distance = min_visibility
 	+ (((VISIBILITY_DISTANCE - min_visibility)
 	    * (NUM_IDS - NumRobots)) / NUM_IDS);
 
-    Max_enemy_distance = world->hypotenuse;
-    if (world->hypotenuse > Visibility_distance)
-	Max_enemy_distance = min_enemy_distance
-	    + (((world->hypotenuse - min_enemy_distance)
-		* (NUM_IDS - NumRobots)) / NUM_IDS);
-
-    if (++RoundCounter % 300 == 0)
+    if (++RoundCounter % (SMART_BRAIN_SAVE_SECS * FPS) == 0 && BrainDirty)
 	Smart_brain_save();
 }
 
@@ -1572,6 +1730,7 @@ static void Robot_smart_go_home(player_t *pl)
     my_data->cur_waypoint = 0;
     Smart_pick_new_patrol_target(pl);
     Smart_evolve_genes_on_respawn(pl);
+    my_data->tactic_timer = 0;	/* choose a fresh tactic after respawn */
 }
 
 static void Robot_smart_set_war(player_t *pl, int victim_id)
@@ -1653,7 +1812,8 @@ static void Robot_smart_message(player_t *pl, const char *message)
 
 static void Robot_smart_destroy(player_t *pl)
 {
-    Smart_brain_save();
+    if (BrainDirty)
+	Smart_brain_save();
     XFREE(pl->robot_data_ptr->private_data);
 }
 
@@ -1677,6 +1837,7 @@ static void Robot_smart_play(player_t *pl)
     double best_item_score = 0.0;
     player_t *best_enemy = NULL;
     double best_enemy_dist = 1e19;
+    bool best_enemy_los = false;
     int aim_dir = pl->dir;
     bool has_aim_dir = false;
     int i, rl_state;
@@ -1684,6 +1845,7 @@ static void Robot_smart_play(player_t *pl)
     if (my_data->robot_count <= 0)
 	my_data->robot_count = 2000 + (int)(rfrac() * 64);
     my_data->robot_count--;
+    my_data->turn_budget = Smart_max_turn_per_tick(Smart_get_effective_level(my_data));
 
     /* Default equipment state per tick (shields stay OFF unless needed to save fuel!) */
     CLR_BIT(pl->used, USES_SHOT | USES_SHIELD | USES_LASER);
@@ -1750,6 +1912,7 @@ static void Robot_smart_play(player_t *pl)
     for (i = 0; i < NumPlayers; i++) {
 	player_t *ship = Player_by_index(i);
 	double d, priority_dist;
+	bool los;
 
 	if (ship->id == pl->id || !Player_is_active(ship) || Team_immune(pl->id, ship->id))
 	    continue;
@@ -1762,7 +1925,8 @@ static void Robot_smart_play(player_t *pl)
 
 	priority_dist = d;
 	/* Prefer enemies in direct line of sight, ball carriers, and war targets */
-	if (Smart_has_line_of_sight(pl, pl->pos, ship->pos, false))
+	los = Smart_has_line_of_sight(pl, pl->pos, ship->pos, false);
+	if (los)
 	    priority_dist *= 0.55;
 	if (BIT(ship->have, HAS_BALL) || ship->ball != NULL)
 	    priority_dist *= 0.45;
@@ -1772,18 +1936,26 @@ static void Robot_smart_play(player_t *pl)
 	if (priority_dist < best_enemy_dist) {
 	    best_enemy_dist = d;
 	    best_enemy = ship;
+	    best_enemy_los = los;
 	}
     }
 
     /* Update RL State & Select Tactic periodically */
-    rl_state = Smart_encode_rl_state(pl, best_enemy ? best_enemy_dist : 1e19, high_threat);
-    if (--my_data->tactic_timer <= 0 || rl_state != my_data->current_state) {
+    if (high_threat)
+	my_data->threat_timer = FPS / 2;
+    else if (my_data->threat_timer > 0)
+	my_data->threat_timer--;
+    rl_state = Smart_encode_rl_state(pl, best_enemy ? best_enemy_dist : 1e19,
+				     my_data->threat_timer > 0);
+    if (--my_data->tactic_timer <= 0) {
 	Smart_rl_step(pl, rl_state);
     }
 
     /* Engage enemy with ballistic lead prediction if in range */
     if (best_enemy != NULL) {
-	Smart_engage_enemy(pl, best_enemy, best_enemy_dist, &aim_dir, &has_aim_dir);
+	Smart_engage_enemy(pl, best_enemy, best_enemy_dist, best_enemy_los,
+			   LENGTH(repulse_vec.x, repulse_vec.y) > 10.0,
+			   &aim_dir, &has_aim_dir);
     }
 
     /* Raise shield only if we did not just fire and a threat is imminent */
@@ -1834,6 +2006,21 @@ static void Robot_smart_play(player_t *pl)
 	}
     }
 
+    /* Evade tactic: break contact and run away from the closest enemy */
+    if (my_data->current_tactic == TACTIC_EVADE_SURVIVE && best_enemy != NULL) {
+	double ax = WRAP_DX(CLICK_TO_PIXEL(pl->pos.cx - best_enemy->pos.cx));
+	double ay = WRAP_DY(CLICK_TO_PIXEL(pl->pos.cy - best_enemy->pos.cy));
+	double alen = MAX(LENGTH(ax, ay), 1.0);
+	clpos_t flee, wp;
+
+	flee.cx = pl->pos.cx + PIXEL_TO_CLICK(ax / alen * 10.0 * BLOCK_SZ);
+	flee.cy = pl->pos.cy + PIXEL_TO_CLICK(ay / alen * 10.0 * BLOCK_SZ);
+	flee = World_wrap_clpos(flee);
+	wp = Smart_find_next_waypoint(pl, flee);
+	Smart_fly_towards(pl, wp, 22.0, repulse_vec, has_aim_dir ? &aim_dir : NULL);
+	return;
+    }
+
     /* Capture the Flag objectives */
     if (my_data->current_tactic == TACTIC_CTF_OBJECTIVE
 	|| BIT(pl->have, HAS_BALL)
@@ -1846,7 +2033,7 @@ static void Robot_smart_play(player_t *pl)
     if (best_item_i >= 0
 	&& (best_enemy == NULL
 	    || best_enemy_dist > 14.0 * BLOCK_SZ
-	    || !Smart_has_line_of_sight(pl, pl->pos, best_enemy->pos, false)
+	    || !best_enemy_los
 	    || best_item_score > 2.0 * my_data->genes.aggression_bias)) {
 	clpos_t wp = Smart_find_next_waypoint(pl, Obj[best_item_i]->pos);
 	Smart_fly_towards(pl, wp, 18.0, repulse_vec, has_aim_dir ? &aim_dir : NULL);
@@ -1862,7 +2049,7 @@ static void Robot_smart_play(player_t *pl)
 	    pref_dist *= 0.60;
 
 	if (best_enemy_dist > pref_dist * 1.20
-	    || !Smart_has_line_of_sight(pl, pl->pos, best_enemy->pos, false)) {
+	    || !best_enemy_los) {
 	    /* Hunt enemy across the map */
 	    clpos_t wp = Smart_find_next_waypoint(pl, best_enemy->pos);
 	    Smart_fly_towards(pl, wp, 20.0, repulse_vec, has_aim_dir ? &aim_dir : NULL);
