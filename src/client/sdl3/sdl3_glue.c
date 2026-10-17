@@ -86,6 +86,11 @@ void Platform_specific_talk_set_state(bool on)
     SDL3_Talk_Set_State(on);
 }
 
+void Platform_specific_team_select(void)
+{
+    SDL3_TeamSelect_Open();
+}
+
 void Toggle_fullscreen(void)
 {
     if (tng_window) {

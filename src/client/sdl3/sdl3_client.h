@@ -179,6 +179,13 @@ bool SDL3_Talk_Handle_Text_Input(const char *text);
 bool SDL3_Talk_Handle_Mouse_Down(int x, int y, int button);
 void SDL3_Render_Talk_Window(void);
 
+/* Team selection dialog */
+void SDL3_TeamSelect_Open(void);
+bool SDL3_TeamSelect_Active(void);
+bool SDL3_TeamSelect_Handle_Key_Down(SDL_Keycode key);
+bool SDL3_TeamSelect_Handle_Mouse_Down(int x, int y, int button);
+void SDL3_TeamSelect_Render(void);
+
 /* Audio */
 int  SDL3_Init_Audio(void);
 void SDL3_Cleanup_Audio(void);

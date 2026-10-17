@@ -588,6 +588,72 @@ bool Grok_map_options(void)
     return true;
 }
 
+/*
+ * Teamplay on a map that defines no teams (all bases belong to a single
+ * team): randomly split the bases into two teams.
+ */
+static void Split_bases_into_teams(void)
+{
+    int i, n = Num_bases();
+
+    if (!BIT(world->rules->mode, TEAM_PLAY)
+	|| world->NumTeamBases > 1
+	|| n < 2)
+	return;
+
+    for (i = 0; i < MAX_TEAMS; i++)
+	world->teams[i].NumBases = 0;
+    world->NumTeamBases = 2;
+
+    /* Shuffle the base order, the first half becomes team 0. */
+    {
+	int *perm = XMALLOC(int, n);
+
+	for (i = 0; i < n; i++)
+	    perm[i] = i;
+	for (i = n - 1; i > 0; i--) {
+	    int j = randomMT() % (i + 1), tmp = perm[i];
+
+	    perm[i] = perm[j];
+	    perm[j] = tmp;
+	}
+	for (i = 0; i < n; i++) {
+	    int team = (i < (n + 1) / 2) ? 0 : 1;
+
+	    Base_by_index(perm[i])->team = team;
+	    world->teams[team].NumBases++;
+	}
+	XFREE(perm);
+    }
+}
+
+/*
+ * Robots need a team with bases. If the configured robot team has none
+ * on this map, use the lowest existing team instead.
+ */
+static void Fix_robot_team(void)
+{
+    int i;
+
+    if (!BIT(world->rules->mode, TEAM_PLAY))
+	return;
+    if (options.maxRobots <= 0 && options.maxSmartRobots <= 0
+	&& options.minRobots <= 0 && options.minSmartRobots <= 0)
+	return;
+    if (options.robotTeam >= 0 && options.robotTeam < MAX_TEAMS
+	&& world->teams[options.robotTeam].NumBases > 0)
+	return;
+
+    for (i = 0; i < MAX_TEAMS; i++) {
+	if (world->teams[i].NumBases > 0) {
+	    warn("Robot team %d has no bases on this map, using team %d.",
+		 options.robotTeam, i);
+	    options.robotTeam = i;
+	    return;
+	}
+    }
+}
+
 bool Grok_map(void)
 {
     if (!Grok_map_options())
@@ -631,6 +697,9 @@ bool Grok_map(void)
 
     /* Both names share one meaning; each has its own variable so the alias's default cannot override the other. */
     options.smartRobotsLaser = options.smartRobotsLaser && options.smartRobotsUseLaser;
+
+    Split_bases_into_teams();
+    Fix_robot_team();
 
     Realloc_map_objects();
 

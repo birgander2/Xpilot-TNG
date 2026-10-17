@@ -2508,6 +2508,17 @@ int Receive_talk_ack(void)
 
 int Net_talk(char *str)
 {
+    /* "/team" without a number opens the team selection dialog. */
+    if (strncmp(str, "/team", 5) == 0) {
+	const char *arg = str + 5;
+
+	while (isspace((unsigned char)*arg))
+	    arg++;
+	if (*arg == '\0' && (str[5] == '\0' || isspace((unsigned char)str[5]))) {
+	    Platform_specific_team_select();
+	    return 0;
+	}
+    }
     strlcpy(talk_str, str, sizeof talk_str);
     if (talk_str[0] == '\\')	/* it's a clientcommand! */
 	executeCommand(talk_str + 1);

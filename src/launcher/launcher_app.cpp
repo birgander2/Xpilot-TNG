@@ -812,7 +812,8 @@ void LauncherApp::RenderAdvanced(bool server_mode) {
                 OptInt("Smartbot level", "smartRobotLevel", 1, 100, "Skill of the learning bots (1-100)");
                 OptInt("Bot team", "robotTeam", 0, 9);
                 ImGui::PopItemWidth();
-                OptBool("Restrict bots to their team", "restrictRobots");
+                OptBool("All bots in one team", "restrictRobots");
+                OptBool("No humans in bot team", "reserveRobotTeam", "Humans cannot join the bot team");
                 OptBool("Smartbots may use lasers", "smartRobotsLaser", "Allow smart robots to collect and fire lasers");
                 OptBool("Bots talk", "robotsTalk");
                 OptBool("Bots may leave", "robotsLeave");

@@ -180,6 +180,9 @@ void SDL3_Process_Events(void)
             break;
 
         case SDL_EVENT_KEY_DOWN:
+            if (SDL3_TeamSelect_Handle_Key_Down(evt.key.key)) {
+                break;
+            }
             if (clData.talking) {
                 if (SDL3_Talk_Handle_Key_Down(evt.key.key, evt.key.mod)) {
                     break;
@@ -197,6 +200,10 @@ void SDL3_Process_Events(void)
         case SDL_EVENT_MOUSE_BUTTON_DOWN: {
             int x = (int)evt.button.x;
             int y = (int)evt.button.y;
+
+            if (SDL3_TeamSelect_Handle_Mouse_Down(x, y, evt.button.button)) {
+                break;
+            }
 
             if (clData.talking) {
                 if (SDL3_Talk_Handle_Mouse_Down(x, y, evt.button.button)) {

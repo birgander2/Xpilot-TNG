@@ -15,6 +15,7 @@ add_executable(xpilot-tng-client
     sdl3_audio.c
     sdl3_glue.c
     sdl3_talk.c
+    sdl3_teamselect.c
     sdl3_welcome.c
     sdl3_bitmaps.c
 )

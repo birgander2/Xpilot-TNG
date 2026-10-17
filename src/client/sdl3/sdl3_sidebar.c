@@ -1490,6 +1490,9 @@ void SDL3_Render_UI_Overlays(void)
     if (clData.talking) {
         SDL3_Render_Talk_Window();
     }
+
+    /* 5. Team selection dialog */
+    SDL3_TeamSelect_Render();
 }
 
 /* =========================================================================
