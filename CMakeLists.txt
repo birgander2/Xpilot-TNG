@@ -19,6 +19,16 @@ add_compile_definitions(_GNU_SOURCE HAVE_CONFIG_H)
 
 if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
     add_compile_options(-Wall -Wextra -Wno-unused-parameter -Wno-sign-compare)
+
+    # Hardening (FORTIFY_SOURCE needs optimization, so skip it for Debug)
+    option(HARDENING "Enable compiler/linker hardening flags" ON)
+    if(HARDENING)
+        add_compile_options(-fstack-protector-strong -fstack-clash-protection
+                            -fno-strict-overflow -fPIE
+                            $<$<NOT:$<CONFIG:Debug>>:-U_FORTIFY_SOURCE>
+                            $<$<NOT:$<CONFIG:Debug>>:-D_FORTIFY_SOURCE=3>)
+        add_link_options(-pie -Wl,-z,relro,-z,now)
+    endif()
 endif()
 
 # Find System Dependencies

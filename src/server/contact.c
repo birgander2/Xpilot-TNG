@@ -1008,8 +1008,11 @@ void Set_deny_hosts(void)
 	n++;
 
     addr_mask_list = (struct addr_plus_mask *)
-	malloc(n * sizeof(*addr_mask_list));
-    num_addr_mask = n;
+	malloc((n ? n : 1) * sizeof(*addr_mask_list));
+    if (addr_mask_list == NULL) {
+	free(list);
+	return;
+    }
     strcpy(list, options.denyHosts);
     for (tok = strtok(list, list_sep); tok; tok = strtok(NULL, list_sep)) {
 	slash = strchr(tok, '/');

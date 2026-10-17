@@ -352,12 +352,14 @@ static int shape2wire(char *ship_shape_str, shipshape_t *ship)
 		warn("Missing colon in ship shape: %s", keyw);
 	    continue;
 	}
-	for (teststr = &buf[++i]; (buf[i] = str[i]) != '\0'; i++) {
+	for (teststr = &buf[++i];
+	     i < (int)sizeof(buf) - 1 && (buf[i] = str[i]) != '\0'; i++) {
 	    if (buf[i] == ')' ) {
 		buf[i++] = '\0';
 		break;
 	    }
 	}
+	buf[sizeof(buf) - 1] = '\0';	/* in case the string was too long */
 	str += i;
 
 	switch (Get_shape_keyword(keyw)) {
