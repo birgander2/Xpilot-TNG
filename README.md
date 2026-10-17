@@ -3,6 +3,8 @@
 
 > *"In space, no one can hear you scream... but across university computer labs in 1994, everyone knew who just ate a cluster nuke."*
 
+<p align="center"><img src="doc/titel.png" alt="XPilot TNG" width="100%"></p>
+
 ---
 
 ## 🛰️ What is XPilot TNG?
@@ -25,13 +27,14 @@ First conceived in 1991 by Bjørn Stabell and Ken Ronny Schouten, XPilot reliabl
 
 - 🤖 **Smartbots**: Strong AI-powered robots that will make you suffer (see below)
 - 🚀 **Launcher**: A cool new launcher app for both client and server.
+- 🤝 **Teamplay**: Better team selection and balancing, now with robots on your side — or against you. Try Blood's Music against a smartbot team if you dare.
 - 🐣 **Newbie mode**: Finally repaired after 30 years — now you can learn to fly without being fed to the cannons on day one.
 
 ---
 
 ## 📖 Background
 
-I'm an old XPilot player, and after almost 30 years I wanted to fly a few rounds with my kids. The catch: none of the available versions still works. What a pity — it was such a cool game! So I rolled up my sleeves and (mostly) brought it back to life. 🧑‍🚀 It's work in progress, and there are even some fresh ideas waiting in the hangar.
+I'm an old XPilot player (Sri Synadasti back in the days), and after almost 30 years I wanted to fly a few rounds with my kids. The catch: none of the available versions still works. What a pity — it was such a cool game! So I rolled up my sleeves and (mostly) brought it back to life. It's work in progress, and there are still some more fresh ideas waiting in the hangar...
 
 ---
 
@@ -138,8 +141,8 @@ Behind the scenes, mainly because there are so few players around nowadays, the 
 - They bounce shots off walls with billiards-grade geometry.
 - They sense when your fuel is low and swarm in for the kill.
 
-Give them hell, or join forces with them in team-play mode! Ball-game smartbots / smartbot teams are
-planned to come in future.
+Give them hell, or join forces with them in team-play mode! Ball-games against pure smartbot teams are possible, but the guys still have to 
+learn that a bit better.
 
 📖 **For detailed usage, configuration options, in-game chat commands, and AI architecture, see the [Smartbots Documentation](doc/SMARTBOTS.md).**
 
