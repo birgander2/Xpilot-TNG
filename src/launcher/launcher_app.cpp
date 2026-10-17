@@ -83,10 +83,22 @@ void LauncherApp::Init() {
     baseline_ok_ = options_mgr_.LoadBaseline(server_bin_path_, data_dir_ + "/defaults.txt");
 
     profile_.Load((data_dir_ + "/shipshapes.txt").c_str());
-    if (baseline_ok_) {   // network settings of lib/defaults.txt are the starting point
+    if (baseline_ok_) {   // network settings: compiled default < lib/defaults.txt < xpilotrc
         CopyTo(server_host_, sizeof(server_host_), options_mgr_.Get("serverHost"));
         server_cport_start_ = options_mgr_.GetInt("clientPortStart");
         server_cport_end_ = options_mgr_.GetInt("clientPortEnd");
+        if (options_mgr_.InDefaultsFile("contactPort")) server_port_ = options_mgr_.GetInt("contactPort");
+    }
+    {
+        auto rc_int = [](const char* key, int& out) {
+            std::string v = XpilotrcValue(key);
+            if (!v.empty()) out = std::atoi(v.c_str());
+        };
+        std::string host = XpilotrcValue("serverHost");
+        if (!host.empty()) CopyTo(server_host_, sizeof(server_host_), host);
+        rc_int("contactPort", server_port_);
+        rc_int("clientPortStart", server_cport_start_);
+        rc_int("clientPortEnd", server_cport_end_);
     }
     if (!baseline_ok_)
         process_mgr_.AddLog("LAUNCHER", "Could not read server defaults (" + server_bin_path_ +

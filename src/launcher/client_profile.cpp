@@ -88,6 +88,8 @@ std::string CurrentUserName() {
 
 } // namespace
 
+std::string XpilotrcValue(const char* key) { return ReadXpilotrcValue(key); }
+
 void ClientProfile::Load(const char* shipshapes_path) {
     rc_name_ = ReadXpilotrcValue("name");
     std::snprintf(name, sizeof name, "%s", (rc_name_.empty() ? CurrentUserName() : rc_name_).c_str());

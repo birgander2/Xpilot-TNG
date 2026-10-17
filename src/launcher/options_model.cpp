@@ -111,6 +111,7 @@ std::string OptionsManager::Canonical(const std::string& key) const {
 
 bool OptionsManager::LoadBaseline(const std::string& server_bin, const std::string& defaults_path) {
     base_.clear();
+    defaults_keys_.clear();
 
     std::string cmd = "'" + server_bin + "' -dump 2>/dev/null";
     FILE* p = popen(cmd.c_str(), "r");
@@ -167,9 +168,14 @@ void OptionsManager::ParseDefaultsFile(const std::string& path) {
 
         std::string canon = Canonical(key);
         if (canon.empty()) continue;
+        defaults_keys_.insert(Lower(canon));
         auto& e = base_[Lower(canon)];
         e.value = e.is_bool ? (ParseBool(val) ? "true" : "false") : val;
     }
+}
+
+bool OptionsManager::InDefaultsFile(const std::string& key) const {
+    return defaults_keys_.count(Lower(Canonical(key))) > 0;
 }
 
 // --- map / current values --------------------------------------------------
