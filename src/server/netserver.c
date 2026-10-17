@@ -620,7 +620,7 @@ extern int min_fd;
 int Setup_connection(char *user, char *nick, char *dpy, int team,
 		     char *addr, char *host, unsigned version)
 {
-    int i, free_conn_index = max_connections, my_port;
+    int i, free_conn_index = max_connections, my_port = 0;
     sock_t sock;
     connection_t *connp;
 

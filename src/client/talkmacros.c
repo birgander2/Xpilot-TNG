@@ -283,7 +283,11 @@ static int Talk_macro_parse_mesg(char *outbuf, char *inbuf, long pos,
 			fclose(fp);
 			break;
 		    }
-		    fread(tmpptr, 1, fsize, fp);
+		    if (fread(tmpptr, 1, fsize, fp) != (size_t)fsize) {
+						fclose(fp);
+						free(tmpptr);
+						break;
+					}
 		    tmpptr[fsize] = '\0';
 		    fclose(fp);
 		    pos = Talk_macro_parse_mesg(outbuf, tmpptr, pos, max);

@@ -310,7 +310,7 @@ static int shape2wire(char *ship_shape_str, shipshape_t *ship)
 {
     grid_t grid;
     int i, j, x, y, dx, dy, max, shape_version = 0;
-    ipos_t pt[MAX_SHIP_PTS2], in, old_in, engine, m_gun;
+    ipos_t pt[MAX_SHIP_PTS2], in, old_in = { 0, 0 }, engine, m_gun;
     ipos_t l_light[MAX_LIGHT_PTS], r_light[MAX_LIGHT_PTS];
     ipos_t l_gun[MAX_GUN_PTS], r_gun[MAX_GUN_PTS];
     ipos_t l_rgun[MAX_GUN_PTS], r_rgun[MAX_GUN_PTS], m_rack[MAX_RACK_PTS];
@@ -754,7 +754,7 @@ static int shape2wire(char *ship_shape_str, shipshape_t *ship)
 	    /*
 	     * For making sure the ship is the right width!
 	     */
-	    int pair[2];
+	    int pair[2] = { 0, 0 };
 	    int dist = 0, tmpDist = 0;
 	    double vec[2], width, dTmp;
 	    const int minWidth = 12;

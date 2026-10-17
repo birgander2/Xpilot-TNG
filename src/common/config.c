@@ -80,7 +80,9 @@ char *Conf_datadir(void)
 static char *build_path(const char *sub)
 {
     path_buf_idx = (path_buf_idx + 1) % 16;
-    snprintf(path_bufs[path_buf_idx], PATH_MAX, "%s%s", Conf_datadir(), sub);
+    int n = snprintf(path_bufs[path_buf_idx], PATH_MAX, "%s%s", Conf_datadir(), sub);
+    if (n < 0 || n >= PATH_MAX)
+        path_bufs[path_buf_idx][0] = '\0';
     return path_bufs[path_buf_idx];
 }
 
