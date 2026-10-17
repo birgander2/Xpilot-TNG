@@ -853,6 +853,8 @@ void LauncherApp::RenderLog(float height) {
         ImGui::SameLine();
         ImGui::TextUnformatted(e.text.c_str());
     }
+    // Bottom padding so the last line isn't clipped by the border/h-scrollbar
+    ImGui::Dummy(ImVec2(0, ImGui::GetStyle().ItemSpacing.y + 2.0f));
     if (auto_scroll_logs_ && ImGui::GetScrollY() >= ImGui::GetScrollMaxY() - 4.0f) ImGui::SetScrollHereY(1.0f);
     ImGui::EndChild();
 }

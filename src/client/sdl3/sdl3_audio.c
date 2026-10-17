@@ -65,16 +65,16 @@ static bool resolve_sound_path(const char *input_path, char *resolved, size_t re
     const char *base = strrchr(input_path, '/');
     base = base ? (base + 1) : input_path;
 
-    snprintf(resolved, resolved_sz, "%s%s", Conf_sounddir(), base);
-    if (access(resolved, R_OK) == 0)
+    int n = snprintf(resolved, resolved_sz, "%s%s", Conf_sounddir(), base);
+    if (n >= 0 && (size_t)n < resolved_sz && access(resolved, R_OK) == 0)
         return true;
 
-    snprintf(resolved, resolved_sz, "lib/sound/%s", base);
-    if (access(resolved, R_OK) == 0)
+    n = snprintf(resolved, resolved_sz, "lib/sound/%s", base);
+    if (n >= 0 && (size_t)n < resolved_sz && access(resolved, R_OK) == 0)
         return true;
 
-    snprintf(resolved, resolved_sz, "../lib/sound/%s", base);
-    if (access(resolved, R_OK) == 0)
+    n = snprintf(resolved, resolved_sz, "../lib/sound/%s", base);
+    if (n >= 0 && (size_t)n < resolved_sz && access(resolved, R_OK) == 0)
         return true;
 
     return false;

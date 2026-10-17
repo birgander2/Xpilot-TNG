@@ -108,7 +108,7 @@ static void Realloc_map_objects(void)
 
 int World_place_cannon(clpos_t pos, int dir, int team)
 {
-    cannon_t t, *cannon;
+    cannon_t t;
     int ind = Num_cannons(), i;
 
     t.pos = pos;
@@ -129,8 +129,7 @@ int World_place_cannon(clpos_t pos, int dir, int team)
     t.shot_speed = -1;
     t.smartness = -1;
     Arraylist_add(world->cannons, &t);
-    cannon = Cannon_by_index(ind);
-    assert(Cannon_by_id(t.id) == cannon);
+    assert(Cannon_by_id(t.id) == Cannon_by_index(ind));
 
     return ind;
 }

@@ -209,7 +209,10 @@ void Get_recording_data(void)
 	    warn("Recording out of sync");
 	    exit(1);
 	}
-	fread(bufs[i].start, 1, len, recf1);
+	if (fread(bufs[i].start, 1, len, recf1) != (size_t)len) {
+	    warn("Short read on recording");
+	    exit(1);
+	}
 	bufs[i].num_read = len;
 	*bufs[i].curp = bufs[i].start;
 	Convert_to_host(bufs[i].start, len, bufs[i].type);
