@@ -932,9 +932,14 @@ static int Queue_player(char *user, char *nick, char *disp, int team,
 	    return E_IN_USE;
 	}
 
-	/* same computer? */
+	/*
+	 * Same computer?  Several players may share one address (NAT, LAN
+	 * party), so use the same limit as for connected clients instead of
+	 * a fixed small number.  0 means no limit.
+	 */
 	if (!strcmp(addr, qp->host_addr)) {
-	    if (++num_same_hosts > 1)
+	    if (options.maxClientsPerIP > 0
+		&& ++num_same_hosts >= options.maxClientsPerIP)
 		return E_IN_USE;
 	}
     }
