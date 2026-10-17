@@ -33,6 +33,7 @@ public:
 
     // Window integration (used by main loop)
     void DesiredWindowSize(int* w, int* h) const;
+    bool WindowResizable() const { return screen_ != Screen::Menu; }   // welcome screen has a fixed size
     bool WindowHidden() const { return screen_ == Screen::Playing; }
     void RequestQuit();                    // window close button / SDL_QUIT
     bool WantsQuit() const { return quit_; }

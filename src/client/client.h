@@ -701,6 +701,7 @@ void Free_selectionAndHistory(void);
 void Add_message(const char *message);
 void Add_newbie_message(const char *message);
 void Newbie_check_items(const u_byte *newNumItems);
+void Newbie_check_shieldtime(void);
 void Newbie_frame(void);
 void Newbie_status(bool playing);
 void Newbie_check_fuel(double newFuelSum);

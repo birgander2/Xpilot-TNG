@@ -630,6 +630,9 @@ bool Grok_map(void)
 
     LIMIT(options.smartRobotLevel, 1, 100);
 
+    /* Both names share one meaning; each has its own variable so the alias's default cannot override the other. */
+    options.smartRobotsLaser = options.smartRobotsLaser && options.smartRobotsUseLaser;
+
     Realloc_map_objects();
 
     if (Num_bases() <= 0)

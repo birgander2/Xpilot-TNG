@@ -21,6 +21,8 @@ First conceived in 1991 by Bjørn Stabell and Ken Ronny Schouten, XPilot reliabl
 New game features:
 
 - **Smartbots**: Strong AI-powered robots that will make you suffer (see below)
+- **Launcher**: A cool new launcher app for both client and server.
+- **Newbie mode**: Finally repaired after 30 years...
 
 ---
 
@@ -169,6 +171,7 @@ For enthusiasts, historians, and retro space aces seeking original archives, rep
 
 ### 🚀 Modern Spin-Offs & AI Research
 - 🌐 [**WPilot (HTML5 Web Remake)**](https://github.com/jfd/wpilot) — The open-source browser remake using HTML5 Canvas and WebSockets inspired directly by XPilot.
+- ♾️ [**XPilot Infinity**](https://github.com/kekyo/xpilot-infinity) — Another fork of XPilot NG modernized for current systems, with SDL3/OpenGL graphics, sound, and TCP/WebSocket transports.
 - 🧠 [**XPilot-AI**](https://github.com/mit-ll/xpilot-ai) — MIT Lincoln Laboratory's autonomous AI agent research and competition platform built on XPilot.
 
 ---
