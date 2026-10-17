@@ -850,6 +850,8 @@ static void Robot_create(bool want_smart)
     strlcpy(robot->name, rob->name, MAX_CHARS);
     strlcpy(robot->username, options.robotUserName, MAX_CHARS);
     strlcpy(robot->hostname, options.robotHostName, MAX_CHARS);
+    if (!strcmp(rob_type->name, SMART_ROBOT_TYPE))
+	strlcpy(robot->hostname, "smartbot.from.hell", MAX_CHARS);
 
     robot->turnspeed = MAX_PLAYER_TURNSPEED;
     robot->turnspeed_s = MAX_PLAYER_TURNSPEED;
