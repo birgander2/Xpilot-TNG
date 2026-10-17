@@ -511,6 +511,11 @@ void Server_info(char *str, size_t max_size)
     int i, j, k;
     player_t *pl, **order;
     char name[MAX_CHARS], lblstr[128], msg[512];
+    int num_humans = 0;
+
+    for (i = 0; i < NumPlayers; i++)
+	if (Player_is_human(Player_by_index(i)))
+	    num_humans++;
 
     snprintf(str, max_size,
 	     "SERVER VERSION..: %s\n"
@@ -528,7 +533,7 @@ void Server_info(char *str, size_t max_size)
 	     Describe_game_status(),
 	     FPS,
 	     world->name, world->author, world->width, world->height,
-	     NumPlayers, Num_bases());
+	     num_humans, Num_bases());
 
     assert(strlen(str) < max_size);
 
