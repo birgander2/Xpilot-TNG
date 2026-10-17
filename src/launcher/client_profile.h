@@ -3,6 +3,9 @@
 #include <string>
 #include <vector>
 
+// Value of "xpilot.<key>" in the xpilotrc, empty if missing.
+std::string XpilotrcValue(const char* key);
+
 // Who the player is when the launcher starts a client: nickname and ship shape.
 // Defaults come from the xpilotrc and the account name; the GUI may override both.
 class ClientProfile {

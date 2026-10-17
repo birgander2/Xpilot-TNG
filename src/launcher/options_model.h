@@ -28,6 +28,9 @@ public:
     // Returns false if the dump could not be read (GUI then works with raw map options only).
     bool LoadBaseline(const std::string& server_bin, const std::string& defaults_path);
 
+    // True if lib/defaults.txt sets the option itself (not just the compiled default).
+    bool InDefaultsFile(const std::string& key) const;
+
     // Switches to a map: discards all GUI edits and loads the map's values.
     void SelectMap(const MapInfo& map);
 
@@ -62,6 +65,8 @@ public:
     static int FindFreePort(int start_port = kDefaultServerPort);
 
 private:
+    std::set<std::string> defaults_keys_;   // lower-case names set by defaults.txt
+
     struct Entry {
         std::string name;   // canonical spelling, e.g. "maxRobots"
         std::string value;  // baseline value (defaults + defaults.txt)
