@@ -90,6 +90,12 @@ int Sockbuf_read(sockbuf_t *sbuf);
 int Sockbuf_copy(sockbuf_t *dest, sockbuf_t *src, int len);
 
 int Packet_printf(sockbuf_t *, const char *fmt, ...);
+/*
+ * Format characters: %c %d %u %hd %hu %ld %lu and strings.
+ * NOTE: the string destinations are not size checked.  A "%s" destination
+ * must hold MAX_CHARS bytes and a "%S" destination MSG_LEN bytes
+ * (the scanner stops and fails after that many bytes without a NUL).
+ */
 int Packet_scanf(sockbuf_t *, const char *fmt, ...);
 
 #endif
