@@ -342,7 +342,7 @@ void Contact(int fd, void *arg)
     unsigned magic, version, my_magic;
     uint16_t port;
     char user_name[MAX_CHARS], disp_name[MAX_CHARS], nick_name[MAX_CHARS];
-    char host_name[MAX_CHARS], host_addr[24], str[MSG_LEN];
+    char host_name[MAX_CHARS], host_addr[INET6_ADDRSTRLEN], str[MSG_LEN];
 
     UNUSED_PARAM(fd); UNUSED_PARAM(arg);
     /*
@@ -712,7 +712,7 @@ struct queued_player {
     char			nick_name[MAX_CHARS];
     char			disp_name[MAX_CHARS];
     char			host_name[MAX_CHARS];
-    char			host_addr[24];
+    char			host_addr[INET6_ADDRSTRLEN];
     int				port;
     int				team;
     unsigned			version;
