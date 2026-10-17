@@ -1390,7 +1390,7 @@ void Log_playtimes(void)
     xpprintf("  %-20s  %9s\n", "--------------------", "---------");
     for (i = 0; i < num_playtimes; i++) {
 	long s = playtimes[i].seconds;
-	char t[16];
+	char t[32];
 
 	snprintf(t, sizeof(t), "%ld:%02ld:%02ld",
 		 s / 3600, (s / 60) % 60, s % 60);
