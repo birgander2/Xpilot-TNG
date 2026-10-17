@@ -325,6 +325,7 @@ typedef struct player {
     int		maxturnsps;		/* turns per second limit */
 
     int		rectype;		/* normal, saved or spectator */
+    time_t	join_time;		/* when the player entered the game */
     struct ranknode	*rank;
 
     double	pauseTime;		/* seconds player has paused */
@@ -734,6 +735,7 @@ void Reset_all_players(void);
 void Check_team_members(int);
 void Compute_game_status(void);
 void Delete_player(player_t *pl);
+void Log_playtimes(void);
 void Add_spectator(player_t *pl);
 void Delete_spectator(player_t *pl);
 void Detach_ball(player_t *pl, ballobject_t *ball);

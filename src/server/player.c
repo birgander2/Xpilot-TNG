@@ -466,6 +466,7 @@ int Init_player(int ind, shipshape_t *ship, int type)
 
     memset(pl, 0, sizeof(player_t));
     pl->visibility = v;
+    pl->join_time = time(NULL);
 
     /*
      * Make sure floats, doubles and pointers are correctly zeroed.
@@ -1336,11 +1337,73 @@ void Compute_game_status(void)
     }
 }
 
+/*
+ * Accumulated play time per human player name, for the shutdown log.
+ */
+typedef struct {
+    char	name[MAX_CHARS];
+    long	seconds;
+} playtime_t;
+
+static playtime_t	*playtimes;
+static int		num_playtimes;
+
+static void Add_playtime(const player_t *pl)
+{
+    long secs = (long)(time(NULL) - pl->join_time);
+    playtime_t *pt;
+    int i;
+
+    for (i = 0; i < num_playtimes; i++) {
+	if (!strcmp(playtimes[i].name, pl->name)) {
+	    playtimes[i].seconds += secs;
+	    return;
+	}
+    }
+    pt = realloc(playtimes, (num_playtimes + 1) * sizeof(*playtimes));
+    if (pt == NULL)
+	return;
+    playtimes = pt;
+    strlcpy(pt[num_playtimes].name, pl->name, sizeof(pt[0].name));
+    pt[num_playtimes].seconds = secs;
+    num_playtimes++;
+}
+
+static int Playtime_cmp(const void *a, const void *b)
+{
+    long x = ((const playtime_t *)a)->seconds;
+    long y = ((const playtime_t *)b)->seconds;
+
+    return (x > y) - (x < y);
+}
+
+/* Log total play time of all human players, ascending. */
+void Log_playtimes(void)
+{
+    int i;
+
+    if (num_playtimes == 0)
+	return;
+    qsort(playtimes, num_playtimes, sizeof(*playtimes), Playtime_cmp);
+    xpprintf("%s Total play time per player:\n", showtime());
+    for (i = 0; i < num_playtimes; i++) {
+	long s = playtimes[i].seconds;
+	xpprintf("  %-20s %ld:%02ld:%02ld\n", playtimes[i].name,
+		 s / 3600, (s / 60) % 60, s % 60);
+    }
+    free(playtimes);
+    playtimes = NULL;
+    num_playtimes = 0;
+}
+
 void Delete_player(player_t *pl)
 {
     int ind = GetInd(pl->id), i, j, id = pl->id;
     object_t *obj;
     team_t *teamp = Team_by_index(pl->team);
+
+    if (Player_is_human(pl))
+	Add_playtime(pl);
 
     xpprintf("[leave] %s|%d\n", pl->name, id);
     fflush(stdout);
