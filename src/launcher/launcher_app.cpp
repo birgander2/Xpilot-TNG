@@ -9,6 +9,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
+#include <unistd.h>
 
 namespace fs = std::filesystem;
 
@@ -25,6 +26,35 @@ const ImVec4 kBad(1.00f, 0.40f, 0.40f, 1.00f);
 
 void CopyTo(char* dst, size_t cap, const std::string& s) {
     std::snprintf(dst, cap, "%s", s.c_str());
+}
+
+// Returns a human-readable problem description, or "" if the binary looks runnable.
+// Missing shared libraries (e.g. libSDL3_ttf) are found via ldd without starting the binary.
+std::string CheckBinary(const std::string& label, const std::string& path) {
+    if (path.find('/') == std::string::npos) return "";   // resolved via PATH at exec time
+    if (access(path.c_str(), X_OK) != 0)
+        return "The " + label + " was not found or is not executable (" + path + "). Did the build finish?";
+
+    std::string quoted = "'";
+    for (char c : path) quoted += (c == '\'') ? std::string("'\\''") : std::string(1, c);
+    quoted += "'";
+    FILE* f = popen(("ldd " + quoted + " 2>&1").c_str(), "r");
+    if (!f) return "";
+    std::string missing;
+    char line[512];
+    while (fgets(line, sizeof line, f)) {
+        std::string l = line;
+        if (l.find("not found") == std::string::npos) continue;
+        size_t b = l.find_first_not_of(" \t");
+        size_t e = l.find(" =>");
+        if (b == std::string::npos || e == std::string::npos || e <= b) continue;
+        if (!missing.empty()) missing += ", ";
+        missing += l.substr(b, e - b);
+    }
+    pclose(f);
+    if (missing.empty()) return "";
+    return "The " + label + " cannot start: missing system library " + missing +
+           ". Please install the matching package (e.g. SDL3_ttf) and restart the launcher.";
 }
 
 } // namespace
@@ -80,6 +110,14 @@ void LauncherApp::Init() {
     server_bin_path_ = ResolveBinaryPath("xpilot-tng-server");
     client_bin_path_ = ResolveBinaryPath("xpilot-tng-client");
 
+    server_problem_ = CheckBinary("server", server_bin_path_);
+    client_problem_ = CheckBinary("client", client_bin_path_);
+    for (const auto* prob : {&server_problem_, &client_problem_})
+        if (!prob->empty()) {
+            process_mgr_.AddLog("LAUNCHER", *prob);
+            banner_ += (banner_.empty() ? "" : "\n") + *prob;
+        }
+
     baseline_ok_ = options_mgr_.LoadBaseline(server_bin_path_, data_dir_ + "/defaults.txt");
 
     profile_.Load((data_dir_ + "/shipshapes.txt").c_str());
@@ -133,6 +171,15 @@ void LauncherApp::RequestQuit() {
 // navigation / actions
 // ============================================================================
 
+bool LauncherApp::BinariesOk(bool server, bool client) {
+    std::string msg;
+    if (server) msg = server_problem_;
+    if (client && !client_problem_.empty()) msg += (msg.empty() ? "" : "\n") + client_problem_;
+    if (msg.empty()) return true;
+    banner_ = msg;
+    return false;
+}
+
 void LauncherApp::GoTo(Screen s) {
     screen_ = s;
     focus_first_ = true;
@@ -171,6 +218,7 @@ void LauncherApp::SelectMap(int idx) {
 
 void LauncherApp::JoinRunningServer() {
     banner_.clear();
+    if (!BinariesOk(false, true)) return;
     if (!process_mgr_.StartClient(client_bin_path_, profile_.BuildArgs(running_port_))) {
         banner_ = "The client could not be started (" + client_bin_path_ + ").";
         return;
@@ -202,6 +250,7 @@ void LauncherApp::StartLocalGame(bool force) {
     auto client_args = profile_.BuildArgs(port);
 
     banner_.clear();
+    if (!BinariesOk(true, true)) return;
     force_log_open_ = false;
     play_kind_ = PlayKind::Local;
     launching_ = true;
@@ -255,6 +304,7 @@ void LauncherApp::StartServerMode() {
     ApplyServerModeSettings(opts);
     auto args = opts.BuildServerArgs(LaunchMode::Server, map.full_path, port);
     banner_.clear();
+    if (!BinariesOk(true, false)) return;
     if (!process_mgr_.StartServer(server_bin_path_, args)) {
         banner_ = "The server could not be started. See log.";
         force_log_open_ = true;
@@ -270,6 +320,7 @@ void LauncherApp::StartServerMode() {
 
 void LauncherApp::JoinServer(const std::string& host, int port) {
     banner_.clear();
+    if (!BinariesOk(false, true)) return;
     if (!process_mgr_.StartClient(client_bin_path_, profile_.BuildArgs(port, host))) {
         banner_ = "The client could not be started (" + client_bin_path_ + ").";
         return;
@@ -968,10 +1019,11 @@ void LauncherApp::RenderServerList(const char* id, ServerSearch& search) {
 
     const ImGuiTableFlags tf = ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerH |
                                ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingStretchProp;
-    if (!ImGui::BeginTable(id, 6, tf, ImVec2(0, ImGui::GetContentRegionAvail().y))) return;
+    if (!ImGui::BeginTable(id, 7, tf, ImVec2(0, ImGui::GetContentRegionAvail().y))) return;
     ImGui::TableSetupScrollFreeze(0, 1);
     ImGui::TableSetupColumn("Server", ImGuiTableColumnFlags_WidthStretch, 2.0f);
     ImGui::TableSetupColumn("Map", ImGuiTableColumnFlags_WidthStretch, 2.0f);
+    ImGui::TableSetupColumn("Version", ImGuiTableColumnFlags_WidthFixed, 72);
     ImGui::TableSetupColumn("Players", ImGuiTableColumnFlags_WidthFixed, 64);
     ImGui::TableSetupColumn("Teams", ImGuiTableColumnFlags_WidthFixed, 54);
     ImGui::TableSetupColumn("Status", ImGuiTableColumnFlags_WidthStretch, 1.0f);
@@ -995,12 +1047,14 @@ void LauncherApp::RenderServerList(const char* id, ServerSearch& search) {
             custom_selected_ = false;
             if (ImGui::IsMouseDoubleClicked(0)) PlaySelectedNetwork();
         }
-        if (ImGui::IsItemHovered() && !e.author.empty()) ImGui::SetTooltip("Version %s, map by %s", e.version.c_str(), e.author.c_str());
+        if (ImGui::IsItemHovered() && !e.author.empty()) ImGui::SetTooltip("Map by %s", e.author.c_str());
         ImGui::SameLine(0, 0);
         ImGui::TextUnformatted(e.host.c_str());
         if (e.port != kDefaultServerPort) { ImGui::SameLine(0, 0); ImGui::TextDisabled(":%d", e.port); }
         ImGui::TableNextColumn();
         ImGui::TextUnformatted(e.map.c_str());
+        ImGui::TableNextColumn();
+        ImGui::TextUnformatted(e.version.c_str());
         ImGui::TableNextColumn();
         ImGui::Text("%d/%d", e.players, e.bases);
         ImGui::TableNextColumn();
