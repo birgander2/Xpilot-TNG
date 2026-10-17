@@ -1029,6 +1029,20 @@ static option_desc opts[] = {
 	OPT_COMMAND | OPT_DEFAULTS | OPT_VISIBLE
     },
     {
+	"contactAdmin",
+	"contactAdmin",
+	"false",
+	&options.contactAdmin,
+	valBool,
+	tuner_none,
+	"Accept privileged requests (lock game, shutdown, kick, set option)\n"
+	"on the contact port?  These are only honoured from 127.0.0.1 for a\n"
+	"client whose claimed user name equals the server owner's, which any\n"
+	"local user can fake, so they are disabled by default.  Operators can\n"
+	"still use the /password and /set commands in game.\n",
+	OPT_COMMAND | OPT_DEFAULTS | OPT_VISIBLE
+    },
+    {
 	"denyHosts",
 	"denyHosts",
 	"",
