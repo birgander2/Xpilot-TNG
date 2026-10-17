@@ -250,6 +250,25 @@ def test_deny_hosts(binary):
         srv.stop()
 
 
+def test_option_list_long_value(binary):
+    """OPTION_LIST used to sprintf long string options into a 256 byte buffer."""
+    deny = ",".join("10.%d.%d.1" % (i // 250, i % 250) for i in range(120))   # ~1300 chars
+    srv = Server(binary, "-denyHosts", deny, "-greeting", "G" * 900)
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.sendto(contact_packet(OPTION_LIST), srv.addr())
+        got = 0
+        while select.select([sock], [], [], 1.0)[0]:
+            sock.recv(65536)
+            got += 1
+        sock.close()
+        check("option list with very long values is answered (%d packets)" % got, got > 0)
+        check("server alive after option list", srv.alive())
+    finally:
+        out = srv.stop()
+    check("no sanitizer reports (option list)", sanitizer_clean(out), out[-1500:])
+
+
 def test_contact_admin(binary):
     srv = Server(binary)
     try:
@@ -364,7 +383,7 @@ def main():
         print(__doc__)
         return 2
     binary = os.path.abspath(sys.argv[1])
-    for t in (test_deny_hosts, test_contact_admin, test_rate_limit, test_shared_address, test_login_hijack,
+    for t in (test_deny_hosts, test_option_list_long_value, test_contact_admin, test_rate_limit, test_shared_address, test_login_hijack,
               test_pre_login_packets, test_password_lockout):
         print("== " + t.__name__)
         try:
