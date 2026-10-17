@@ -360,10 +360,10 @@ static option_desc opts[] = {
 	"smartRobotsUseLaser",
 	"allowSmartLaser",
 	"true",
-	&options.smartRobotsLaser,
+	&options.smartRobotsUseLaser,
 	valBool,
 	tuner_dummy,
-	"Alias for smartRobotsLaser.\n",
+	"Alias for smartRobotsLaser (lasers are disabled if either is false).\n",
 	OPT_ORIGIN_ANY | OPT_VISIBLE
     },
     {

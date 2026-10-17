@@ -160,23 +160,75 @@ static void Newbie_item_picked_up(int item)
 static bool have_old_items = false;
 static bool have_old_fuel = false;
 
+static unsigned long newbie_grace_until = 0;	/* frame, see Newbie_status() */
+static bool was_playing = false;
+
+/*
+ * Call with the player's state after each self packet.  Start items and
+ * start fuel can show up a frame or two after respawning, so hints stay
+ * quiet for a second after the player appears.
+ */
 void Newbie_status(bool playing)
 {
     if (!playing)
 	have_old_items = have_old_fuel = false;
+    else if (!was_playing)
+	newbie_grace_until = newbie_frame + (unsigned long)Newbie_fps();
+    was_playing = playing;
 }
 
-/* Call with the item counts of a new self packet, before they are stored. */
+/*
+ * The server sends the item counts in a separate packet, and only if the
+ * player owns any, so numItems is cleared and refilled every frame.  Keep
+ * our own copy: the packet fills new_items, Newbie_frame() compares it
+ * with last_items once per frame.
+ */
+static u_byte new_items[NUM_ITEMS];
+static u_byte last_items[NUM_ITEMS];
+
 void Newbie_check_items(const u_byte *newNumItems)
 {
-    int i;
+    memcpy(new_items, newNumItems, sizeof(new_items));
+}
 
-    if (newbie && have_old_items) {
+/*
+ * Without regular shields the server switches on the first emergency
+ * shield at pickup, so the item count never rises on the client.
+ * Catch it by the shield timer starting while we owned none.
+ */
+static bool es_timer_seen = false;
+static bool es_timer_was_on = false;
+static u_byte es_prev_count = 0;	/* count one frame before last_items */
+
+void Newbie_check_shieldtime(void)
+{
+    if (newbie)
+	es_timer_seen = true;
+}
+
+static void Newbie_compare_items(void)
+{
+    int i;
+    bool es_on = es_timer_seen;
+
+    es_timer_seen = false;
+    if (newbie && have_old_items && newbie_frame >= newbie_grace_until
+	&& es_on && !es_timer_was_on
+	&& last_items[ITEM_EMERGENCY_SHIELD] == 0
+	&& es_prev_count == 0
+	&& new_items[ITEM_EMERGENCY_SHIELD] == 0)
+	Newbie_item_picked_up(ITEM_EMERGENCY_SHIELD);
+    es_timer_was_on = es_on;
+    es_prev_count = last_items[ITEM_EMERGENCY_SHIELD];
+
+    if (newbie && have_old_items && newbie_frame >= newbie_grace_until) {
 	for (i = 0; i < NUM_ITEMS; i++) {
-	    if (i != ITEM_FUEL && newNumItems[i] > numItems[i])
+	    if (i != ITEM_FUEL && new_items[i] > last_items[i])
 		Newbie_item_picked_up(i);
 	}
     }
+    memcpy(last_items, new_items, sizeof(last_items));
+    memset(new_items, 0, sizeof(new_items));
     have_old_items = true;
 }
 
@@ -187,7 +239,8 @@ void Newbie_check_items(const u_byte *newNumItems)
  */
 void Newbie_check_fuel(double newFuelSum)
 {
-    if (newbie && have_old_fuel && newFuelSum - fuelSum >= NEWBIE_FUEL_PACK_MIN)
+    if (newbie && have_old_fuel && newbie_frame >= newbie_grace_until
+	&& newFuelSum - fuelSum >= NEWBIE_FUEL_PACK_MIN)
 	Newbie_item_picked_up(ITEM_FUEL);
     have_old_fuel = true;
 }
@@ -263,6 +316,7 @@ void Newbie_frame(void)
     char msg[MSG_LEN];
     int tries;
 
+    Newbie_compare_items();
     newbie_frame++;
     if (!newbie || clData.quitMode || clData.talking)
 	return;

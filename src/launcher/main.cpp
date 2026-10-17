@@ -196,7 +196,9 @@ int main(int argc, char* argv[]) {
         int want_w = 0, want_h = 0;
         app.DesiredWindowSize(&want_w, &want_h);
         if (want_w != cur_w || want_h != cur_h) {
+            SDL_SetWindowResizable(window, true);   // a fixed-size window may refuse SetWindowSize
             SDL_SetWindowSize(window, want_w, want_h);
+            SDL_SetWindowResizable(window, app.WindowResizable());
             SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
             cur_w = want_w;
             cur_h = want_h;

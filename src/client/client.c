@@ -1616,7 +1616,6 @@ int Handle_self(int x, int y, int vx, int vy, int newHeading,
     lock_dir = newLockBearing;
     nextCheckPoint = newNextCheckPoint;
     autopilotLight = newAutopilotLight;
-    Newbie_check_items(newNumItems);
     Newbie_check_fuel(newFuelSum);
     Newbie_frame();
     memcpy(numItems, newNumItems, NUM_ITEMS * sizeof(u_byte));
@@ -1678,6 +1677,7 @@ int Handle_thrusttime(int count, int max)
 int Handle_shieldtime(int count, int max)
 {
     shieldtime = count;
+    Newbie_check_shieldtime();
     shieldtimemax = max;
     return 0;
 }
