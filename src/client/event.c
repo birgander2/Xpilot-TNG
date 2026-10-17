@@ -1008,7 +1008,7 @@ xp_option_t key_options[] = {
 
     XP_KEY_OPTION(
 	"keyChangeHome",
-	"Home h",
+	"Home",
 	KEY_CHANGE_HOME,
 	"Change home base.\n"
 	"When the ship is close to a suitable base.\n"),
@@ -1147,7 +1147,7 @@ xp_option_t key_options[] = {
 
     XP_KEY_OPTION(
 	"keyToggleAutoPilot",
-	"h",
+	"9",
 	KEY_TOGGLE_AUTOPILOT,
 	"Toggle automatic pilot mode.\n"),
 

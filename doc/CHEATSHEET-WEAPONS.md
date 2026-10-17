@@ -53,7 +53,7 @@ Icons are the in-game item pickup symbols (16×16 XBM from `src/client/items/`, 
 | <img src="img/items/itemPhasingDevice.png" width="32"> | **Phasing** | `P` | Pass through walls and shots for a short time. |
 | <img src="img/items/itemHyperJump.png" width="32"> | **Hyperjump** | `Q` | Random teleport on the map. |
 | <img src="img/items/itemSensorPack.png" width="32"> | **Sensor** | auto | Extends radar visibility (shows cloaked/hidden ships). |
-| <img src="img/items/itemAutopilot.png" width="32"> | **Autopilot** | `H` | Stabilises/brakes ship when engaged. |
+| <img src="img/items/itemAutopilot.png" width="32"> | **Autopilot** | `9` | Stabilises/brakes ship when engaged. |
 | <img src="img/items/itemEmergencyThrust.png" width="32"> | **Emergency thrust** | `J` | Short burst of extra thrust. |
 | <img src="img/items/itemTank.png" width="32"> | **Fuel tank** | `E` / `W` / `R` | Extra fuel capacity; cycle with `E`/`W`, jettison with `R` (jettisoned tank explodes as a hazard). |
 | <img src="img/items/itemTransporter.png" width="32"> | **Transporter** | `T` | Steals an item from a nearby ship. |

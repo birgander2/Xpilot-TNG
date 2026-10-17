@@ -331,7 +331,8 @@ foreach(_t xpilot-tng-server xpilot-tng-client xpilot-tng-launcher)
     if(TARGET ${_t})
         add_dependencies(dist ${_t})
         add_custom_command(TARGET dist POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:${_t}>" "${DIST_DIR}/")
+            COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:${_t}>" "${DIST_DIR}/"
+            COMMAND chmod 755 "${DIST_DIR}/$<TARGET_FILE_NAME:${_t}>")
     endif()
 endforeach()
 

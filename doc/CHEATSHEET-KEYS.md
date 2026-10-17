@@ -17,7 +17,7 @@ Pointer (mouse) defaults: **Button 1 = Fire shot**, **Button 2 / 3 = Thrust**, B
 | `O` | keyDeflector | Toggle deflector |
 | `J` | keyEmergencyThrust | Emergency thrust |
 | `Caps Lock` | keyEmergencyShield | Emergency shield |
-| `H` | keyToggleAutoPilot | Toggle autopilot |
+| `9` | keyToggleAutoPilot | Toggle autopilot |
 | `End` | keySelfDestruct | Toggle self-destruct |
 | `Pause` | keyPause | Pause (only stationary on home base) |
 | `Home` | keyChangeHome | Change home base (when near a suitable base) |

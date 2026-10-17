@@ -1046,15 +1046,22 @@ void LauncherApp::RenderServerList(const char* id, ServerSearch& search) {
         ImGui::AlignTextToFramePadding();
         const std::string& addr = e.ip.empty() ? e.host : e.ip;
         const bool selected = (addr == sel_ip_ && e.port == sel_port_);
-        if (ImGui::Selectable("##row", selected,
-                              ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap |
-                                  ImGuiSelectableFlags_AllowDoubleClick)) {
+        // selected row: strong accent fill instead of the subtle theme header colour
+        if (selected) {
+            ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.20f, 0.45f, 0.78f, 0.85f));
+            ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.25f, 0.52f, 0.88f, 0.95f));
+        }
+        const bool clicked = ImGui::Selectable("##row", selected,
+                                               ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap |
+                                                   ImGuiSelectableFlags_AllowDoubleClick);
+        if (selected) ImGui::PopStyleColor(2);
+        if (clicked) {
             sel_ip_ = addr;
             sel_host_ = e.host.empty() ? addr : e.host;
             sel_port_ = e.port;
             custom_selected_ = false;
-            if (ImGui::IsMouseDoubleClicked(0)) PlaySelectedNetwork();
         }
+        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0) && !launching_) PlaySelectedNetwork();
         if (ImGui::IsItemHovered() && !e.author.empty()) ImGui::SetTooltip("Map by %s", e.author.c_str());
         ImGui::SameLine(0, 0);
         ImGui::TextUnformatted(e.host.c_str());
