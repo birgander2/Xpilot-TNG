@@ -100,6 +100,9 @@ private:
 
     std::string server_bin_path_;
     std::string client_bin_path_;
+    std::string server_problem_;   // non-empty: binary missing or shared library not found
+    std::string client_problem_;
+    bool BinariesOk(bool server, bool client);   // sets banner_ and returns false on problems
     bool baseline_ok_ = false;
 
     Screen screen_ = Screen::Menu;
