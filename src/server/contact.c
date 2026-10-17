@@ -72,6 +72,9 @@ int Contact_init(void)
 	return false;
     }
 
+    /* The tuner is otherwise only run when the option is changed. */
+    Set_deny_hosts();
+
     install_input(Contact, contactSocket.fd, (void *) &contactSocket);
     return true;
 }
@@ -224,7 +227,8 @@ static bool Contact_rate_ok(const char *addr)
     long burst = options.contactRateBurst, rate = options.contactRatePerSec;
     int i;
 
-    if (burst <= 0 || Is_local_addr(addr))
+    if (burst <= 0
+	|| (options.contactRateLocalExempt && Is_local_addr(addr)))
 	return true;
     if (rate < 0)
 	rate = 0;

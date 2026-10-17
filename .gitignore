@@ -24,3 +24,5 @@ make-deb.sh
 /IDEAS
 build-deb/
 dist-deb/
+build-asan/
+__pycache__/

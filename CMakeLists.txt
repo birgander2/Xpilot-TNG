@@ -12,6 +12,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 option(BUILD_SERVER "Build the xpilot-tng-server" ON)
 option(BUILD_CLIENT_SDL3 "Build modern SDL3 client (xpilot-tng-client)" ON)
 option(BUILD_LAUNCHER "Build modern Dear ImGui / SDL3 frontend launcher (xpilot-tng-launcher)" ON)
+option(SANITIZE "Build with AddressSanitizer and UndefinedBehaviorSanitizer (for testing)" OFF)
+option(BUILD_TESTS "Build the security regression and fuzz tests" OFF)
 option(FETCH_SDL3 "Download and build SDL3 / SDL3_ttf if not installed on system" OFF)
 
 # Compiler Definitions & Flags
@@ -29,6 +31,11 @@ if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
                             $<$<NOT:$<CONFIG:Debug>>:-D_FORTIFY_SOURCE=3>)
         add_link_options(-pie -Wl,-z,relro,-z,now)
     endif()
+endif()
+
+if(SANITIZE AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer -g -O1)
+    add_link_options(-fsanitize=address,undefined)
 endif()
 
 # Find System Dependencies
@@ -339,3 +346,21 @@ set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/COPYING")
 set(CPACK_DEBIAN_PACKAGE_SECTION "games")
 set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
 include(CPack)
+
+# -------------------------------------------------------------
+# Tests (cmake -DBUILD_TESTS=ON -DSANITIZE=ON; run with ctest)
+# -------------------------------------------------------------
+if(BUILD_TESTS)
+    enable_testing()
+    add_executable(fuzz_parsers tests/fuzz_parsers.c)
+    target_link_libraries(fuzz_parsers PRIVATE xpcommon)
+    add_test(NAME fuzz_parsers COMMAND fuzz_parsers 200000)
+    if(BUILD_SERVER)
+        find_package(Python3 QUIET COMPONENTS Interpreter)
+        if(Python3_FOUND)
+            add_test(NAME server_security
+                     COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tests/server_security.py
+                             $<TARGET_FILE:xpilot-tng-server>)
+        endif()
+    endif()
+endif()
