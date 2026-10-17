@@ -288,6 +288,25 @@ def test_rate_limit(binary):
         srv.stop()
 
 
+def test_shared_address(binary):
+    """Several players behind one address (NAT, LAN) must be able to join."""
+    srv = Server(binary, "-maxClientsPerIP", "5")
+    try:
+        clients = [Client(srv, "Lan%c" % c) for c in "ABCD"]
+        for c in clients:       # one request each, no retries
+            payload = s(c.nick) + s("localhost:0") + s("localhost") + struct.pack(">i", -1)
+            c.sock.sendto(contact_packet(ENTER_QUEUE, payload), srv.addr())
+        statuses = []
+        for c in clients:
+            pkt = c.recv(2.0)
+            statuses.append(pkt[0][5] if pkt and len(pkt[0]) >= 6 else None)
+        check("4 players from one address can queue at once", statuses == [0, 0, 0, 0], str(statuses))
+        for c in clients:
+            c.close()
+    finally:
+        srv.stop()
+
+
 def test_login_hijack(binary):
     srv = Server(binary)
     try:
@@ -345,7 +364,7 @@ def main():
         print(__doc__)
         return 2
     binary = os.path.abspath(sys.argv[1])
-    for t in (test_deny_hosts, test_contact_admin, test_rate_limit, test_login_hijack,
+    for t in (test_deny_hosts, test_contact_admin, test_rate_limit, test_shared_address, test_login_hijack,
               test_pre_login_packets, test_password_lockout):
         print("== " + t.__name__)
         try:

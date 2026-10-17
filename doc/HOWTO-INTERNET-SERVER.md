@@ -282,7 +282,7 @@ in the GUI.
 | --- | --- | --- |
 | `contactRateBurst` / `contactRatePerSec` | 10 / 2 | Per-IP limit for status and option-list requests on the contact port. Their replies are much larger than the request, so without a limit the server could be abused to flood third parties with forged source addresses. Joining the game is never limited. `contactRateBurst 0` disables the limit. |
 | `contactRateLocalExempt` | on | Loopback and private addresses (10.x, 172.16-31.x, 192.168.x) are not limited. Turn it off with `+contactRateLocalExempt` if all players arrive through a proxy or NAT with a private address. |
-| `maxClientsPerIP` | 4 | Maximum simultaneous clients from one address. |
+| `maxClientsPerIP` | 4 | Maximum simultaneous clients (and players joining at the same moment) from one address. Players behind the same router share one address, so raise it (or set 0 for no limit) if groups play together from one network. |
 | `contactAdmin` | off | Privileged contact-port requests (lock, shutdown, kick, set option) are refused. They were only protected by a user name check from `127.0.0.1`, which any local user can fake. Use `/password` and `/set` in game instead. |
 | `denyHosts` | empty | Addresses (optionally `addr/mask`) that get no service at all. |
 
