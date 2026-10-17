@@ -1386,11 +1386,17 @@ void Log_playtimes(void)
 	return;
     qsort(playtimes, num_playtimes, sizeof(*playtimes), Playtime_cmp);
     xpprintf("%s Total play time per player:\n", showtime());
+    xpprintf("  %-20s  %9s\n", "Player", "Time");
+    xpprintf("  %-20s  %9s\n", "--------------------", "---------");
     for (i = 0; i < num_playtimes; i++) {
 	long s = playtimes[i].seconds;
-	xpprintf("  %-20s %ld:%02ld:%02ld\n", playtimes[i].name,
+	char t[16];
+
+	snprintf(t, sizeof(t), "%ld:%02ld:%02ld",
 		 s / 3600, (s / 60) % 60, s % 60);
+	xpprintf("  %-20.20s  %9s\n", playtimes[i].name, t);
     }
+    fflush(stdout);
     free(playtimes);
     playtimes = NULL;
     num_playtimes = 0;

@@ -138,6 +138,7 @@ void ProcessManager::StopServer() {
     AddLog("LAUNCHER", "Stopping server (PID " + std::to_string(server_pid_) + ")...");
     Terminate(server_pid_);
     if (server_read_fd_ >= 0) {
+        ReadFromFd(server_read_fd_, server_line_buf_, "SERVER"); // drain shutdown output
         close(server_read_fd_);
         server_read_fd_ = -1;
     }

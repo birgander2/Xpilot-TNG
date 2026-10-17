@@ -365,6 +365,7 @@ void End_game(void)
     Log_game("END");
 
     sock_cleanup();
+    fflush(stdout);
 
 #if !defined(_WINDOWS)
     if (termsig != 0) {
