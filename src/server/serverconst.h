@@ -90,6 +90,10 @@
 /*
  * ID values: In the network protocol these are 16 bit signed values.
  */
+/* Bit for connection index i in the per object conn_mask/update_mask. */
+#define CONN_BIT(i)		(UINT64_C(1) << (i))
+#define MAX_CONN_BITS		64
+
 #define NO_ID			(-1)
 
 /* Currently there is 256 possible player IDs. */

@@ -138,7 +138,7 @@ typedef struct {
     int estyles_start;
     int num_echanges;
     int is_decor;
-    unsigned update_mask;
+    uint64_t update_mask;
     long last_change;
 } poly_t;
 
