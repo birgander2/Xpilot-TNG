@@ -200,6 +200,7 @@ extern struct options {
     bool	reportToMetaServer;
     int		metaUpdateMaxSize;
     bool	searchDomainForXPilot;
+    bool	contactAdmin;
     char	*denyHosts;
 
     bool	playersOnRadar;

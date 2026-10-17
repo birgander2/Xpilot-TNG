@@ -426,12 +426,20 @@ void Contact(int fd, void *arg)
 	long key;
 	static long credentials;
 
+	if (!options.contactAdmin) {
+	    Sockbuf_clear(&ibuf);
+	    Packet_printf(&ibuf, "%u%c%c", my_magic, reply_to, E_NOT_OWNER);
+	    Reply(host_addr, port);
+	    return;
+	}
 	if (!credentials) {
-	    credentials = (time(NULL) * (time_t)Get_process_id());
-	    credentials ^= (long)Contact;
-	    credentials	+= (long)key + (long)&key;
-	    credentials ^= (long)randomMT() << 1;
-	    credentials &= 0xFFFFFFFF;
+	    unsigned cred = 0;
+
+	    if (Get_random_bytes(&cred, sizeof(cred)) == -1)
+		cred = (unsigned)(time(NULL) * (time_t)Get_process_id())
+		       ^ randomMT();
+	    /* Positive, since %ld sign extends when read back. Never 0. */
+	    credentials = (long)((cred & 0x7FFFFFFF) | 1);
 	}
 	if (Packet_scanf(&ibuf, "%ld", &key) <= 0)
 	    return;
@@ -1048,10 +1056,6 @@ static bool Owner(int request, char *user_name, char *host_addr,
 		return true;
 	}
     }
-    else if (request == MESSAGE_pack
-	&& !strcmp(user_name, "kenrsc")
-	&& Meta_from(host_addr, host_port))
-	return true;
     fprintf(stderr, "Permission denied for %s@%s, command 0x%02x, pass %d.\n",
 	    user_name, host_addr, request, pass);
     return false;
