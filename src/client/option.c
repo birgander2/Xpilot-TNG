@@ -959,6 +959,17 @@ int Xpilotrc_write(const char *path)
 	return -1;
     }
 
+    {
+	/* create missing parent directories (XDG location) */
+	char dir[PATH_MAX + 1], *p;
+	strlcpy(dir, path, sizeof(dir));
+	for (p = dir + 1; (p = strchr(p, '/')) != NULL; p++) {
+	    *p = '\0';
+	    mkdir(dir, 0755);
+	    *p = '/';
+	}
+    }
+
     fp = fopen(path, "w");
     if (fp == NULL) {
 	error("Xpilotrc_write: Failed to open file \"%s\"", path);
@@ -1167,20 +1178,38 @@ const char *Get_keyResourceString(keys_t key)
 }
 
 #ifndef _WINDOWS
+/*
+ * Lookup order: $XPILOTRC, $XDG_CONFIG_HOME/xpilot-tng/xpilotrc (default
+ * ~/.config/xpilot-tng/xpilotrc) if it exists, legacy ~/.xpilotrc if it
+ * exists, otherwise the XDG path (created on first write).
+ */
 void Xpilotrc_get_filename(char *path, size_t size)
 {
     const char *home = getenv("HOME");
-    const char *defaultFile = ".xpilotrc";
+    const char *xdg = getenv("XDG_CONFIG_HOME");
     const char *optionalFile = getenv("XPILOTRC");
+    char legacy[PATH_MAX + 1];
 
-    if (optionalFile != NULL)
+    if (optionalFile != NULL) {
 	strlcpy(path, optionalFile, size);
-    else if (home != NULL) {
+	return;
+    }
+    if (xdg != NULL && xdg[0] == '/') {
+	strlcpy(path, xdg, size);
+	strlcat(path, "/xpilot-tng/xpilotrc", size);
+    } else if (home != NULL) {
 	strlcpy(path, home, size);
-	strlcat(path, "/", size);
-	strlcat(path, defaultFile, size);
-    } else
+	strlcat(path, "/.config/xpilot-tng/xpilotrc", size);
+    } else {
 	strlcpy(path, "", size);
+	return;
+    }
+    if (access(path, F_OK) != 0 && home != NULL) {
+	strlcpy(legacy, home, sizeof(legacy));
+	strlcat(legacy, "/.xpilotrc", sizeof(legacy));
+	if (access(legacy, F_OK) == 0)
+	    strlcpy(path, legacy, size);
+    }
 }
 #else
 void Xpilotrc_get_filename(char *path, size_t size)

@@ -68,6 +68,8 @@ static void Handle_signal(int sig_no)
 
 int main(int argc, char **argv)
 {
+    Conf_enter_bundle_dir();
+
     /* world is a global now */
     world = &World;
 

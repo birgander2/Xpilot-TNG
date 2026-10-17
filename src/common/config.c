@@ -32,6 +32,26 @@
 #endif
 
 static char datadir[PATH_MAX] = "";
+
+/*
+ * Relocatable bundle support: if "lib/maps" sits next to the executable,
+ * make that directory the CWD so all "lib/..." relative paths resolve.
+ */
+void Conf_enter_bundle_dir(void)
+{
+    char exe[PATH_MAX], probe[PATH_MAX + 16];
+    ssize_t n = readlink("/proc/self/exe", exe, sizeof(exe) - 1);
+    if (n <= 0)
+        return;
+    exe[n] = '\0';
+    char *slash = strrchr(exe, '/');
+    if (!slash)
+        return;
+    *slash = '\0';
+    snprintf(probe, sizeof(probe), "%s/lib/maps", exe);
+    if (access(probe, R_OK) == 0 && chdir(exe) != 0)
+        perror("chdir");
+}
 static char path_bufs[16][PATH_MAX];
 static int path_buf_idx = 0;
 

@@ -73,15 +73,13 @@ static int max_tng_pixmaps = 0;
 
 int Bitmaps_init(void)
 {
-    /* Set up robust texture paths with absolute paths */
-    char full_rtp[8192];
-    char abs_lib_textures[PATH_MAX] = "";
-    if (realpath("lib/textures", abs_lib_textures) == NULL) {
-        strlcpy(abs_lib_textures, "/data/Work/Xpilot-5X/Xpilot-TNG/lib/textures", sizeof(abs_lib_textures));
-    }
-
-    snprintf(full_rtp, sizeof(full_rtp), "%s:/data/Work/Xpilot-5X/NG/share/xpilot-ng/textures:%s",
-             abs_lib_textures, Conf_texturedir());
+    /* Texture search path: the resolved data directory, made absolute */
+    char full_rtp[PATH_MAX];
+    char abs_textures[PATH_MAX];
+    if (realpath(Conf_texturedir(), abs_textures) != NULL)
+        strlcpy(full_rtp, abs_textures, sizeof(full_rtp));
+    else
+        strlcpy(full_rtp, Conf_texturedir(), sizeof(full_rtp));
 
     if (realTexturePath == NULL) {
         realTexturePath = xp_safe_strdup(full_rtp);

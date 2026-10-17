@@ -47,6 +47,19 @@ static TTF_Font *Open_Bundled_Font(float ptsize)
         }
     }
 
+    /* 2b. Try the resolved data directory ($XPILOT_DATADIR, lib/, CONF_DATADIR) */
+    {
+        static const char *const names[] = {
+            "fonts/IBMPlexMono-Medium.ttf", "fonts/VeraMoBd.ttf", NULL
+        };
+        char full_path[PATH_MAX];
+        for (int i = 0; names[i] != NULL; i++) {
+            snprintf(full_path, sizeof(full_path), "%s%s", Conf_datadir(), names[i]);
+            TTF_Font *f = TTF_OpenFont(full_path, ptsize);
+            if (f) return f;
+        }
+    }
+
     /* 3. Try installed CONF_DATADIR and system fallback paths */
     const char *abs_candidates[] = {
 #ifdef CONF_DATADIR

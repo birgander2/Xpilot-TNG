@@ -226,6 +226,7 @@ Bots receiving high episode rewards (kills, CTF captures, survival) propagate th
 - All smartbots on a server share a single persistent brain.
 - At the end of matches, upon server shutdown, or when `/msg <BotName> save` is issued, the state table and optimal policy genes are written to `smartbot_brain.dat`.
 - When the server boots up, existing knowledge is loaded automatically, preventing bots from having to relearn basic tactics.
+- Location: `$XDG_DATA_HOME/xpilot-tng/smartbot_brain.dat` (default `~/.local/share/xpilot-tng/smartbot_brain.dat`). The directory is created on first save. If no file exists there, a legacy `smartbot_brain.dat` in the server's working directory is loaded once and subsequently saved to the new location.
 
 ---
 
