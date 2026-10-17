@@ -89,6 +89,7 @@ private:
     SDL_Renderer* renderer_ = nullptr;
     std::string app_dir_;
     std::string root_dir_;
+    std::string data_dir_;   // game data (lib/): $XPILOT_DATADIR, root_dir_/lib or CONF_DATADIR, no trailing slash
 
     OptionsManager options_mgr_;
     ProcessManager process_mgr_;

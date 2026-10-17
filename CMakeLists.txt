@@ -295,6 +295,37 @@ endif()
 # -------------------------------------------------------------
 # Install Game Assets
 # -------------------------------------------------------------
-install(DIRECTORY lib/ DESTINATION ${CONF_DATADIR}
+install(DIRECTORY lib/ DESTINATION ${CMAKE_INSTALL_DATADIR}/xpilot-tng
     PATTERN "Makefile*" EXCLUDE
 )
+
+# -------------------------------------------------------------
+# Relocatable bundle: "cmake --build build --target dist"
+# Binaries and lib/ side by side; the result can be moved anywhere.
+# Override the location with -DDIST_DIR=/some/path
+# -------------------------------------------------------------
+set(DIST_DIR "${CMAKE_BINARY_DIR}/dist" CACHE PATH "Output directory of the 'dist' target")
+add_custom_target(dist
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${DIST_DIR}"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/lib" "${DIST_DIR}/lib"
+    COMMENT "Creating relocatable bundle in ${DIST_DIR}"
+)
+foreach(_t xpilot-tng-server xpilot-tng-client xpilot-tng-launcher)
+    if(TARGET ${_t})
+        add_dependencies(dist ${_t})
+        add_custom_command(TARGET dist POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:${_t}>" "${DIST_DIR}/")
+    endif()
+endforeach()
+
+# -------------------------------------------------------------
+# Packaging (.deb): use tools/make-deb.sh
+# -------------------------------------------------------------
+set(CPACK_PACKAGE_NAME "xpilot-tng")
+set(CPACK_PACKAGE_VENDOR "XPilot TNG")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "XPilot TNG multiplayer space war game")
+set(CPACK_PACKAGE_CONTACT "XPilot TNG maintainers <github@nought.de>")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/COPYING")
+set(CPACK_DEBIAN_PACKAGE_SECTION "games")
+set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
+include(CPack)

@@ -18,10 +18,12 @@
  */
 
 #include "xpserver.h"
+#include <sys/stat.h>
 
 #define WITHIN(NOW,THEN,DIFF) (NOW<=THEN && (THEN-NOW)<DIFF)
 
 #define SMART_BRAIN_FILE	"smartbot_brain.dat"
+#define SMART_BRAIN_SUBDIR	"xpilot-tng"
 #define SMART_BRAIN_MAGIC	0x58505342U /* "XPSB" */
 #define SMART_BRAIN_VERSION	1U
 
@@ -177,14 +179,47 @@ static inline int Smart_get_effective_level(robot_smart_data_t *my_data)
  * Persistent RL Brain Management
  * ========================================================================= */
 
+/*
+ * Brain file location: $XDG_DATA_HOME/xpilot-tng/ (default
+ * ~/.local/share/xpilot-tng/).  Returns NULL if no home can be determined.
+ * If mkdirs is true, the directory is created as needed.
+ */
+static const char *Smart_brain_path(bool mkdirs)
+{
+    static char path[PATH_MAX];
+    const char *xdg = getenv("XDG_DATA_HOME");
+    const char *home = getenv("HOME");
+    char *p;
+
+    if (xdg && xdg[0] == '/')
+	snprintf(path, sizeof(path), "%s/" SMART_BRAIN_SUBDIR "/" SMART_BRAIN_FILE, xdg);
+    else if (home && home[0])
+	snprintf(path, sizeof(path), "%s/.local/share/" SMART_BRAIN_SUBDIR "/" SMART_BRAIN_FILE, home);
+    else
+	return NULL;
+
+    if (mkdirs) {
+	for (p = path + 1; (p = strchr(p, '/')) != NULL; p++) {
+	    *p = '\0';
+	    mkdir(path, 0755);
+	    *p = '/';
+	}
+    }
+    return path;
+}
+
 static void Smart_brain_save(void)
 {
     FILE *fp;
+    const char *path;
 
     if (!BrainInitialized)
 	return;
 
-    fp = fopen(SMART_BRAIN_FILE, "wb");
+    path = Smart_brain_path(true);
+    if (!path)
+	path = SMART_BRAIN_FILE;
+    fp = fopen(path, "wb");
     if (fp) {
 	fwrite(&SharedBrain, sizeof(SharedBrain), 1, fp);
 	fclose(fp);
@@ -224,7 +259,12 @@ static void Smart_brain_init(void)
 	SharedBrain.q_table[s][TACTIC_CTF_OBJECTIVE]  = (ctf_bin > 0) ? 7.5 : 1.5;
     }
 
-    fp = fopen(SMART_BRAIN_FILE, "rb");
+    {
+	const char *path = Smart_brain_path(false);
+	fp = path ? fopen(path, "rb") : NULL;
+	if (!fp)	/* legacy location: current working directory */
+	    fp = fopen(SMART_BRAIN_FILE, "rb");
+    }
     if (fp) {
 	smart_shared_brain_t loaded;
 	if (fread(&loaded, sizeof(loaded), 1, fp) == 1
@@ -1599,7 +1639,7 @@ static void Robot_smart_message(player_t *pl, const char *message)
     } else if (strstr(cmd, "save") != NULL) {
 	Smart_brain_save();
 	Set_message_f("Brain saved to %s (%llu episodes). [%s]",
-		      SMART_BRAIN_FILE,
+		      Smart_brain_path(false) ? Smart_brain_path(false) : SMART_BRAIN_FILE,
 		      (unsigned long long)SharedBrain.total_episodes,
 		      pl->name);
     } else if (strstr(cmd, "learn off") != NULL) {

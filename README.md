@@ -28,7 +28,7 @@ New game features:
 
 ## Background
 
-Being an old Xpilot player, after almost 30 years, I had the idea to play again some rounds with my kids. But: None of the available versions is really working anymore. What a pity, it was such a cool game. So I took some time to (mostly) let the AI bring it back to live. This is work in progress, there are even some fresh ideas waiting to be implemented.
+Being an old Xpilot player, after almost 30 years, I had the idea to play again some rounds with my kids. But: None of the available versions is really working anymore. What a pity, it was such a cool game. So I took some time to (mostly) to bring it back to live. This is work in progress, there are even some fresh ideas waiting to be implemented.
 
 ---
 

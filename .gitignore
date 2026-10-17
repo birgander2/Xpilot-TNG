@@ -10,6 +10,7 @@ build/
 *~
 .*.kate-swp
 smartbot_brain.dat
+CLAUDE.md
 
 # Root convenience symlinks
 /xpilot-tng-server
@@ -17,6 +18,9 @@ smartbot_brain.dat
 /xpilot-tng-sdl3
 /xpilot-tng-launcher
 imgui.ini
+make-deb.sh
 
 # Local notes
 /IDEAS
+build-deb/
+dist-deb/

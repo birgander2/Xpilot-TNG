@@ -70,6 +70,11 @@ static std::string FindFontFile(const std::vector<std::string>& candidates) {
 static LauncherFonts SetupFonts(ImGuiIO& io, const std::string& app_dir) {
     LauncherFonts fonts;
 
+    // Data directory candidates: $XPILOT_DATADIR, then the installed CONF_DATADIR
+    std::string env_dir = std::getenv("XPILOT_DATADIR") ? std::getenv("XPILOT_DATADIR") : "";
+    if (!env_dir.empty() && env_dir.back() != '/') env_dir += '/';
+    const std::string conf_dir = CONF_DATADIR;
+
     std::vector<std::string> regular_candidates = {
         "/usr/share/fonts/dejavu/DejaVuSans.ttf",
         "/usr/share/fonts/liberation-fonts/LiberationSans-Regular.ttf",
@@ -77,7 +82,9 @@ static LauncherFonts SetupFonts(ImGuiIO& io, const std::string& app_dir) {
         "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
         app_dir + "/../lib/fonts/IBMPlexMono-Medium.ttf",
         app_dir + "/lib/fonts/IBMPlexMono-Medium.ttf",
-        "lib/fonts/IBMPlexMono-Medium.ttf"
+        "lib/fonts/IBMPlexMono-Medium.ttf",
+        env_dir + "fonts/IBMPlexMono-Medium.ttf",
+        conf_dir + "fonts/IBMPlexMono-Medium.ttf"
     };
 
     std::vector<std::string> bold_candidates = {
@@ -87,7 +94,9 @@ static LauncherFonts SetupFonts(ImGuiIO& io, const std::string& app_dir) {
         "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
         app_dir + "/../lib/fonts/VeraMoBd.ttf",
         app_dir + "/lib/fonts/VeraMoBd.ttf",
-        "lib/fonts/VeraMoBd.ttf"
+        "lib/fonts/VeraMoBd.ttf",
+        env_dir + "fonts/VeraMoBd.ttf",
+        conf_dir + "fonts/VeraMoBd.ttf"
     };
 
     std::string reg_path = FindFontFile(regular_candidates);
@@ -121,6 +130,14 @@ static LauncherFonts SetupFonts(ImGuiIO& io, const std::string& app_dir) {
 
 int main(int argc, char* argv[]) {
     (void)argc;
+
+    // Relocatable bundle: if lib/maps sits next to the executable, run from there.
+    if (const char* base = SDL_GetBasePath()) {
+        std::error_code ec;
+        fs::path bundle(base);
+        if (fs::is_directory(bundle / "lib" / "maps", ec))
+            fs::current_path(bundle, ec);
+    }
 
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         std::cerr << "SDL_Init failed: " << SDL_GetError() << std::endl;

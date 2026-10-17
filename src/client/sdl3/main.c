@@ -31,6 +31,7 @@ int main(int argc, char *argv[])
 {
     bool auto_shutdown = false;
 
+    Conf_enter_bundle_dir();
     init_error(argv[0]);
     seedMT((unsigned)time(NULL) ^ Get_process_id());
 

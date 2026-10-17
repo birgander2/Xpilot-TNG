@@ -41,3 +41,5 @@ add_custom_target(xpilot-tng-sdl3 ALL
 )
 
 install(TARGETS xpilot-tng-client DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+install(TARGETS xpilot-tng-client DESTINATION ${CMAKE_INSTALL_BINDIR})

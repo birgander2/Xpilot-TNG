@@ -69,12 +69,20 @@ void LauncherApp::Init() {
         std::error_code ec;
         fs::current_path(root_dir_, ec); // the server resolves lib/ relative to its cwd
     }
+    // Same order as Conf_datadir() on the server side
+    const char* env_dir = std::getenv("XPILOT_DATADIR");
+    std::error_code ec;
+    if (env_dir && *env_dir && fs::is_directory(env_dir, ec)) data_dir_ = env_dir;
+    else if (!root_dir_.empty()) data_dir_ = root_dir_ + "/lib";
+    else data_dir_ = CONF_DATADIR;
+    while (data_dir_.size() > 1 && data_dir_.back() == '/') data_dir_.pop_back();
+
     server_bin_path_ = ResolveBinaryPath("xpilot-tng-server");
     client_bin_path_ = ResolveBinaryPath("xpilot-tng-client");
 
-    baseline_ok_ = options_mgr_.LoadBaseline(server_bin_path_, "lib/defaults.txt");
+    baseline_ok_ = options_mgr_.LoadBaseline(server_bin_path_, data_dir_ + "/defaults.txt");
 
-    profile_.Load("lib/shipshapes.txt");
+    profile_.Load((data_dir_ + "/shipshapes.txt").c_str());
     if (baseline_ok_) {   // network settings of lib/defaults.txt are the starting point
         CopyTo(server_host_, sizeof(server_host_), options_mgr_.Get("serverHost"));
         server_cport_start_ = options_mgr_.GetInt("clientPortStart");
@@ -84,8 +92,8 @@ void LauncherApp::Init() {
         process_mgr_.AddLog("LAUNCHER", "Could not read server defaults (" + server_bin_path_ +
                                             " -dump). Option editing is limited.");
 
-    process_mgr_.AddLog("LAUNCHER", "Scanning maps in lib/maps ...");
-    maps_ = MapScanner::ScanDirectory("lib/maps", renderer_);
+    process_mgr_.AddLog("LAUNCHER", "Scanning maps in " + data_dir_ + "/maps ...");
+    maps_ = MapScanner::ScanDirectory(data_dir_ + "/maps", renderer_);
     for (auto& m : maps_) {
         std::error_code ec;
         m.full_path = fs::absolute(m.full_path, ec).string();

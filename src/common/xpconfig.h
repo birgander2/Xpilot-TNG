@@ -170,6 +170,7 @@
 #endif
 
 void Conf_print(void);
+void Conf_enter_bundle_dir(void);
 char *Conf_datadir(void);
 char *Conf_defaults_file_name(void);
 char *Conf_password_file_name(void);
