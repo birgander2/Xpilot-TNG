@@ -414,6 +414,9 @@ void Handle_player_command(player_t *pl, char *cmd)
     }
 #endif
 
+    /* Commands count towards flooding too, but weigh less than chat. */
+    pl->flooding += FPS/6;
+
     msg[0] = '\0';
     result = (*commands[i].cmd)(args, pl, pl->isoperator, msg, sizeof(msg));
     switch (result) {
@@ -902,10 +905,62 @@ static int Cmd_op(char *arg, player_t *pl, bool oper, char *msg, size_t size)
 }
 
 
+/*
+ * Failed /password attempts are counted per address, so reconnecting does not
+ * reset the counter.  After PW_MAX_FAILURES wrong guesses the address is
+ * locked out for PW_LOCKOUT seconds.
+ */
+#define PW_SLOTS	64
+#define PW_MAX_FAILURES	3
+#define PW_LOCKOUT	300
+
+static struct {
+    char	addr[INET6_ADDRSTRLEN];
+    int		failures;
+    time_t	locked_until;
+    time_t	last;
+} pw_table[PW_SLOTS];
+
+static int Password_slot(const char *addr)
+{
+    int i, oldest = 0;
+    time_t now = time(NULL);
+
+    for (i = 0; i < PW_SLOTS; i++) {
+	if (pw_table[i].addr[0] && !strcmp(pw_table[i].addr, addr))
+	    return i;
+    }
+    /* Not found: reuse a free or expired slot, else the least recent one. */
+    for (i = 0; i < PW_SLOTS; i++) {
+	if (!pw_table[i].addr[0] || (pw_table[i].locked_until < now
+				     && now - pw_table[i].last > PW_LOCKOUT)) {
+	    oldest = i;
+	    break;
+	}
+	if (pw_table[i].last < pw_table[oldest].last)
+	    oldest = i;
+    }
+    memset(&pw_table[oldest], 0, sizeof(pw_table[oldest]));
+    strlcpy(pw_table[oldest].addr, addr, sizeof(pw_table[oldest].addr));
+    return oldest;
+}
+
 static int Cmd_password(char *arg, player_t *pl, bool oper,
 			 char *msg, size_t size)
 {
+    const char *addr = Player_get_addr(pl);
+    int slot = -1;
+    time_t now = time(NULL);
+
     UNUSED_PARAM(oper);
+
+    if (addr != NULL && strcmp(addr, "127.0.0.1") && strcmp(addr, "::1")) {
+	slot = Password_slot(addr);
+	if (pw_table[slot].locked_until > now) {
+	    strlcpy(msg, "Too many wrong passwords, try again later.", size);
+	    return CMD_RESULT_ERROR;
+	}
+    }
 
     if (!options.password || !arg || strcmp(arg, options.password)) {
 	strlcpy(msg, "Wrong.", size);
@@ -914,8 +969,23 @@ static int Cmd_password(char *arg, player_t *pl, bool oper,
 	    pl->isoperator = false;
 	    strlcat(msg, "  You lost operator status.", size);
 	}
+	if (slot >= 0) {
+	    pw_table[slot].last = now;
+	    if (++pw_table[slot].failures >= PW_MAX_FAILURES) {
+		pw_table[slot].failures = 0;
+		pw_table[slot].locked_until = now + PW_LOCKOUT;
+		warn("Password lockout for %s", addr);
+		/*
+		 * We cannot destroy the connection from within a command
+		 * handler, so let the flooding check in update.c kick him.
+		 */
+		pl->flooding = 2 * FPS;
+	    }
+	}
     }
     else {
+	if (slot >= 0)
+	    pw_table[slot].failures = 0;
 	if (!pl->isoperator && pl->rectype != 2) {
 	    NumOperators++;
 	    pl->isoperator = true;
