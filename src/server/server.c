@@ -341,6 +341,8 @@ void End_game(void)
     record = rrecord;
     playback = rplayback;
 
+    Log_playtimes();
+
     if (options.recordMode != 0) {
 	options.recordMode = 0;
 	Init_recording();
