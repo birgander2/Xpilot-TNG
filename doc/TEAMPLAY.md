@@ -49,8 +49,14 @@ Set on the command line (`-option value`), in `lib/defaults.txt`, or in the map 
 | `robotTeam` | `0` | Team used by robots (0–9). |
 | `restrictRobots` | `true` | Robots stay in `robotTeam`. |
 | `reserveRobotTeam` | `true` | Humans cannot join `robotTeam`. |
+| `botsMatchHumans` | `false` | Keep the number of bots equal to the number of active humans (see below). |
+| `botsPerHuman` | `1.0` | Bots per human when `botsMatchHumans` is on. |
 
 Game modes built on teams (`captureTheFlag`, `treasureKillTeam`, `targetKillTeam`, team cup) are described in [GAMEMODES.md](GAMEMODES.md).
+
+### Bots match humans
+
+With `botsMatchHumans` on, the server keeps `humans × botsPerHuman` bots (rounded). A joining human adds a bot, a leaving human removes one. Paused players and spectators do not count. `maxRobots` and `maxSmartRobots` no longer limit the count; they only give the ratio of normal to smart bots (`maxSmartRobots / (maxRobots + maxSmartRobots)` is the chance that a new bot is a smart one). If both are 0, only normal bots are created. New bots are still limited by free bases (and by the bot team's bases with "All bots in one team").
 
 ### Robot team pitfalls
 
@@ -67,7 +73,7 @@ With the defaults (`robotTeam 0`, `restrictRobots`, `reserveRobotTeam`) all bots
 | Tab | Options |
 |---|---|
 | Gameplay | Team play, Team immunity |
-| Bots | Bot team (`robotTeam`), All bots in one team (`restrictRobots`), No humans in bot team (`reserveRobotTeam`) |
+| Bots | Bot team (`robotTeam`), All bots in one team (`restrictRobots`), No humans in bot team (`reserveRobotTeam`), Bots match humans (`botsMatchHumans`), Bots per human (`botsPerHuman`) |
 
 Changed values are marked with `*`; right-click an option to reset it to the map default. The launcher's server list shows the number of team bases per server in the *Teams* column. This counts bases, not teams.
 

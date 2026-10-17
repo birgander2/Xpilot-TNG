@@ -814,6 +814,13 @@ void LauncherApp::RenderAdvanced(bool server_mode) {
                 ImGui::PopItemWidth();
                 OptBool("All bots in one team", "restrictRobots");
                 OptBool("No humans in bot team", "reserveRobotTeam", "Humans cannot join the bot team");
+                ImGui::Separator();
+                OptBool("Bots match humans", "botsMatchHumans",
+                        "One bot per human player. Bots / Smartbots then only set the normal-to-smart ratio");
+                ImGui::PushItemWidth(260);
+                OptFloat("Bots per human", "botsPerHuman", 0.25f, 4.0f, "%.2f", false,
+                         "Used when 'Bots match humans' is on");
+                ImGui::PopItemWidth();
                 OptBool("Smartbots may use lasers", "smartRobotsLaser", "Allow smart robots to collect and fire lasers");
                 OptBool("Bots talk", "robotsTalk");
                 OptBool("Bots may leave", "robotsLeave");

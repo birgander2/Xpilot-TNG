@@ -1160,6 +1160,60 @@ static void Tank_play(player_t *pl)
 
 
 /*
+ * botsMatchHumans: keep NumRobots at botsPerHuman * (number of active
+ * human players). maxRobots and maxSmartRobots only give the ratio of
+ * normal to smart robots. Returns after at most one create/delete.
+ */
+static void Robot_match_humans(bool can_spawn_more, int num_playing_ships,
+			       int num_any_ships, double *create_delay)
+{
+    int i, humans = 0, target;
+    int num_default_robots = NumRobots - NumSmartRobots;
+    int weight_default = MAX(options.maxRobots, 0);
+    int weight_smart = MAX(options.maxSmartRobots, 0);
+    bool want_smart;
+
+    for (i = 0; i < NumPlayers; i++) {
+	player_t *pl = Player_by_index(i);
+
+	if (Player_is_human(pl) && !Player_is_paused(pl) && pl->rectype != 2)
+	    humans++;
+    }
+    target = (int)(humans * MAX(options.botsPerHuman, 0.0) + 0.5);
+
+    if (NumRobots < target && can_spawn_more) {
+	*create_delay += timeStep;
+	if (*create_delay < ROBOT_CREATE_DELAY)
+	    return;
+	*create_delay = 0;
+	if (weight_default + weight_smart > 0)
+	    want_smart = (int)(randomMT() % (weight_default + weight_smart))
+			 >= weight_default;
+	else
+	    want_smart = false;
+	/* Fall back to the other type if its pool is exhausted. */
+	if (want_smart && NumSmartRobots >= MAX_SMART_ROBOTS)
+	    want_smart = false;
+	else if (!want_smart && num_default_robots >= MAX_ROBOTS)
+	    want_smart = true;
+	Robot_create(want_smart);
+	return;
+    }
+    *create_delay = 0;
+
+    if (NumRobots <= 0)
+	return;
+    if ((!options.baselessPausing && num_playing_ships > Num_bases())
+	|| num_any_ships > NUM_IDS) {
+	Robot_delete(NULL, false);
+    } else if (NumRobots > target) {
+	/* Remove a type with probability proportional to its share. */
+	want_smart = (int)(randomMT() % NumRobots) < NumSmartRobots;
+	Robot_delete_type(want_smart, false);
+    }
+}
+
+/*
  * Update robots. If 'tick' is true, robot AI routines will be called.
  */
 void Robot_update(bool tick)
@@ -1183,51 +1237,56 @@ void Robot_update(bool tick)
 	     && world->teams[options.robotTeam].NumMembers >=
 		world->teams[options.robotTeam].NumBases);
 
-    if (NumSmartRobots < MAX_SMART_ROBOTS
-	&& (NumSmartRobots < options.minSmartRobots
-	    || (NumSmartRobots < options.maxSmartRobots
-		&& num_playing_ships < total_max_robots)))
-	need_smart = true;
+    if (options.botsMatchHumans) {
+	Robot_match_humans(can_spawn_more, num_playing_ships, num_any_ships,
+			   &new_robot_delay);
+    } else {
+	    if (NumSmartRobots < MAX_SMART_ROBOTS
+		&& (NumSmartRobots < options.minSmartRobots
+		    || (NumSmartRobots < options.maxSmartRobots
+			&& num_playing_ships < total_max_robots)))
+		need_smart = true;
 
-    if (num_default_robots < MAX_ROBOTS
-	&& (num_default_robots < options.minRobots
-	    || (num_default_robots < options.maxRobots
-		&& num_playing_ships < total_max_robots)))
-	need_default = true;
+	    if (num_default_robots < MAX_ROBOTS
+		&& (num_default_robots < options.minRobots
+		    || (num_default_robots < options.maxRobots
+			&& num_playing_ships < total_max_robots)))
+		need_default = true;
 
-    if (can_spawn_more && (need_smart || need_default)) {
-	new_robot_delay += timeStep;
-	if (new_robot_delay >= ROBOT_CREATE_DELAY) {
-	    if (need_smart && (!need_default || NumSmartRobots <= num_default_robots))
-		Robot_create(true);
-	    else
-		Robot_create(false);
-	    new_robot_delay = 0;
-	}
-    }
-    else {
-	new_robot_delay = 0;
-	if (NumRobots > 0) {
-	    if ((!options.baselessPausing 
-		 && num_playing_ships > Num_bases())
-		|| (num_any_ships > NUM_IDS)) {
-		Robot_delete(NULL, false);
+	    if (can_spawn_more && (need_smart || need_default)) {
+		new_robot_delay += timeStep;
+		if (new_robot_delay >= ROBOT_CREATE_DELAY) {
+		    if (need_smart && (!need_default || NumSmartRobots <= num_default_robots))
+			Robot_create(true);
+		    else
+			Robot_create(false);
+		    new_robot_delay = 0;
+		}
 	    }
-	    else if (num_default_robots > options.maxRobots
-		     && num_default_robots > options.minRobots) {
-		Robot_delete_type(false, false);
+	    else {
+		new_robot_delay = 0;
+		if (NumRobots > 0) {
+		    if ((!options.baselessPausing 
+			 && num_playing_ships > Num_bases())
+			|| (num_any_ships > NUM_IDS)) {
+			Robot_delete(NULL, false);
+		    }
+		    else if (num_default_robots > options.maxRobots
+			     && num_default_robots > options.minRobots) {
+			Robot_delete_type(false, false);
+		    }
+		    else if (NumSmartRobots > options.maxSmartRobots
+			     && NumSmartRobots > options.minSmartRobots) {
+			Robot_delete_type(true, false);
+		    }
+		    else if (num_playing_ships > total_max_robots) {
+			if (num_default_robots > options.minRobots)
+			    Robot_delete_type(false, false);
+			else if (NumSmartRobots > options.minSmartRobots)
+			    Robot_delete_type(true, false);
+		    }
+		}
 	    }
-	    else if (NumSmartRobots > options.maxSmartRobots
-		     && NumSmartRobots > options.minSmartRobots) {
-		Robot_delete_type(true, false);
-	    }
-	    else if (num_playing_ships > total_max_robots) {
-		if (num_default_robots > options.minRobots)
-		    Robot_delete_type(false, false);
-		else if (NumSmartRobots > options.minSmartRobots)
-		    Robot_delete_type(true, false);
-	    }
-	}
     }
 
     if (!tick)

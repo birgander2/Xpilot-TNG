@@ -41,6 +41,8 @@ extern struct options {
     int		robotTeam;
     bool	restrictRobots;
     bool	reserveRobotTeam;
+    bool	botsMatchHumans;
+    double	botsPerHuman;
     int 	robotTicksPerSecond;
     list_t	expandList;		/* Predefined settings. */
     double	shotMass;

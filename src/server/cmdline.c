@@ -437,6 +437,28 @@ static option_desc opts[] = {
 	OPT_ORIGIN_ANY | OPT_VISIBLE
     },
     {
+	"botsMatchHumans",
+	"botsMatchHumans",
+	"false",
+	&options.botsMatchHumans,
+	valBool,
+	tuner_dummy,
+	"Keep the number of robots equal to the number of human players.\n"
+	"The maxRobots/maxSmartRobots settings then only give the ratio of\n"
+	"normal to smart robots, they no longer limit the robot count.\n",
+	OPT_ORIGIN_ANY | OPT_VISIBLE
+    },
+    {
+	"botsPerHuman",
+	"botsPerHuman",
+	"1.0",
+	&options.botsPerHuman,
+	valReal,
+	tuner_dummy,
+	"Robots per human player when botsMatchHumans is on.\n",
+	OPT_ORIGIN_ANY | OPT_VISIBLE
+    },
+    {
 	"robotUserName",
 	"robotRealName",
 	"robot",
