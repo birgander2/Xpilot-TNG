@@ -136,4 +136,10 @@ extern gettimeofday(struct timeval *tv, struct timezone *tz);
 #  error "This program needs gettimeofday() to work. Have a nice day."
 #endif
 
+/*
+ * Fill buf with n bytes from the OS random source.
+ * Returns 0 on success, -1 if no secure source is available.
+ */
+int Get_random_bytes(void *buf, size_t n);
+
 #endif /* PORTABILITY_H */

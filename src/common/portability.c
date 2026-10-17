@@ -29,6 +29,11 @@
 
 #include "xpcommon.h"
 
+#ifdef __linux__
+#include <sys/random.h>
+#endif
+
+
 int Get_process_id(void)
 {
 #if defined(_WINDOWS)
@@ -125,3 +130,22 @@ int gettimeofday(struct timeval *tv, struct timezone *tz)
 
 }
 #endif
+
+
+int Get_random_bytes(void *buf, size_t n)
+{
+#ifdef __linux__
+    if (getrandom(buf, n, 0) == (ssize_t)n)
+	return 0;
+#endif
+    {
+	FILE *f = fopen("/dev/urandom", "rb");
+	size_t got = 0;
+
+	if (f != NULL) {
+	    got = fread(buf, 1, n, f);
+	    fclose(f);
+	}
+	return (got == n) ? 0 : -1;
+    }
+}
