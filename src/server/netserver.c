@@ -2226,6 +2226,9 @@ static int Receive_power(connection_t *connp)
     }
     power = (double) tmp / 256.0F;
     pl = Player_by_id(connp->id);
+    if (pl == NULL)
+	/* Not logged in yet. */
+	return 1;
     autopilot = Player_uses_autopilot(pl) ? 1 : 0;
 
     switch (ch) {
@@ -2781,6 +2784,9 @@ static int Receive_modifier_bank(connection_t *connp)
 	return n;
     }
     pl = Player_by_id(connp->id);
+    if (pl == NULL)
+	/* Not logged in yet. */
+	return 1;
     Player_set_modbank(pl, bank, str);
 
     return 1;
@@ -2846,6 +2852,10 @@ static int Receive_motd(connection_t *connp)
 	if (n == -1)
 	    Destroy_connection(connp, "read error");
 	return n;
+    }
+    if (offset < 0 || offset > MAX_MOTD_SIZE || nbytes < 0) {
+	Destroy_connection(connp, "bad motd request");
+	return -1;
     }
     connp->motd_offset = offset;
     connp->motd_stop = offset + nbytes;
@@ -2934,7 +2944,9 @@ static int Get_motd(char *buf, int offset, int maxlen, int *size_ptr)
     if (size_ptr)
 	*size_ptr = motd_size;
 
-    if (offset + maxlen > (int)motd_size)
+    if (offset >= (int)motd_size)
+	return 0;
+    if (maxlen > (int)motd_size - offset)
 	maxlen = motd_size - offset;
 
     if (maxlen <= 0)
