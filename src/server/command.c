@@ -954,7 +954,7 @@ static int Cmd_password(char *arg, player_t *pl, bool oper,
 
     UNUSED_PARAM(oper);
 
-    if (addr != NULL && strcmp(addr, "127.0.0.1") && strcmp(addr, "::1")) {
+    if (addr != NULL) {
 	slot = Password_slot(addr);
 	if (pw_table[slot].locked_until > now) {
 	    strlcpy(msg, "Too many wrong passwords, try again later.", size);

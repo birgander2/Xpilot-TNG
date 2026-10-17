@@ -3691,6 +3691,18 @@ static option_desc opts[] = {
 	OPT_COMMAND | OPT_DEFAULTS | OPT_VISIBLE
     },
     {
+	"contactRateLocalExempt",
+	"contactRateLocalExempt",
+	"true",
+	&options.contactRateLocalExempt,
+	valBool,
+	tuner_dummy,
+	"Exempt loopback and private network addresses from the contact\n"
+	"rate limit.  Turn this off if all your players reach the server\n"
+	"through a proxy or NAT on a private address.\n",
+	OPT_COMMAND | OPT_DEFAULTS | OPT_VISIBLE
+    },
+    {
 	"playerLimit",
 	"playerLimit",
 	"0",
