@@ -309,7 +309,7 @@ int Setup_net_server(void)
      * the contact socket, and the socket for the resolver library routines.
      */
     max_connections
-	= MIN((int)MAX_SELECT_FD - 5,
+	= MIN(MIN((int)MAX_SELECT_FD - 5, MAX_CONN_BITS),
 	      options.playerLimit_orig + MAX_SPECTATORS * !!rplayback);
     if ((Conn = XCALLOC(connection_t, max_connections)) == NULL) {
 	error("Cannot allocate memory for connections");
@@ -1008,7 +1008,8 @@ static void LegalizeHost(char *string)
 static int Handle_login(connection_t *connp, char *errmsg, size_t errsize)
 {
     player_t *pl;
-    int i, conn_bit;
+    int i;
+    uint64_t conn_bit;
     const char sender[] = "[*Server notice*]";
 
     if (BIT(world->rules->mode, TEAM_PLAY)) {
@@ -1202,7 +1203,7 @@ static int Handle_login(connection_t *connp, char *errmsg, size_t errsize)
 	}
     }
 
-    conn_bit = (1 << connp->ind);
+    conn_bit = CONN_BIT(connp->ind);
     for (i = 0; i < Num_cannons(); i++) {
 	cannon_t *cannon = Cannon_by_index(i);
 	/*
@@ -2543,7 +2544,7 @@ static int Receive_ack_cannon(connection_t *connp)
     }
     cannon = Cannon_by_index(num);
     if (loops_ack > cannon->last_change)
-	SET_BIT(cannon->conn_mask, 1 << connp->ind);
+	SET_BIT(cannon->conn_mask, CONN_BIT(connp->ind));
 
     return 1;
 }
@@ -2568,7 +2569,7 @@ static int Receive_ack_fuel(connection_t *connp)
     }
     fs = Fuel_by_index(num);
     if (loops_ack > fs->last_change)
-	SET_BIT(fs->conn_mask, 1 << connp->ind);
+	SET_BIT(fs->conn_mask, CONN_BIT(connp->ind));
     return 1;
 }
 
@@ -2604,8 +2605,8 @@ static int Receive_ack_target(connection_t *connp)
      */
     targ = Target_by_index(num);
     if (loops_ack > targ->last_change) {
-	SET_BIT(targ->conn_mask, 1 << connp->ind);
-	CLR_BIT(targ->update_mask, 1 << connp->ind);
+	SET_BIT(targ->conn_mask, CONN_BIT(connp->ind));
+	CLR_BIT(targ->update_mask, CONN_BIT(connp->ind));
     }
     return 1;
 }
@@ -2630,7 +2631,7 @@ static int Receive_ack_polystyle(connection_t *connp)
     }
     poly = &pdata[num];
     if (loops_ack > poly->last_change)
-	CLR_BIT(poly->update_mask, 1 << connp->ind);
+	CLR_BIT(poly->update_mask, CONN_BIT(connp->ind));
     return 1;
 }
 

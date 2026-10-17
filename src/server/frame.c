@@ -403,7 +403,8 @@ static int Frame_status(connection_t *conn, player_t *pl)
 
 static void Frame_map(connection_t *conn, player_t *pl)
 {
-    int i, k, conn_bit = (1 << conn->ind);
+    int i, k;
+    uint64_t conn_bit = CONN_BIT(conn->ind);
     const int fuel_packet_size = 5;
     const int cannon_packet_size = 5;
     const int target_packet_size = 7;

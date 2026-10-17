@@ -83,7 +83,7 @@ extern world_t		World, *world;
 typedef struct fuel {
     clpos_t	pos;
     double	fuel;
-    uint32_t	conn_mask;
+    uint64_t	conn_mask;
     long	last_change;
     int		team;
 } fuel_t;
@@ -106,7 +106,7 @@ typedef struct base {
 typedef struct cannon {
     clpos_t	pos;
     int		dir;
-    uint32_t	conn_mask;
+    uint64_t	conn_mask;
     long	last_change;
     int		item[NUM_ITEMS];
     int		tractor_target_id;
@@ -181,8 +181,8 @@ typedef struct target {
     int		team;
     double	dead_ticks;
     double	damage;
-    uint32_t	conn_mask;
-    uint32_t 	update_mask;
+    uint64_t	conn_mask;
+    uint64_t 	update_mask;
     long	last_change;
     int		group;
 } target_t;
