@@ -186,6 +186,7 @@ void LauncherApp::GoTo(Screen s) {
     if (s == Screen::Menu) {
         banner_.clear();
     }
+    if (s == Screen::Profile) profile_editor_.Load(profile_.ship_names);
     if (s == Screen::NetworkBrowser) {
         lan_search_.Start();        // full refresh on every visit (no-op while a scan is still running)
         internet_search_.Start();
@@ -427,6 +428,7 @@ void LauncherApp::RenderUI() {
         case Screen::ServerSetup:   RenderSetup(true); break;
         case Screen::ServerRunning: RenderServerRunning(); break;
         case Screen::NetworkBrowser: RenderNetworkBrowser(); break;
+        case Screen::Profile:       RenderProfile(); break;
         case Screen::Playing:       break;
     }
 
@@ -445,8 +447,8 @@ void LauncherApp::RenderUI() {
     if (!AnyPopupOpen() && !ImGui::GetIO().WantTextInput && ImGui::IsKeyPressed(ImGuiKey_Escape, false) &&
         !launching_) {
         if (screen_ == Screen::LocalSetup || screen_ == Screen::ServerSetup || screen_ == Screen::ServerRunning ||
-            screen_ == Screen::NetworkBrowser)
-            GoTo(Screen::Menu);
+            screen_ == Screen::NetworkBrowser || (screen_ == Screen::Profile && !profile_editor_.Capturing()))
+            GoTo(screen_ == Screen::Profile ? profile_return_ : Screen::Menu);
     }
 
     ImGui::End();
@@ -680,10 +682,10 @@ bool LauncherApp::OptFloat(const char* label, const char* key, float lo, float h
 }
 
 void LauncherApp::RenderIdentityRow() {
-    ImGui::SetNextItemWidth(190);
+    ImGui::SetNextItemWidth(150);
     ImGui::InputTextWithHint("Name", "(account name)", profile_.name, sizeof(profile_.name));
     ImGui::SameLine(0, 24);
-    ImGui::SetNextItemWidth(190);
+    ImGui::SetNextItemWidth(150);
     auto& ships = profile_.ship_names;
     int& choice = profile_.ship_choice;
     // -1 passes no ship: the client then uses ~/.xpilotrc or, without it, its built-in default ship
@@ -702,6 +704,15 @@ void LauncherApp::RenderIdentityRow() {
     ImGui::SameLine(0, 24);
     ImGui::Checkbox("Newbie mode", &profile_.newbie);
     if (ImGui::IsItemHovered()) ImGui::SetTooltip("Show help messages for new players");
+
+    // small profile editor button, right-aligned
+    const float bw = ImGui::CalcTextSize("Profile...").x + ImGui::GetStyle().FramePadding.x * 2;
+    ImGui::SameLine(ImGui::GetWindowContentRegionMax().x - bw);
+    if (ImGui::Button("Profile...") && !launching_) {
+        profile_return_ = screen_;
+        GoTo(Screen::Profile);
+    }
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Edit keys, mouse buttons, modifier banks and ship in the xpilotrc");
 }
 
 void LauncherApp::RenderQuickSettings(bool server_mode) {
@@ -980,6 +991,14 @@ void LauncherApp::RenderActionBar(bool server_mode) {
         if (server_mode) StartServerMode();
         else StartLocalGame();
     }
+}
+
+void LauncherApp::RenderProfile() {
+    if (ImGui::Button("< Back", ImVec2(80, 0))) GoTo(profile_return_);
+    ImGui::SameLine();
+    RenderHeader("PLAYER PROFILE", false);
+    if (profile_editor_.Render(40))
+        profile_.Load((data_dir_ + "/shipshapes.txt").c_str());   // pick up the saved name and ship
 }
 
 void LauncherApp::RenderSetup(bool server_mode) {
