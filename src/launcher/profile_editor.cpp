@@ -115,6 +115,10 @@ const std::vector<KeyGroup>& KeyGroups() {
             {"keyNo", "No (prompts)", "n"},
             {"keyExit", "Exit", "Escape"},
         }},
+        {"Voice", {
+            {"keyVoiceTeam", "Push-to-talk, team channel", "Alt_L"},
+            {"keyVoiceAll", "Push-to-talk, all channel", "Insert"},
+        }},
     };
     return groups;
 }

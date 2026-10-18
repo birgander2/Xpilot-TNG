@@ -963,7 +963,7 @@ void LauncherApp::RenderVoiceTab() {
 
 // Player's own voice settings (client side), reachable from the name row of local and network games.
 void LauncherApp::RenderVoicePopup() {
-    static const char* kModes[] = {"Push-to-talk (hold G = team, H = all)", "Voice activation"};
+    static const char* kModes[] = {"Push-to-talk only (keys: Profile...)", "Voice activation"};
     VoiceSettings& v = profile_.voice;
 
     ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));

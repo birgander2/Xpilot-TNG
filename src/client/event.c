@@ -1272,13 +1272,13 @@ xp_option_t key_options[] = {
 
     XP_KEY_OPTION(
 	"keyVoiceTeam",
-	"g",
+	"Alt_L",
 	KEY_VOICE_TEAM,
 	"Push-to-talk on the team voice channel (hold while speaking).\n"),
 
     XP_KEY_OPTION(
 	"keyVoiceAll",
-	"h",
+	"Insert",
 	KEY_VOICE_ALL,
 	"Push-to-talk on the voice channel everybody nearby hears.\n"),
 

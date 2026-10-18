@@ -126,8 +126,8 @@ Pointer (mouse) defaults: **Button 1 = Fire shot**, **Button 2 / 3 = Thrust**, B
 
 | Key | Option | Action |
 |---|---|---|
-| `G` (hold) | keyVoiceTeam | Push-to-talk on the team channel (all channel on servers without teams) |
-| `H` (hold) | keyVoiceAll | Push-to-talk on the channel everybody nearby hears |
+| `Alt` (left, hold) | keyVoiceTeam | Push-to-talk on the team channel (all channel on servers without teams) |
+| `Insert` (hold) | keyVoiceAll | Push-to-talk on the channel everybody nearby hears |
 
 > Voice activation is on by default (`voiceActivation: false` = push-to-talk only). Mute a player with `\ignore <name>`. See [VOICECHAT.md](VOICECHAT.md).
 

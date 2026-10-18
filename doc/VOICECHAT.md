@@ -17,7 +17,8 @@ On servers without teams the team key talks on the all channel.
 - **Voice activation** (default): sends whenever the microphone is louder than
   `voiceActivationLevel` dB, on the team channel (`voiceActivationTeam`).
   The microphone opens as soon as you join a server with voice chat.
-- **Push-to-talk**: hold `G` (team) or `H` (all) while speaking. Keys:
+- **Push-to-talk**: hold left `Alt` (team) or `Insert` (all) while speaking.
+  Rebind them in the launcher under *Profile... → Voice*. Keys:
   `keyVoiceTeam`, `keyVoiceAll`. They work in both modes and pick the channel;
   set `voiceActivation: false` to send only while a key is held.
 
