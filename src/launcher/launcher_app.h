@@ -57,6 +57,7 @@ private:
     void RenderMapCard(const MapInfo& map);
     void RenderQuickSettings(bool server_mode);
     void RenderAdvanced(bool server_mode);
+    void RenderVoiceTab(bool server_mode);
     void RenderLog(float height);
     void RenderActionBar(bool server_mode);
 

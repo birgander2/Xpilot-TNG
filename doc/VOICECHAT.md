@@ -7,8 +7,8 @@ forwards the audio (Opus, ~24 kbit/s per speaker); it never decodes it.
 
 | Channel | Who hears you | Default sound |
 |---|---|---|
-| **Team** | Your teammates only | Full volume at any distance, like a radio |
-| **All** | Everybody nearby, enemies included | Fades out with distance, panned left/right towards the speaker |
+| **Team** | Your teammates only | Full volume at any distance, radio filter |
+| **All** | Everybody nearby, enemies included | Unfiltered, fades out with distance, panned left/right towards the speaker |
 
 On servers without teams the team key talks on the all channel.
 
@@ -38,9 +38,23 @@ undo with `\unignore <name>`.
 | `voiceVolume` | `100` | Playback volume of other voices (0–200 %) |
 | `voiceMicGain` | `100` | Microphone amplification (0–400 %) |
 | `voiceBitrate` | `24` | Opus bitrate in kbit/s (6–64) |
+| `voiceTeamFilter` | `1` | Sound of the team channel: 0 = unfiltered, 1 = radio, 2 = telephone |
+| `voiceAllFilter` | `0` | Same for the all channel |
+
+The **radio** filter is a 400–2800 Hz band pass with soft clipping, light
+hiss, a crackle when the channel opens and a short noise tail when it closes.
+**Telephone** is a clean 300–3400 Hz band pass. Filters are applied when
+playing, so every listener chooses their own sound.
 
 The microphone is opened the first time you press a push-to-talk key (or
 right away with voice activation) and stays open until the client quits.
+
+## Launcher
+
+*Advanced settings → Voice* holds the server options and, for local games,
+your own client settings. They are preset from your xpilotrc; only changed
+values are passed to the client, for local games and for servers joined from
+the server browser. The launcher does not write them back to the xpilotrc.
 
 ## Server options
 

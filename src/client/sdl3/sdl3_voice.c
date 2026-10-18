@@ -23,6 +23,12 @@
 #define VOICE_MAX_BACKLOG	4	/* captured frames before dropping */
 #define VOICE_HUD_MS		300	/* show speaker this long */
 #define VOICE_PAN_DEPTH		0.75f	/* never mute one ear completely */
+#define VOICE_SQUELCH_FRAMES	3	/* radio noise tail after a spurt */
+
+/* voiceTeamFilter / voiceAllFilter */
+#define VOICE_FILTER_OFF	0
+#define VOICE_FILTER_RADIO	1
+#define VOICE_FILTER_PHONE	2
 
 /* Options */
 static bool voiceChat = true;
@@ -32,6 +38,8 @@ static int voiceActivationLevel = -40;
 static int voiceVolume = 100;
 static int voiceMicGain = 100;
 static int voiceBitrate = 24;
+static int voiceTeamFilter = VOICE_FILTER_RADIO;
+static int voiceAllFilter = VOICE_FILTER_OFF;
 
 /* Server state */
 static bool server_known;
@@ -108,6 +116,28 @@ static xp_option_t voice_options[] = {
 	NULL,
 	XP_OPTFLAG_CONFIG_DEFAULT,
 	"Opus bitrate for your voice in kbit/s.\n"),
+
+    XP_INT_OPTION(
+	"voiceTeamFilter",
+	VOICE_FILTER_RADIO,
+	VOICE_FILTER_OFF,
+	VOICE_FILTER_PHONE,
+	&voiceTeamFilter,
+	NULL,
+	XP_OPTFLAG_CONFIG_DEFAULT,
+	"Sound of voices on the team channel:\n"
+	"0 = unfiltered, 1 = radio, 2 = telephone (narrow band).\n"),
+
+    XP_INT_OPTION(
+	"voiceAllFilter",
+	VOICE_FILTER_OFF,
+	VOICE_FILTER_OFF,
+	VOICE_FILTER_PHONE,
+	&voiceAllFilter,
+	NULL,
+	XP_OPTFLAG_CONFIG_DEFAULT,
+	"Sound of voices on the all channel:\n"
+	"0 = unfiltered, 1 = radio, 2 = telephone (narrow band).\n"),
 };
 
 void Store_voice_options(void)
@@ -161,6 +191,21 @@ typedef struct {
     uint8_t		data[VOICE_MAX_PAYLOAD];
 } voice_packet_t;
 
+/* Biquad in direct form I (RBJ audio EQ cookbook). */
+typedef struct {
+    float		b0, b1, b2, a1, a2;
+} biquad_coef_t;
+
+typedef struct {
+    float		x1, x2, y1, y2;
+} biquad_state_t;
+
+typedef struct {
+    biquad_state_t	hp, lp1, lp2;
+    uint32_t		rng;
+    int			mode;		/* VOICE_FILTER_* of the spurt */
+} voice_filter_t;
+
 typedef struct {
     bool		used;
     int			id;
@@ -174,6 +219,8 @@ typedef struct {
     Uint64		last_play_ms;
     int			last_channel;
     int			last_gain, last_pan;	/* for concealed frames */
+    voice_filter_t	filter;
+    int			squelch_left;	/* noise tail frames still due */
     float		cur_gain;
     float		cur_pan;
 } voice_speaker_t;
@@ -244,6 +291,133 @@ static void Voice_reset_speaker(voice_speaker_t *sp)
 }
 
 /*
+ * Voice filters.  "Radio" is a 400-2800 Hz band pass with soft clipping,
+ * a little hiss, a crackle when the channel opens and a short noise tail
+ * when it closes.  "Telephone" is a clean 300-3400 Hz band pass.
+ */
+#define FRAME_KIND_VOICE	0
+#define FRAME_KIND_FIRST	1	/* first frame of a talk spurt */
+#define FRAME_KIND_TAIL		2	/* squelch noise after the spurt */
+
+static biquad_coef_t radio_hp, radio_lp, phone_hp, phone_lp;
+static bool filters_ready;
+
+static biquad_coef_t Biquad_make(bool highpass, float freq, float q)
+{
+    float w0 = 2.0f * SDL_PI_F * freq / VOICE_SAMPLE_RATE;
+    float c = cosf(w0), alpha = sinf(w0) / (2.0f * q);
+    float a0 = 1.0f + alpha;
+    biquad_coef_t k;
+
+    if (highpass) {
+	k.b0 = (1.0f + c) / 2.0f;
+	k.b1 = -(1.0f + c);
+    } else {
+	k.b0 = (1.0f - c) / 2.0f;
+	k.b1 = 1.0f - c;
+    }
+    k.b2 = k.b0;
+    k.b0 /= a0;
+    k.b1 /= a0;
+    k.b2 /= a0;
+    k.a1 = -2.0f * c / a0;
+    k.a2 = (1.0f - alpha) / a0;
+    return k;
+}
+
+static inline float Biquad_run(const biquad_coef_t *k, biquad_state_t *st,
+			       float x)
+{
+    float y = k->b0 * x + k->b1 * st->x1 + k->b2 * st->x2
+	- k->a1 * st->y1 - k->a2 * st->y2;
+
+    st->x2 = st->x1;
+    st->x1 = x;
+    st->y2 = st->y1;
+    st->y1 = y;
+    return y;
+}
+
+/* White noise in [-1, 1] (xorshift32, runs in the audio thread). */
+static inline float Voice_noise(voice_filter_t *f)
+{
+    f->rng ^= f->rng << 13;
+    f->rng ^= f->rng >> 17;
+    f->rng ^= f->rng << 5;
+    return (float)(int32_t)f->rng / 2147483648.0f;
+}
+
+static int Voice_filter_mode(int channel)
+{
+    int mode = (channel == VOICE_CHANNEL_TEAM)
+	? voiceTeamFilter : voiceAllFilter;
+
+    return (mode >= VOICE_FILTER_OFF && mode <= VOICE_FILTER_PHONE)
+	? mode : VOICE_FILTER_OFF;
+}
+
+static void Voice_filter_start(voice_filter_t *f, int mode)
+{
+    uint32_t rng = f->rng ? f->rng : 0x9E3779B9u ^ (uint32_t)(uintptr_t)f;
+
+    if (!filters_ready) {
+	radio_hp = Biquad_make(true, 400.0f, 0.707f);
+	radio_lp = Biquad_make(false, 2800.0f, 0.707f);
+	phone_hp = Biquad_make(true, 300.0f, 0.707f);
+	phone_lp = Biquad_make(false, 3400.0f, 0.707f);
+	filters_ready = true;
+    }
+    memset(f, 0, sizeof(*f));
+    f->rng = rng;
+    f->mode = mode;
+}
+
+/* Filter one frame in place.  tail_pos counts down the squelch frames. */
+static void Voice_filter_frame(voice_filter_t *f, opus_int16 *pcm, int kind,
+			       int tail_pos)
+{
+    const int burst_len = VOICE_SAMPLE_RATE / 100;	/* 10 ms crackle */
+    int i;
+
+    if (f->mode == VOICE_FILTER_OFF)
+	return;
+
+    for (i = 0; i < VOICE_FRAME_SAMPLES; i++) {
+	float x = pcm[i] / 32768.0f, y;
+
+	if (f->mode == VOICE_FILTER_RADIO) {
+	    if (kind == FRAME_KIND_TAIL) {
+		/* Fade the noise out over the tail frames. */
+		float env = ((float)tail_pos
+			     - (float)i / VOICE_FRAME_SAMPLES)
+		    / VOICE_SQUELCH_FRAMES;
+
+		x = 0.2f * env * Voice_noise(f);
+	    } else {
+		x += 0.006f * Voice_noise(f);
+		if (kind == FRAME_KIND_FIRST && i < burst_len)
+		    x += 0.4f * (1.0f - (float)i / burst_len)
+			* Voice_noise(f);
+	    }
+	    y = Biquad_run(&radio_hp, &f->hp, x);
+	    y = Biquad_run(&radio_lp, &f->lp1, y);
+	    y = Biquad_run(&radio_lp, &f->lp2, y);
+	    /*
+	     * Soft clipping: gain 1.6 for quiet signals (make-up for the
+	     * lost bass), loud ones saturate at 0.64 like an overdriven radio.
+	     */
+	    y = 1.6f * tanhf(2.5f * y) / 2.5f;
+	} else {
+	    y = Biquad_run(&phone_hp, &f->hp, x);
+	    y = Biquad_run(&phone_lp, &f->lp1, y);
+	    y = Biquad_run(&phone_lp, &f->lp2, y);
+	    y *= 1.2f;
+	}
+	pcm[i] = (opus_int16)MAX(-32768.0f, MIN(32767.0f, y * 32767.0f));
+    }
+}
+
+/*
  * Mono frame to stereo with gain and pan, ramped over the frame so
  * changes in distance don't click.
  */
@@ -278,7 +452,7 @@ static bool Voice_next_frame(voice_speaker_t *sp, Uint64 now,
 {
     opus_int16 pcm[VOICE_FRAME_SAMPLES];
     voice_packet_t *pkt;
-    int gain, pan, n;
+    int gain, pan, n, kind = FRAME_KIND_VOICE;
 
     if (!sp->playing) {
 	int count = Voice_ring_count(sp);
@@ -290,15 +464,20 @@ static bool Voice_next_frame(voice_speaker_t *sp, Uint64 now,
 		   < (Uint64)(play_target_frames + 1) * VOICE_FRAME_MS))
 	    return false;
 	sp->playing = true;
+	kind = FRAME_KIND_FIRST;
 	/* Start the fade from the first packet's level, not silence. */
 	pkt = &sp->ring[sp->next_seq % VOICE_RING];
 	if (pkt->valid) {
 	    sp->last_gain = pkt->gain;
 	    sp->last_pan = pkt->pan;
+	    sp->last_channel = pkt->channel;
 	    sp->cur_gain = (float)pkt->gain / VOICE_GAIN_MAX
 		* (float)voiceVolume / 100.0f;
 	    sp->cur_pan = (float)(pkt->pan - VOICE_PAN_CENTER) / 127.0f;
 	}
+	Voice_filter_start(&sp->filter, Voice_filter_mode(sp->last_channel));
+	sp->squelch_left = (sp->filter.mode == VOICE_FILTER_RADIO)
+	    ? VOICE_SQUELCH_FRAMES : 0;
     }
 
     pkt = &sp->ring[sp->next_seq % VOICE_RING];
@@ -309,9 +488,18 @@ static bool Voice_next_frame(voice_speaker_t *sp, Uint64 now,
 	pan = sp->last_pan = pkt->pan;
 	sp->last_channel = pkt->channel;
 	pkt->valid = false;
+	sp->next_seq++;
     } else if (Voice_ring_count(sp) > 0) {
 	/* Lost packet with later ones waiting: conceal it. */
 	n = opus_decode(sp->dec, NULL, 0, pcm, VOICE_FRAME_SAMPLES, 0);
+	gain = sp->last_gain;
+	pan = sp->last_pan;
+	sp->next_seq++;
+    } else if (sp->squelch_left > 0) {
+	/* Radio: the channel closes with a short burst of noise. */
+	memset(pcm, 0, sizeof(pcm));
+	n = VOICE_FRAME_SAMPLES;
+	kind = FRAME_KIND_TAIL;
 	gain = sp->last_gain;
 	pan = sp->last_pan;
     } else {
@@ -319,11 +507,14 @@ static bool Voice_next_frame(voice_speaker_t *sp, Uint64 now,
 	sp->playing = false;
 	return false;
     }
-    sp->next_seq++;
     if (n != VOICE_FRAME_SAMPLES)
 	memset(pcm, 0, sizeof(pcm));
+    Voice_filter_frame(&sp->filter, pcm, kind, sp->squelch_left);
+    if (kind == FRAME_KIND_TAIL)
+	sp->squelch_left--;
     Voice_mix_frame(sp, pcm, gain, pan, out);
-    sp->last_play_ms = now;
+    if (kind != FRAME_KIND_TAIL)
+	sp->last_play_ms = now;
     return true;
 }
 

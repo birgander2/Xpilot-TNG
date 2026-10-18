@@ -79,6 +79,24 @@ std::vector<std::string> ReadShipShapeNames(const char* path) {
     return names;
 }
 
+// Boolean xpilotrc value, def if missing or unparsable
+bool XpilotrcBool(const char* key, bool def) {
+    std::string v = ReadXpilotrcValue(key);
+    for (char& c : v) c = char(std::tolower((unsigned char)c));
+    if (v == "true" || v == "yes" || v == "on" || v == "1") return true;
+    if (v == "false" || v == "no" || v == "off" || v == "0") return false;
+    return def;
+}
+
+// Integer xpilotrc value clamped to [lo, hi], def if missing or unparsable
+int XpilotrcInt(const char* key, int def, int lo, int hi) {
+    std::string v = ReadXpilotrcValue(key);
+    char* end = nullptr;
+    long n = std::strtol(v.c_str(), &end, 10);
+    if (v.empty() || end == v.c_str()) return def;
+    return int(std::clamp<long>(n, lo, hi));
+}
+
 // Login name of the current account (empty if unavailable)
 std::string CurrentUserName() {
     if (const passwd* pw = getpwuid(getuid())) return pw->pw_name;
@@ -107,6 +125,18 @@ void ClientProfile::Load(const char* shipshapes_path) {
     std::string rc_newbie = ReadXpilotrcValue("newbie");
     for (char& c : rc_newbie) c = char(std::tolower((unsigned char)c));
     if (rc_newbie == "false" || rc_newbie == "no" || rc_newbie == "off" || rc_newbie == "0") newbie = false;
+
+    const VoiceSettings def;
+    voice.chat = XpilotrcBool("voiceChat", def.chat);
+    voice.activation = XpilotrcBool("voiceActivation", def.activation);
+    voice.activation_team = XpilotrcBool("voiceActivationTeam", def.activation_team);
+    voice.activation_level = XpilotrcInt("voiceActivationLevel", def.activation_level, -80, 0);
+    voice.volume = XpilotrcInt("voiceVolume", def.volume, 0, 200);
+    voice.mic_gain = XpilotrcInt("voiceMicGain", def.mic_gain, 0, 400);
+    voice.bitrate = XpilotrcInt("voiceBitrate", def.bitrate, 6, 64);
+    voice.team_filter = XpilotrcInt("voiceTeamFilter", def.team_filter, 0, 2);
+    voice.all_filter = XpilotrcInt("voiceAllFilter", def.all_filter, 0, 2);
+    rc_voice_ = voice;
 }
 
 std::vector<std::string> ClientProfile::BuildArgs(int port, const std::string& host) const {
@@ -119,6 +149,27 @@ std::vector<std::string> ClientProfile::BuildArgs(int port, const std::string& h
     }
     args.push_back("-newbie");
     args.push_back(newbie ? "true" : "false");
+
+    // voice: only what the GUI changed, the client reads the rest itself
+    auto opt_bool = [&](const char* opt, bool v, bool rc) {
+        if (v == rc) return;
+        args.push_back(opt);
+        args.push_back(v ? "true" : "false");
+    };
+    auto opt_int = [&](const char* opt, int v, int rc) {
+        if (v == rc) return;
+        args.push_back(opt);
+        args.push_back(std::to_string(v));
+    };
+    opt_bool("-voiceChat", voice.chat, rc_voice_.chat);
+    opt_bool("-voiceActivation", voice.activation, rc_voice_.activation);
+    opt_bool("-voiceActivationTeam", voice.activation_team, rc_voice_.activation_team);
+    opt_int("-voiceActivationLevel", voice.activation_level, rc_voice_.activation_level);
+    opt_int("-voiceVolume", voice.volume, rc_voice_.volume);
+    opt_int("-voiceMicGain", voice.mic_gain, rc_voice_.mic_gain);
+    opt_int("-voiceBitrate", voice.bitrate, rc_voice_.bitrate);
+    opt_int("-voiceTeamFilter", voice.team_filter, rc_voice_.team_filter);
+    opt_int("-voiceAllFilter", voice.all_filter, rc_voice_.all_filter);
     args.push_back("-port");
     args.push_back(std::to_string(port));
     args.push_back(host);

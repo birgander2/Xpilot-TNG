@@ -827,6 +827,7 @@ void LauncherApp::RenderAdvanced(bool server_mode) {
                 ImGui::EndTabItem();
             }
         }
+        RenderVoiceTab(server_mode);
         if (ImGui::BeginTabItem("Map Options")) {
             ImGui::Spacing();
             const auto& raw = options_mgr_.MapOptions();
@@ -898,6 +899,61 @@ void LauncherApp::RenderAdvanced(bool server_mode) {
         ImGui::EndTabBar();
     }
     ImGui::PopID();
+}
+
+// Voice chat: server options, and in local mode the player's own client settings.
+void LauncherApp::RenderVoiceTab(bool server_mode) {
+    if (!ImGui::BeginTabItem("Voice")) return;
+    ImGui::Spacing();
+
+    ImGui::SeparatorText("Server");
+    if (baseline_ok_ && options_mgr_.Known("voiceChat")) {
+        OptBool("Allow voice chat", "voiceChat", "Players with a headset can talk to each other");
+        ImGui::BeginDisabled(!options_mgr_.GetBool("voiceChat"));
+        OptBool("Team channel only", "voiceTeamOnly", "Disable the channel that enemies nearby hear as well");
+        ImGui::PushItemWidth(260);
+        OptFloat("Range, all channel", "voiceRange", 0.0f, 5000.0f, "%.0f px", false,
+                 "Distance at which voices fade out completely.\n0 = unlimited range at full volume");
+        OptFloat("Range, team channel", "voiceTeamRange", 0.0f, 5000.0f, "%.0f px", false,
+                 "0 = like a radio: full volume at any distance");
+        ImGui::PopItemWidth();
+        ImGui::EndDisabled();
+    } else {
+        ImGui::TextDisabled("This server build does not support voice chat.");
+    }
+
+    if (!server_mode) {
+        static const char* kFilters[] = {"Unfiltered", "Radio", "Telephone"};
+        static const char* kModes[] = {"Push-to-talk (hold G = team, H = all)", "Voice activation"};
+        VoiceSettings& v = profile_.voice;
+
+        ImGui::Spacing();
+        ImGui::SeparatorText("Your client");
+        ImGui::Checkbox("Voice chat", &v.chat);
+        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Hear other players and talk with a microphone");
+        ImGui::BeginDisabled(!v.chat);
+        ImGui::PushItemWidth(260);
+        int mode = v.activation ? 1 : 0;
+        if (ImGui::Combo("Sending", &mode, kModes, IM_ARRAYSIZE(kModes))) v.activation = (mode == 1);
+        if (v.activation) {
+            ImGui::SliderInt("Activation level", &v.activation_level, -80, 0, "%d dB");
+            if (ImGui::IsItemHovered())
+                ImGui::SetTooltip("Microphone level that opens the channel.\nRaise it if background noise triggers it.");
+            ImGui::Checkbox("Voice activation talks to the team", &v.activation_team);
+            if (ImGui::IsItemHovered())
+                ImGui::SetTooltip("Off: voice activation uses the channel everybody nearby hears");
+        }
+        ImGui::SliderInt("Voice volume", &v.volume, 0, 200, "%d%%");
+        ImGui::SliderInt("Microphone gain", &v.mic_gain, 0, 400, "%d%%");
+        ImGui::SliderInt("Bitrate", &v.bitrate, 6, 64, "%d kbit/s");
+        ImGui::Combo("Team channel sound", &v.team_filter, kFilters, IM_ARRAYSIZE(kFilters));
+        ImGui::Combo("All channel sound", &v.all_filter, kFilters, IM_ARRAYSIZE(kFilters));
+        ImGui::PopItemWidth();
+        ImGui::EndDisabled();
+        ImGui::TextDisabled("Used for local games and servers joined from the launcher.");
+        ImGui::TextDisabled("Mute a player in game with \\ignore <name>.");
+    }
+    ImGui::EndTabItem();
 }
 
 void LauncherApp::RenderLog(float height) {
