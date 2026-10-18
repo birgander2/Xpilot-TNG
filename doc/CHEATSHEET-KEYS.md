@@ -122,4 +122,13 @@ Pointer (mouse) defaults: **Button 1 = Fire shot**, **Button 2 / 3 = Thrust**, B
 | `Esc` | keyExit | Exit mouse mode / quit client |
 | `Y` / `N` | keyYes / keyNo | Answer client questions |
 
+## Voice chat
+
+| Key | Option | Action |
+|---|---|---|
+| `G` (hold) | keyVoiceTeam | Push-to-talk on the team channel (all channel on servers without teams) |
+| `H` (hold) | keyVoiceAll | Push-to-talk on the channel everybody nearby hears |
+
+> Hands-free: set `voiceActivation: true`. Mute a player with `\ignore <name>`. See [VOICECHAT.md](VOICECHAT.md).
+
 > **Note:** several defaults overlap (`F` for refuel/repair/connect, arrows for lock vs. talk cursor); the context decides which fires.

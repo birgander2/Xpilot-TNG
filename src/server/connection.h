@@ -77,6 +77,11 @@
 #define MAX_RETRANSMIT		(FPS + 1)
 #define DEFAULT_RETRANSMIT	(FPS / 2)
 
+/*
+ * Outgoing voice packets waiting for the next frame update.
+ */
+#define VOICE_QUEUE_SIZE	1024
+
 
 /*
  * All the player connection state info.
@@ -123,6 +128,11 @@ typedef struct {
     char		*host;			/* hostname of players host */
     int			rectype;		/* normal/saved/spectator */
     int			features;		/* supported features */
+    bool		voice_on;		/* client requested voice */
+    int			voice_len;		/* bytes in voice_queue */
+    long		voice_rate_sec;		/* rate limit window */
+    int			voice_rate_count;	/* frames in window */
+    unsigned char	voice_queue[VOICE_QUEUE_SIZE];
 } connection_t;
 
 #endif

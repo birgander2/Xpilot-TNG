@@ -98,6 +98,13 @@ const char *Player_get_addr(player_t *pl);
 const char *Player_get_dpy(player_t *pl);
 int Send_shape(connection_t *connp, int shape);
 int Check_max_clients_per_IP(char *host_addr);
+int Send_voice_state(connection_t *connp);
+
+/* voicechat.c */
+void Voice_forward(player_t *speaker, unsigned seq, int channel,
+		   const unsigned char *data, int len);
+void Voice_flush(connection_t *connp);
+void Voice_options_changed(void);
 #define FEATURE(connp, feature)	((connp)->features & (feature))
 #define F_POLY			(1 << 0)
 #define F_FLOATSCORE		(1 << 1)
@@ -112,5 +119,6 @@ int Check_max_clients_per_IP(char *host_addr);
 #define F_CUMULATIVETURN	(1 << 9)
 #define F_BALLSTYLE		(1 << 10)
 #define F_POLYSTYLE		(1 << 11)
+#define F_VOICE			(1 << 12)
 
 #endif

@@ -160,6 +160,7 @@ void SDL3_Process_Events(void)
             break;
 
         case SDL_EVENT_WINDOW_FOCUS_LOST:
+            Voice_release_all();
             if (clData.pointerControl) {
                 clData.restorePointerControl = true;
                 Pointer_control_set_state(false);

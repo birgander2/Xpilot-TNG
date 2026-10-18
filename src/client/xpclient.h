@@ -59,6 +59,7 @@ extern bool threadedDraw; /* default.c */
 #include "clientrank.h"
 #include "configure.h"
 #include "connectparam.h"
+#include "cvoice.h"
 #include "datagram.h"
 #include "gfx2d.h"
 #include "guimap.h"

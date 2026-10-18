@@ -51,6 +51,7 @@ int main(int argc, char *argv[])
     Store_color_options();
     Store_xpaint_options();
     Store_hud_options();
+    Store_voice_options();
     Store_paintradar_options();
     Store_guimap_options();
     Store_guiobject_options();

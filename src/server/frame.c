@@ -1185,6 +1185,7 @@ void Frame_update(void)
 	    fastshot_end(conn);
 	}
 	sound_play_queued(pl2);
+	Voice_flush(conn);
 	Send_end_of_frame(conn);
     }
     playback = rplayback;

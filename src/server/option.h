@@ -327,6 +327,10 @@ extern struct options {
     bool	legacyMode;
     bool	ballStyles;
     bool	ignoreMaxFPS;
+    bool	voiceChat;
+    bool	voiceTeamOnly;
+    double	voiceRange;
+    double	voiceTeamRange;
     bool	polygonMode;
     bool	fastAim;
     bool	teamcup;

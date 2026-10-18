@@ -110,9 +110,20 @@
  * 4.F.1.3: cumulative turning
  * 4.F.1.4: balls use polygon styles
  * 4.F.1.5: Possibility to change polygon styles.
+ *
+ * 4.F.1.6 - 4.F.1.F: reserved, used by XPilot Infinity as transport
+ *                    markers (TCP/WebSocket). Never use them here.
+ *
+ * XPilot TNG (reserved range 4.F.2.0 - 4.F.2.F)
+ * 4.F.2.0: voice chat (PKT_REQUEST_VOICE, PKT_VOICE).
  */
 #define MAGIC_WORD		0xF4ED
-#define POLYGON_VERSION		0x4F15
+#define POLYGON_VERSION		0x4F20
+/* Highest protocol version shared with XPilot NG / XPilot Infinity. */
+#define NG_POLYGON_VERSION	0x4F15
+/* First TNG protocol version, features below are gated on it. */
+#define TNG_FIRST_VERSION	0x4F20
+#define TNG_VOICE_VERSION	0x4F20
 #define OLD_VERSION		0x4501
 #ifdef SERVER
 #define	MAGIC (is_polygon_map \

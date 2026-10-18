@@ -284,6 +284,7 @@ typedef int socklen_t;
 #include "shipshape.h"
 #include "socklib.h"
 #include "types.h"
+#include "voice.h"
 #include "wreckshape.h"
 #include "xpmap.h"
 

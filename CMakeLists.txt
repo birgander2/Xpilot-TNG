@@ -213,6 +213,7 @@ if(BUILD_SERVER)
         src/server/tuner.c
         src/server/treasure.c
         src/server/update.c
+        src/server/voicechat.c
         src/server/walls.c
         src/server/wormhole.c
         src/server/xp2map.c

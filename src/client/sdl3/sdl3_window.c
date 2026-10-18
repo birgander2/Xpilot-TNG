@@ -74,6 +74,7 @@ void SDL3_Cleanup(void)
 {
     Config_destroy();
     aboutCleanup();
+    Voice_cleanup();
     SDL3_Cleanup_Audio();
     SDL3_Cleanup_Draw();
     SDL3_Cleanup_Font();
@@ -152,6 +153,7 @@ void Paint_frame(void)
 
         /* 7. Render In-Game Messages and Score Objects */
         Paint_messages();
+        Voice_paint();
         Paint_score_objects();
     } else {
         /* Damaged by ECM flash */
@@ -225,6 +227,8 @@ void SDL3_Game_Loop(void)
         SDL3_Process_Events();
         if (!tng_running)
             return;
+
+        Voice_update();
 
         if (Net_flush() == -1) {
             error("Bad net flush after input");

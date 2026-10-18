@@ -7,6 +7,8 @@
 - zlib, expat
 - SDL3 and SDL3_ttf (client, launcher). If they are not installed, let CMake
   download and build them: `-DFETCH_SDL3=ON`
+- libopus (optional, client voice chat): `libopus-dev` / `opus-devel` / `opus`.
+  Without it the client builds without voice chat.
 - The launcher fetches Dear ImGui via CMake `FetchContent` (needs network on
   first configure)
 
@@ -40,6 +42,7 @@ for server and client in the project root, so you can run them from there:
 | `BUILD_CLIENT_SDL3`  | ON      | Build `xpilot-tng-client`                       |
 | `BUILD_LAUNCHER`     | ON      | Build `xpilot-tng-launcher` (needs SDL3)        |
 | `FETCH_SDL3`         | OFF     | Download and build SDL3 / SDL3_ttf if missing   |
+| `ENABLE_VOICE`       | ON      | Voice chat in the client (needs libopus)        |
 | `DIST_DIR`           | `<build>/dist` | Target of the `dist` bundle (see below)  |
 
 Example: `cmake -B build -DBUILD_LAUNCHER=OFF -DFETCH_SDL3=ON`
@@ -70,7 +73,7 @@ Binaries go to `<prefix>/bin`, game assets (`lib/`) to
 
 The `dist` target creates a self-contained directory with the binaries and
 `lib/` side by side. It can be moved, archived or copied to another machine
-(same OS/architecture, SDL3 available) without rebuilding.
+(same OS/architecture, SDL3 and libopus available) without rebuilding.
 
 ```sh
 cmake --build build --target dist                    # → build/dist/
