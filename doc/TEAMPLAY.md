@@ -26,14 +26,14 @@ Maps that already define two or more teams are never touched.
 
 ### Team selection dialog (SDL3 client)
 
-On a teamplay server with at least two teams, a dialog opens once after joining (unless `-team` was given). It lists each team with its color, `players/bases`, and marks your own team.
+On a teamplay server with at least two teams, a dialog opens once after joining (unless `-team` was given). It lists each team with `players/bases`, and marks your own team.
 
 - Click a row or press the team's digit key to swap. This sends `/team <n>` for you.
 - `Esc` or a click outside closes it.
 - **`/team` without a number** in the talk window opens the dialog again.
 - The mouse cursor is shown while it is open; mouse steering is restored when it closes.
 
-The dialog does not know about server-side restrictions. Picking the reserved robot team, a full team, or any team under `game_lock` gives the server's usual message (e.g. "You cannot join the robot team on this server.").
+A reserved robot team (`reserveRobotTeam` with bots enabled) is shown as "(robot team, locked)" and cannot be selected. The dialog does not know about other server-side restrictions: picking a full team or any team under `game_lock` gives the server's usual message.
 
 ## 3. Server options
 

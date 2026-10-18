@@ -910,10 +910,19 @@ void LauncherApp::RenderLog(float height) {
     if (ImGui::SmallButton("Clear")) process_mgr_.ClearLogs();
 
     ImGui::BeginChild("LogScroll", ImVec2(0, height), ImGuiChildFlags_Borders, ImGuiWindowFlags_HorizontalScrollbar);
-    for (const auto& e : process_mgr_.GetLogs()) {
-        if (log_filter_type_ == 1 && e.tag != "SERVER") continue;
-        if (log_filter_type_ == 2 && e.tag != "CLIENT") continue;
-        if (log_filter_type_ == 3 && e.tag != "LAUNCHER") continue;
+    const auto& all_logs = process_mgr_.GetLogs();
+    const char* want_tag = log_filter_type_ == 1 ? "SERVER" : log_filter_type_ == 2 ? "CLIENT"
+                         : log_filter_type_ == 3 ? "LAUNCHER" : nullptr;
+    std::vector<const ProcessLogEntry*> shown;
+    shown.reserve(all_logs.size());
+    for (const auto& e : all_logs) {
+        if (!want_tag || e.tag == want_tag) shown.push_back(&e);
+    }
+    ImGuiListClipper clipper;   // only lay out the visible lines (log holds up to 2000)
+    clipper.Begin((int)shown.size());
+    while (clipper.Step())
+    for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+        const auto& e = *shown[i];
         ImVec4 col(0.6f, 0.6f, 0.6f, 1.0f);
         if (e.tag == "SERVER") col = ImVec4(0.3f, 0.7f, 1.0f, 1.0f);
         else if (e.tag == "CLIENT") col = ImVec4(0.4f, 0.9f, 0.4f, 1.0f);

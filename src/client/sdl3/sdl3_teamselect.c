@@ -18,6 +18,7 @@ typedef struct {
     int team;
     int bases;
     int players;
+    bool locked;
 } ts_entry_t;
 
 static bool ts_active = false;
@@ -44,6 +45,10 @@ static void TeamSelect_collect(void)
             ts_entries[ts_num_entries].team = t;
             ts_entries[ts_num_entries].bases = nbases[t];
             ts_entries[ts_num_entries].players = nplayers[t];
+            ts_entries[ts_num_entries].locked =
+                BIT(Setup->mode, SETUP_ROBOT_TEAM_LOCKED)
+                && t == ((Setup->mode & SETUP_ROBOT_TEAM_MASK)
+                         >> SETUP_ROBOT_TEAM_SHIFT);
             ts_num_entries++;
         }
     }
@@ -73,6 +78,10 @@ static void TeamSelect_choose(int team)
     char cmd[32];
 
     TeamSelect_close();
+    for (int i = 0; i < ts_num_entries; i++) {
+        if (ts_entries[i].team == team && ts_entries[i].locked)
+            return;
+    }
     if (self != NULL && self->team == team)
         return;
     snprintf(cmd, sizeof(cmd), "/team %d", team);
@@ -111,7 +120,7 @@ bool SDL3_TeamSelect_Handle_Key_Down(SDL_Keycode key)
         TeamSelect_close();
     } else if (key >= SDLK_0 && key <= SDLK_9) {
         for (int i = 0; i < ts_num_entries; i++) {
-            if (ts_entries[i].team == key - SDLK_0) {
+            if (ts_entries[i].team == key - SDLK_0 && !ts_entries[i].locked) {
                 TeamSelect_choose(ts_entries[i].team);
                 break;
             }
@@ -135,7 +144,8 @@ bool SDL3_TeamSelect_Handle_Mouse_Down(int mx, int my, int button)
         return true;
     }
     int row = (int)((my - y - TS_HEADER_H) / TS_ROW_H);
-    if (my >= y + TS_HEADER_H && row >= 0 && row < ts_num_entries)
+    if (my >= y + TS_HEADER_H && row >= 0 && row < ts_num_entries
+        && !ts_entries[row].locked)
         TeamSelect_choose(ts_entries[row].team);
     return true;
 }
@@ -180,15 +190,20 @@ void SDL3_TeamSelect_Render(void)
         bool mine = self != NULL && self->team == e->team;
         char label[64];
 
+        hover = hover && !e->locked;
         SDL3_Fill_Rect(x + 4.0f, ry + 1.0f, w - 8.0f, TS_ROW_H - 2.0f,
                        hover ? buttonColor : XP_COLOR_BLACK);
-        SDL3_Fill_Rect(x + TS_PAD, ry + 7.0f, 14.0f, 14.0f, Team_color(e->team));
         snprintf(label, sizeof(label), "%d  Team %d", e->team, e->team);
-        SDL3_Draw_Text(label, x + TS_PAD + 24.0f, ry + 7.0f, XP_COLOR_WHITE);
-        snprintf(label, sizeof(label), "%d/%d%s", e->players, e->bases,
-                 mine ? "  (you)" : "");
+        SDL3_Draw_Text(label, x + TS_PAD, ry + 7.0f, XP_COLOR_WHITE);
+        if (e->locked)
+            snprintf(label, sizeof(label), "%d/%d  (robot team, locked)",
+                     e->players, e->bases);
+        else
+            snprintf(label, sizeof(label), "%d/%d%s", e->players, e->bases,
+                     mine ? "  (you)" : "");
         SDL3_Draw_Text(label, x + w - TS_PAD - SDL3_Text_Width(label),
-                       ry + 7.0f, mine ? XP_COLOR_GREEN : XP_COLOR_WHITE);
+                       ry + 7.0f, mine ? XP_COLOR_GREEN
+                        : e->locked ? XP_COLOR_RED : XP_COLOR_WHITE);
     }
 
     SDL3_Draw_Text("Click or press a number, Esc to cancel", x + TS_PAD,

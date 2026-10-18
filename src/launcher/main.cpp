@@ -194,9 +194,14 @@ int main(int argc, char* argv[]) {
 
     int cur_w = 0, cur_h = 0;
     bool hidden = false;
+    int active_frames = 30;     // full-rate frames left after input; otherwise idle at ~10 fps
     while (!app.WantsQuit()) {
         SDL_Event event;
-        while (SDL_PollEvent(&event)) {
+        // Sleep until input arrives (or 100 ms pass for log/status updates) instead of spinning at vsync.
+        bool got = hidden ? false : (active_frames > 0 ? SDL_PollEvent(&event)
+                                                       : SDL_WaitEventTimeout(&event, 100));
+        while (got) {
+            active_frames = 30;
             ImGui_ImplSDL3_ProcessEvent(&event);
             if (event.type == SDL_EVENT_QUIT) {
                 app.RequestQuit();
@@ -205,7 +210,9 @@ int main(int argc, char* argv[]) {
                 event.window.windowID == SDL_GetWindowID(window)) {
                 app.RequestQuit();
             }
+            got = SDL_PollEvent(&event);
         }
+        if (active_frames > 0) active_frames--;
 
         app.Update();
 

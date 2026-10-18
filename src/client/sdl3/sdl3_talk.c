@@ -262,6 +262,11 @@ bool SDL3_Talk_Handle_Text_Input(const char *text)
     return true;
 }
 
+static float Talk_box_height(void)
+{
+    return SDL_ceilf(SDL3_Prop_Text_Height()) + 10.0f;
+}
+
 bool SDL3_Talk_Handle_Mouse_Down(int x, int y, int button)
 {
     if (!clData.talking)
@@ -272,24 +277,16 @@ bool SDL3_Talk_Handle_Mouse_Down(int x, int y, int button)
     float tw_x = (float)(PLAYFIELD_X + 50);
     float tw_w = (float)(draw_width - 100);
     if (tw_w < 200.0f) tw_w = 200.0f;
-    float tw_h = 28.0f;
+    float tw_h = Talk_box_height();
     float tw_y = (float)((int)(draw_height * 3 / 4 - tw_h / 2));
 
     if (x >= (int)tw_x && x <= (int)(tw_x + tw_w) &&
         y >= (int)tw_y && y <= (int)(tw_y + tw_h)) {
         /* Click inside talk box: position cursor */
         const char *prompt = "Talk: ";
-        float text_start_x = tw_x + 8.0f + SDL3_Text_Width(prompt);
+        float text_start_x = tw_x + 8.0f + SDL3_Prop_Text_Width(prompt);
         float click_rel = (float)x - text_start_x;
-        if (click_rel <= 0.0f) {
-            talk_cursor_pos = 0;
-        } else {
-            float char_w = SDL3_Text_Width_Len(1);
-            int idx = (char_w > 0.0f) ? (int)((click_rel + char_w * 0.5f) / char_w) : 0;
-            int len = (int)strlen(talk_str);
-            if (idx > len) idx = len;
-            talk_cursor_pos = idx;
-        }
+        talk_cursor_pos = (click_rel <= 0.0f) ? 0 : SDL3_Prop_Index_At(talk_str, click_rel);
         return true;
     }
 
@@ -306,7 +303,7 @@ void SDL3_Render_Talk_Window(void)
     float tw_x = (float)(PLAYFIELD_X + 50);
     float tw_w = (float)(draw_width - 100);
     if (tw_w < 200.0f) tw_w = 200.0f;
-    float tw_h = 28.0f;
+    float tw_h = Talk_box_height();
     float tw_y = (float)((int)(draw_height * 3 / 4 - tw_h / 2));
 
     /* 1. Black background */
@@ -318,9 +315,10 @@ void SDL3_Render_Talk_Window(void)
 
     /* 3. "Talk: " prompt in green */
     const char *prompt = "Talk: ";
-    float prompt_w = SDL3_Text_Width(prompt);
-    float text_y = tw_y + 6.0f;
-    SDL3_Draw_Text(prompt, tw_x + 8.0f, text_y, 4 /* XPGREEN */);
+    float prompt_w = SDL3_Prop_Text_Width(prompt);
+    float text_h = SDL3_Prop_Text_Height();
+    float text_y = tw_y + SDL_floorf((tw_h - text_h) * 0.5f);
+    SDL3_Prop_Draw_Text(prompt, tw_x + 8.0f, text_y, 4 /* XPGREEN */);
 
     /* 4. Clip area for talk message so it never overflows box */
     SDL_Rect prev_clip;
@@ -336,7 +334,7 @@ void SDL3_Render_Talk_Window(void)
     SDL_SetRenderClipRect(tng_renderer, &text_clip);
 
     /* Scroll offset if text length exceeds visible box */
-    float cursor_rel_x = SDL3_Text_Width_Len(talk_cursor_pos);
+    float cursor_rel_x = SDL3_Prop_Text_Width_Len(talk_str, talk_cursor_pos);
     float visible_w = (float)text_clip.w - 10.0f;
     float scroll_offset = 0.0f;
     if (cursor_rel_x > visible_w) {
@@ -344,13 +342,13 @@ void SDL3_Render_Talk_Window(void)
     }
 
     float msg_x = (float)text_clip.x - scroll_offset;
-    SDL3_Draw_Text(talk_str, msg_x, text_y, WHITE);
+    SDL3_Prop_Draw_Text(talk_str, msg_x, text_y, WHITE);
 
     /* 5. Blinking cursor */
     bool cursor_visible = ((SDL_GetTicks() / 400) % 2 == 0);
     if (cursor_visible) {
         float cx = msg_x + cursor_rel_x;
-        SDL3_Fill_Rect(cx, text_y + 1.0f, 2.0f, 15.0f, WHITE);
+        SDL3_Fill_Rect(cx, text_y + 2.0f, 2.0f, text_h - 4.0f, WHITE);
     }
 
     /* Restore previous clip rect */

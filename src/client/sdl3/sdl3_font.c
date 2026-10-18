@@ -19,6 +19,8 @@ static float        font_y_offset = 0.0f;
 static float        glyph_w[256];
 static float        glyph_h[256];
 static bool         ttf_initialized = false;
+static SDL_Texture *prop_texture = NULL;
+static void         Init_Prop_Font(void);
 
 static TTF_Font *Open_Bundled_Font(float ptsize)
 {
@@ -130,6 +132,7 @@ int SDL3_Init_Font(void)
             ttf_initialized = true;
         }
     }
+    Init_Prop_Font();
 
     TTF_Font *ttf_font = ttf_initialized ? Open_Bundled_Font(DEFAULT_PTSIZE) : NULL;
     if (!ttf_font) {
@@ -216,6 +219,10 @@ void SDL3_Cleanup_Font(void)
         SDL_DestroyTexture(font_texture);
         font_texture = NULL;
     }
+    if (prop_texture) {
+        SDL_DestroyTexture(prop_texture);
+        prop_texture = NULL;
+    }
     if (ttf_initialized) {
         TTF_Quit();
         ttf_initialized = false;
@@ -280,4 +287,159 @@ void SDL3_Draw_Text(const char *str, float x, float y, int color_idx)
 {
     if (!str) return;
     SDL3_Draw_Text_Len(str, (int)strlen(str), x, y, color_idx);
+}
+
+/* ---- Proportional UI font (talk window etc.) ---- */
+
+#define PROP_PTSIZE     13.0f
+#define PROP_CELL       28
+
+static float        prop_adv[256];
+static float        prop_w[256];
+static float        prop_h[256];
+static float        prop_height = 0.0f;
+
+static TTF_Font *Open_Font_Named(const char *name, float ptsize)
+{
+    char path[PATH_MAX];
+    TTF_Font *f;
+
+    snprintf(path, sizeof(path), "lib/fonts/%s", name);
+    if ((f = TTF_OpenFont(path, ptsize))) return f;
+    snprintf(path, sizeof(path), "../lib/fonts/%s", name);
+    if ((f = TTF_OpenFont(path, ptsize))) return f;
+
+    const char *base_path = SDL_GetBasePath();
+    if (base_path) {
+        snprintf(path, sizeof(path), "%slib/fonts/%s", base_path, name);
+        if ((f = TTF_OpenFont(path, ptsize))) return f;
+        snprintf(path, sizeof(path), "%s../lib/fonts/%s", base_path, name);
+        if ((f = TTF_OpenFont(path, ptsize))) return f;
+    }
+
+    snprintf(path, sizeof(path), "%sfonts/%s", Conf_datadir(), name);
+    if ((f = TTF_OpenFont(path, ptsize))) return f;
+
+#ifdef CONF_DATADIR
+    snprintf(path, sizeof(path), CONF_DATADIR "fonts/%s", name);
+    if ((f = TTF_OpenFont(path, ptsize))) return f;
+#endif
+    snprintf(path, sizeof(path), "/usr/share/fonts/truetype/dejavu/%s", name);
+    return TTF_OpenFont(path, ptsize);
+}
+
+static void Init_Prop_Font(void)
+{
+    if (prop_texture || !ttf_initialized)
+        return;
+
+    TTF_Font *font = Open_Font_Named("DejaVuSans.ttf", PROP_PTSIZE);
+    if (!font)
+        return;
+
+    TTF_SetFontHinting(font, TTF_HINTING_LIGHT);
+    prop_height = (float)TTF_GetFontHeight(font);
+
+    SDL_Surface *atlas = SDL_CreateSurface(ATLAS_COLS * PROP_CELL, ATLAS_ROWS * PROP_CELL,
+                                           SDL_PIXELFORMAT_RGBA32);
+    if (!atlas) {
+        TTF_CloseFont(font);
+        return;
+    }
+    SDL_SetSurfaceBlendMode(atlas, SDL_BLENDMODE_NONE);
+    memset(atlas->pixels, 0, (size_t)(atlas->pitch * atlas->h));
+
+    SDL_Color white = { 255, 255, 255, 255 };
+    for (int c = 0; c < 256; c++) {
+        prop_adv[c] = prop_w[c] = prop_h[c] = 0.0f;
+        if (c < 32 || (c >= 127 && c < 160))
+            continue;
+
+        int adv = 0;
+        if (TTF_GetGlyphMetrics(font, (Uint32)c, NULL, NULL, NULL, NULL, &adv))
+            prop_adv[c] = (float)adv;
+
+        SDL_Surface *g = TTF_RenderGlyph_Blended(font, (Uint32)c, white);
+        if (!g)
+            continue;
+        SDL_SetSurfaceBlendMode(g, SDL_BLENDMODE_NONE);
+
+        int cw = (g->w < PROP_CELL) ? g->w : PROP_CELL;
+        int ch = (g->h < PROP_CELL) ? g->h : PROP_CELL;
+        SDL_Rect src = { 0, 0, cw, ch };
+        SDL_Rect dst = { (c % ATLAS_COLS) * PROP_CELL, (c / ATLAS_COLS) * PROP_CELL, cw, ch };
+        SDL_BlitSurface(g, &src, atlas, &dst);
+        prop_w[c] = (float)cw;
+        prop_h[c] = (float)ch;
+        SDL_DestroySurface(g);
+    }
+    TTF_CloseFont(font);
+
+    prop_texture = SDL_CreateTextureFromSurface(tng_renderer, atlas);
+    SDL_DestroySurface(atlas);
+    if (prop_texture) {
+        SDL_SetTextureScaleMode(prop_texture, SDL_SCALEMODE_LINEAR);
+        SDL_SetTextureBlendMode(prop_texture, SDL_BLENDMODE_BLEND);
+    }
+}
+
+float SDL3_Prop_Text_Height(void)
+{
+    return prop_texture ? prop_height : 10.0f;
+}
+
+float SDL3_Prop_Text_Width_Len(const char *str, int len)
+{
+    if (!str || len <= 0) return 0.0f;
+    if (!prop_texture) return SDL3_Text_Width_Len(len);
+    float w = 0.0f;
+    for (int i = 0; i < len && str[i]; i++)
+        w += prop_adv[(unsigned char)str[i]];
+    return w;
+}
+
+float SDL3_Prop_Text_Width(const char *str)
+{
+    return str ? SDL3_Prop_Text_Width_Len(str, (int)strlen(str)) : 0.0f;
+}
+
+/* Character index closest to horizontal offset rel_x from the string start. */
+int SDL3_Prop_Index_At(const char *str, float rel_x)
+{
+    int len = str ? (int)strlen(str) : 0;
+    float x = 0.0f;
+    for (int i = 0; i < len; i++) {
+        float a = prop_texture ? prop_adv[(unsigned char)str[i]] : SDL3_Text_Width_Len(1);
+        if (rel_x < x + a * 0.5f)
+            return i;
+        x += a;
+    }
+    return len;
+}
+
+/* y is the top of the text line (full font height). */
+void SDL3_Prop_Draw_Text(const char *str, float x, float y, int color_idx)
+{
+    if (!str || !tng_renderer) return;
+    if (!prop_texture) {
+        SDL3_Draw_Text(str, x, y, color_idx);
+        return;
+    }
+
+    SDL_Color col = SDL3_Get_Color(color_idx);
+    SDL_SetTextureColorMod(prop_texture, col.r, col.g, col.b);
+    SDL_SetTextureAlphaMod(prop_texture, col.a);
+
+    float cur_x = x;
+    float draw_y = SDL_roundf(y);
+    for (const char *p = str; *p && *p != '\n' && *p != '\r'; p++) {
+        unsigned char c = (unsigned char)*p;
+        if (prop_w[c] > 0.0f && prop_h[c] > 0.0f) {
+            SDL_FRect src = { (float)(c % ATLAS_COLS) * PROP_CELL,
+                              (float)(c / ATLAS_COLS) * PROP_CELL, prop_w[c], prop_h[c] };
+            SDL_FRect dst = { SDL_roundf(cur_x), draw_y, prop_w[c], prop_h[c] };
+            SDL_RenderTexture(tng_renderer, prop_texture, &src, &dst);
+        }
+        cur_x += prop_adv[c];
+    }
 }

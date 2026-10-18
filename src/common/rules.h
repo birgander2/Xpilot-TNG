@@ -45,6 +45,14 @@
 #define ALLIANCES		(1<<14)
 
 /*
+ * Not a rule: sent in the setup mode word when humans cannot join the
+ * robot team. The team number is stored in the four bits above the flag.
+ */
+#define SETUP_ROBOT_TEAM_LOCKED	(1<<16)
+#define SETUP_ROBOT_TEAM_SHIFT	20
+#define SETUP_ROBOT_TEAM_MASK	(0xF<<SETUP_ROBOT_TEAM_SHIFT)
+
+/*
  * Client uses only a subset of them:
  */
 #define CLIENT_RULES_MASK	(WRAP_PLAY|TEAM_PLAY|TIMING|LIMITED_LIVES|\

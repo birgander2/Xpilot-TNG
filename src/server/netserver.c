@@ -192,6 +192,23 @@ static void Feature_init(connection_t *connp)
  * We only setup this structure once to save time when new
  * players log in during play.
  */
+/*
+ * Mode bits sent to the client. In team play, a robot team that humans
+ * cannot join is announced in the spare bits above the rules mask.
+ */
+static long Setup_mode_for_client(const setup_t *S)
+{
+    long mode = S->mode;
+
+    if (BIT(mode, TEAM_PLAY) && options.reserveRobotTeam
+	&& (options.maxRobots > 0 || options.maxSmartRobots > 0
+	    || options.botsMatchHumans)
+	&& options.robotTeam >= 0 && options.robotTeam < MAX_TEAMS)
+	mode |= SETUP_ROBOT_TEAM_LOCKED
+		| ((long)options.robotTeam << SETUP_ROBOT_TEAM_SHIFT);
+    return mode;
+}
+
 static int Init_setup(void)
 {
     size_t size;
@@ -884,7 +901,7 @@ static int Handle_setup(connection_t *connp)
 	    n = Packet_printf(&connp->c,
 			      "%ld" "%ld%hd" "%hd%hd" "%hd%hd" "%s%s",
 			      S->map_data_len,
-			      S->mode, S->lives,
+			      Setup_mode_for_client(S), S->lives,
 			      S->x, S->y,
 			      options.framesPerSecond, S->map_order,
 			      S->name, S->author);
@@ -892,7 +909,7 @@ static int Handle_setup(connection_t *connp)
 	    n = Packet_printf(&connp->c,
 			      "%ld" "%ld%hd" "%hd%hd" "%hd%s" "%s%S",
 			      S->map_data_len,
-			      S->mode, S->lives,
+			      Setup_mode_for_client(S), S->lives,
 			      S->width, S->height,
 			      options.framesPerSecond, S->name,
 			      S->author, S->data_url);

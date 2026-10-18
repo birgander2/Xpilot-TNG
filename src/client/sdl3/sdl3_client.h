@@ -91,6 +91,12 @@ SDL_FColor SDL3_Get_FColor_RGB(Uint32 rgb);
 /* Crisp Bitmap Font subsystem */
 int   SDL3_Init_Font(void);
 void  SDL3_Cleanup_Font(void);
+/* Proportional UI font (falls back to the monospace font if unavailable) */
+float SDL3_Prop_Text_Height(void);
+float SDL3_Prop_Text_Width(const char *str);
+float SDL3_Prop_Text_Width_Len(const char *str, int len);
+int   SDL3_Prop_Index_At(const char *str, float rel_x);
+void  SDL3_Prop_Draw_Text(const char *str, float x, float y, int color_idx);
 void  SDL3_Draw_Text(const char *str, float x, float y, int color_idx);
 void  SDL3_Draw_Text_Len(const char *str, int len, float x, float y, int color_idx);
 float SDL3_Text_Width(const char *str);
