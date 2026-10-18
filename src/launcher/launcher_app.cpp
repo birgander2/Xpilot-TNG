@@ -996,7 +996,7 @@ void LauncherApp::RenderActionBar(bool server_mode) {
 void LauncherApp::RenderProfile() {
     if (ImGui::Button("< Back", ImVec2(80, 0))) GoTo(profile_return_);
     ImGui::SameLine();
-    RenderHeader("PLAYER PROFILE", false);
+    RenderHeader("EDIT PLAYER PROFILE", false);
     if (profile_editor_.Render(40))
         profile_.Load((data_dir_ + "/shipshapes.txt").c_str());   // pick up the saved name and ship
 }
