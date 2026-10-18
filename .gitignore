@@ -12,6 +12,7 @@ build/
 smartbot_brain.dat
 CLAUDE.md
 screenshot*
+settings.local.json
 
 # Root convenience symlinks
 /xpilot-tng-server
