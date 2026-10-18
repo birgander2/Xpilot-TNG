@@ -9,7 +9,7 @@ std::string XpilotrcValue(const char* key);
 // Client voice chat settings (client options voice*), see doc/VOICECHAT.md.
 struct VoiceSettings {
     bool chat = true;
-    bool activation = false;        // false = push-to-talk
+    bool activation = true;         // false = push-to-talk only
     bool activation_team = true;
     int activation_level = -40;     // dB
     int volume = 100;               // %

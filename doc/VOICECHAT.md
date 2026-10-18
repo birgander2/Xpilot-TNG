@@ -14,11 +14,12 @@ On servers without teams the team key talks on the all channel.
 
 ## Talking
 
-- **Push-to-talk** (default): hold `G` (team) or `H` (all) while speaking.
-  Keys: `keyVoiceTeam`, `keyVoiceAll`.
-- **Voice activation**: `voiceActivation: true` sends whenever the microphone
-  is louder than `voiceActivationLevel` dB. The push-to-talk keys still work
-  and override the channel.
+- **Voice activation** (default): sends whenever the microphone is louder than
+  `voiceActivationLevel` dB, on the team channel (`voiceActivationTeam`).
+  The microphone opens as soon as you join a server with voice chat.
+- **Push-to-talk**: hold `G` (team) or `H` (all) while speaking. Keys:
+  `keyVoiceTeam`, `keyVoiceAll`. They work in both modes and pick the channel;
+  set `voiceActivation: false` to send only while a key is held.
 
 While you send, the HUD shows `VOICE TEAM` / `VOICE ALL` (bottom right).
 The names of players currently speaking are listed above it
@@ -32,7 +33,7 @@ undo with `\unignore <name>`.
 | Option | Default | Meaning |
 |---|---|---|
 | `voiceChat` | `true` | Enable voice chat |
-| `voiceActivation` | `false` | Hands-free sending instead of push-to-talk |
+| `voiceActivation` | `true` | Hands-free sending; `false` = push-to-talk only |
 | `voiceActivationTeam` | `true` | Voice activation talks on the team channel |
 | `voiceActivationLevel` | `-40` | Trigger level in dB (−80 … 0), raise it if noise opens the channel |
 | `voiceVolume` | `100` | Playback volume of other voices (0–200 %) |
@@ -41,8 +42,9 @@ undo with `\unignore <name>`.
 Bitrate and channel sound are decided by the server (see below), so every
 player hears the same thing.
 
-The microphone is opened the first time you press a push-to-talk key (or
-right away with voice activation) and stays open until the client quits.
+The microphone is opened as soon as the server offers voice chat (with
+`voiceActivation: false` only when you first press a push-to-talk key) and
+stays open until the client quits.
 
 ## Launcher
 

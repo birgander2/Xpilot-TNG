@@ -28,7 +28,7 @@
 
 /* Options */
 static bool voiceChat = true;
-static bool voiceActivation = false;
+static bool voiceActivation = true;
 static bool voiceActivationTeam = true;
 static int voiceActivationLevel = -40;
 static int voiceVolume = 100;
@@ -57,12 +57,13 @@ static xp_option_t voice_options[] = {
 
     XP_BOOL_OPTION(
 	"voiceActivation",
-	false,
+	true,
 	&voiceActivation,
 	NULL,
 	XP_OPTFLAG_CONFIG_DEFAULT,
-	"Send voice automatically while you speak instead of only while\n"
-	"holding a push-to-talk key (keyVoiceTeam / keyVoiceAll).\n"),
+	"Send voice automatically while you speak. Set to false to talk only\n"
+	"while holding a push-to-talk key (keyVoiceTeam / keyVoiceAll).\n"
+	"The push-to-talk keys work in both modes.\n"),
 
     XP_BOOL_OPTION(
 	"voiceActivationTeam",

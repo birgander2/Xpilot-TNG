@@ -988,8 +988,7 @@ void LauncherApp::RenderVoicePopup() {
     ImGui::PopItemWidth();
     ImGui::EndDisabled();
     ImGui::Spacing();
-    ImGui::TextDisabled("Applies to the next game you start from the launcher.");
-    ImGui::TextDisabled("Bitrate and channel sound are set by the server.");
+    ImGui::TextDisabled("Voice chat needs an XPilot TNG server 5.0.2 or newer.");
     ImGui::TextDisabled("Mute a player in game with \\ignore <name>.");
     ImGui::Spacing();
     if (ImGui::Button("Close", ImVec2(120, 0)) || ImGui::IsKeyPressed(ImGuiKey_Escape)) ImGui::CloseCurrentPopup();
