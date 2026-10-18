@@ -15,6 +15,7 @@ option(BUILD_LAUNCHER "Build modern Dear ImGui / SDL3 frontend launcher (xpilot-
 option(SANITIZE "Build with AddressSanitizer and UndefinedBehaviorSanitizer (for testing)" OFF)
 option(BUILD_TESTS "Build the security regression and fuzz tests" OFF)
 option(FETCH_SDL3 "Download and build SDL3 / SDL3_ttf if not installed on system" OFF)
+option(FETCH_OPUS "Download and build Opus (static) if not installed on system" OFF)
 
 # Compiler Definitions & Flags
 add_compile_definitions(_GNU_SOURCE HAVE_CONFIG_H)

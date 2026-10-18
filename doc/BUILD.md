@@ -7,8 +7,10 @@
 - zlib, expat
 - SDL3 and SDL3_ttf (client, launcher). If they are not installed, let CMake
   download and build them: `-DFETCH_SDL3=ON`
-- libopus (optional, client voice chat): `libopus-dev` / `opus-devel` / `opus`.
-  Without it the client builds without voice chat.
+- libopus (optional, client voice chat): `libopus-dev` / `libopus-devel` /
+  `opus-devel` / `opus`. Without it the client builds without voice chat;
+  `-DFETCH_OPUS=ON` downloads it and links it statically (no extra DLL on
+  Windows).
 - The launcher fetches Dear ImGui via CMake `FetchContent` (needs network on
   first configure)
 
@@ -43,6 +45,7 @@ for server and client in the project root, so you can run them from there:
 | `BUILD_LAUNCHER`     | ON      | Build `xpilot-tng-launcher` (needs SDL3)        |
 | `FETCH_SDL3`         | OFF     | Download and build SDL3 / SDL3_ttf if missing   |
 | `ENABLE_VOICE`       | ON      | Voice chat in the client (needs libopus)        |
+| `FETCH_OPUS`         | OFF     | Download and build Opus (static) if missing     |
 | `DIST_DIR`           | `<build>/dist` | Target of the `dist` bundle (see below)  |
 
 Example: `cmake -B build -DBUILD_LAUNCHER=OFF -DFETCH_SDL3=ON`
