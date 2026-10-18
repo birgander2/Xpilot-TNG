@@ -117,9 +117,6 @@ void ClientProfile::Load(const char* shipshapes_path) {
     voice.activation_level = XpilotrcInt("voiceActivationLevel", def.activation_level, -80, 0);
     voice.volume = XpilotrcInt("voiceVolume", def.volume, 0, 200);
     voice.mic_gain = XpilotrcInt("voiceMicGain", def.mic_gain, 0, 400);
-    voice.bitrate = XpilotrcInt("voiceBitrate", def.bitrate, 6, 64);
-    voice.team_filter = XpilotrcInt("voiceTeamFilter", def.team_filter, 0, 2);
-    voice.all_filter = XpilotrcInt("voiceAllFilter", def.all_filter, 0, 2);
     rc_voice_ = voice;
 }
 
@@ -151,9 +148,7 @@ std::vector<std::string> ClientProfile::BuildArgs(int port, const std::string& h
     opt_int("-voiceActivationLevel", voice.activation_level, rc_voice_.activation_level);
     opt_int("-voiceVolume", voice.volume, rc_voice_.volume);
     opt_int("-voiceMicGain", voice.mic_gain, rc_voice_.mic_gain);
-    opt_int("-voiceBitrate", voice.bitrate, rc_voice_.bitrate);
-    opt_int("-voiceTeamFilter", voice.team_filter, rc_voice_.team_filter);
-    opt_int("-voiceAllFilter", voice.all_filter, rc_voice_.all_filter);
+
     args.push_back("-port");
     args.push_back(std::to_string(port));
     args.push_back(host);

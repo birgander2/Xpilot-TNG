@@ -37,24 +37,22 @@ undo with `\unignore <name>`.
 | `voiceActivationLevel` | `-40` | Trigger level in dB (−80 … 0), raise it if noise opens the channel |
 | `voiceVolume` | `100` | Playback volume of other voices (0–200 %) |
 | `voiceMicGain` | `100` | Microphone amplification (0–400 %) |
-| `voiceBitrate` | `24` | Opus bitrate in kbit/s (6–64) |
-| `voiceTeamFilter` | `1` | Sound of the team channel: 0 = unfiltered, 1 = radio, 2 = telephone |
-| `voiceAllFilter` | `0` | Same for the all channel |
 
-The **radio** filter is a 400–2800 Hz band pass with soft clipping, light
-hiss, a crackle when the channel opens and a short noise tail when it closes.
-**Telephone** is a clean 300–3400 Hz band pass. Filters are applied when
-playing, so every listener chooses their own sound.
+Bitrate and channel sound are decided by the server (see below), so every
+player hears the same thing.
 
 The microphone is opened the first time you press a push-to-talk key (or
 right away with voice activation) and stays open until the client quits.
 
 ## Launcher
 
-*Advanced settings → Voice* holds the server options and, for local games,
-your own client settings. They are preset from your xpilotrc; only changed
-values are passed to the client, for local games and for servers joined from
-the server browser. The launcher does not write them back to the xpilotrc.
+- *Advanced settings → Voice* (local game and server launch) holds the
+  server options.
+- The **Voice...** button next to your name (local game and *Join network
+  game*) opens your own settings: voice chat on/off, push-to-talk or voice
+  activation, activation level, voice volume and microphone gain. They are
+  preset from your xpilotrc; only changed values are passed to the client.
+  The launcher does not write them back to the xpilotrc.
 
 ## Server options
 
@@ -64,6 +62,14 @@ the server browser. The launcher does not write them back to the xpilotrc.
 | `voiceTeamOnly` | `false` | Only the team channel is allowed |
 | `voiceRange` | `1500` | Pixels after which the all channel is silent (0 = unlimited, full volume) |
 | `voiceTeamRange` | `0` | Same for the team channel (0 = radio, any distance) |
+| `voiceBitrate` | `24` | Opus bitrate in kbit/s (6–64) used by all clients. Each speaker is sent to every listener, so this sets the bandwidth |
+| `voiceTeamFilter` | `1` | Sound of the team channel: 0 = unfiltered, 1 = radio, 2 = telephone |
+| `voiceAllFilter` | `0` | Same for the all channel |
+
+The **radio** filter is a 400–2800 Hz band pass with soft clipping, light
+hiss, a crackle when the channel opens and a short noise tail when it closes.
+**Telephone** is a clean 300–3400 Hz band pass. The filters are applied by
+the clients when playing; the server only tells them which one to use.
 
 All of them can be changed at runtime; clients are informed immediately.
 

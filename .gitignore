@@ -28,3 +28,4 @@ build-deb/
 dist-deb/
 build-asan/
 __pycache__/
+.claude/settings.local.json

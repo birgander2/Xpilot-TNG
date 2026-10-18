@@ -9,8 +9,11 @@
  *
  * Wire formats:
  *   client -> server  PKT_REQUEST_VOICE  %c%c               on
- *   server -> client  PKT_VOICE_STATE    %c%c%hd%hd         flags, range,
- *                                                           team range
+ *   server -> client  PKT_VOICE_STATE    %c%c%hd%hd%c%c%c   flags, range,
+ *                                                           team range,
+ *                                                           bitrate (kbit/s),
+ *                                                           team filter,
+ *                                                           all filter
  *                                                           (reliable)
  *   client -> server  PKT_VOICE          %c%hu%c%c + data   seq, channel,
  *                                                           len
@@ -29,6 +32,15 @@
 #define VOICE_STATE_ENABLED	(1 << 0)
 #define VOICE_STATE_TEAM_ONLY	(1 << 1)
 #define VOICE_STATE_TEAM_PLAY	(1 << 2)
+
+/* Playback filter per channel, set by the server. */
+#define VOICE_FILTER_OFF	0
+#define VOICE_FILTER_RADIO	1
+#define VOICE_FILTER_PHONE	2
+
+/* Opus bitrate limits in kbit/s. */
+#define VOICE_BITRATE_MIN	6
+#define VOICE_BITRATE_MAX	64
 
 #define VOICE_SAMPLE_RATE	48000
 #define VOICE_FRAME_MS		20

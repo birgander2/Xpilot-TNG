@@ -25,10 +25,6 @@
 #define VOICE_PAN_DEPTH		0.75f	/* never mute one ear completely */
 #define VOICE_SQUELCH_FRAMES	3	/* radio noise tail after a spurt */
 
-/* voiceTeamFilter / voiceAllFilter */
-#define VOICE_FILTER_OFF	0
-#define VOICE_FILTER_RADIO	1
-#define VOICE_FILTER_PHONE	2
 
 /* Options */
 static bool voiceChat = true;
@@ -37,13 +33,14 @@ static bool voiceActivationTeam = true;
 static int voiceActivationLevel = -40;
 static int voiceVolume = 100;
 static int voiceMicGain = 100;
-static int voiceBitrate = 24;
-static int voiceTeamFilter = VOICE_FILTER_RADIO;
-static int voiceAllFilter = VOICE_FILTER_OFF;
 
 /* Server state */
 static bool server_known;
 static int server_flags;
+/* Set by the server (voiceBitrate, voiceTeamFilter, voiceAllFilter). */
+static int server_bitrate = 24;
+static int server_team_filter = VOICE_FILTER_RADIO;
+static int server_all_filter = VOICE_FILTER_OFF;
 static bool requested;		/* last voice request sent to server */
 
 static bool ptt_down[VOICE_NUM_CHANNELS];
@@ -106,38 +103,6 @@ static xp_option_t voice_options[] = {
 	NULL,
 	XP_OPTFLAG_CONFIG_DEFAULT,
 	"Amplification of your microphone (0-400%%).\n"),
-
-    XP_INT_OPTION(
-	"voiceBitrate",
-	24,
-	6,
-	64,
-	&voiceBitrate,
-	NULL,
-	XP_OPTFLAG_CONFIG_DEFAULT,
-	"Opus bitrate for your voice in kbit/s.\n"),
-
-    XP_INT_OPTION(
-	"voiceTeamFilter",
-	VOICE_FILTER_RADIO,
-	VOICE_FILTER_OFF,
-	VOICE_FILTER_PHONE,
-	&voiceTeamFilter,
-	NULL,
-	XP_OPTFLAG_CONFIG_DEFAULT,
-	"Sound of voices on the team channel:\n"
-	"0 = unfiltered, 1 = radio, 2 = telephone (narrow band).\n"),
-
-    XP_INT_OPTION(
-	"voiceAllFilter",
-	VOICE_FILTER_OFF,
-	VOICE_FILTER_OFF,
-	VOICE_FILTER_PHONE,
-	&voiceAllFilter,
-	NULL,
-	XP_OPTFLAG_CONFIG_DEFAULT,
-	"Sound of voices on the all channel:\n"
-	"0 = unfiltered, 1 = radio, 2 = telephone (narrow band).\n"),
 };
 
 void Store_voice_options(void)
@@ -145,7 +110,8 @@ void Store_voice_options(void)
     STORE_OPTIONS(voice_options);
 }
 
-void Voice_server_state(int flags, int range, int team_range)
+void Voice_server_state(int flags, int range, int team_range, int bitrate,
+			int team_filter, int all_filter)
 {
     bool was_enabled = server_known && (server_flags & VOICE_STATE_ENABLED);
 
@@ -153,6 +119,9 @@ void Voice_server_state(int flags, int range, int team_range)
     UNUSED_PARAM(team_range);
     server_known = true;
     server_flags = flags;
+    server_bitrate = MAX(VOICE_BITRATE_MIN, MIN(VOICE_BITRATE_MAX, bitrate));
+    server_team_filter = team_filter;
+    server_all_filter = all_filter;
 #ifdef HAVE_OPUS
     if ((flags & VOICE_STATE_ENABLED) && !was_enabled)
 	Add_message("Voice chat is available on this server. "
@@ -350,7 +319,7 @@ static inline float Voice_noise(voice_filter_t *f)
 static int Voice_filter_mode(int channel)
 {
     int mode = (channel == VOICE_CHANNEL_TEAM)
-	? voiceTeamFilter : voiceAllFilter;
+	? server_team_filter : server_all_filter;
 
     return (mode >= VOICE_FILTER_OFF && mode <= VOICE_FILTER_PHONE)
 	? mode : VOICE_FILTER_OFF;
@@ -791,7 +760,7 @@ static void Voice_capture(void)
 	if (tx_channel < 0) {
 	    /* New talk spurt: fresh encoder state, current bitrate. */
 	    opus_encoder_ctl(enc, OPUS_RESET_STATE);
-	    opus_encoder_ctl(enc, OPUS_SET_BITRATE(voiceBitrate * 1000));
+	    opus_encoder_ctl(enc, OPUS_SET_BITRATE(server_bitrate * 1000));
 	}
 	tx_channel = ch;
 

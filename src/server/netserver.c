@@ -3157,9 +3157,15 @@ int Send_voice_state(connection_t *connp)
     if (BIT(world->rules->mode, TEAM_PLAY))
 	flags |= VOICE_STATE_TEAM_PLAY;
 
-    return Packet_printf(&connp->c, "%c%c%hd%hd", PKT_VOICE_STATE, flags,
+    return Packet_printf(&connp->c, "%c%c%hd%hd%c%c%c", PKT_VOICE_STATE, flags,
 			 (int)MIN(options.voiceRange, 32767.0),
-			 (int)MIN(options.voiceTeamRange, 32767.0));
+			 (int)MIN(options.voiceTeamRange, 32767.0),
+			 MAX(VOICE_BITRATE_MIN,
+			     MIN(VOICE_BITRATE_MAX, options.voiceBitrate)),
+			 MAX(VOICE_FILTER_OFF,
+			     MIN(VOICE_FILTER_PHONE, options.voiceTeamFilter)),
+			 MAX(VOICE_FILTER_OFF,
+			     MIN(VOICE_FILTER_PHONE, options.voiceAllFilter)));
 }
 
 static int Receive_voice_request(connection_t *connp)

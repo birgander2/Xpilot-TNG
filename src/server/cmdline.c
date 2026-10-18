@@ -4001,6 +4001,40 @@ static option_desc opts[] = {
 	OPT_ORIGIN_ANY | OPT_VISIBLE
     },
     {
+	"voiceBitrate",
+	"voiceBitrate",
+	"24",
+	&options.voiceBitrate,
+	valInt,
+	Voice_options_changed,
+	"Opus bitrate in kbit/s (6-64) all clients use for their voice.\n"
+	"Higher is clearer but costs bandwidth: each speaker is sent to\n"
+	"every listener.\n",
+	OPT_ORIGIN_ANY | OPT_VISIBLE
+    },
+    {
+	"voiceTeamFilter",
+	"voiceTeamFilter",
+	"1",
+	&options.voiceTeamFilter,
+	valInt,
+	Voice_options_changed,
+	"Sound of the team channel on all clients:\n"
+	"0 = unfiltered, 1 = radio, 2 = telephone (narrow band).\n",
+	OPT_ORIGIN_ANY | OPT_VISIBLE
+    },
+    {
+	"voiceAllFilter",
+	"voiceAllFilter",
+	"0",
+	&options.voiceAllFilter,
+	valInt,
+	Voice_options_changed,
+	"Sound of the all channel on all clients:\n"
+	"0 = unfiltered, 1 = radio, 2 = telephone (narrow band).\n",
+	OPT_ORIGIN_ANY | OPT_VISIBLE
+    },
+    {
 	"pausedFramesPerSecond",
 	"pausedFPS",
 	"0",

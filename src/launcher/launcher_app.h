@@ -59,13 +59,15 @@ private:
     void RenderMapCard(const MapInfo& map);
     void RenderQuickSettings(bool server_mode);
     void RenderAdvanced(bool server_mode);
-    void RenderVoiceTab(bool server_mode);
+    void RenderVoiceTab();
+    void RenderVoicePopup();
     void RenderLog(float height);
     void RenderActionBar(bool server_mode);
 
     // option widgets bound to OptionsManager
     bool OptBool(const char* label, const char* key, const char* tip = nullptr);
     bool OptInt(const char* label, const char* key, int lo, int hi, const char* tip = nullptr);
+    bool OptChoice(const char* label, const char* key, const char* const* items, int count, const char* tip = nullptr);
     bool OptFloat(const char* label, const char* key, float lo, float hi, const char* fmt,
                   bool logarithmic = false, const char* tip = nullptr);
     void ModifiedMenu(const char* key);

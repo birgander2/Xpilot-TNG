@@ -2708,13 +2708,15 @@ static int Receive_voice(void)
 static int Receive_voice_state(void)
 {
     int n;
-    unsigned char pkt, flags;
+    unsigned char pkt, flags, bitrate, team_filter, all_filter;
     short range, team_range;
 
-    if ((n = Packet_scanf(&cbuf, "%c%c%hd%hd", &pkt, &flags,
-			  &range, &team_range)) <= 0)
+    if ((n = Packet_scanf(&cbuf, "%c%c%hd%hd%c%c%c", &pkt, &flags,
+			  &range, &team_range, &bitrate, &team_filter,
+			  &all_filter)) <= 0)
 	return n;
-    Voice_server_state(flags, range, team_range);
+    Voice_server_state(flags, range, team_range, bitrate, team_filter,
+		       all_filter);
     return 1;
 }
 

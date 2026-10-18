@@ -30,9 +30,9 @@
 #ifndef	VERSION_H
 #define	VERSION_H
 
-#define TITLE			"XPilot TNG 5.0.1"
+#define TITLE			"XPilot TNG 5.0.2"
 #ifndef VERSION
-#  define VERSION		"5.0.1"
+#  define VERSION		"5.0.2"
 #endif
 #define AUTHORS			"Bjørn Stabell, Ken Ronny Schouten, Bert Gijsbers, Dick Balaska, Uoti Urpala, Juha Lindström, Kristian Söderblom, Erik Andersson, and the Modernization Team"
 #define COPYRIGHT		"Copyright © 1991-2026 XPilot & XPilot TNG contributors"

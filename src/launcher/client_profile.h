@@ -14,9 +14,6 @@ struct VoiceSettings {
     int activation_level = -40;     // dB
     int volume = 100;               // %
     int mic_gain = 100;             // %
-    int bitrate = 24;               // kbit/s
-    int team_filter = 1;            // 0 = off, 1 = radio, 2 = telephone
-    int all_filter = 0;
 };
 
 // Who the player is when the launcher starts a client: nickname and ship shape.

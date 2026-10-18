@@ -331,6 +331,9 @@ extern struct options {
     bool	voiceTeamOnly;
     double	voiceRange;
     double	voiceTeamRange;
+    int		voiceBitrate;
+    int		voiceTeamFilter;
+    int		voiceAllFilter;
     bool	polygonMode;
     bool	fastAim;
     bool	teamcup;

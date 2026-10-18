@@ -669,6 +669,18 @@ bool LauncherApp::OptInt(const char* label, const char* key, int lo, int hi, con
     return changed;
 }
 
+// Integer option with named values (0, 1, 2, ...)
+bool LauncherApp::OptChoice(const char* label, const char* key, const char* const* items, int count,
+                            const char* tip) {
+    if (!options_mgr_.Known(key)) return false;
+    int v = std::clamp(options_mgr_.GetInt(key), 0, count - 1);
+    bool changed = ImGui::Combo(OptLabel(label, key, options_mgr_.IsModified(key)).c_str(), &v, items, count);
+    if (changed) options_mgr_.SetInt(key, v);
+    ModifiedMenu(key);
+    if (tip && ImGui::IsItemHovered()) ImGui::SetTooltip("%s", tip);
+    return changed;
+}
+
 bool LauncherApp::OptFloat(const char* label, const char* key, float lo, float hi, const char* fmt,
                            bool logarithmic, const char* tip) {
     if (!options_mgr_.Known(key)) return false;
@@ -705,9 +717,15 @@ void LauncherApp::RenderIdentityRow() {
     ImGui::Checkbox("Newbie mode", &profile_.newbie);
     if (ImGui::IsItemHovered()) ImGui::SetTooltip("Show help messages for new players");
 
-    // small profile editor button, right-aligned
-    const float bw = ImGui::CalcTextSize("Profile...").x + ImGui::GetStyle().FramePadding.x * 2;
-    ImGui::SameLine(ImGui::GetWindowContentRegionMax().x - bw);
+    // small voice and profile editor buttons, right-aligned
+    const ImGuiStyle& st = ImGui::GetStyle();
+    const float bw = ImGui::CalcTextSize("Profile...").x + st.FramePadding.x * 2;
+    const float vw = ImGui::CalcTextSize("Voice...").x + st.FramePadding.x * 2;
+    ImGui::SameLine(ImGui::GetWindowContentRegionMax().x - bw - st.ItemSpacing.x - vw);
+    if (ImGui::Button("Voice...")) ImGui::OpenPopup("Voice chat settings");
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Microphone, push-to-talk and voice volume");
+    RenderVoicePopup();
+    ImGui::SameLine();
     if (ImGui::Button("Profile...") && !launching_) {
         profile_return_ = screen_;
         GoTo(Screen::Profile);
@@ -838,7 +856,7 @@ void LauncherApp::RenderAdvanced(bool server_mode) {
                 ImGui::EndTabItem();
             }
         }
-        RenderVoiceTab(server_mode);
+        RenderVoiceTab();
         if (ImGui::BeginTabItem("Map Options")) {
             ImGui::Spacing();
             const auto& raw = options_mgr_.MapOptions();
@@ -912,12 +930,12 @@ void LauncherApp::RenderAdvanced(bool server_mode) {
     ImGui::PopID();
 }
 
-// Voice chat: server options, and in local mode the player's own client settings.
-void LauncherApp::RenderVoiceTab(bool server_mode) {
+// Voice chat: server options. The player's own settings are in RenderVoicePopup().
+void LauncherApp::RenderVoiceTab() {
+    static const char* kFilters[] = {"Unfiltered", "Radio", "Telephone"};
+
     if (!ImGui::BeginTabItem("Voice")) return;
     ImGui::Spacing();
-
-    ImGui::SeparatorText("Server");
     if (baseline_ok_ && options_mgr_.Known("voiceChat")) {
         OptBool("Allow voice chat", "voiceChat", "Players with a headset can talk to each other");
         ImGui::BeginDisabled(!options_mgr_.GetBool("voiceChat"));
@@ -927,44 +945,55 @@ void LauncherApp::RenderVoiceTab(bool server_mode) {
                  "Distance at which voices fade out completely.\n0 = unlimited range at full volume");
         OptFloat("Range, team channel", "voiceTeamRange", 0.0f, 5000.0f, "%.0f px", false,
                  "0 = like a radio: full volume at any distance");
+        ImGui::Separator();
+        OptInt("Bitrate", "voiceBitrate", 6, 64,
+               "Opus bitrate in kbit/s for everybody's voice.\nHigher is clearer but costs bandwidth.");
+        OptChoice("Team channel sound", "voiceTeamFilter", kFilters, IM_ARRAYSIZE(kFilters),
+                  "How the team channel sounds on all clients");
+        OptChoice("All channel sound", "voiceAllFilter", kFilters, IM_ARRAYSIZE(kFilters),
+                  "How the all channel sounds on all clients");
         ImGui::PopItemWidth();
         ImGui::EndDisabled();
     } else {
         ImGui::TextDisabled("This server build does not support voice chat.");
     }
-
-    if (!server_mode) {
-        static const char* kFilters[] = {"Unfiltered", "Radio", "Telephone"};
-        static const char* kModes[] = {"Push-to-talk (hold G = team, H = all)", "Voice activation"};
-        VoiceSettings& v = profile_.voice;
-
-        ImGui::Spacing();
-        ImGui::SeparatorText("Your client");
-        ImGui::Checkbox("Voice chat", &v.chat);
-        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Hear other players and talk with a microphone");
-        ImGui::BeginDisabled(!v.chat);
-        ImGui::PushItemWidth(260);
-        int mode = v.activation ? 1 : 0;
-        if (ImGui::Combo("Sending", &mode, kModes, IM_ARRAYSIZE(kModes))) v.activation = (mode == 1);
-        if (v.activation) {
-            ImGui::SliderInt("Activation level", &v.activation_level, -80, 0, "%d dB");
-            if (ImGui::IsItemHovered())
-                ImGui::SetTooltip("Microphone level that opens the channel.\nRaise it if background noise triggers it.");
-            ImGui::Checkbox("Voice activation talks to the team", &v.activation_team);
-            if (ImGui::IsItemHovered())
-                ImGui::SetTooltip("Off: voice activation uses the channel everybody nearby hears");
-        }
-        ImGui::SliderInt("Voice volume", &v.volume, 0, 200, "%d%%");
-        ImGui::SliderInt("Microphone gain", &v.mic_gain, 0, 400, "%d%%");
-        ImGui::SliderInt("Bitrate", &v.bitrate, 6, 64, "%d kbit/s");
-        ImGui::Combo("Team channel sound", &v.team_filter, kFilters, IM_ARRAYSIZE(kFilters));
-        ImGui::Combo("All channel sound", &v.all_filter, kFilters, IM_ARRAYSIZE(kFilters));
-        ImGui::PopItemWidth();
-        ImGui::EndDisabled();
-        ImGui::TextDisabled("Used for local games and servers joined from the launcher.");
-        ImGui::TextDisabled("Mute a player in game with \\ignore <name>.");
-    }
+    ImGui::TextDisabled("Your own microphone and volume settings: Voice... button next to your name.");
     ImGui::EndTabItem();
+}
+
+// Player's own voice settings (client side), reachable from the name row of local and network games.
+void LauncherApp::RenderVoicePopup() {
+    static const char* kModes[] = {"Push-to-talk (hold G = team, H = all)", "Voice activation"};
+    VoiceSettings& v = profile_.voice;
+
+    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    if (!ImGui::BeginPopupModal("Voice chat settings", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) return;
+
+    ImGui::Checkbox("Voice chat", &v.chat);
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Hear other players and talk with a microphone");
+    ImGui::BeginDisabled(!v.chat);
+    ImGui::PushItemWidth(280);
+    int mode = v.activation ? 1 : 0;
+    if (ImGui::Combo("Sending", &mode, kModes, IM_ARRAYSIZE(kModes))) v.activation = (mode == 1);
+    if (v.activation) {
+        ImGui::SliderInt("Activation level", &v.activation_level, -80, 0, "%d dB");
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Microphone level that opens the channel.\nRaise it if background noise triggers it.");
+        ImGui::Checkbox("Voice activation talks to the team", &v.activation_team);
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Off: voice activation uses the channel everybody nearby hears");
+    }
+    ImGui::SliderInt("Voice volume", &v.volume, 0, 200, "%d%%");
+    ImGui::SliderInt("Microphone gain", &v.mic_gain, 0, 400, "%d%%");
+    ImGui::PopItemWidth();
+    ImGui::EndDisabled();
+    ImGui::Spacing();
+    ImGui::TextDisabled("Applies to the next game you start from the launcher.");
+    ImGui::TextDisabled("Bitrate and channel sound are set by the server.");
+    ImGui::TextDisabled("Mute a player in game with \\ignore <name>.");
+    ImGui::Spacing();
+    if (ImGui::Button("Close", ImVec2(120, 0)) || ImGui::IsKeyPressed(ImGuiKey_Escape)) ImGui::CloseCurrentPopup();
+    ImGui::EndPopup();
 }
 
 void LauncherApp::RenderLog(float height) {
