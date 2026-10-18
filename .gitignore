@@ -18,6 +18,7 @@ screenshot*
 /xpilot-tng-client
 /xpilot-tng-sdl3
 /xpilot-tng-launcher
+/xpilot-tng-mapeditor
 imgui.ini
 make-deb.sh
 tools/

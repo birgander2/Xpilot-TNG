@@ -12,6 +12,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 option(BUILD_SERVER "Build the xpilot-tng-server" ON)
 option(BUILD_CLIENT_SDL3 "Build modern SDL3 client (xpilot-tng-client)" ON)
 option(BUILD_LAUNCHER "Build modern Dear ImGui / SDL3 frontend launcher (xpilot-tng-launcher)" ON)
+option(BUILD_MAPEDITOR "Build the Dear ImGui / SDL3 map editor (xpilot-tng-mapeditor)" ON)
 option(SANITIZE "Build with AddressSanitizer and UndefinedBehaviorSanitizer (for testing)" OFF)
 option(BUILD_TESTS "Build the security regression and fuzz tests" OFF)
 option(FETCH_SDL3 "Download and build SDL3 / SDL3_ttf if not installed on system" OFF)
@@ -310,6 +311,17 @@ if(BUILD_LAUNCHER)
 endif()
 
 # -------------------------------------------------------------
+# Map Editor Target
+# -------------------------------------------------------------
+if(BUILD_MAPEDITOR)
+    if(TARGET SDL3::SDL3)
+        add_subdirectory(src/mapeditor)
+    else()
+        message(WARNING "SDL3 not found on system. Map editor (xpilot-tng-mapeditor) skipped.")
+    endif()
+endif()
+
+# -------------------------------------------------------------
 # Install Game Assets
 # -------------------------------------------------------------
 install(DIRECTORY lib/ DESTINATION ${CMAKE_INSTALL_DATADIR}/xpilot-tng
@@ -327,7 +339,7 @@ add_custom_target(dist
     COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/lib" "${DIST_DIR}/lib"
     COMMENT "Creating relocatable bundle in ${DIST_DIR}"
 )
-foreach(_t xpilot-tng-server xpilot-tng-client xpilot-tng-launcher)
+foreach(_t xpilot-tng-server xpilot-tng-client xpilot-tng-launcher xpilot-tng-mapeditor)
     if(TARGET ${_t})
         add_dependencies(dist ${_t})
         add_custom_command(TARGET dist POST_BUILD
