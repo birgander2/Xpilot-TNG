@@ -52,7 +52,12 @@ static void XMLCALL xp2_start_element(void* user_data, const XML_Char* name, con
         return nullptr;
     };
 
-    if (strcasecmp(name, "Option") == 0) {
+    if (strcasecmp(name, "XPilotMap") == 0) {
+        const char* desc = get_attr("description");
+        if (desc) ctx->info->description = desc;
+        const char* prio = get_attr("launcherprio");
+        if (prio) { ctx->info->has_prio = true; ctx->info->launcher_prio = std::atoi(prio); }
+    } else if (strcasecmp(name, "Option") == 0) {
         const char* opt_name = get_attr("name");
         const char* opt_val = get_attr("value");
         if (opt_name && opt_val) {
@@ -613,6 +618,8 @@ std::vector<MapInfo> MapScanner::ScanDirectory(const std::string& directory_path
     }
 
     std::sort(maps.begin(), maps.end(), [](const MapInfo& a, const MapInfo& b) {
+        if (a.has_prio != b.has_prio) return a.has_prio;
+        if (a.has_prio && a.launcher_prio != b.launcher_prio) return a.launcher_prio > b.launcher_prio;
         return a.filename < b.filename;
     });
 

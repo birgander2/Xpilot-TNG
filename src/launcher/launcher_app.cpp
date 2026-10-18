@@ -595,7 +595,7 @@ void LauncherApp::RenderMapCard(const MapInfo& map) {
     ImGui::EndChild();
 
     ImGui::TextColored(kAccent, "%s", map.title.c_str());
-    ImGui::TextDisabled("%s  (%s)", map.filename.c_str(), map.is_xp2 ? "XP2 vector" : "XP raster");
+    if (!map.description.empty()) ImGui::TextDisabled("%s", map.description.c_str());
     ImGui::Text("by %s", map.author.c_str());
     ImGui::Text("%d x %d  |  %d bases  |  %d cannons", map.width, map.height, map.num_bases, map.num_cannons);
 }

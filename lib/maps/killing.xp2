@@ -1,6 +1,6 @@
 <XPilotMap version="1.2"
-           description="Classical Death Match"
-           launcherpos="30">
+           description="Classical dogfighting"
+           launcherprio="50">
 <GeneralOptions>
 <Option name="mapwidth" value="4375"/>
 <Option name="mapheight" value="4375"/>

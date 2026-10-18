@@ -10,6 +10,9 @@ struct MapInfo {
     std::string full_path;
     std::string title;
     std::string author;
+    std::string description;   // optional <XPilotMap description="...">
+    bool has_prio = false;     // <XPilotMap launcherprio="..."> set
+    int launcher_prio = 0;
     int width = 0;
     int height = 0;
     int num_bases = 0;

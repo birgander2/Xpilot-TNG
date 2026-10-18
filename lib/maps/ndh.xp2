@@ -1,6 +1,6 @@
-<XPilotMap version="1.1">
+<XPilotMap version="1.1"
            description="Classical Death Match"
-           launcherpos="20">
+           launcherprio="99">
 <GeneralOptions>
 <Option name="allowAlliances" value="yes"/>
 <Option name="allowClusters" value="yes"/>
