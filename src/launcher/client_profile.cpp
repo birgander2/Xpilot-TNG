@@ -1,4 +1,5 @@
 #include "client_profile.h"
+#include "xpilotrc.h"
 
 #include <algorithm>
 #include <cctype>
@@ -12,23 +13,6 @@
 #include <unistd.h>
 
 namespace {
-
-// Same lookup as the client (Xpilotrc_get_filename): $XPILOTRC, then
-// $XDG_CONFIG_HOME/xpilot-tng/xpilotrc, then legacy ~/.xpilotrc.
-std::string XpilotrcPath() {
-    if (const char* env = std::getenv("XPILOTRC")) return env;
-    const char* xdg = std::getenv("XDG_CONFIG_HOME");
-    const char* home = std::getenv("HOME");
-    std::string path;
-    if (xdg && xdg[0] == '/') path = std::string(xdg) + "/xpilot-tng/xpilotrc";
-    else if (home && *home) path = std::string(home) + "/.config/xpilot-tng/xpilotrc";
-    else return "";
-    if (access(path.c_str(), F_OK) != 0 && home && *home) {
-        std::string legacy = std::string(home) + "/.xpilotrc";
-        if (access(legacy.c_str(), F_OK) == 0) return legacy;
-    }
-    return path;
-}
 
 // Value of "xpilot.<wanted>: ..." in the xpilotrc (empty if unavailable)
 std::string ReadXpilotrcValue(const char* wanted) {

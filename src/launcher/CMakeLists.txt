@@ -23,6 +23,8 @@ add_executable(xpilot-tng-launcher
     main.cpp
     launcher_app.cpp
     client_profile.cpp
+    profile_editor.cpp
+    xpilotrc.cpp
     ui_helpers.cpp
     map_preview.cpp
     options_model.cpp

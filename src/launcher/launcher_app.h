@@ -5,12 +5,13 @@
 #include <vector>
 #include <SDL3/SDL.h>
 #include "client_profile.h"
+#include "profile_editor.h"
 #include "map_preview.h"
 #include "options_model.h"
 #include "process_manager.h"
 #include "server_browser.h"
 
-enum class Screen { Menu, LocalSetup, ServerSetup, ServerRunning, NetworkBrowser, Playing };
+enum class Screen { Menu, LocalSetup, ServerSetup, ServerRunning, NetworkBrowser, Profile, Playing };
 
 struct ImFont;
 
@@ -46,6 +47,7 @@ private:
     void RenderSetup(bool server_mode);
     void RenderServerRunning();
     void RenderNetworkBrowser();
+    void RenderProfile();
     void RenderServerList(const char* id, ServerSearch& search);
     void RenderIdentityRow();
     void RenderHeader(const char* title, bool show_back);
@@ -107,6 +109,7 @@ private:
     bool baseline_ok_ = false;
 
     Screen screen_ = Screen::Menu;
+    Screen profile_return_ = Screen::Menu;   // screen the profile editor was opened from
     PlayKind play_kind_ = PlayKind::None;
     bool launching_ = false;          // local game: waiting for server / client
     bool quit_ = false;
@@ -120,6 +123,7 @@ private:
 
     // client session overrides (empty/auto = use ~/.xpilotrc)
     ClientProfile profile_;
+    ProfileEditor profile_editor_;
     ServerSearch lan_search_{ServerSearch::Kind::Lan};
     ServerSearch internet_search_{ServerSearch::Kind::Internet};
     char manual_addr_[128] = "";
