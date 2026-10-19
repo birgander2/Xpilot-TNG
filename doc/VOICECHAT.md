@@ -49,13 +49,15 @@ stays open until the client quits.
 
 ## Launcher
 
-- *Advanced settings → Voice* (local game and server launch) holds the
+- *Advanced settings → Audio* (local game and server launch) holds the
   server options.
-- The **Voice...** button next to your name (local game and *Join network
-  game*) opens your own settings: voice chat on/off, push-to-talk or voice
-  activation, activation level, voice volume and microphone gain. They are
-  preset from your xpilotrc; only changed values are passed to the client.
-  The launcher does not write them back to the xpilotrc.
+- *Profile... → Audio* (reachable from local game and *Join network game*)
+  holds your own settings and writes them to the xpilotrc: game sounds (on/off,
+  volume) and voice chat (on/off, push-to-talk or voice activation, activation
+  level, voice volume, microphone gain). The push-to-talk keys are under
+  *Profile... → Keyboard → Voice*.
+  Audio values you changed but did not save still apply to games you start
+  from the launcher (they are passed to the client); save them to keep them.
 
 ## Server options
 

@@ -50,6 +50,7 @@ private:
     void RenderProfile();
     void RenderServerList(const char* id, ServerSearch& search);
     void RenderIdentityRow();
+    std::vector<std::string> ClientArgs(int port, const std::string& host = "localhost") const;
     void RenderHeader(const char* title, bool show_back);
     void RenderBanner();
     void RenderQuitPopup();
@@ -60,7 +61,6 @@ private:
     void RenderQuickSettings(bool server_mode);
     void RenderAdvanced(bool server_mode);
     void RenderVoiceTab();
-    void RenderVoicePopup();
     void RenderLog(float height);
     void RenderActionBar(bool server_mode);
 

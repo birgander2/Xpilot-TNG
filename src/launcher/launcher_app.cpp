@@ -180,13 +180,18 @@ bool LauncherApp::BinariesOk(bool server, bool client) {
     return false;
 }
 
+// Client arguments: identity row plus audio edits that are not saved to the xpilotrc yet.
+std::vector<std::string> LauncherApp::ClientArgs(int port, const std::string& host) const {
+    return profile_.BuildArgs(port, host, profile_editor_.UnsavedAudioArgs());
+}
+
 void LauncherApp::GoTo(Screen s) {
     screen_ = s;
     focus_first_ = true;
     if (s == Screen::Menu) {
         banner_.clear();
     }
-    if (s == Screen::Profile) profile_editor_.Load(profile_.ship_names);
+    if (s == Screen::Profile) profile_editor_.Load(profile_.ship_names, true);   // keeps unsaved audio edits
     if (s == Screen::NetworkBrowser) {
         lan_search_.Start();        // full refresh on every visit (no-op while a scan is still running)
         internet_search_.Start();
@@ -220,7 +225,7 @@ void LauncherApp::SelectMap(int idx) {
 void LauncherApp::JoinRunningServer() {
     banner_.clear();
     if (!BinariesOk(false, true)) return;
-    if (!process_mgr_.StartClient(client_bin_path_, profile_.BuildArgs(running_port_))) {
+    if (!process_mgr_.StartClient(client_bin_path_, ClientArgs(running_port_))) {
         banner_ = "The client could not be started (" + client_bin_path_ + ").";
         return;
     }
@@ -248,7 +253,7 @@ void LauncherApp::StartLocalGame(bool force) {
     opts.SetBool("reportToMetaServer", local_meta_);
     auto server_args = opts.BuildServerArgs(LaunchMode::Local, map.full_path, port);
 
-    auto client_args = profile_.BuildArgs(port);
+    auto client_args = ClientArgs(port);
 
     banner_.clear();
     if (!BinariesOk(true, true)) return;
@@ -322,7 +327,7 @@ void LauncherApp::StartServerMode() {
 void LauncherApp::JoinServer(const std::string& host, int port) {
     banner_.clear();
     if (!BinariesOk(false, true)) return;
-    if (!process_mgr_.StartClient(client_bin_path_, profile_.BuildArgs(port, host))) {
+    if (!process_mgr_.StartClient(client_bin_path_, ClientArgs(port, host))) {
         banner_ = "The client could not be started (" + client_bin_path_ + ").";
         return;
     }
@@ -717,20 +722,14 @@ void LauncherApp::RenderIdentityRow() {
     ImGui::Checkbox("Newbie mode", &profile_.newbie);
     if (ImGui::IsItemHovered()) ImGui::SetTooltip("Show help messages for new players");
 
-    // small voice and profile editor buttons, right-aligned
-    const ImGuiStyle& st = ImGui::GetStyle();
-    const float bw = ImGui::CalcTextSize("Profile...").x + st.FramePadding.x * 2;
-    const float vw = ImGui::CalcTextSize("Voice...").x + st.FramePadding.x * 2;
-    ImGui::SameLine(ImGui::GetWindowContentRegionMax().x - bw - st.ItemSpacing.x - vw);
-    if (ImGui::Button("Voice...")) ImGui::OpenPopup("Voice chat settings");
-    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Microphone, push-to-talk and voice volume");
-    RenderVoicePopup();
-    ImGui::SameLine();
+    // small profile editor button, right-aligned
+    const float bw = ImGui::CalcTextSize("Profile...").x + ImGui::GetStyle().FramePadding.x * 2;
+    ImGui::SameLine(ImGui::GetWindowContentRegionMax().x - bw);
     if (ImGui::Button("Profile...") && !launching_) {
         profile_return_ = screen_;
         GoTo(Screen::Profile);
     }
-    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Edit keys, mouse buttons, modifier banks and ship in the xpilotrc");
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Edit keys, mouse buttons, modifier banks, audio and ship in the xpilotrc");
 }
 
 void LauncherApp::RenderQuickSettings(bool server_mode) {
@@ -930,11 +929,11 @@ void LauncherApp::RenderAdvanced(bool server_mode) {
     ImGui::PopID();
 }
 
-// Voice chat: server options. The player's own settings are in RenderVoicePopup().
+// Voice chat: server options. The player's own settings are in the profile editor (Audio).
 void LauncherApp::RenderVoiceTab() {
     static const char* kFilters[] = {"Unfiltered", "Radio", "Telephone"};
 
-    if (!ImGui::BeginTabItem("Voice")) return;
+    if (!ImGui::BeginTabItem("Audio")) return;
     ImGui::Spacing();
     if (baseline_ok_ && options_mgr_.Known("voiceChat")) {
         OptBool("Allow voice chat", "voiceChat", "Players with a headset can talk to each other");
@@ -957,42 +956,8 @@ void LauncherApp::RenderVoiceTab() {
     } else {
         ImGui::TextDisabled("This server build does not support voice chat.");
     }
-    ImGui::TextDisabled("Your own microphone and volume settings: Voice... button next to your name.");
+    ImGui::TextDisabled("Your own microphone and volume settings: Profile... > Audio.");
     ImGui::EndTabItem();
-}
-
-// Player's own voice settings (client side), reachable from the name row of local and network games.
-void LauncherApp::RenderVoicePopup() {
-    static const char* kModes[] = {"Push-to-talk only (keys: Profile...)", "Voice activation"};
-    VoiceSettings& v = profile_.voice;
-
-    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    if (!ImGui::BeginPopupModal("Voice chat settings", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) return;
-
-    ImGui::Checkbox("Voice chat", &v.chat);
-    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Hear other players and talk with a microphone");
-    ImGui::BeginDisabled(!v.chat);
-    ImGui::PushItemWidth(280);
-    int mode = v.activation ? 1 : 0;
-    if (ImGui::Combo("Sending", &mode, kModes, IM_ARRAYSIZE(kModes))) v.activation = (mode == 1);
-    if (v.activation) {
-        ImGui::SliderInt("Activation level", &v.activation_level, -80, 0, "%d dB");
-        if (ImGui::IsItemHovered())
-            ImGui::SetTooltip("Microphone level that opens the channel.\nRaise it if background noise triggers it.");
-        ImGui::Checkbox("Voice activation talks to the team", &v.activation_team);
-        if (ImGui::IsItemHovered())
-            ImGui::SetTooltip("Off: voice activation uses the channel everybody nearby hears");
-    }
-    ImGui::SliderInt("Voice volume", &v.volume, 0, 200, "%d%%");
-    ImGui::SliderInt("Microphone gain", &v.mic_gain, 0, 400, "%d%%");
-    ImGui::PopItemWidth();
-    ImGui::EndDisabled();
-    ImGui::Spacing();
-    ImGui::TextDisabled("Voice chat needs an XPilot TNG server 5.0.2 or newer.");
-    ImGui::TextDisabled("Mute a player in game with \\ignore <name>.");
-    ImGui::Spacing();
-    if (ImGui::Button("Close", ImVec2(120, 0)) || ImGui::IsKeyPressed(ImGuiKey_Escape)) ImGui::CloseCurrentPopup();
-    ImGui::EndPopup();
 }
 
 void LauncherApp::RenderLog(float height) {
@@ -1298,7 +1263,7 @@ bool LauncherApp::NetworkTarget(std::string* host, int* port) const {
 }
 
 std::string LauncherApp::ClientCommandLine(const std::string& host, int port) const {
-    return CommandLine(client_bin_path_, profile_.BuildArgs(port, host));
+    return CommandLine(client_bin_path_, ClientArgs(port, host));
 }
 
 void LauncherApp::PlaySelectedNetwork() {
