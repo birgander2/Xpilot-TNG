@@ -442,6 +442,17 @@ void LauncherApp::RenderUI() {
         open_quit_popup_ = false;
     }
     RenderQuitPopup();
+    if (!banner_.empty()) {   // errors go into their own dialog
+        error_text_ = banner_;
+        banner_.clear();
+        ImGui::OpenPopup("Error");
+    }
+    RenderErrorPopup();
+    if (open_leave_profile_popup_) {
+        ImGui::OpenPopup("Unsaved changes");
+        open_leave_profile_popup_ = false;
+    }
+    RenderProfileLeavePopup();
     if (open_running_popup_) {
         ImGui::OpenPopup("Server already running");
         open_running_popup_ = false;
@@ -453,20 +464,13 @@ void LauncherApp::RenderUI() {
         !launching_) {
         if (screen_ == Screen::LocalSetup || screen_ == Screen::ServerSetup || screen_ == Screen::ServerRunning ||
             screen_ == Screen::NetworkBrowser || (screen_ == Screen::Profile && !profile_editor_.Capturing()))
-            GoTo(screen_ == Screen::Profile ? profile_return_ : Screen::Menu);
+        {
+            if (screen_ == Screen::Profile) LeaveProfile();
+            else GoTo(Screen::Menu);
+        }
     }
 
     ImGui::End();
-}
-
-void LauncherApp::RenderBanner() {
-    if (banner_.empty()) return;
-    ImGui::PushStyleColor(ImGuiCol_Text, kBad);
-    ImGui::TextWrapped("%s", banner_.c_str());
-    ImGui::PopStyleColor();
-    ImGui::SameLine();
-    if (ImGui::SmallButton("Dismiss")) banner_.clear();
-    ImGui::Spacing();
 }
 
 void LauncherApp::RenderHeader(const char* title, bool show_back) {
@@ -503,16 +507,6 @@ void LauncherApp::RenderMenu() {
     ImGui::TextColored(ImVec4(0.55f, 0.62f, 0.72f, 1.0f), "Launcher");
     if (fonts_.subtitle) ImGui::PopFont();
     ImGui::Dummy(ImVec2(0, 12));
-
-    if (!banner_.empty()) {
-        ImGui::SetCursorPosX(x0);
-        ImGui::PushTextWrapPos(x0 + col_w);
-        ImGui::PushStyleColor(ImGuiCol_Text, kBad);
-        ImGui::TextWrapped("%s", banner_.c_str());
-        ImGui::PopStyleColor();
-        ImGui::PopTextWrapPos();
-        ImGui::Spacing();
-    }
 
     auto menu_button = [&](const char* id, const char* label, const char* sub) {
         ImGui::SetCursorPosX(x0);
@@ -1043,16 +1037,20 @@ void LauncherApp::RenderActionBar(bool server_mode) {
 }
 
 void LauncherApp::RenderProfile() {
-    if (ImGui::Button("< Back", ImVec2(80, 0))) GoTo(profile_return_);
+    if (ImGui::Button("< Back", ImVec2(80, 0))) LeaveProfile();
     ImGui::SameLine();
     RenderHeader("EDIT PLAYER PROFILE", false);
     if (profile_editor_.Render(40))
         profile_.Load((data_dir_ + "/shipshapes.txt").c_str());   // pick up the saved name and ship
 }
 
+void LauncherApp::LeaveProfile() {
+    if (profile_editor_.Dirty()) open_leave_profile_popup_ = true;
+    else GoTo(profile_return_);
+}
+
 void LauncherApp::RenderSetup(bool server_mode) {
     RenderHeader(server_mode ? "LAUNCH SERVER" : "START LOCAL GAME", true);
-    RenderBanner();
 
     const float bar_h = server_mode ? 96 : 60;
     ImVec2 avail = ImGui::GetContentRegionAvail();
@@ -1163,7 +1161,6 @@ void LauncherApp::RenderServerList(const char* id, ServerSearch& search) {
 
 void LauncherApp::RenderNetworkBrowser() {
     RenderHeader("JOIN NETWORK GAME", true);
-    RenderBanner();
 
     RenderIdentityRow();
     ImGui::Spacing();
@@ -1278,7 +1275,6 @@ void LauncherApp::PlaySelectedNetwork() {
 
 void LauncherApp::RenderServerRunning() {
     RenderHeader("SERVER", true);
-    RenderBanner();
 
     bool ready = process_mgr_.IsServerReady();
     StatusDot(ready ? kGood : kWarn);
@@ -1364,6 +1360,47 @@ void LauncherApp::RenderRunningServerPopup() {
     }
     ImGui::SameLine();
     if (ImGui::Button("Cancel", ImVec2(100, 0)) || ImGui::IsKeyPressed(ImGuiKey_Escape))
+        ImGui::CloseCurrentPopup();
+    ImGui::EndPopup();
+}
+
+void LauncherApp::RenderErrorPopup() {
+    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    ImGui::SetNextWindowSizeConstraints(ImVec2(360, 0), ImVec2(560, 400));
+    if (!ImGui::BeginPopupModal("Error", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) return;
+    ImGui::PushTextWrapPos(520.0f);
+    ImGui::PushStyleColor(ImGuiCol_Text, kBad);
+    ImGui::TextUnformatted(error_text_.c_str());
+    ImGui::PopStyleColor();
+    ImGui::PopTextWrapPos();
+    ImGui::Spacing();
+    if (ImGui::Button("OK", ImVec2(100, 0)) || ImGui::IsKeyPressed(ImGuiKey_Escape) ||
+        ImGui::IsKeyPressed(ImGuiKey_Enter))
+        ImGui::CloseCurrentPopup();
+    ImGui::EndPopup();
+}
+
+void LauncherApp::RenderProfileLeavePopup() {
+    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    if (!ImGui::BeginPopupModal("Unsaved changes", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) return;
+    ImGui::Text("The player profile has unsaved changes.");
+    ImGui::Spacing();
+    if (ImGui::Button("Save", ImVec2(110, 0))) {
+        if (profile_editor_.Save()) {
+            profile_.Load((data_dir_ + "/shipshapes.txt").c_str());
+            ImGui::CloseCurrentPopup();
+            GoTo(profile_return_);
+        } else {
+            ImGui::CloseCurrentPopup();   // the editor shows the error; stay on the profile screen
+        }
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Discard", ImVec2(110, 0))) {
+        ImGui::CloseCurrentPopup();
+        GoTo(profile_return_);
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Cancel", ImVec2(110, 0)) || ImGui::IsKeyPressed(ImGuiKey_Escape))
         ImGui::CloseCurrentPopup();
     ImGui::EndPopup();
 }

@@ -22,6 +22,10 @@ public:
     // True while a key is being captured (Esc cancels the capture, not the screen).
     bool Capturing() const;
 
+    // Unsaved edits? Save() writes them to the xpilotrc (true on success).
+    bool Dirty() const;
+    bool Save();
+
 private:
     struct ModBank {
         int nuclear = 0;      // 0 off, 1 nuclear, 2 full nuclear
@@ -37,8 +41,6 @@ private:
     void RenderMouse();
     void RenderModBanks();
     void RenderAudio();
-    bool Save();
-    bool Dirty() const;
     std::vector<std::pair<std::string, std::string>> Changes() const;
 
     static constexpr int kButtons = 5, kBanks = 4;
