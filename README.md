@@ -29,7 +29,7 @@ First conceived in 1991 by Bjørn Stabell and Ken Ronny Schouten, XPilot reliabl
 - 🚀 **Launcher**: A cool new launcher app for both client and server. 
 - 🤝 **Teamplay**: Better team selection and balancing, now with robots on your side — or against you. Try Blood's Music against a smartbot team if you dare.
 - 🐣 **Newbie mode**: Finally repaired after 30 years — now you can learn to fly without being fed to the cannons on day one.
-- 🎧 **Voice chat**: Bark orders at your team over crackling radio, or trash-talk everyone within earshot — the farther away they are, the quieter your insults get. Headset not included.
+- 🎧 **Voice chat**: Bark orders at your team over crackling radio, or trash-talk everyone within earshot — headset not included.
 
 ---
 

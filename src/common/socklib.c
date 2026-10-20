@@ -307,7 +307,11 @@ static int sock_resolve_addr(const char *name, struct sockaddr_storage *out,
     char port_str[16];
 
     memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_UNSPEC;
+    /*
+     * All our sockets are AF_INET.  With AF_UNSPEC "localhost" may resolve
+     * to ::1 first (e.g. Raspberry Pi OS), which fails with EAFNOSUPPORT.
+     */
+    hints.ai_family = AF_INET;
     hints.ai_socktype = socktype;
 
     if (port > 0)
