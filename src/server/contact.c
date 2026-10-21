@@ -334,6 +334,10 @@ static int Check_names(char *nick_name, char *user_name, char *host_name)
  */
 static unsigned Version_to_magic(unsigned version)
 {
+    /* XPilot Infinity transport markers: answer with the shared protocol. */
+    if (version > NG_POLYGON_VERSION && version < TNG_FIRST_VERSION
+	&& MY_VERSION >= TNG_FIRST_VERSION)
+	return VERSION2MAGIC(NG_POLYGON_VERSION);
     if (version >= 0x4203  && version <= MY_VERSION)
 	return VERSION2MAGIC(version);
     return MAGIC;

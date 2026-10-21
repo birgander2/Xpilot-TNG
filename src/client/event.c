@@ -410,6 +410,7 @@ void Key_clear_counts(void)
     int i;
     bool change = false;
 
+    Voice_release_all();
     for (i = 0; i < NUM_KEYS; i++) {
     	if (keyv_new[i] > 0) {
 	    /* set to one so that Key_release(i) will trigger */
@@ -557,6 +558,14 @@ bool Key_press(keys_t key)
 
     case KEY_EXIT:
 	return Key_press_exit();
+
+    case KEY_VOICE_TEAM:
+	Voice_ptt(VOICE_CHANNEL_TEAM, true);
+	return false;	/* server doesn't need to know */
+
+    case KEY_VOICE_ALL:
+	Voice_ptt(VOICE_CHANNEL_ALL, true);
+	return false;	/* server doesn't need to know */
     case KEY_YES:
 	return Key_press_yes();
     case KEY_NO:
@@ -610,6 +619,14 @@ bool Key_release(keys_t key)
     case KEY_TOGGLE_OWNED_ITEMS:
     case KEY_TOGGLE_MESSAGES:
 	return false;	/* server doesn't need to know */
+
+    case KEY_VOICE_TEAM:
+	Voice_ptt(VOICE_CHANNEL_TEAM, false);
+	return false;
+
+    case KEY_VOICE_ALL:
+	Voice_ptt(VOICE_CHANNEL_ALL, false);
+	return false;
 
     /* Don auto-shield hack */
     /* restore shields */
@@ -1252,6 +1269,18 @@ xp_option_t key_options[] = {
 	"8",
 	KEY_LOAD_LOCK_4,
 	"Load player lock from bank 4.\n"),
+
+    XP_KEY_OPTION(
+	"keyVoiceTeam",
+	"Alt_L",
+	KEY_VOICE_TEAM,
+	"Push-to-talk on the team voice channel (hold while speaking).\n"),
+
+    XP_KEY_OPTION(
+	"keyVoiceAll",
+	"Insert",
+	KEY_VOICE_ALL,
+	"Push-to-talk on the voice channel everybody nearby hears.\n"),
 
     XP_KEY_OPTION(
 	"keyToggleRecord",

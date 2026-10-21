@@ -14,7 +14,9 @@ public:
     void Load(const char* shipshapes_path);
 
     // Client arguments for connecting to host:port.
-    std::vector<std::string> BuildArgs(int port, const std::string& host = "localhost") const;
+    // extra: further client options, e.g. settings not saved to the xpilotrc yet.
+    std::vector<std::string> BuildArgs(int port, const std::string& host = "localhost",
+                                       const std::vector<std::string>& extra = {}) const;
 
     // Bound to the GUI.
     char name[64] = "";                 // empty = use the the xpilotrc nickname

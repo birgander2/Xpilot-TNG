@@ -3957,6 +3957,84 @@ static option_desc opts[] = {
 	OPT_ORIGIN_ANY | OPT_VISIBLE
     },
     {
+	"voiceChat",
+	"voiceChat",
+	"true",
+	&options.voiceChat,
+	valBool,
+	Voice_options_changed,
+	"Allow players with voice capable clients to talk to each other\n"
+	"via headset. The server only forwards the audio.\n",
+	OPT_ORIGIN_ANY | OPT_VISIBLE
+    },
+    {
+	"voiceTeamOnly",
+	"voiceTeamOnly",
+	"false",
+	&options.voiceTeamOnly,
+	valBool,
+	Voice_options_changed,
+	"Only allow voice chat on the team channel.\n",
+	OPT_ORIGIN_ANY | OPT_VISIBLE
+    },
+    {
+	"voiceRange",
+	"voiceRange",
+	"1500.0",
+	&options.voiceRange,
+	valReal,
+	Voice_options_changed,
+	"Distance in pixels at which voice on the 'all' channel fades\n"
+	"out completely. Closer speakers are louder and panned to their\n"
+	"side. 0 means unlimited range at full volume.\n",
+	OPT_ORIGIN_ANY | OPT_VISIBLE
+    },
+    {
+	"voiceTeamRange",
+	"voiceTeamRange",
+	"0.0",
+	&options.voiceTeamRange,
+	valReal,
+	Voice_options_changed,
+	"Like voiceRange, but for the team channel. The default of 0\n"
+	"makes team voice work like a radio at any distance.\n",
+	OPT_ORIGIN_ANY | OPT_VISIBLE
+    },
+    {
+	"voiceBitrate",
+	"voiceBitrate",
+	"24",
+	&options.voiceBitrate,
+	valInt,
+	Voice_options_changed,
+	"Opus bitrate in kbit/s (6-64) all clients use for their voice.\n"
+	"Higher is clearer but costs bandwidth: each speaker is sent to\n"
+	"every listener.\n",
+	OPT_ORIGIN_ANY | OPT_VISIBLE
+    },
+    {
+	"voiceTeamFilter",
+	"voiceTeamFilter",
+	"1",
+	&options.voiceTeamFilter,
+	valInt,
+	Voice_options_changed,
+	"Sound of the team channel on all clients:\n"
+	"0 = unfiltered, 1 = radio, 2 = telephone (narrow band).\n",
+	OPT_ORIGIN_ANY | OPT_VISIBLE
+    },
+    {
+	"voiceAllFilter",
+	"voiceAllFilter",
+	"0",
+	&options.voiceAllFilter,
+	valInt,
+	Voice_options_changed,
+	"Sound of the all channel on all clients:\n"
+	"0 = unfiltered, 1 = radio, 2 = telephone (narrow band).\n",
+	OPT_ORIGIN_ANY | OPT_VISIBLE
+    },
+    {
 	"pausedFramesPerSecond",
 	"pausedFPS",
 	"0",

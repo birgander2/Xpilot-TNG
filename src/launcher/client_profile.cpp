@@ -93,7 +93,8 @@ void ClientProfile::Load(const char* shipshapes_path) {
     if (rc_newbie == "false" || rc_newbie == "no" || rc_newbie == "off" || rc_newbie == "0") newbie = false;
 }
 
-std::vector<std::string> ClientProfile::BuildArgs(int port, const std::string& host) const {
+std::vector<std::string> ClientProfile::BuildArgs(int port, const std::string& host,
+                                                  const std::vector<std::string>& extra) const {
     std::vector<std::string> args;
     const std::string player_name = name[0] ? std::string(name) : rc_name_;
     if (!player_name.empty()) { args.push_back("-name"); args.push_back(player_name); }
@@ -103,6 +104,7 @@ std::vector<std::string> ClientProfile::BuildArgs(int port, const std::string& h
     }
     args.push_back("-newbie");
     args.push_back(newbie ? "true" : "false");
+    args.insert(args.end(), extra.begin(), extra.end());
     args.push_back("-port");
     args.push_back(std::to_string(port));
     args.push_back(host);

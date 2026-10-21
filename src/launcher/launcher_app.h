@@ -50,21 +50,26 @@ private:
     void RenderProfile();
     void RenderServerList(const char* id, ServerSearch& search);
     void RenderIdentityRow();
+    std::vector<std::string> ClientArgs(int port, const std::string& host = "localhost") const;
     void RenderHeader(const char* title, bool show_back);
-    void RenderBanner();
+    void RenderErrorPopup();
     void RenderQuitPopup();
+    void RenderProfileLeavePopup();
+    void LeaveProfile();   // back to profile_return_; asks first when there are unsaved edits
 
     // setup building blocks
     void RenderMapPanel(bool with_list);
     void RenderMapCard(const MapInfo& map);
     void RenderQuickSettings(bool server_mode);
     void RenderAdvanced(bool server_mode);
+    void RenderVoiceTab();
     void RenderLog(float height);
     void RenderActionBar(bool server_mode);
 
     // option widgets bound to OptionsManager
     bool OptBool(const char* label, const char* key, const char* tip = nullptr);
     bool OptInt(const char* label, const char* key, int lo, int hi, const char* tip = nullptr);
+    bool OptChoice(const char* label, const char* key, const char* const* items, int count, const char* tip = nullptr);
     bool OptFloat(const char* label, const char* key, float lo, float hi, const char* fmt,
                   bool logarithmic = false, const char* tip = nullptr);
     void ModifiedMenu(const char* key);
@@ -114,8 +119,10 @@ private:
     bool quit_ = false;
     bool open_running_popup_ = false;
     bool open_quit_popup_ = false;
+    bool open_leave_profile_popup_ = false;
     bool focus_first_ = true;
-    std::string banner_;
+    std::string banner_;        // pending error message; shown once in the "Error" dialog
+    std::string error_text_;
 
     // per-mode remembered map (file names)
     std::string last_map_local_, last_map_server_;

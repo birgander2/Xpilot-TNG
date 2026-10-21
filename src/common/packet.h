@@ -110,9 +110,9 @@
 #define PKT_TEAM		61
 #define PKT_POLYSTYLE		62
 #define PKT_ACK_POLYSTYLE	63
-#define PKT_NOT_USED_64		64
-#define PKT_NOT_USED_65		65
-#define PKT_NOT_USED_66		66
+#define PKT_REQUEST_VOICE	64	/* TNG >= 4.F.2.0 */
+#define PKT_VOICE		65	/* TNG >= 4.F.2.0 */
+#define PKT_VOICE_STATE		66	/* TNG >= 4.F.2.0 */
 #define PKT_NOT_USED_67		67
 #define PKT_MODIFIERS		68
 #define PKT_FASTSHOT		69	/* replaces SHOT/TEAMSHOT */

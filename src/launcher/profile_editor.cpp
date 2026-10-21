@@ -115,6 +115,10 @@ const std::vector<KeyGroup>& KeyGroups() {
             {"keyNo", "No (prompts)", "n"},
             {"keyExit", "Exit", "Escape"},
         }},
+        {"Voice", {
+            {"keyVoiceTeam", "Push-to-talk, team channel", "Alt_L"},
+            {"keyVoiceAll", "Push-to-talk, all channel", "Insert"},
+        }},
     };
     return groups;
 }
@@ -276,7 +280,9 @@ std::string ProfileEditor::ModBank::Serialize() const {
 // load / save
 // ---------------------------------------------------------------------------
 
-void ProfileEditor::Load(const std::vector<std::string>& ship_names) {
+void ProfileEditor::Load(const std::vector<std::string>& ship_names, bool keep_audio) {
+    const Audio unsaved = audio_;
+    const bool had_audio = loaded_;
     rc_.clear();
     ship_names_ = ship_names;
     auto get = [&](const std::string& key, const std::string& def) {
@@ -305,8 +311,33 @@ void ProfileEditor::Load(const std::vector<std::string>& ship_names) {
     for (int i = 0; i < kBanks; ++i)
         banks_[i] = ModBank::Parse(get("modifierBank" + std::to_string(i + 1), ""));
 
+    auto get_bool = [&](const char* key, bool def) {
+        std::string v = get(key, def ? "true" : "false");
+        for (char& ch : v) ch = char(tolower((unsigned char)ch));
+        if (v == "true" || v == "yes" || v == "on" || v == "1") return true;
+        if (v == "false" || v == "no" || v == "off" || v == "0") return false;
+        return def;
+    };
+    auto get_int = [&](const char* key, int def, int lo, int hi) {
+        std::string v = get(key, std::to_string(def));
+        char* end = nullptr;
+        long n = std::strtol(v.c_str(), &end, 10);
+        return end == v.c_str() ? def : int(std::clamp<long>(n, lo, hi));
+    };
+    audio_.sound = get_bool("sound", true);
+    audio_.max_volume = get_int("maxVolume", 100, 0, 100);
+    audio_.voice_chat = get_bool("voiceChat", true);
+    audio_.voice_activation = get_bool("voiceActivation", true);
+    audio_.voice_activation_team = get_bool("voiceActivationTeam", true);
+    audio_.voice_level = get_int("voiceActivationLevel", -40, -80, 0);
+    audio_.voice_volume = get_int("voiceVolume", 100, 0, 200);
+    audio_.voice_mic_gain = get_int("voiceMicGain", 100, 0, 400);
+
     shown_.clear();
     // snapshot of everything the editor can write, to detect edits
+    for (const auto& kv : AudioValues()) shown_[kv.first] = kv.second;
+    if (keep_audio && had_audio) audio_ = unsaved;   // shown_ stays what the xpilotrc has
+    loaded_ = true;
     shown_["name"] = name_;
     shown_["shipShape"] = ship_ >= 0 ? ship_names_[ship_] : rc_ship_;
     int n = 0;
@@ -316,8 +347,23 @@ void ProfileEditor::Load(const std::vector<std::string>& ship_names) {
     for (int i = 0; i < kBanks; ++i) shown_["modifierBank" + std::to_string(i + 1)] = banks_[i].Serialize();
 }
 
+std::vector<std::pair<std::string, std::string>> ProfileEditor::AudioValues() const {
+    auto b = [](bool v) { return std::string(v ? "true" : "false"); };
+    return {
+        {"sound", b(audio_.sound)},
+        {"maxVolume", std::to_string(audio_.max_volume)},
+        {"voiceChat", b(audio_.voice_chat)},
+        {"voiceActivation", b(audio_.voice_activation)},
+        {"voiceActivationTeam", b(audio_.voice_activation_team)},
+        {"voiceActivationLevel", std::to_string(audio_.voice_level)},
+        {"voiceVolume", std::to_string(audio_.voice_volume)},
+        {"voiceMicGain", std::to_string(audio_.voice_mic_gain)},
+    };
+}
+
 std::vector<std::pair<std::string, std::string>> ProfileEditor::Changes() const {
     std::vector<std::pair<std::string, std::string>> cur, changed;
+    for (const auto& kv : AudioValues()) cur.push_back(kv);
     cur.emplace_back("name", name_);
     cur.emplace_back("shipShape", ship_ >= 0 ? ship_names_[ship_] : rc_ship_);
     int n = 0;
@@ -333,6 +379,18 @@ std::vector<std::pair<std::string, std::string>> ProfileEditor::Changes() const 
 }
 
 bool ProfileEditor::Dirty() const { return !Changes().empty(); }
+
+std::vector<std::string> ProfileEditor::UnsavedAudioArgs() const {
+    std::vector<std::string> args;
+    if (!loaded_) return args;   // editor never opened: the xpilotrc is the truth
+    for (const auto& kv : AudioValues()) {
+        auto it = shown_.find(kv.first);
+        if (it != shown_.end() && it->second == kv.second) continue;
+        args.push_back("-" + kv.first);
+        args.push_back(kv.second);
+    }
+    return args;
+}
 
 bool ProfileEditor::Save() {
     std::string err;
@@ -531,6 +589,46 @@ void ProfileEditor::RenderModBanks() {
     }
 }
 
+void ProfileEditor::RenderAudio() {
+    static const char* kModes[] = {"Push-to-talk only (keys: Keyboard > Voice)", "Voice activation"};
+
+    ImGui::Spacing();
+    ImGui::SeparatorText("Game sounds");
+    ImGui::Checkbox("Sound", &audio_.sound);
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Sounds of the game (xpilot.sound)");
+    ImGui::BeginDisabled(!audio_.sound);
+    ImGui::SetNextItemWidth(280);
+    ImGui::SliderInt("Volume", &audio_.max_volume, 0, 100, "%d%%");
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Volume of the game sounds (xpilot.maxVolume)");
+    ImGui::EndDisabled();
+
+    ImGui::Spacing();
+    ImGui::SeparatorText("Voice chat");
+    ImGui::Checkbox("Voice chat", &audio_.voice_chat);
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Hear other players and talk with a microphone (xpilot.voiceChat)");
+    ImGui::BeginDisabled(!audio_.voice_chat);
+    ImGui::SetNextItemWidth(280);
+    int mode = audio_.voice_activation ? 1 : 0;
+    if (ImGui::Combo("Sending", &mode, kModes, IM_ARRAYSIZE(kModes))) audio_.voice_activation = (mode == 1);
+    if (audio_.voice_activation) {
+        ImGui::SetNextItemWidth(280);
+        ImGui::SliderInt("Activation level", &audio_.voice_level, -80, 0, "%d dB");
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Microphone level that opens the channel.\nRaise it if background noise triggers it.");
+        ImGui::Checkbox("Voice activation talks to the team", &audio_.voice_activation_team);
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Off: voice activation uses the channel everybody nearby hears");
+    }
+    ImGui::SetNextItemWidth(280);
+    ImGui::SliderInt("Voice volume", &audio_.voice_volume, 0, 200, "%d%%");
+    ImGui::SetNextItemWidth(280);
+    ImGui::SliderInt("Microphone gain", &audio_.voice_mic_gain, 0, 400, "%d%%");
+    ImGui::EndDisabled();
+    ImGui::Spacing();
+    ImGui::TextDisabled("Voice chat needs an XPilot TNG server 5.0.2 or newer.");
+    ImGui::TextDisabled("Mute a player in game with \\ignore <name>.");
+}
+
 bool ProfileEditor::Render(float bottom_reserve) {
     bool saved = false;
     ImGui::BeginChild("ProfileBody", ImVec2(0, -bottom_reserve));
@@ -540,6 +638,7 @@ bool ProfileEditor::Render(float bottom_reserve) {
         else if (capture_ >= 0) capture_ = -1;
         if (ImGui::BeginTabItem("Mouse")) { RenderMouse(); ImGui::EndTabItem(); }
         if (ImGui::BeginTabItem("Modifier banks")) { RenderModBanks(); ImGui::EndTabItem(); }
+        if (ImGui::BeginTabItem("Audio")) { RenderAudio(); ImGui::EndTabItem(); }
         ImGui::EndTabBar();
     }
     ImGui::EndChild();

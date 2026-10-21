@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.25)
-project(xpilot-tng VERSION 5.0.1 LANGUAGES C CXX)
+project(xpilot-tng VERSION 5.0.2 LANGUAGES C CXX)
 
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -15,6 +15,7 @@ option(BUILD_LAUNCHER "Build modern Dear ImGui / SDL3 frontend launcher (xpilot-
 option(SANITIZE "Build with AddressSanitizer and UndefinedBehaviorSanitizer (for testing)" OFF)
 option(BUILD_TESTS "Build the security regression and fuzz tests" OFF)
 option(FETCH_SDL3 "Download and build SDL3 / SDL3_ttf if not installed on system" OFF)
+option(FETCH_OPUS "Download and build Opus (static) if not installed on system" OFF)
 
 # Compiler Definitions & Flags
 add_compile_definitions(_GNU_SOURCE HAVE_CONFIG_H)
@@ -213,6 +214,7 @@ if(BUILD_SERVER)
         src/server/tuner.c
         src/server/treasure.c
         src/server/update.c
+        src/server/voicechat.c
         src/server/walls.c
         src/server/wormhole.c
         src/server/xp2map.c

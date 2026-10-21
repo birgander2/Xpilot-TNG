@@ -5,17 +5,26 @@
 #include <vector>
 
 // Editor for the player profile in the xpilotrc: nickname, ship, key bindings,
-// mouse buttons and weapon modifier banks.
+// mouse buttons, weapon modifier banks and audio (game sounds, voice chat).
 class ProfileEditor {
 public:
     // Reads the xpilotrc. ship_names are the choices of lib/shipshapes.txt.
-    void Load(const std::vector<std::string>& ship_names);
+    // keep_audio: keep audio edits that were not saved yet (they stay "unsaved").
+    void Load(const std::vector<std::string>& ship_names, bool keep_audio = false);
+
+    // Client arguments for audio values that were changed but not saved to the
+    // xpilotrc, so they apply to the next game anyway.
+    std::vector<std::string> UnsavedAudioArgs() const;
 
     // Draws the editor into the current window. Returns true when the xpilotrc was written.
     bool Render(float bottom_reserve);
 
     // True while a key is being captured (Esc cancels the capture, not the screen).
     bool Capturing() const;
+
+    // Unsaved edits? Save() writes them to the xpilotrc (true on success).
+    bool Dirty() const;
+    bool Save();
 
 private:
     struct ModBank {
@@ -31,8 +40,7 @@ private:
     void RenderKeys();
     void RenderMouse();
     void RenderModBanks();
-    bool Save();
-    bool Dirty() const;
+    void RenderAudio();
     std::vector<std::pair<std::string, std::string>> Changes() const;
 
     static constexpr int kButtons = 5, kBanks = 4;
@@ -45,6 +53,20 @@ private:
     std::vector<std::string> key_values_;        // per key action: space separated key names
     std::vector<std::string> button_actions_[kButtons];
     ModBank banks_[kBanks];
+
+    // audio: client options sound, maxVolume, voice*
+    struct Audio {
+        bool sound = true;
+        int max_volume = 100;            // game sounds, %
+        bool voice_chat = true;
+        bool voice_activation = true;    // false = push-to-talk only
+        bool voice_activation_team = true;
+        int voice_level = -40;           // dB
+        int voice_volume = 100;          // %
+        int voice_mic_gain = 100;        // %
+    } audio_;
+    std::vector<std::pair<std::string, std::string>> AudioValues() const;
+    bool loaded_ = false;
 
     std::map<std::string, std::string> rc_;      // values defined in the xpilotrc when loaded
     std::map<std::string, std::string> shown_;   // what the editor showed after loading

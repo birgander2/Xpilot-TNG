@@ -119,6 +119,8 @@ static int Receive_shape(connection_t *connp);
 static int Receive_pointer_move(connection_t *connp);
 static int Receive_audio_request(connection_t *connp);
 static int Receive_fps_request(connection_t *connp);
+static int Receive_voice_request(connection_t *connp);
+static int Receive_voice(connection_t *connp);
 
 static int Send_motd(connection_t *connp);
 
@@ -181,6 +183,9 @@ static void Feature_init(connection_t *connp)
 	    SET_BIT(features, F_BALLSTYLE);
 	if (v >= 0x4F15)
 	    SET_BIT(features, F_POLYSTYLE);
+	/* 0x4F16 - 0x4F1F belong to XPilot Infinity, nothing new there. */
+	if (v >= TNG_VOICE_VERSION)
+	    SET_BIT(features, F_VOICE);
     }
     connp->features = features;
     return;
@@ -308,6 +313,8 @@ static void Init_receive(void)
     playing_receive[PKT_POINTER_MOVE]		= Receive_pointer_move;
     playing_receive[PKT_REQUEST_AUDIO]		= Receive_audio_request;
     playing_receive[PKT_ASYNC_FPS]		= Receive_fps_request;
+    playing_receive[PKT_REQUEST_VOICE]		= Receive_voice_request;
+    playing_receive[PKT_VOICE]			= Receive_voice;
 }
 
 /*
@@ -758,6 +765,10 @@ int Setup_connection(char *user, char *nick, char *dpy, int team,
     connp->debris_colors = 0;
     connp->spark_rand = DEF_SPARK_RAND;
     connp->last_mouse_pos = 0;
+    connp->voice_on = false;
+    connp->voice_len = 0;
+    connp->voice_rate_sec = 0;
+    connp->voice_rate_count = 0;
     connp->rectype = rplayback ? 2-playback : 0;
     Conn_set_state(connp, CONN_LISTENING, CONN_FREE);
     if (connp->w.buf == NULL
@@ -3127,6 +3138,101 @@ static int Receive_audio_request(connection_t *connp)
 	sound_player_on(pl, on);
     }
 
+    return 1;
+}
+
+/*
+ * Tell a voice capable client how voice chat is configured.
+ */
+int Send_voice_state(connection_t *connp)
+{
+    int flags = 0;
+
+    if (!FEATURE(connp, F_VOICE))
+	return 0;
+    if (options.voiceChat)
+	flags |= VOICE_STATE_ENABLED;
+    if (options.voiceTeamOnly)
+	flags |= VOICE_STATE_TEAM_ONLY;
+    if (BIT(world->rules->mode, TEAM_PLAY))
+	flags |= VOICE_STATE_TEAM_PLAY;
+
+    return Packet_printf(&connp->c, "%c%c%hd%hd%c%c%c", PKT_VOICE_STATE, flags,
+			 (int)MIN(options.voiceRange, 32767.0),
+			 (int)MIN(options.voiceTeamRange, 32767.0),
+			 MAX(VOICE_BITRATE_MIN,
+			     MIN(VOICE_BITRATE_MAX, options.voiceBitrate)),
+			 MAX(VOICE_FILTER_OFF,
+			     MIN(VOICE_FILTER_PHONE, options.voiceTeamFilter)),
+			 MAX(VOICE_FILTER_OFF,
+			     MIN(VOICE_FILTER_PHONE, options.voiceAllFilter)));
+}
+
+static int Receive_voice_request(connection_t *connp)
+{
+    int n;
+    unsigned char ch, on;
+
+    if ((n = Packet_scanf(&connp->r, "%c%c", &ch, &on)) <= 0) {
+	if (n == -1)
+	    Destroy_connection(connp, "read error");
+	return n;
+    }
+    recSpecial = 1;
+    if (!FEATURE(connp, F_VOICE) || connp->rectype == 1)
+	return 1;
+    connp->voice_on = (on != 0);
+    connp->voice_len = 0;
+    if (Send_voice_state(connp) == -1) {
+	Destroy_connection(connp, "write error");
+	return -1;
+    }
+
+    return 1;
+}
+
+/*
+ * One Opus frame from a client.  The payload follows the header
+ * as raw bytes, so it is read without Packet_scanf().
+ */
+static int Receive_voice(connection_t *connp)
+{
+    int n;
+    unsigned char ch, channel, len;
+    unsigned short seq;
+    unsigned char *data;
+    long now;
+
+    if ((n = Packet_scanf(&connp->r, "%c%hu%c%c",
+			  &ch, &seq, &channel, &len)) <= 0) {
+	if (n == -1)
+	    Destroy_connection(connp, "read error");
+	return n;
+    }
+    if (connp->r.buf + connp->r.len - connp->r.ptr < len)
+	return 0;	/* truncated, rest of datagram is dropped */
+    data = (unsigned char *)connp->r.ptr;
+    connp->r.ptr += len;
+    recSpecial = 1;
+
+    if (!connp->voice_on
+	|| connp->id == NO_ID
+	|| connp->rectype != 0
+	|| len == 0
+	|| len > VOICE_MAX_PAYLOAD
+	|| channel >= VOICE_NUM_CHANNELS)
+	return 1;
+
+    /* Allow 50% more than real time to absorb network jitter. */
+    now = (long)time(NULL);
+    if (now != connp->voice_rate_sec) {
+	connp->voice_rate_sec = now;
+	connp->voice_rate_count = 0;
+    }
+    if (++connp->voice_rate_count > (1000 / VOICE_FRAME_MS) * 3 / 2)
+	return 1;
+
+    Voice_forward(Player_by_id(connp->id), seq, channel, data, len);
     return 1;
 }
 

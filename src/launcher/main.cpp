@@ -193,6 +193,8 @@ int main(int argc, char* argv[]) {
     app.Init();
 
     int cur_w = 0, cur_h = 0;
+    Uint64 size_check_until = 0, size_request_at = 0;
+    bool size_settled = true;
     bool hidden = false;
     int active_frames = 30;     // full-rate frames left after input; otherwise idle at ~10 fps
     while (!app.WantsQuit()) {
@@ -219,13 +221,33 @@ int main(int argc, char* argv[]) {
         // The window size follows the current screen (small menu, large setup screens).
         int want_w = 0, want_h = 0;
         app.DesiredWindowSize(&want_w, &want_h);
+        // The window manager applies SDL_SetWindowSize asynchronously and some (e.g. on a Raspberry Pi) drop or
+        // clamp it when the window was just resized or its resizable flag changed. So the request is verified for
+        // a moment and repeated until the real size matches.
+        Uint64 now_ms = SDL_GetTicks();
         if (want_w != cur_w || want_h != cur_h) {
-            SDL_SetWindowResizable(window, true);   // a fixed-size window may refuse SetWindowSize
-            SDL_SetWindowSize(window, want_w, want_h);
-            SDL_SetWindowResizable(window, app.WindowResizable());
-            SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
             cur_w = want_w;
             cur_h = want_h;
+            size_check_until = now_ms + 1500;
+            size_request_at = 0;
+            size_settled = false;
+        }
+        if (!size_settled && !hidden) {
+            int aw = 0, ah = 0;
+            SDL_GetWindowSize(window, &aw, &ah);
+            if (aw == cur_w && ah == cur_h) {
+                SDL_SetWindowResizable(window, app.WindowResizable());
+                size_settled = true;
+            } else if (now_ms >= size_check_until) {
+                SDL_SetWindowResizable(window, app.WindowResizable());   // give up, keep what the WM gave us
+                size_settled = true;
+            } else if (now_ms - size_request_at >= 200) {
+                SDL_SetWindowResizable(window, true);   // a fixed-size window may refuse SetWindowSize
+                SDL_SetWindowSize(window, cur_w, cur_h);
+                SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+                size_request_at = now_ms;
+            }
+            active_frames = 30;   // keep polling until settled
         }
 
         // The launcher is hidden while a game is running and comes back afterwards.

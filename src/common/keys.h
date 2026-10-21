@@ -159,6 +159,8 @@ typedef enum {
     KEY_EXIT,
     KEY_YES,
     KEY_NO,
+    KEY_VOICE_TEAM,	/* push-to-talk, team channel */
+    KEY_VOICE_ALL,	/* push-to-talk, all channel */
     NUM_CLIENT_KEYS	/* The number of keys really used by the client. */
 #endif
 } keys_t;

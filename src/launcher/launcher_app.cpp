@@ -180,13 +180,18 @@ bool LauncherApp::BinariesOk(bool server, bool client) {
     return false;
 }
 
+// Client arguments: identity row plus audio edits that are not saved to the xpilotrc yet.
+std::vector<std::string> LauncherApp::ClientArgs(int port, const std::string& host) const {
+    return profile_.BuildArgs(port, host, profile_editor_.UnsavedAudioArgs());
+}
+
 void LauncherApp::GoTo(Screen s) {
     screen_ = s;
     focus_first_ = true;
     if (s == Screen::Menu) {
         banner_.clear();
     }
-    if (s == Screen::Profile) profile_editor_.Load(profile_.ship_names);
+    if (s == Screen::Profile) profile_editor_.Load(profile_.ship_names, true);   // keeps unsaved audio edits
     if (s == Screen::NetworkBrowser) {
         lan_search_.Start();        // full refresh on every visit (no-op while a scan is still running)
         internet_search_.Start();
@@ -220,7 +225,7 @@ void LauncherApp::SelectMap(int idx) {
 void LauncherApp::JoinRunningServer() {
     banner_.clear();
     if (!BinariesOk(false, true)) return;
-    if (!process_mgr_.StartClient(client_bin_path_, profile_.BuildArgs(running_port_))) {
+    if (!process_mgr_.StartClient(client_bin_path_, ClientArgs(running_port_))) {
         banner_ = "The client could not be started (" + client_bin_path_ + ").";
         return;
     }
@@ -248,7 +253,7 @@ void LauncherApp::StartLocalGame(bool force) {
     opts.SetBool("reportToMetaServer", local_meta_);
     auto server_args = opts.BuildServerArgs(LaunchMode::Local, map.full_path, port);
 
-    auto client_args = profile_.BuildArgs(port);
+    auto client_args = ClientArgs(port);
 
     banner_.clear();
     if (!BinariesOk(true, true)) return;
@@ -322,7 +327,7 @@ void LauncherApp::StartServerMode() {
 void LauncherApp::JoinServer(const std::string& host, int port) {
     banner_.clear();
     if (!BinariesOk(false, true)) return;
-    if (!process_mgr_.StartClient(client_bin_path_, profile_.BuildArgs(port, host))) {
+    if (!process_mgr_.StartClient(client_bin_path_, ClientArgs(port, host))) {
         banner_ = "The client could not be started (" + client_bin_path_ + ").";
         return;
     }
@@ -437,6 +442,17 @@ void LauncherApp::RenderUI() {
         open_quit_popup_ = false;
     }
     RenderQuitPopup();
+    if (!banner_.empty()) {   // errors go into their own dialog
+        error_text_ = banner_;
+        banner_.clear();
+        ImGui::OpenPopup("Error");
+    }
+    RenderErrorPopup();
+    if (open_leave_profile_popup_) {
+        ImGui::OpenPopup("Unsaved changes");
+        open_leave_profile_popup_ = false;
+    }
+    RenderProfileLeavePopup();
     if (open_running_popup_) {
         ImGui::OpenPopup("Server already running");
         open_running_popup_ = false;
@@ -448,20 +464,13 @@ void LauncherApp::RenderUI() {
         !launching_) {
         if (screen_ == Screen::LocalSetup || screen_ == Screen::ServerSetup || screen_ == Screen::ServerRunning ||
             screen_ == Screen::NetworkBrowser || (screen_ == Screen::Profile && !profile_editor_.Capturing()))
-            GoTo(screen_ == Screen::Profile ? profile_return_ : Screen::Menu);
+        {
+            if (screen_ == Screen::Profile) LeaveProfile();
+            else GoTo(Screen::Menu);
+        }
     }
 
     ImGui::End();
-}
-
-void LauncherApp::RenderBanner() {
-    if (banner_.empty()) return;
-    ImGui::PushStyleColor(ImGuiCol_Text, kBad);
-    ImGui::TextWrapped("%s", banner_.c_str());
-    ImGui::PopStyleColor();
-    ImGui::SameLine();
-    if (ImGui::SmallButton("Dismiss")) banner_.clear();
-    ImGui::Spacing();
 }
 
 void LauncherApp::RenderHeader(const char* title, bool show_back) {
@@ -498,16 +507,6 @@ void LauncherApp::RenderMenu() {
     ImGui::TextColored(ImVec4(0.55f, 0.62f, 0.72f, 1.0f), "Launcher");
     if (fonts_.subtitle) ImGui::PopFont();
     ImGui::Dummy(ImVec2(0, 12));
-
-    if (!banner_.empty()) {
-        ImGui::SetCursorPosX(x0);
-        ImGui::PushTextWrapPos(x0 + col_w);
-        ImGui::PushStyleColor(ImGuiCol_Text, kBad);
-        ImGui::TextWrapped("%s", banner_.c_str());
-        ImGui::PopStyleColor();
-        ImGui::PopTextWrapPos();
-        ImGui::Spacing();
-    }
 
     auto menu_button = [&](const char* id, const char* label, const char* sub) {
         ImGui::SetCursorPosX(x0);
@@ -669,6 +668,18 @@ bool LauncherApp::OptInt(const char* label, const char* key, int lo, int hi, con
     return changed;
 }
 
+// Integer option with named values (0, 1, 2, ...)
+bool LauncherApp::OptChoice(const char* label, const char* key, const char* const* items, int count,
+                            const char* tip) {
+    if (!options_mgr_.Known(key)) return false;
+    int v = std::clamp(options_mgr_.GetInt(key), 0, count - 1);
+    bool changed = ImGui::Combo(OptLabel(label, key, options_mgr_.IsModified(key)).c_str(), &v, items, count);
+    if (changed) options_mgr_.SetInt(key, v);
+    ModifiedMenu(key);
+    if (tip && ImGui::IsItemHovered()) ImGui::SetTooltip("%s", tip);
+    return changed;
+}
+
 bool LauncherApp::OptFloat(const char* label, const char* key, float lo, float hi, const char* fmt,
                            bool logarithmic, const char* tip) {
     if (!options_mgr_.Known(key)) return false;
@@ -712,7 +723,7 @@ void LauncherApp::RenderIdentityRow() {
         profile_return_ = screen_;
         GoTo(Screen::Profile);
     }
-    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Edit keys, mouse buttons, modifier banks and ship in the xpilotrc");
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Edit keys, mouse buttons, modifier banks, audio and ship in the xpilotrc");
 }
 
 void LauncherApp::RenderQuickSettings(bool server_mode) {
@@ -838,6 +849,7 @@ void LauncherApp::RenderAdvanced(bool server_mode) {
                 ImGui::EndTabItem();
             }
         }
+        RenderVoiceTab();
         if (ImGui::BeginTabItem("Map Options")) {
             ImGui::Spacing();
             const auto& raw = options_mgr_.MapOptions();
@@ -909,6 +921,37 @@ void LauncherApp::RenderAdvanced(bool server_mode) {
         ImGui::EndTabBar();
     }
     ImGui::PopID();
+}
+
+// Voice chat: server options. The player's own settings are in the profile editor (Audio).
+void LauncherApp::RenderVoiceTab() {
+    static const char* kFilters[] = {"Unfiltered", "Radio", "Telephone"};
+
+    if (!ImGui::BeginTabItem("Audio")) return;
+    ImGui::Spacing();
+    if (baseline_ok_ && options_mgr_.Known("voiceChat")) {
+        OptBool("Allow voice chat", "voiceChat", "Players with a headset can talk to each other");
+        ImGui::BeginDisabled(!options_mgr_.GetBool("voiceChat"));
+        OptBool("Team channel only", "voiceTeamOnly", "Disable the channel that enemies nearby hear as well");
+        ImGui::PushItemWidth(260);
+        OptFloat("Range, all channel", "voiceRange", 0.0f, 5000.0f, "%.0f px", false,
+                 "Distance at which voices fade out completely.\n0 = unlimited range at full volume");
+        OptFloat("Range, team channel", "voiceTeamRange", 0.0f, 5000.0f, "%.0f px", false,
+                 "0 = like a radio: full volume at any distance");
+        ImGui::Separator();
+        OptInt("Bitrate", "voiceBitrate", 6, 64,
+               "Opus bitrate in kbit/s for everybody's voice.\nHigher is clearer but costs bandwidth.");
+        OptChoice("Team channel sound", "voiceTeamFilter", kFilters, IM_ARRAYSIZE(kFilters),
+                  "How the team channel sounds on all clients");
+        OptChoice("All channel sound", "voiceAllFilter", kFilters, IM_ARRAYSIZE(kFilters),
+                  "How the all channel sounds on all clients");
+        ImGui::PopItemWidth();
+        ImGui::EndDisabled();
+    } else {
+        ImGui::TextDisabled("This server build does not support voice chat.");
+    }
+    ImGui::TextDisabled("Your own microphone and volume settings: Profile... > Audio.");
+    ImGui::EndTabItem();
 }
 
 void LauncherApp::RenderLog(float height) {
@@ -994,16 +1037,20 @@ void LauncherApp::RenderActionBar(bool server_mode) {
 }
 
 void LauncherApp::RenderProfile() {
-    if (ImGui::Button("< Back", ImVec2(80, 0))) GoTo(profile_return_);
+    if (ImGui::Button("< Back", ImVec2(80, 0))) LeaveProfile();
     ImGui::SameLine();
     RenderHeader("EDIT PLAYER PROFILE", false);
     if (profile_editor_.Render(40))
         profile_.Load((data_dir_ + "/shipshapes.txt").c_str());   // pick up the saved name and ship
 }
 
+void LauncherApp::LeaveProfile() {
+    if (profile_editor_.Dirty()) open_leave_profile_popup_ = true;
+    else GoTo(profile_return_);
+}
+
 void LauncherApp::RenderSetup(bool server_mode) {
     RenderHeader(server_mode ? "LAUNCH SERVER" : "START LOCAL GAME", true);
-    RenderBanner();
 
     const float bar_h = server_mode ? 96 : 60;
     ImVec2 avail = ImGui::GetContentRegionAvail();
@@ -1114,7 +1161,6 @@ void LauncherApp::RenderServerList(const char* id, ServerSearch& search) {
 
 void LauncherApp::RenderNetworkBrowser() {
     RenderHeader("JOIN NETWORK GAME", true);
-    RenderBanner();
 
     RenderIdentityRow();
     ImGui::Spacing();
@@ -1214,7 +1260,7 @@ bool LauncherApp::NetworkTarget(std::string* host, int* port) const {
 }
 
 std::string LauncherApp::ClientCommandLine(const std::string& host, int port) const {
-    return CommandLine(client_bin_path_, profile_.BuildArgs(port, host));
+    return CommandLine(client_bin_path_, ClientArgs(port, host));
 }
 
 void LauncherApp::PlaySelectedNetwork() {
@@ -1229,7 +1275,6 @@ void LauncherApp::PlaySelectedNetwork() {
 
 void LauncherApp::RenderServerRunning() {
     RenderHeader("SERVER", true);
-    RenderBanner();
 
     bool ready = process_mgr_.IsServerReady();
     StatusDot(ready ? kGood : kWarn);
@@ -1315,6 +1360,47 @@ void LauncherApp::RenderRunningServerPopup() {
     }
     ImGui::SameLine();
     if (ImGui::Button("Cancel", ImVec2(100, 0)) || ImGui::IsKeyPressed(ImGuiKey_Escape))
+        ImGui::CloseCurrentPopup();
+    ImGui::EndPopup();
+}
+
+void LauncherApp::RenderErrorPopup() {
+    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    ImGui::SetNextWindowSizeConstraints(ImVec2(360, 0), ImVec2(560, 400));
+    if (!ImGui::BeginPopupModal("Error", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) return;
+    ImGui::PushTextWrapPos(520.0f);
+    ImGui::PushStyleColor(ImGuiCol_Text, kBad);
+    ImGui::TextUnformatted(error_text_.c_str());
+    ImGui::PopStyleColor();
+    ImGui::PopTextWrapPos();
+    ImGui::Spacing();
+    if (ImGui::Button("OK", ImVec2(100, 0)) || ImGui::IsKeyPressed(ImGuiKey_Escape) ||
+        ImGui::IsKeyPressed(ImGuiKey_Enter))
+        ImGui::CloseCurrentPopup();
+    ImGui::EndPopup();
+}
+
+void LauncherApp::RenderProfileLeavePopup() {
+    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+    if (!ImGui::BeginPopupModal("Unsaved changes", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) return;
+    ImGui::Text("The player profile has unsaved changes.");
+    ImGui::Spacing();
+    if (ImGui::Button("Save", ImVec2(110, 0))) {
+        if (profile_editor_.Save()) {
+            profile_.Load((data_dir_ + "/shipshapes.txt").c_str());
+            ImGui::CloseCurrentPopup();
+            GoTo(profile_return_);
+        } else {
+            ImGui::CloseCurrentPopup();   // the editor shows the error; stay on the profile screen
+        }
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Discard", ImVec2(110, 0))) {
+        ImGui::CloseCurrentPopup();
+        GoTo(profile_return_);
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Cancel", ImVec2(110, 0)) || ImGui::IsKeyPressed(ImGuiKey_Escape))
         ImGui::CloseCurrentPopup();
     ImGui::EndPopup();
 }

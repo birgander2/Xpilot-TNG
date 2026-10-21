@@ -61,6 +61,9 @@ static sockbuf_t	rbuf,
 			cbuf,
 			wbuf;
 static frame_buf_t	*Frames;
+static int		Receive_voice(void);
+static int		Receive_voice_state(void);
+
 static int		(*receive_tbl[256])(void),
 			(*reliable_tbl[256])(void);
 static int		keyboard_delta;
@@ -137,6 +140,7 @@ static void Receive_init(void)
     receive_tbl[PKT_WORMHOLE]	= Receive_wormhole;
     receive_tbl[PKT_POLYSTYLE]	= Receive_polystyle;
     receive_tbl[PKT_DEBRIS_EXT]	= Receive_debris_ext;
+    receive_tbl[PKT_VOICE]	= Receive_voice;
     for (i = 0; i < OLD_DEBRIS_TYPES; i++)
 	receive_tbl[PKT_DEBRIS + i] = Receive_debris;
 
@@ -155,6 +159,7 @@ static void Receive_init(void)
     reliable_tbl[PKT_STRING]	= Receive_string;
     reliable_tbl[PKT_SCORE_OBJECT] = Receive_score_object;
     reliable_tbl[PKT_TALK_ACK]	= Receive_talk_ack;
+    reliable_tbl[PKT_VOICE_STATE] = Receive_voice_state;
 }
 
 /*
@@ -2644,6 +2649,75 @@ int Send_audio_request(int on)
     if (Packet_printf(&wbuf, "%c%c", PKT_REQUEST_AUDIO, (on != 0)) == -1)
 	return -1;
     return 0;
+}
+
+/*
+ * Voice chat (TNG protocol >= TNG_VOICE_VERSION only).
+ */
+int Send_voice_request(int on)
+{
+    if (version < TNG_VOICE_VERSION)
+	return 0;
+    if (Packet_printf(&wbuf, "%c%c", PKT_REQUEST_VOICE, (on != 0)) == -1)
+	return -1;
+    return 0;
+}
+
+/*
+ * The Opus payload is binary, so it is appended raw after the header.
+ * A frame that doesn't fit is dropped, voice is not worth a flush.
+ */
+int Send_voice(unsigned seq, int channel, const unsigned char *data, int len)
+{
+    char *p;
+
+    if (version < TNG_VOICE_VERSION || len <= 0 || len > VOICE_MAX_PAYLOAD)
+	return 0;
+    if (wbuf.size - wbuf.len < 5 + len + SOCKBUF_WRITE_SPARE)
+	return 0;
+    p = wbuf.buf + wbuf.len;
+    p[0] = PKT_VOICE;
+    p[1] = (char)((seq >> 8) & 0xFF);
+    p[2] = (char)(seq & 0xFF);
+    p[3] = (char)channel;
+    p[4] = (char)len;
+    memcpy(p + 5, data, (size_t)len);
+    wbuf.len += 5 + len;
+    return 1;
+}
+
+static int Receive_voice(void)
+{
+    int n;
+    unsigned char pkt, channel, gain, pan, len;
+    short id;
+    unsigned short seq;
+    const unsigned char *data;
+
+    if ((n = Packet_scanf(&rbuf, "%c%hd%hu%c%c%c%c", &pkt, &id, &seq,
+			  &channel, &gain, &pan, &len)) <= 0)
+	return n;
+    if (rbuf.buf + rbuf.len - rbuf.ptr < len)
+	return 0;
+    data = (const unsigned char *)rbuf.ptr;
+    rbuf.ptr += len;
+    Voice_received(id, seq, channel, gain, pan, data, len);
+    return 1;
+}
+
+static int Receive_voice_state(void)
+{
+    int n;
+    unsigned char pkt, flags, bitrate, team_filter, all_filter;
+    short range, team_range;
+
+    if ((n = Packet_scanf(&cbuf, "%c%c%hd%hd%c%c%c", &pkt, &flags,
+			  &range, &team_range, &bitrate, &team_filter,
+			  &all_filter)) <= 0)
+	return n;
+    Voice_server_state(flags, range, team_range, bitrate, team_filter,
+		       all_filter);
+    return 1;
 }
 
 int Send_fps_request(int fps)

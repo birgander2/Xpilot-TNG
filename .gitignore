@@ -29,3 +29,8 @@ dist-deb/
 build-asan/
 __pycache__/
 /tests/
+.claude/settings.local.json
+build_dist.sh
+build_src.sh
+Xpilot-TNG_Sources.tgz
+Xpilot-TNG_portable.tgz
