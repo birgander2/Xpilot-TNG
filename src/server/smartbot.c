@@ -138,7 +138,31 @@ typedef struct robot_smart_data {
     int			episode_deaths;		/* Deaths already counted as episodes */
     bool		genes_sampled;
     bool		cut_thrust;		/* Heat seeker nearby: coast this tick */
+
+    /* Ball delivery state */
+    int			throw_side;		/* Swing side (+1/-1) of a throw, 0 = none */
+    bool		deliver_retreat;	/* Swinging out for another delivery run */
+    clpos_t		deliver_pt;		/* Swing-out point next to the home treasure */
 } robot_smart_data_t;
+
+/*
+ * BallArea outlines (treasure boxes), in pixels.  Ships die on contact
+ * (treasureCollisionKills), so they are avoided exactly at polygon level with
+ * no margin beyond the ship's own size; flying closely past them stays possible.
+ */
+#define BALLAREA_MAX_VERTS	64
+
+typedef struct smart_ballarea {
+    int		num;
+    double	x[BALLAREA_MAX_VERTS];
+    double	y[BALLAREA_MAX_VERTS];
+    double	cx, cy, radius;		/* bounding circle */
+} smart_ballarea_t;
+
+static smart_ballarea_t	*BallAreas;
+static int		NumBallAreas;
+static const poly_t	*BallAreasPdata;
+static int		BallAreasNumPolys = -1;
 
 static double	Visibility_distance;
 
@@ -476,9 +500,17 @@ static void Smart_evolve_genes_on_respawn(player_t *pl)
 static bool Smart_empty_space_for_ball(int bx, int by)
 {
     clpos_t pos;
+    int group;
+    group_t *gp;
+
     pos.cx = BLOCK_CENTER(bx);
     pos.cy = BLOCK_CENTER(by);
-    return (shape_is_inside(pos.cx, pos.cy, BALL_BIT, NULL, &filled_wire, 0) == NO_GROUP);
+    group = shape_is_inside(pos.cx, pos.cy, BALL_BIT, NULL, &filled_wire, 0);
+    if (group == NO_GROUP)
+	return true;
+    /* Ball targets are where the ball should go, not obstacles */
+    gp = groupptr_by_id(group);
+    return gp != NULL && gp->type == TREASURE;
 }
 
 /*
@@ -493,7 +525,12 @@ static bool Smart_empty_space_for_ball(int bx, int by)
 static uint32_t	*PassCache;
 static int	PassCacheW, PassCacheH;
 
-static bool Smart_block_passable(player_t *pl, int bx, int by)
+/*
+ * Block passability.  BallAreas count as solid for path planning only when
+ * ballarea_solid is set; near-field avoidance handles them exactly instead
+ * (Smart_avoid_ballareas), so blocks touching them are never cached.
+ */
+static bool Smart_block_test(player_t *pl, int bx, int by, bool ballarea_solid)
 {
     int group, cx, cy, i, j;
     int delta = BLOCK_CLICKS / 4;
@@ -540,6 +577,10 @@ static bool Smart_block_passable(player_t *pl, int bx, int by)
 		    special = true;
 		    if (!options.targetTeamCollision && gp->team == pl->team)
 			group = NO_GROUP;
+		} else if (gp != NULL && gp->type == TREASURE && gp->hitmask == BALL_BIT) {
+		    special = true;
+		    if (!ballarea_solid)
+			group = NO_GROUP;
 		}
 	    }
 	    if (group != NO_GROUP) {
@@ -552,6 +593,187 @@ static bool Smart_block_passable(player_t *pl, int bx, int by)
     if (!special && slot)
 	*slot = (epoch << 2) | PASS_FREE;
     return true;
+}
+
+static bool Smart_block_passable(player_t *pl, int bx, int by)
+{
+    return Smart_block_test(pl, bx, by, true);
+}
+
+static int Smart_max_turn_per_tick(int eff_level);
+
+/* (Re)build the BallArea outline list when the map's polygons change. */
+static void Smart_ballareas_update(void)
+{
+    int i, k;
+
+    if (BallAreasPdata == pdata && BallAreasNumPolys == num_polys)
+	return;
+
+    free(BallAreas);
+    BallAreas = NULL;
+    NumBallAreas = 0;
+    BallAreasPdata = pdata;
+    BallAreasNumPolys = num_polys;
+
+    for (i = 0; i < num_polys; i++) {
+	group_t *gp = groupptr_by_id(pdata[i].group);
+	smart_ballarea_t *ba, *tmp;
+	int *edges;
+	double x, y, minx, maxx, miny, maxy;
+
+	if (gp == NULL || gp->type != TREASURE || gp->hitmask != BALL_BIT)
+	    continue;
+	if (pdata[i].num_points < 3 || pdata[i].num_points > BALLAREA_MAX_VERTS)
+	    continue;
+	tmp = realloc(BallAreas, (size_t)(NumBallAreas + 1) * sizeof(*BallAreas));
+	if (tmp == NULL)
+	    return;
+	BallAreas = tmp;
+	ba = &BallAreas[NumBallAreas++];
+
+	edges = edgeptr + pdata[i].edges;
+	x = CLICK_TO_PIXEL(pdata[i].pos.cx);
+	y = CLICK_TO_PIXEL(pdata[i].pos.cy);
+	minx = maxx = x;
+	miny = maxy = y;
+	ba->num = pdata[i].num_points;
+	for (k = 0; k < ba->num; k++) {
+	    ba->x[k] = x;
+	    ba->y[k] = y;
+	    minx = MIN(minx, x);
+	    maxx = MAX(maxx, x);
+	    miny = MIN(miny, y);
+	    maxy = MAX(maxy, y);
+	    x += CLICK_TO_PIXEL(edges[2 * k]);
+	    y += CLICK_TO_PIXEL(edges[2 * k + 1]);
+	}
+	ba->cx = (minx + maxx) / 2.0;
+	ba->cy = (miny + maxy) / 2.0;
+	ba->radius = LENGTH(maxx - minx, maxy - miny) / 2.0;
+    }
+}
+
+/*
+ * Signed distance (pixels) from (px, py) to a BallArea outline, negative
+ * inside.  (*nx, *ny) is the unit normal pointing away from the box.
+ */
+static double Smart_ballarea_dist(const smart_ballarea_t *ba, double px, double py,
+				  double *nx, double *ny)
+{
+    double best = 1e19, qbx = 0.0, qby = 0.0;
+    bool inside = false;
+    int k, n = ba->num;
+
+    for (k = 0; k < n; k++) {
+	double ax = WRAP_DX(ba->x[k] - px);
+	double ay = WRAP_DY(ba->y[k] - py);
+	double cx = WRAP_DX(ba->x[(k + 1) % n] - px);
+	double cy = WRAP_DY(ba->y[(k + 1) % n] - py);
+	double ex = cx - ax, ey = cy - ay;
+	double len2 = ex * ex + ey * ey;
+	double t = (len2 > 0.0) ? -(ax * ex + ay * ey) / len2 : 0.0;
+	double qx, qy, d2;
+
+	LIMIT(t, 0.0, 1.0);
+	qx = ax + ex * t;
+	qy = ay + ey * t;
+	d2 = qx * qx + qy * qy;
+	if (d2 < best) {
+	    best = d2;
+	    qbx = qx;
+	    qby = qy;
+	}
+	/* Crossing test of the ray from the point along +x */
+	if ((ay > 0.0) != (cy > 0.0) && ax - ay * ex / ey > 0.0)
+	    inside = !inside;
+    }
+    best = sqrt(best);
+    if (best > 1e-6) {
+	*nx = -qbx / best;
+	*ny = -qby / best;
+    } else {
+	*nx = 1.0;
+	*ny = 0.0;
+    }
+    if (inside) {
+	*nx = -*nx;
+	*ny = -*ny;
+	return -best;
+    }
+    return best;
+}
+
+/* Smallest distance from a point to any BallArea outline. */
+static double Smart_ballarea_clearance(clpos_t pos)
+{
+    double px = CLICK_TO_PIXEL(pos.cx), py = CLICK_TO_PIXEL(pos.cy);
+    double best = 1e19, nx, ny;
+    int i;
+
+    Smart_ballareas_update();
+    for (i = 0; i < NumBallAreas; i++)
+	best = MIN(best, Smart_ballarea_dist(&BallAreas[i], px, py, &nx, &ny));
+    return best;
+}
+
+/* Can a ship hover at pos without touching walls or a BallArea? */
+static bool Smart_spot_is_free(player_t *pl, clpos_t pos)
+{
+    blkpos_t blk = Clpos_to_blkpos(pos);
+
+    return Smart_block_test(pl, blk.bx, blk.by, false)
+	&& Smart_ballarea_clearance(pos) > SHIP_SZ + 4.0;
+}
+
+/*
+ * Limit the desired velocity so the ship can always stop before touching a
+ * BallArea.  Only the velocity component towards a box is limited, so close
+ * fly-bys stay possible.  Returns true if the ship must brake right now.
+ */
+static bool Smart_avoid_ballareas(player_t *pl, double *des_vx, double *des_vy)
+{
+    robot_smart_data_t *my_data = Robot_smart_get_data(pl);
+    double px = CLICK_TO_PIXEL(pl->pos.cx);
+    double py = CLICK_TO_PIXEL(pl->pos.cy);
+    /* Assume only part of full thrust for braking; a towed ball adds its mass. */
+    double acc = 0.5 * MAX_PLAYER_POWER
+		 / MAX(pl->mass + (BIT(pl->have, HAS_BALL) ? options.ballMass : 0.0), 1.0);
+    /*
+     * Time to turn the ship around before braking thrust takes effect.
+     * Bots act once per game time unit, which is also the unit of velocity.
+     */
+    double react = (RES / 2.0) / Smart_max_turn_per_tick(Smart_get_effective_level(my_data))
+		   + 1.0;
+    double reach = 4.0 * BLOCK_SZ + pl->velocity * (react + 10.0);
+    bool urgent = false;
+    int i;
+
+    Smart_ballareas_update();
+    for (i = 0; i < NumBallAreas; i++) {
+	const smart_ballarea_t *ba = &BallAreas[i];
+	double nx, ny, dist, clear, v_allow, approach;
+
+	if (LENGTH(WRAP_DX(ba->cx - px), WRAP_DY(ba->cy - py)) - ba->radius > reach)
+	    continue;
+
+	dist = Smart_ballarea_dist(ba, px, py, &nx, &ny);
+	clear = dist - SHIP_SZ;
+	if (clear > 0.0)
+	    v_allow = acc * (sqrt(react * react + 2.0 * clear / acc) - react);
+	else
+	    v_allow = 0.25 * clear;	/* touching: push out */
+
+	approach = -(*des_vx * nx + *des_vy * ny);
+	if (approach > v_allow) {
+	    *des_vx += nx * (approach - v_allow);
+	    *des_vy += ny * (approach - v_allow);
+	}
+	approach = -(pl->vel.x * nx + pl->vel.y * ny);
+	if (approach > 0.5 && approach > 0.8 * v_allow)
+	    urgent = true;
+    }
+    return urgent;
 }
 
 static bool Smart_has_line_of_sight(player_t *pl, clpos_t from, clpos_t to, bool for_ball)
@@ -1115,7 +1337,8 @@ static void Smart_scan_environment(player_t *pl,
 	    int bx = (int)((px + c * d) / BLOCK_SZ);
 	    int by = (int)((py + s * d) / BLOCK_SZ);
 
-	    if (!Smart_block_passable(pl, bx, by)) {
+	    /* BallAreas are handled exactly by Smart_avoid_ballareas() */
+	    if (!Smart_block_test(pl, bx, by, false)) {
 		if (vel_proj > 0.5) {
 		    double t_impact = d / MAX(vel_proj, 1.0);
 		    if (t_impact < 10.0) {
@@ -1323,6 +1546,301 @@ static void Smart_scan_environment(player_t *pl,
 }
 
 /* =========================================================================
+ * Ball Towing Flight Controller
+ * ========================================================================= */
+
+/* Point at dist pixels from pos in direction dir (dir units). */
+static clpos_t Smart_offset_pos(clpos_t pos, int dir, double dist)
+{
+    pos.cx += PIXEL_TO_CLICK(tcos(MOD2(dir, RES)) * dist);
+    pos.cy += PIXEL_TO_CLICK(tsin(MOD2(dir, RES)) * dist);
+    return World_wrap_clpos(pos);
+}
+
+/* The ball we are towing, or NULL. */
+static ballobject_t *Smart_carried_ball(player_t *pl)
+{
+    int i;
+
+    if (!BIT(pl->have, HAS_BALL))
+	return NULL;
+    for (i = 0; i < NumObjs; i++) {
+	if (Obj[i]->type == OBJ_BALL && Obj[i]->id == pl->id)
+	    return BALL_PTR(Obj[i]);
+    }
+    return NULL;
+}
+
+/*
+ * Velocity correction keeping the towed ball off walls: rays from the ball
+ * along its motion; the strongest needed braking (with the pair's real
+ * deceleration acc) is returned.
+ */
+static vector_t Smart_ball_wall_brake(ballobject_t *ball, double acc)
+{
+    vector_t brake = { 0.0, 0.0 };
+    double bx = CLICK_TO_PIXEL(ball->pos.cx);
+    double by = CLICK_TO_PIXEL(ball->pos.cy);
+    double v = LENGTH(ball->vel.x, ball->vel.y);
+    double reach = v * v / (2.0 * acc) + v * 2.0 + BLOCK_SZ;
+    double worst = 0.0;
+    int i;
+
+    LIMIT(reach, 2.0 * BLOCK_SZ, 12.0 * BLOCK_SZ);
+    for (i = 0; i < 16; i++) {
+	int ray_dir = (i * RES) / 16;
+	double c = tcos(ray_dir), s = tsin(ray_dir);
+	double vel_proj = ball->vel.x * c + ball->vel.y * s;
+	double d;
+
+	if (vel_proj <= 0.5)
+	    continue;
+	for (d = BLOCK_SZ * 0.45; d <= reach; d += BLOCK_SZ * 0.45) {
+	    int x = (int)floor((bx + c * d) / BLOCK_SZ);
+	    int y = (int)floor((by + s * d) / BLOCK_SZ);
+	    bool blocked;
+
+	    if (BIT(world->rules->mode, WRAP_PLAY)) {
+		x = WRAP_XBLOCK(x);
+		y = WRAP_YBLOCK(y);
+	    }
+	    blocked = (x < 0 || x >= world->x || y < 0 || y >= world->y
+		       || !Smart_empty_space_for_ball(x, y));
+	    if (blocked) {
+		double room = MAX(d - 0.5 * BLOCK_SZ - options.ballRadius, 0.0);
+		double excess = vel_proj - sqrt(2.0 * acc * room);
+
+		if (excess > worst) {
+		    worst = excess;
+		    brake.x = -c * excess;
+		    brake.y = -s * excess;
+		}
+		break;
+	    }
+	}
+    }
+    return brake;
+}
+
+/* Is the ship out of the released ball's path? */
+static bool Smart_clear_of_ball_path(player_t *pl, ballobject_t *ball)
+{
+    double v = LENGTH(ball->vel.x, ball->vel.y);
+    double rx = WRAP_DX(CLICK_TO_PIXEL(pl->pos.cx - ball->pos.cx));
+    double ry = WRAP_DY(CLICK_TO_PIXEL(pl->pos.cy - ball->pos.cy));
+    double ux, uy;
+
+    if (v < 1.0)
+	return false;
+    ux = ball->vel.x / v;
+    uy = ball->vel.y / v;
+    return rx * ux + ry * uy < 0.0
+	|| fabs(rx * uy - ry * ux) > SHIP_SZ + options.ballRadius + 8.0;
+}
+
+/*
+ * Flight controller while towing a ball.  The ball is heavier than the ship
+ * and hangs on a stiff, barely damped spring, so steering the ship alone
+ * makes the pair jerk and oscillate.  Instead:
+ * - the pair's centre of mass is flown, with the acceleration the pair
+ *   really has (thrust / total mass) and slowing down before turns,
+ * - the ship pulls away whenever the connector compresses, damping the
+ *   spring oscillation (it can only thrust forward, so only this half),
+ * - the pair's orientation is held: normally the ship leads in the direction
+ *   of travel.  With throw_at set it swings out beside the ball's line to
+ *   the target, so the ball can be released past the ship.
+ */
+static void Smart_fly_with_ball(player_t *pl, ballobject_t *ball, clpos_t target_pos,
+				double desired_speed, vector_t repulse_vec,
+				const clpos_t *throw_at)
+{
+    robot_smart_data_t *my_data = Robot_smart_get_data(pl);
+    int eff_level = Smart_get_effective_level(my_data);
+    double ms = MAX(pl->mass, 1.0), mb = MAX(ball->mass, 1.0), m = ms + mb;
+    double acc = MAX_PLAYER_POWER / m;
+    double rx = WRAP_DX(CLICK_TO_PIXEL(pl->pos.cx - ball->pos.cx));
+    double ry = WRAP_DY(CLICK_TO_PIXEL(pl->pos.cy - ball->pos.cy));
+    double len = MAX(LENGTH(rx, ry), 1.0);
+    double dx = rx / len, dy = ry / len;	/* ball -> ship */
+    double px = -dy, py = dx;			/* D turned +90 degrees */
+    double vcx = (ms * pl->vel.x + mb * ball->vel.x) / m;
+    double vcy = (ms * pl->vel.y + mb * ball->vel.y) / m;
+    double vrx = pl->vel.x - ball->vel.x, vry = pl->vel.y - ball->vel.y;
+    double v_along = vrx * dx + vry * dy, v_tan = vrx * px + vry * py;
+    double tx, ty, dist, speed, des_x = 0.0, des_y = 0.0;
+    double ux, uy, ulen, phi, phi_t = 0.0, v_t_des, f_tan;
+    double fx, fy, sx, sy, proj, ex, ey, e_par, des_len, cl_x, cl_y;
+    bool emergency;
+    vector_t brake;
+
+    speed = desired_speed * my_data->genes.speed_factor;
+    LIMIT(speed, 4.0, 14.0 + 14.0 * eff_level / 100.0);
+
+    if (throw_at != NULL) {
+	/* Fly the centre of mass parallel to the ball's line to the target */
+	tx = WRAP_DX(CLICK_TO_PIXEL(throw_at->cx - ball->pos.cx));
+	ty = WRAP_DY(CLICK_TO_PIXEL(throw_at->cy - ball->pos.cy));
+	dist = LENGTH(tx, ty);
+    } else {
+	double v_end = 3.0;
+
+	/* Target relative to the centre of mass */
+	tx = WRAP_DX(CLICK_TO_PIXEL(target_pos.cx - pl->pos.cx)) + rx * mb / m;
+	ty = WRAP_DY(CLICK_TO_PIXEL(target_pos.cy - pl->pos.cy)) + ry * mb / m;
+	dist = LENGTH(tx, ty);
+
+	/*
+	 * Following a path: plan the speed backwards over all remaining
+	 * waypoints, so straight runs are flown fast and the pair still has
+	 * room to slow down for every later turn.
+	 */
+	if (my_data->cur_waypoint < my_data->num_waypoints
+	    && my_data->waypoints[my_data->cur_waypoint].cx == target_pos.cx
+	    && my_data->waypoints[my_data->cur_waypoint].cy == target_pos.cy) {
+	    double in_x = tx, in_y = ty;	/* leg arriving at waypoint k */
+	    int k;
+
+	    v_end = 0.5 * speed;		/* end of the planned path */
+	    for (k = my_data->num_waypoints - 1; k > my_data->cur_waypoint; k--) {
+		clpos_t a = my_data->waypoints[k - 1], b = my_data->waypoints[k];
+		double lx = WRAP_DX(CLICK_TO_PIXEL(b.cx - a.cx));
+		double ly = WRAP_DY(CLICK_TO_PIXEL(b.cy - a.cy));
+
+		v_end = sqrt(v_end * v_end + 1.2 * acc * LENGTH(lx, ly));
+		/* Speed allowed at waypoint k - 1, turning onto this leg */
+		if (k - 1 == my_data->cur_waypoint) {
+		    in_x = tx;
+		    in_y = ty;
+		} else {
+		    clpos_t z = my_data->waypoints[k - 2];
+		    in_x = WRAP_DX(CLICK_TO_PIXEL(a.cx - z.cx));
+		    in_y = WRAP_DY(CLICK_TO_PIXEL(a.cy - z.cy));
+		}
+		if (LENGTH(in_x, in_y) > 1.0 && LENGTH(lx, ly) > 1.0) {
+		    double c = (in_x * lx + in_y * ly) / (LENGTH(in_x, in_y) * LENGTH(lx, ly));
+		    v_end = MIN(v_end, MAX(3.0, speed * (1.0 + c) / 2.0));
+		}
+	    }
+	}
+	speed = MIN(speed, sqrt(v_end * v_end + 1.2 * acc * dist));
+    }
+    if (dist > 1.0) {
+	des_x = tx / dist * speed;
+	des_y = ty / dist * speed;
+    }
+
+    /* Keep ship and ball off walls, ship off BallAreas */
+    des_x += 0.5 * repulse_vec.x;
+    des_y += 0.5 * repulse_vec.y;
+    brake = Smart_ball_wall_brake(ball, 0.6 * acc);
+    des_x += brake.x;
+    des_y += brake.y;
+    cl_x = des_x;
+    cl_y = des_y;
+    Smart_avoid_ballareas(pl, &des_x, &des_y);
+    emergency = LENGTH(brake.x, brake.y) > 0.5
+		|| LENGTH(des_x - cl_x, des_y - cl_y) > 0.5;
+
+    /*
+     * Centre of mass velocity control.  Braking means turning towards the
+     * ball, so a small overspeed along the track is simply coasted out.
+     */
+    ex = des_x - vcx;
+    ey = des_y - vcy;
+    des_len = LENGTH(des_x, des_y);
+    if (des_len > 0.5) {
+	e_par = (ex * des_x + ey * des_y) / des_len;
+	if (e_par < 0.0) {
+	    if (-e_par < 0.25 * des_len + 1.5) {
+		ex -= e_par * des_x / des_len;
+		ey -= e_par * des_y / des_len;
+	    } else
+		emergency = true;
+	}
+    }
+    fx = m * 0.6 * ex;
+    fy = m * 0.6 * ey;
+
+    /* Orientation control: angle of ball->ship relative to the reference */
+    if (throw_at != NULL) {
+	ux = tx;
+	uy = ty;
+    } else {
+	ux = des_x;
+	uy = des_y;
+    }
+    ulen = LENGTH(ux, uy);
+    if (ulen > 0.5) {
+	ux /= ulen;
+	uy /= ulen;
+	phi = atan2(ux * dy - uy * dx, ux * dx + uy * dy);
+	if (throw_at != NULL) {
+	    if (my_data->throw_side == 0) {
+		clpos_t side = Smart_offset_pos(ball->pos,
+						(int)(findDir(ux, uy) + 0.5) + RES / 4, len);
+		my_data->throw_side = (phi > 0.2 || (phi > -0.2 && Smart_spot_is_free(pl, side)))
+				      ? 1 : -1;
+	    }
+	    phi_t = my_data->throw_side * PI / 2.0;
+	}
+	phi = phi_t - phi;
+	if (phi > PI)
+	    phi -= 2.0 * PI;
+	else if (phi < -PI)
+	    phi += 2.0 * PI;
+	v_t_des = 0.8 * phi * len;
+	LIMIT(v_t_des, -8.0, 8.0);
+	f_tan = ms * 0.5 * (v_t_des - v_tan);
+	fx += px * f_tan;
+	fy += py * f_tan;
+    }
+
+    /*
+     * Keep the ball behind: unless we must brake, never push towards the
+     * ball.  A ship that ended up behind it swings around it via the
+     * orientation control instead of ramming it.
+     */
+    if (throw_at == NULL && !emergency) {
+	double f_par = fx * dx + fy * dy;
+
+	if (f_par < 0.0) {
+	    fx -= f_par * dx;
+	    fy -= f_par * dy;
+	}
+    }
+
+    /* Damp the spring: pull away while the connector is being compressed */
+    if (v_along < 0.0) {
+	double mu = ms * mb / m;
+	double omega = sqrt(options.ballConnectorSpringConstant
+			    / MAX(options.ballConnectorLength, 1.0) / mu);
+	double c_d = 2.0 * 0.6 * omega * ms * (0.4 + 0.6 * eff_level / 100.0);
+
+	fx += dx * -c_d * v_along;
+	fy += dy * -c_d * v_along;
+    }
+
+    /* Emergency: the ship itself approaching a BallArea too fast */
+    sx = pl->vel.x;
+    sy = pl->vel.y;
+    if (Smart_avoid_ballareas(pl, &sx, &sy)) {
+	fx += ms * 2.0 * (sx - pl->vel.x);
+	fy += ms * 2.0 * (sy - pl->vel.y);
+    }
+
+    if (LENGTH(fx, fy) > 0.5 * MIN_PLAYER_POWER)
+	Smart_steer_to_dir(pl, MOD2((int)(findDir(fx, fy) + 0.5), RES));
+
+    proj = fx * tcos(pl->dir) + fy * tsin(pl->dir);
+    if (proj > 0.5 * MIN_PLAYER_POWER && !my_data->cut_thrust) {
+	pl->power = proj;
+	LIMIT(pl->power, MIN_PLAYER_POWER, MAX_PLAYER_POWER);
+	Thrust(pl, true);
+    } else
+	Thrust(pl, false);
+}
+
+/* =========================================================================
  * Desired Velocity Vector Flight Controller (PD Thrust & Direction)
  * ========================================================================= */
 
@@ -1330,12 +1848,19 @@ static void Smart_fly_towards(player_t *pl, clpos_t target_pos, double desired_s
 			      vector_t repulse_vec, int *aim_override_dir)
 {
     robot_smart_data_t *my_data = Robot_smart_get_data(pl);
+    ballobject_t *towed = Smart_carried_ball(pl);
     double dx = WRAP_DX(CLICK_TO_PIXEL(target_pos.cx - pl->pos.cx));
     double dy = WRAP_DY(CLICK_TO_PIXEL(target_pos.cy - pl->pos.cy));
     double dist = LENGTH(dx, dy);
     double des_vx = 0.0, des_vy = 0.0;
     double err_vx, err_vy, err_mag;
     int thrust_dir;
+    bool must_brake;
+
+    if (towed != NULL) {
+	Smart_fly_with_ball(pl, towed, target_pos, desired_speed, repulse_vec, NULL);
+	return;
+    }
 
     desired_speed *= my_data->genes.speed_factor;
     LIMIT(desired_speed, 6.0, 38.0);
@@ -1353,6 +1878,9 @@ static void Smart_fly_towards(player_t *pl, clpos_t target_pos, double desired_s
     des_vx += repulse_vec.x;
     des_vy += repulse_vec.y;
 
+    /* Never approach a deadly BallArea faster than we can stop */
+    must_brake = Smart_avoid_ballareas(pl, &des_vx, &des_vy);
+
     /* Compute velocity error vector (desired_vel - current_vel) */
     err_vx = des_vx - pl->vel.x;
     err_vy = des_vy - pl->vel.y;
@@ -1367,7 +1895,8 @@ static void Smart_fly_towards(player_t *pl, clpos_t target_pos, double desired_s
 	 * On non-firing frames (or when accelerating/dodging), steer in thrust_dir!
 	 */
 	double repulse_mag = LENGTH(repulse_vec.x, repulse_vec.y);
-	if (repulse_mag > 10.0 || pl->velocity < 3.5 || (err_mag > 9.0 && (my_data->robot_count & 1))) {
+	if (must_brake || repulse_mag > 10.0 || pl->velocity < 3.5
+	    || (err_mag > 9.0 && (my_data->robot_count & 1))) {
 	    CLR_BIT(pl->used, HAS_SHOT | HAS_LASER);
 	    Smart_steer_to_dir(pl, thrust_dir);
 	    pl->power = MAX_PLAYER_POWER;
@@ -1385,7 +1914,7 @@ static void Smart_fly_towards(player_t *pl, clpos_t target_pos, double desired_s
 	Smart_steer_to_dir(pl, thrust_dir);
 	if (err_mag > 1.2) {
 	    int delta = MOD2(thrust_dir - pl->dir, RES);
-	    pl->power = (err_mag > 5.0) ? MAX_PLAYER_POWER : (MAX_PLAYER_POWER * 0.75);
+	    pl->power = (err_mag > 5.0 || must_brake) ? MAX_PLAYER_POWER : (MAX_PLAYER_POWER * 0.75);
 	    Thrust(pl, (delta < RES / 4 || delta > 3 * RES / 4));
 	} else {
 	    Thrust(pl, false);
@@ -1522,11 +2051,87 @@ static void Smart_engage_enemy(player_t *pl, player_t *enemy, double enemy_dist,
  * Capture The Flag (CTF) Specialist Handler
  * ========================================================================= */
 
+/*
+ * Will the released ball hit the treasure's ball target on its current
+ * course?  Balls fly through BallAreas, so only walls matter.  Low-skill
+ * bots accept a sloppier course.
+ */
+static bool Smart_ball_on_target(player_t *pl, ballobject_t *ball, treasure_t *tr)
+{
+    int eff_level = Smart_get_effective_level(Robot_smart_get_data(pl));
+    double rx = WRAP_DX(CLICK_TO_PIXEL(tr->pos.cx - ball->pos.cx));
+    double ry = WRAP_DY(CLICK_TO_PIXEL(tr->pos.cy - ball->pos.cy));
+    double vx = ball->vel.x, vy = ball->vel.y;
+    double v2 = vx * vx + vy * vy;
+    double t, miss, tol;
+
+    if (v2 < sqr(4.0) || LENGTH(rx, ry) > 14.0 * BLOCK_SZ)
+	return false;
+    t = (rx * vx + ry * vy) / v2;	/* time of closest approach */
+    if (t <= 0.0)
+	return false;
+    miss = LENGTH(rx - vx * t, ry - vy * t);
+    tol = options.ballRadius + 8.0 + (100 - eff_level) * 0.2;
+    return miss < tol && Smart_has_line_of_sight(pl, ball->pos, tr->pos, true);
+}
+
+/*
+ * Point to swing out to after a delivery run without release: off to the
+ * side of the treasure so the next run comes in straight, with the ball
+ * having a clear line to the target.
+ */
+static clpos_t Smart_pick_swing_out_point(player_t *pl, treasure_t *tr)
+{
+    static const int offs[] = { RES / 4, -RES / 4, RES / 6, -RES / 6,
+				RES / 3, -RES / 3, 0 };
+    int base = (int)(Wrap_cfindDir(pl->pos.cx - tr->pos.cx, pl->pos.cy - tr->pos.cy) + 0.5);
+    double dist;
+    int k;
+
+    for (dist = 8.0 * BLOCK_SZ; dist >= 5.0 * BLOCK_SZ; dist -= 3.0 * BLOCK_SZ) {
+	for (k = 0; k < (int)NELEM(offs); k++) {
+	    clpos_t p = Smart_offset_pos(tr->pos, base + offs[k], dist);
+	    if (Smart_spot_is_free(pl, p)
+		&& Smart_has_line_of_sight(pl, p, tr->pos, true))
+		return p;
+	}
+    }
+    return Smart_offset_pos(tr->pos, base, 6.0 * BLOCK_SZ);
+}
+
+/*
+ * Where to fly to grab the enemy ball: the connector arms anywhere within
+ * ballConnectorLength, so hover well inside that range on our side of the
+ * ball instead of flying into its deadly BallArea.
+ */
+static clpos_t Smart_pick_pickup_spot(player_t *pl, treasure_t *tr)
+{
+    static const int offs[] = { 0, 8, -8, 16, -16, 24, -24, 32, -32, 48, -48, 64 };
+    clpos_t bpos = tr->pos;
+    double r = 0.55 * options.ballConnectorLength;
+    int base, i, k;
+
+    for (i = 0; i < NumObjs; i++) {
+	if (Obj[i]->type == OBJ_BALL && Obj[i]->id == NO_ID
+	    && BALL_PTR(Obj[i])->ball_treasure == tr) {
+	    bpos = Obj[i]->pos;
+	    break;
+	}
+    }
+
+    base = (int)(Wrap_cfindDir(pl->pos.cx - bpos.cx, pl->pos.cy - bpos.cy) + 0.5);
+    for (k = 0; k < (int)NELEM(offs); k++) {
+	clpos_t p = Smart_offset_pos(bpos, base + offs[k] * RES / 128, r);
+	if (Smart_spot_is_free(pl, p))
+	    return p;
+    }
+    return Smart_offset_pos(bpos, base, r);
+}
+
 static bool Smart_handle_ctf(player_t *pl, vector_t repulse_vec,
 			     int *aim_dir, bool *has_aim_dir)
 {
     robot_smart_data_t *my_data = Robot_smart_get_data(pl);
-    int eff_level = Smart_get_effective_level(my_data);
     int i;
     int home_tr = NO_IND, enemy_tr = NO_IND;
     double home_tr_dist = 1e19, enemy_tr_dist = 1e19;
@@ -1553,48 +2158,83 @@ static bool Smart_handle_ctf(player_t *pl, vector_t repulse_vec,
 	}
     }
 
-    /* Case 1: We are carrying a ball -> Navigate home & catapult ball into treasure */
-    if ((BIT(pl->have, HAS_BALL) || pl->ball != NULL) && home_tr != NO_IND) {
-	treasure_t *htr = Treasure_by_index(home_tr);
+    /*
+     * Case 0: Connector is armed (we came within ballConnectorLength) but the
+     * ball is not attached yet.  It attaches once we are a connector length
+     * away again, so back off the way we came instead of closing in.
+     */
+    if (pl->ball != NULL && !BIT(pl->have, HAS_BALL)) {
 	ballobject_t *ball = pl->ball;
+	double ax = WRAP_DX(CLICK_TO_PIXEL(pl->pos.cx - ball->pos.cx));
+	double ay = WRAP_DY(CLICK_TO_PIXEL(pl->pos.cy - ball->pos.cy));
+	double alen = MAX(LENGTH(ax, ay), 1.0);
+	double pull = 2.5 * options.ballConnectorLength;
+	clpos_t away;
 
-	if (ball == NULL) {
-	    for (i = 0; i < NumObjs; i++) {
-		if (Obj[i]->type == OBJ_BALL && Obj[i]->id == pl->id) {
-		    ball = BALL_PTR(Obj[i]);
-		    break;
-		}
-	    }
+	away.cx = ball->pos.cx + PIXEL_TO_CLICK(ax / alen * pull);
+	away.cy = ball->pos.cy + PIXEL_TO_CLICK(ay / alen * pull);
+	away = World_wrap_clpos(away);
+	SET_BIT(pl->used, USES_CONNECTOR);
+	Smart_fly_towards(pl, away, 10.0, repulse_vec, NULL);
+	return true;
+    }
+
+    /* Case 1: We are carrying a ball -> Navigate home & release it on target */
+    if (BIT(pl->have, HAS_BALL) && home_tr != NO_IND) {
+	treasure_t *htr = Treasure_by_index(home_tr);
+	ballobject_t *ball = Smart_carried_ball(pl);
+
+	if (ball != NULL && Smart_ball_on_target(pl, ball, htr)
+	    && Smart_clear_of_ball_path(pl, ball)) {
+	    Detach_ball(pl, NULL);
+	    CLR_BIT(pl->used, USES_CONNECTOR);
+	    my_data->last_thrown_ball = my_data->robot_count;
+	    my_data->throw_side = 0;
+	    my_data->deliver_retreat = false;
+	    my_data->accumulated_reward += 6.0;
+	    return true;
 	}
 
-	if (ball != NULL && eff_level >= 50) {
-	    double bspeed = LENGTH(ball->vel.x, ball->vel.y);
-	    int bdir = MOD2((int)(findDir(ball->vel.x, ball->vel.y) + 0.5), RES);
-	    int tdir = MOD2((int)(Wrap_cfindDir(htr->pos.cx - ball->pos.cx,
-						htr->pos.cy - ball->pos.cy) + 0.5), RES);
-	    int delta_dir = MOD2(tdir - bdir, RES);
-
-	    if ((delta_dir <= 3 || delta_dir >= RES - 3)
-		&& bspeed > 7.5
-		&& home_tr_dist < 14.0 * BLOCK_SZ
-		&& Smart_has_line_of_sight(pl, ball->pos, htr->pos, true)) {
-		Detach_ball(pl, NULL);
-		CLR_BIT(pl->used, USES_CONNECTOR);
-		my_data->last_thrown_ball = my_data->robot_count;
-		my_data->accumulated_reward += 6.0;
+	/* Too close without a release: swing out for another straight run */
+	if (!my_data->deliver_retreat && home_tr_dist < 2.5 * BLOCK_SZ) {
+	    my_data->deliver_pt = Smart_pick_swing_out_point(pl, htr);
+	    my_data->deliver_retreat = true;
+	}
+	if (my_data->deliver_retreat) {
+	    double d = Wrap_length(my_data->deliver_pt.cx - pl->pos.cx,
+				   my_data->deliver_pt.cy - pl->pos.cy) / CLICK;
+	    if (home_tr_dist > 7.0 * BLOCK_SZ || d < 1.5 * BLOCK_SZ)
+		my_data->deliver_retreat = false;
+	    else {
+		clpos_t wp = Smart_find_next_waypoint(pl, my_data->deliver_pt);
+		my_data->throw_side = 0;
+		Smart_fly_towards(pl, wp, 12.0, repulse_vec, NULL);
 		return true;
 	    }
 	}
 
+	/*
+	 * Throwing run once the ball has a clear line to the target: swing the
+	 * ship out beside the ball's line and release when the ball is on course.
+	 */
+	if (ball != NULL
+	    && home_tr_dist < 10.0 * BLOCK_SZ
+	    && Smart_has_line_of_sight(pl, ball->pos, htr->pos, true)) {
+	    Smart_fly_with_ball(pl, ball, htr->pos, 12.0, repulse_vec, &htr->pos);
+	    return true;
+	}
+	my_data->throw_side = 0;
+
 	{
 	    clpos_t wp = Smart_find_next_waypoint(pl, htr->pos);
-	    Smart_fly_towards(pl, wp, 14.0, repulse_vec, has_aim_dir ? aim_dir : NULL);
+	    /* Speed is planned along the path by the towing controller */
+	    Smart_fly_towards(pl, wp, 24.0, repulse_vec, has_aim_dir ? aim_dir : NULL);
 	    return true;
 	}
     }
 
     /* Case 2: Check for loose enemy balls or enemy carriers to intercept */
-    {
+    if (!WITHIN(my_data->robot_count, my_data->last_thrown_ball, 3 * FPS)) {
 	int loose_ball_i = NO_IND;
 	double loose_ball_dist = 1e19;
 
@@ -1625,9 +2265,13 @@ static bool Smart_handle_ctf(player_t *pl, vector_t repulse_vec,
     /* Case 3: Go steal enemy treasure */
     if (enemy_tr != NO_IND) {
 	treasure_t *etr = Treasure_by_index(enemy_tr);
-	clpos_t wp = Smart_find_next_waypoint(pl, etr->pos);
+	clpos_t spot = Smart_pick_pickup_spot(pl, etr);
+	clpos_t wp = Smart_find_next_waypoint(pl, spot);
+	double d = Wrap_length(spot.cx - pl->pos.cx, spot.cy - pl->pos.cy) / CLICK;
+
 	SET_BIT(pl->used, USES_CONNECTOR);
-	Smart_fly_towards(pl, wp, 16.0, repulse_vec, has_aim_dir ? aim_dir : NULL);
+	Smart_fly_towards(pl, wp, (d < 4.0 * BLOCK_SZ) ? 9.0 : 16.0,
+			  repulse_vec, has_aim_dir ? aim_dir : NULL);
 	return true;
     }
 
@@ -1951,10 +2595,15 @@ static void Robot_smart_play(player_t *pl)
 	Smart_rl_step(pl, rl_state);
     }
 
-    /* Engage enemy with ballistic lead prediction if in range */
+    /*
+     * Engage enemy with ballistic lead prediction if in range.  While towing
+     * a ball the ship's heading belongs to the towing controller: only fire
+     * when the aim happens to fit.
+     */
     if (best_enemy != NULL) {
 	Smart_engage_enemy(pl, best_enemy, best_enemy_dist, best_enemy_los,
-			   LENGTH(repulse_vec.x, repulse_vec.y) > 10.0,
+			   LENGTH(repulse_vec.x, repulse_vec.y) > 10.0
+			   || BIT(pl->have, HAS_BALL),
 			   &aim_dir, &has_aim_dir);
     }
 
@@ -1972,6 +2621,11 @@ static void Robot_smart_play(player_t *pl)
 	Smart_fly_towards(pl, wp, 24.0, repulse_vec, has_aim_dir ? &aim_dir : NULL);
 	return;
     }
+
+    /* Towing (or about to tow) a ball takes priority over everything else */
+    if ((BIT(pl->have, HAS_BALL) || pl->ball != NULL)
+	&& Smart_handle_ctf(pl, repulse_vec, &aim_dir, &has_aim_dir))
+	return;
 
     /* Critical fuel -> navigate to nearest fuel pack or fuel station */
     if (pl->fuel.sum < my_data->fuel_l2 || my_data->current_tactic == TACTIC_HARVEST_REFUEL) {
