@@ -32,6 +32,7 @@ target_compile_features(xpilot-tng-mapeditor PRIVATE cxx_std_20)
 target_include_directories(xpilot-tng-mapeditor PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${PROJECT_SOURCE_DIR}/src/launcher
+    ${PROJECT_SOURCE_DIR}/src/common
     ${imgui_SOURCE_DIR}
     ${imgui_SOURCE_DIR}/backends
 )

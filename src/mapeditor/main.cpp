@@ -5,6 +5,7 @@
 #include <backends/imgui_impl_sdlrenderer3.h>
 
 #include <cstdlib>
+#include "tng_app_icon.h"
 #include <filesystem>
 #include <iostream>
 #include "editor_app.h"
@@ -129,6 +130,7 @@ int main(int argc, char* argv[]) {
         SDL_Quit();
         return 1;
     }
+    tng_set_window_icon(window);
     SDL_SetWindowMinimumSize(window, 1000, 640);
     SDL_Renderer* renderer = SDL_CreateRenderer(window, nullptr);
     if (!renderer) {

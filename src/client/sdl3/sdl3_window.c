@@ -4,6 +4,7 @@
  */
 
 #include "sdl3_client.h"
+#include "tng_app_icon.h"
 
 SDL_Window   *tng_window = NULL;
 SDL_Renderer *tng_renderer = NULL;
@@ -42,6 +43,8 @@ int SDL3_Init_Window(int w, int h)
         fprintf(stderr, "Failed to create SDL3 window: %s\n", SDL_GetError());
         return -1;
     }
+
+    tng_set_window_icon(tng_window);
 
     if (fullScreen) {
         int actual_w = 0, actual_h = 0;

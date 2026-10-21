@@ -7,6 +7,7 @@
 #include <iostream>
 #include <filesystem>
 #include "launcher_app.h"
+#include "tng_app_icon.h"
 
 namespace fs = std::filesystem;
 
@@ -165,6 +166,8 @@ int main(int argc, char* argv[]) {
         SDL_Quit();
         return 1;
     }
+
+    tng_set_window_icon(window);
 
     SDL_Renderer* renderer = SDL_CreateRenderer(window, nullptr);
     if (!renderer) {
