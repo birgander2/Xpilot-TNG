@@ -997,17 +997,18 @@ void Robot_invite(player_t *pl, player_t *inviter)
 }
 
 /*
- * Tell a robot about a ball game event; pl may be any player.
+ * Tell a robot about a game event; pl may be any player, other is the
+ * second player involved (or NULL).
  */
-void Robot_ball_event(player_t *pl, int event)
+void Robot_game_event(player_t *pl, int event, player_t *other)
 {
     robot_type_t *rob_type;
 
     if (pl == NULL || !Player_is_robot(pl) || pl->robot_data_ptr == NULL)
 	return;
     rob_type = &robot_types[pl->robot_data_ptr->robot_types_ind];
-    if (rob_type->robot_ball_event != NULL)
-	(*rob_type->robot_ball_event)(pl, event);
+    if (rob_type->robot_game_event != NULL)
+	(*rob_type->robot_game_event)(pl, event, other);
 }
 
 /*

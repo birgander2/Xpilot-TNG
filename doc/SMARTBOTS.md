@@ -194,7 +194,8 @@ On team maps with treasures (balls), Smartbots play the ball game with dedicated
 #### Picking up the ball
 
 - The connector arms as soon as the ship comes within `ballConnectorLength` of the ball, and the ball attaches when the ship moves out of that range again. The bot therefore flies to a free spot at about half that distance on its own side of the ball, never to the ball or the treasure centre.
-- Once the connector is armed, it backs away until the ball is attached.
+- The connector is switched on only for a deliberate grab: the ball must be within reach **with a clear line to it**. It is never armed through a wall, which used to leave ship and ball stuck on both sides of it. If a towed ball still ends up behind a wall for about a second, the bot lets go and grabs it again.
+- The bot grabs from the side where its chosen route home leaves the ball and pulls the ball out in that direction (see *Ball run routes* below).
 
 #### Towing: flying a ship-and-ball pair
 
@@ -206,6 +207,12 @@ The ball is heavier than the ship and hangs on a stiff, barely damped spring, so
 - keeps the **ball behind the ship** and never pushes towards it, except in an emergency; a small overspeed is simply coasted out,
 - checks the **ball's path for walls** too, not only the ship's,
 - limits its top speed with the skill level.
+
+**Ball run routes:** for every pair "enemy treasure → own treasure" the server computes four clearly different routes once per map (logged with `logRobots`, about 25 ms per direction). Routes are searched on a half-block grid with 20 px wall clearance; further variants come from penalising a corridor around each route found, and routes running mostly inside the corridor of an accepted one are dropped. A route's quality is its estimated flight time with a towed ball, where every corner costs the time to slow down for it, so twisty routes rate badly even when they are short.
+
+Before grabbing the ball the bot picks one route at random, weighted by quality (weight `(best time / time)²`), and routes with a visible enemy on them get almost no weight. Until the ball is grabbed it checks about once per second and picks again if an enemy shows up on its route. On `bloods-smartbots` the short route over the map edge is chosen a bit less than half of the time, each of the other three in roughly 15–20% of the runs.
+
+**Enemies on the route (fine-tuning on the way):** route points are pushed up to 2.5 blocks away from enemies close to them. When the next route point is out of sight, the local path finder leads there; while towing, its path blocks within 6 blocks of visible enemies cost extra (up to four times the normal cost right next to an enemy), so the carrier gets around them. If the bot loses its route for about three seconds, it falls back to the plain path finder.
 
 #### Scoring: the swing throw
 
@@ -220,15 +227,17 @@ Roles are assigned per team about once per second. A bot that already has a role
 
 | Situation | Roles |
 | :--- | :--- |
-| Own ball at home | **Attacker** (the bot closest to the enemy ball), **Defender**, up to two **Escorts** for the carrier or attacker, any further bots attack too |
+| Own ball at home | **Attacker** (the bot closest to the enemy ball), from three bots on a **Defender**, up to two **Escorts** for the carrier or attacker, any further bots attack too. Stealing the ball comes first, so two bots are attacker and escort. |
 | Own ball stolen or loose | Everybody becomes a **Hunter**; with 3 or more free bots one keeps attacking |
 | Towing a ball | **Carrier** (always) |
 
-- **Attacker:** fetches the enemy ball and only fights enemies that are directly in the way (closer than 8 blocks, in line of sight).
+- **Attacker:** fetches the enemy ball and only fights enemies that are directly in the way (closer than 6 blocks, in line of sight; never with the CTF tactic).
 - **Defender:** circles the own treasure at about 4 blocks and fights enemies that come within 16 blocks of it.
-- **Escort:** flies ahead of and beside the carrier, away from the trailing ball, and fights enemies that approach the carrier (within 12 blocks).
-- **Hunter:** intercepts the enemy carrier of the own ball, aiming at its predicted position; if the ball lies loose, it picks it up and brings it home with the same logic as the enemy ball.
-- If the RL picks `TACTIC_CTF_OBJECTIVE`, the bot sticks strictly to its role objective instead of fighting.
+- **Escort:** flies ahead of and beside the carrier, away from the trailing ball, and fights enemies that approach the carrier (within 18 blocks); an enemy carrier is pressed at close range.
+- **Hunter:** intercepts the enemy carrier of the own ball, aiming at its predicted position, and attacks him at close range (3 blocks) as soon as he is in sight within 18 blocks; if the ball lies loose, it picks it up and brings it home with the same logic as the enemy ball.
+- **Carrier:** flies the ball home. While the pair coasts (little thrust needed) and an enemy is within 12 blocks, it turns to it and fires, as human carriers do; as soon as real thrust is needed, flying has priority again.
+- The RL tactic only sets the fighting style (dogfight distance, sniping). Escorts, defenders and hunters always fight in their area, because that is their job; with `TACTIC_CTF_OBJECTIVE` an attacker ignores fights completely.
+- In ball games the RL does not use `TACTIC_EVADE_SURVIVE` or `TACTIC_HARVEST_REFUEL` unless fuel is low, and near walls no longer count as a "threat" for its state.
 
 #### What a team knows (fairness)
 
@@ -289,10 +298,13 @@ Bots receiving high episode rewards (kills, ball scores, survival) propagate the
 | The enemy scored our ball | −20 |
 | Brought our own ball back home | +4 |
 | Released the ball on a goal course | +2 |
+| Stole (attached) an enemy ball | +8 |
+| Killed a ball carrier (extra to the kill) | +15 |
+| Killed an enemy within 16 blocks of our treasure (extra) | +5 |
 | Score change since the last decision | ×0.25, limited to ±3 |
 | Survival, per decision (about once per second) | +0.05 |
 
-A ball score is worth far more than a kill because it wins the round. Bringing the own ball back scores few points, so its reward stays small and below a kill. The score term is capped so a large ball score swing is not counted twice. The server tells the bots about ball events through `Robot_ball_event()`.
+A ball score is worth far more than a kill because it wins the round. Bringing the own ball back scores few points, so its reward stays small and below a kill. The score term is capped so a large ball score swing is not counted twice. The server tells the bots about ball events and kills through `Robot_game_event()`.
 
 ### Brain Persistence (`smartbot_brain.dat`)
 

@@ -318,6 +318,17 @@ std::vector<std::string> OptionsManager::BuildServerArgs(LaunchMode mode, const 
         if (!is_default("reporttometaserver", v)) emit("reporttometaserver", v);
     }
 
+    // The public name and client ports must reach the server even when they equal the launcher's baseline
+    // (the server may not see the same defaults.txt); never emit an empty name.
+    if (mode == LaunchMode::Server) {
+        for (const char* key : {"serverHost", "clientPortStart", "clientPortEnd"}) {
+            std::string lc = Lower(key);
+            std::string v = Get(key);
+            if (!base_.count(lc) || v.empty() || v == "0") continue;
+            emit(lc, v);
+        }
+    }
+
     std::vector<std::string> args;
     if (!map_path.empty()) {
         args.push_back("-mapFileName");

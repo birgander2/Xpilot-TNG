@@ -103,17 +103,19 @@ typedef struct {
     void		(*robot_message)(player_t *robot, const char *str);
     void		(*robot_destroy)(player_t *robot);
     void		(*robot_invite)(player_t *robot, player_t *inviter);
-    void		(*robot_ball_event)(player_t *robot, int event); /* optional */
+    void		(*robot_game_event)(player_t *robot, int event,
+					    player_t *other);	/* optional */
 } robot_type_t;
 
 /*
- * Ball game events reported to robots (see Robot_ball_event()).
+ * Game events reported to robots (see Robot_game_event()).
  */
-enum robot_ball_event_t {
+enum robot_game_event_t {
     ROBOT_BALL_CASHED,		/* this robot scored an enemy ball */
     ROBOT_BALL_WON,		/* a teammate scored an enemy ball */
     ROBOT_BALL_LOST,		/* the enemy scored our ball */
-    ROBOT_BALL_SAVED		/* this robot brought our own ball home */
+    ROBOT_BALL_SAVED,		/* this robot brought our own ball home */
+    ROBOT_KILLED_PLAYER		/* this robot killed 'other' (before it drops a ball) */
 };
 
 /*
@@ -204,7 +206,7 @@ void Robot_delete_type(bool want_smart, bool kicked);
 void Robot_destroy(player_t *robot);
 void Robot_update(bool tick);
 void Robot_invite(player_t *robot, player_t *inviter);
-void Robot_ball_event(player_t *pl, int event);
+void Robot_game_event(player_t *pl, int event, player_t *other);
 const char *Robot_type_name(player_t *robot);
 void Robot_war(player_t *robot, player_t *killer);
 void Robot_reset_war(player_t *robot);

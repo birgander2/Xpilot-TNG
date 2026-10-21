@@ -193,7 +193,7 @@ static robot_type_t robot_default_type = {
     Robot_default_message,
     Robot_default_destroy,
     Robot_default_invite,
-    NULL			/* no ball event handling */
+    NULL			/* no game event handling */
 };
 
 

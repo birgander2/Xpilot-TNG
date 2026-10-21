@@ -92,6 +92,8 @@ static int			RoundCounter = 0;
 #define ASTAR_MAX_WAYPOINTS	32
 #define ASTAR_RECALC_TICKS	18
 
+struct smart_route;
+
 /*
  * Per-instance private data for each smartbot.
  */
@@ -143,6 +145,19 @@ typedef struct robot_smart_data {
     int			throw_side;		/* Swing side (+1/-1) of a throw, 0 = none */
     bool		deliver_retreat;	/* Swinging out for another delivery run */
     clpos_t		deliver_pt;		/* Swing-out point next to the home treasure */
+    int			ball_blocked;		/* Ticks the towed ball is behind a wall */
+    bool		carrier_aim;		/* Towing with an enemy to shoot at close by */
+    int			carrier_aim_dir;	/* Lead direction for that shot */
+    bool		had_enemy_ball;		/* Steal of the towed enemy ball rewarded */
+
+    /* Ball run home: one of the precomputed route variants */
+    bool		route_valid;		/* route below is chosen */
+    struct smart_route	*route;
+    treasure_t		*route_from;		/* Enemy treasure the route starts at */
+    treasure_t		*route_to;		/* Our treasure it leads to */
+    int			route_cur;		/* Next route point */
+    int			route_checked_at;	/* robot_count of the last enemy check */
+    int			route_lost;		/* Ticks without sight of the next point */
 
     /* Team play */
     int			role;			/* enum SmartRole */
@@ -180,7 +195,7 @@ static bool	TreasureAwayKnown[MAX_KNOWN_TREASURES];
 static smart_team_t	SmartTeams[MAX_TEAMS];
 
 /*
- * Q-learning rewards for ball game events (Robot_smart_ball_event).  Scoring
+ * Q-learning rewards for ball game events (Robot_smart_game_event).  Scoring
  * a ball wins the round, so it outweighs everything else; bringing our own
  * ball back scores little and is rewarded less than a kill.
  */
@@ -188,6 +203,9 @@ static smart_team_t	SmartTeams[MAX_TEAMS];
 #define REWARD_BALL_WON		25.0
 #define REWARD_BALL_LOST	-20.0
 #define REWARD_BALL_SAVED	4.0
+#define REWARD_BALL_STOLEN	8.0	/* grabbed an enemy ball (shaping) */
+#define REWARD_KILL_CARRIER	15.0	/* extra for killing a ball carrier */
+#define REWARD_KILL_AT_HOME	5.0	/* extra for a kill near our treasure */
 
 /*
  * BallArea outlines (treasure boxes), in pixels.  Ships die on contact
@@ -222,7 +240,7 @@ static int  Robot_smart_war_on_player(player_t *pl);
 static void Robot_smart_message(player_t *pl, const char *str);
 static void Robot_smart_destroy(player_t *pl);
 static void Robot_smart_invite(player_t *pl, player_t *inviter);
-static void Robot_smart_ball_event(player_t *pl, int event);
+static void Robot_smart_game_event(player_t *pl, int event, player_t *other);
 int         Robot_smart_setup(robot_type_t *type_ptr);
 
 static robot_type_t robot_smart_type = {
@@ -236,7 +254,7 @@ static robot_type_t robot_smart_type = {
     Robot_smart_message,
     Robot_smart_destroy,
     Robot_smart_invite,
-    Robot_smart_ball_event
+    Robot_smart_game_event
 };
 
 static inline robot_smart_data_t *Robot_smart_get_data(player_t *pl)
@@ -417,6 +435,22 @@ static int Smart_encode_rl_state(player_t *pl, double enemy_dist, bool high_thre
     return s;
 }
 
+/*
+ * In ball games the ball matters, not survival or item harvesting: there
+ * the RL only chooses between fighting styles and the plain objective, and
+ * evading or harvesting only with low fuel.
+ */
+static bool Smart_tactic_allowed(int state, int tactic)
+{
+    int fuel_bin = state / (RL_CTF_BINS * RL_THREAT_BINS * RL_DIST_BINS);
+
+    if (!BIT(world->rules->mode, TEAM_PLAY) || Num_treasures() <= 0)
+	return true;
+    if (tactic == TACTIC_EVADE_SURVIVE || tactic == TACTIC_HARVEST_REFUEL)
+	return fuel_bin == 0;
+    return true;
+}
+
 static void Smart_rl_step(player_t *pl, int next_state)
 {
     robot_smart_data_t *my_data = Robot_smart_get_data(pl);
@@ -437,7 +471,7 @@ static void Smart_rl_step(player_t *pl, int next_state)
     my_data->last_deaths = pl->deaths;
 
     /*
-     * Ball scores are rewarded through Robot_smart_ball_event(); cap the
+     * Ball scores are rewarded through Robot_smart_game_event(); cap the
      * plain score signal so its large ball swings are not counted twice.
      */
     {
@@ -460,9 +494,10 @@ static void Smart_rl_step(player_t *pl, int next_state)
     my_data->episode_reward += reward;
 
     if (my_data->learning_enabled && my_data->current_state >= 0) {
-	max_next_q = SharedBrain.q_table[next_state][0];
-	for (a = 1; a < NUM_SMART_TACTICS; a++) {
-	    if (SharedBrain.q_table[next_state][a] > max_next_q)
+	max_next_q = -1e30;
+	for (a = 0; a < NUM_SMART_TACTICS; a++) {
+	    if (Smart_tactic_allowed(next_state, a)
+		&& SharedBrain.q_table[next_state][a] > max_next_q)
 		max_next_q = SharedBrain.q_table[next_state][a];
 	}
 	td_error = my_data->accumulated_reward
@@ -475,15 +510,20 @@ static void Smart_rl_step(player_t *pl, int next_state)
 
     /* Select next tactic using epsilon-greedy scaled by smartRobotLevel */
     eps = my_data->learning_enabled ? 0.02 + (100 - eff_level) * 0.0015 : 0.0;
-    best_a = 0;
-    for (a = 1; a < NUM_SMART_TACTICS; a++) {
-	if (SharedBrain.q_table[next_state][a] > SharedBrain.q_table[next_state][best_a])
+    best_a = -1;
+    for (a = 0; a < NUM_SMART_TACTICS; a++) {
+	if (Smart_tactic_allowed(next_state, a)
+	    && (best_a < 0
+		|| SharedBrain.q_table[next_state][a] > SharedBrain.q_table[next_state][best_a]))
 	    best_a = a;
     }
 
-    if (rfrac() < eps)
-	my_data->current_tactic = (int)(rfrac() * NUM_SMART_TACTICS) % NUM_SMART_TACTICS;
-    else
+    if (rfrac() < eps) {
+	do
+	    a = (int)(rfrac() * NUM_SMART_TACTICS) % NUM_SMART_TACTICS;
+	while (!Smart_tactic_allowed(next_state, a));
+	my_data->current_tactic = a;
+    } else
 	my_data->current_tactic = best_a;
 
     my_data->current_state = next_state;
@@ -1023,6 +1063,66 @@ static clpos_t Smart_find_open_corridor_target(player_t *pl)
     }
 }
 
+/*
+ * While towing a ball, blocks near enemies the bot sees cost extra, so it
+ * avoids guarded ways.  Extra costs are never negative, so the A* heuristic
+ * stays admissible.
+ */
+#define ROUTE_DANGER_RADIUS	6.0f	/* blocks */
+#define ROUTE_DANGER		3.0f	/* extra cost factor right at an enemy */
+#define ROUTE_MAX_DANGERS	8
+
+static bool Smart_detect_ship(player_t *pl, player_t *ship);
+
+typedef struct smart_route_ctx {
+    int		num_dangers;
+    float	dbx[ROUTE_MAX_DANGERS];
+    float	dby[ROUTE_MAX_DANGERS];
+} smart_route_ctx_t;
+
+static void Smart_route_ctx_init(player_t *pl, smart_route_ctx_t *rc)
+{
+    int i;
+
+    rc->num_dangers = 0;
+    if (!BIT(pl->have, HAS_BALL))
+	return;
+    for (i = 0; i < NumPlayers && rc->num_dangers < ROUTE_MAX_DANGERS; i++) {
+	player_t *ship = Player_by_index(i);
+
+	if (ship->id == pl->id || !Player_is_active(ship) || Team_immune(pl->id, ship->id)
+	    || !Smart_detect_ship(pl, ship))
+	    continue;
+	rc->dbx[rc->num_dangers] = (float)CLICK_TO_PIXEL(ship->pos.cx) / BLOCK_SZ;
+	rc->dby[rc->num_dangers] = (float)CLICK_TO_PIXEL(ship->pos.cy) / BLOCK_SZ;
+	rc->num_dangers++;
+    }
+}
+
+/* Cost factor (>= 1) for entering block (bx, by). */
+static float Smart_route_cost(const smart_route_ctx_t *rc, int bx, int by)
+{
+    float extra = 0.0f;
+    int i;
+
+    for (i = 0; i < rc->num_dangers; i++) {
+	float dx = bx + 0.5f - rc->dbx[i];
+	float dy = by + 0.5f - rc->dby[i];
+	float d;
+
+	if (BIT(world->rules->mode, WRAP_PLAY)) {
+	    if (dx > world->x / 2) dx -= world->x;
+	    if (dx < -world->x / 2) dx += world->x;
+	    if (dy > world->y / 2) dy -= world->y;
+	    if (dy < -world->y / 2) dy += world->y;
+	}
+	d = sqrtf(dx * dx + dy * dy);
+	if (d < ROUTE_DANGER_RADIUS)
+	    extra += ROUTE_DANGER * (1.0f - d / ROUTE_DANGER_RADIUS);
+    }
+    return 1.0f + extra;
+}
+
 static clpos_t Smart_find_next_waypoint(player_t *pl, clpos_t goal_pos)
 {
     robot_smart_data_t *my_data = Robot_smart_get_data(pl);
@@ -1036,6 +1136,7 @@ static clpos_t Smart_find_next_waypoint(player_t *pl, clpos_t goal_pos)
     static const int dx8[8] = { 1, -1,  0,  0,  1,  1, -1, -1 };
     static const int dy8[8] = { 0,  0,  1, -1,  1, -1,  1, -1 };
     static const float cost8[8] = { 1.0f, 1.0f, 1.0f, 1.0f, 1.414f, 1.414f, 1.414f, 1.414f };
+    smart_route_ctx_t route;
 
     /* If direct line of sight is clear, fly directly to goal_pos */
     if (Smart_has_line_of_sight(pl, pl->pos, goal_pos, false)) {
@@ -1072,6 +1173,7 @@ static clpos_t Smart_find_next_waypoint(player_t *pl, clpos_t goal_pos)
 
     if (!Smart_astar_prepare())
 	return Smart_find_open_corridor_target(pl);
+    Smart_route_ctx_init(pl, &route);
 
     nodes[0].bx = start_blk.bx;
     nodes[0].by = start_blk.by;
@@ -1118,7 +1220,7 @@ static clpos_t Smart_find_next_waypoint(player_t *pl, clpos_t goal_pos)
 		    continue;
 	    }
 
-	    ng = nodes[cur].g + cost8[dir];
+	    ng = nodes[cur].g + cost8[dir] * Smart_route_cost(&route, nbx, nby);
 	    if (AstarStamp[cell] == AstarGen) {
 		int existing = AstarSlot[cell];
 		if (ng < nodes[existing].g) {
@@ -1409,11 +1511,10 @@ static void Smart_scan_environment(player_t *pl,
 		    repulse_vec->y -= s * 4.0;
 		}
 
-		if (d < SHIP_SZ * 2.2 && vel_proj > 2.0) {
-		    *high_threat = true;
-		    if (options.maxShieldedWallBounceSpeed > options.maxUnshieldedWallBounceSpeed)
-			*need_shield_now = true;
-		}
+		/* Shield against a hard wall hit; walls are no RL "threat" */
+		if (d < SHIP_SZ * 2.2 && vel_proj > 2.0
+		    && options.maxShieldedWallBounceSpeed > options.maxUnshieldedWallBounceSpeed)
+		    *need_shield_now = true;
 		break;
 	    }
 	}
@@ -1449,10 +1550,6 @@ static void Smart_scan_environment(player_t *pl,
 
 	if (obj->type == OBJ_SPARK || obj->type == OBJ_DEBRIS)
 	    continue;
-
-	if (obj->type == OBJ_BALL
-	    && !WITHIN(my_data->robot_count, my_data->last_thrown_ball, 3 * FPS))
-	    SET_BIT(pl->used, USES_CONNECTOR);
 
 	rx = WRAP_DX(CLICK_TO_PIXEL(obj->pos.cx - pl->pos.cx));
 	ry = WRAP_DY(CLICK_TO_PIXEL(obj->pos.cy - pl->pos.cy));
@@ -1877,6 +1974,19 @@ static void Smart_fly_with_ball(player_t *pl, ballobject_t *ball, clpos_t target
     if (Smart_avoid_ballareas(pl, &sx, &sy)) {
 	fx += ms * 2.0 * (sx - pl->vel.x);
 	fy += ms * 2.0 * (sy - pl->vel.y);
+	emergency = true;
+    }
+
+    /*
+     * Defend the ball: while the pair coasts (little thrust needed), turn
+     * to an enemy close by so the cannon can fire, as human carriers do.
+     * Flying has priority again as soon as real thrust is needed.
+     */
+    if (my_data->carrier_aim && throw_at == NULL && !emergency
+	&& LENGTH(fx, fy) < 0.35 * MAX_PLAYER_POWER) {
+	Smart_steer_to_dir(pl, my_data->carrier_aim_dir);
+	Thrust(pl, false);
+	return;
     }
 
     if (LENGTH(fx, fy) > 0.5 * MIN_PLAYER_POWER)
@@ -2151,6 +2261,641 @@ static clpos_t Smart_pick_swing_out_point(player_t *pl, treasure_t *tr)
 }
 
 /*
+ * Switch the connector on for a deliberate grab only: the ball must be
+ * within reach with a clear line for it, so it is never grabbed through a
+ * wall (ship and ball then end up stuck on both sides of it).
+ */
+static bool Smart_use_connector(player_t *pl, clpos_t ball_pos)
+{
+    double d = Wrap_length(ball_pos.cx - pl->pos.cx, ball_pos.cy - pl->pos.cy) / CLICK;
+
+    if (d > options.ballConnectorLength
+	|| !Smart_has_line_of_sight(pl, pl->pos, ball_pos, true))
+	return false;
+    SET_BIT(pl->used, USES_CONNECTOR);
+    return true;
+}
+
+/* Position of the ball resting in (or loose from) treasure tr, if any. */
+static bool Smart_free_ball_pos(treasure_t *tr, clpos_t *pos)
+{
+    int i;
+
+    for (i = 0; i < NumObjs; i++) {
+	if (Obj[i]->type == OBJ_BALL && Obj[i]->id == NO_ID
+	    && BALL_PTR(Obj[i])->ball_treasure == tr) {
+	    *pos = Obj[i]->pos;
+	    return true;
+	}
+    }
+    return false;
+}
+
+/* =========================================================================
+ * Ball Run Routes
+ * ========================================================================= */
+
+/*
+ * For each pair "enemy treasure -> our treasure" four clearly different
+ * routes are computed once per map.  A route's quality is its estimated
+ * flight time with a towed ball: corners count heavily, because the heavy
+ * pair has to slow down for them.  Before grabbing the ball, a bot picks
+ * one at random, weighted by quality and avoiding routes with enemies on
+ * them; on the way, route points are pushed away from enemies and the
+ * local path finder steers around them.
+ *
+ * Routes are searched on a grid of half blocks with real wall clearance.
+ * Variants come from penalising a corridor around every route found;
+ * routes running mostly inside the corridor of an accepted one are dropped.
+ */
+#define SR_VARIANTS		4
+#define SR_MAX_POINTS		48
+#define SR_MAX_TREASURES	8
+#define SR_CELL			(BLOCK_CLICKS / 2)	/* grid cell size in clicks */
+#define SR_CLEARANCE		20.0	/* px from walls */
+#define SR_CORRIDOR		8	/* cells around a route */
+#define SR_PENALTY		2.0f	/* extra cost factor inside earlier corridors */
+#define SR_MAX_OVERLAP		0.4	/* share of a route inside accepted corridors */
+#define SR_MAX_TRIES		24
+#define SR_SPEED		22.0	/* towing speed for the time estimate */
+#define SR_SIMPLIFY		20.0	/* px tolerance when straightening */
+
+typedef struct smart_route {
+    int		num;
+    clpos_t	pts[SR_MAX_POINTS];
+    double	time;		/* estimated flight time incl. corners */
+    double	length;		/* px */
+    int		turns;		/* corners of more than 25 degrees */
+} smart_route_t;
+
+typedef struct smart_route_set {
+    bool		computed;
+    int			num;
+    smart_route_t	r[SR_VARIANTS];
+} smart_route_set_t;
+
+static smart_route_set_t	RouteSets[SR_MAX_TREASURES][SR_MAX_TREASURES];
+static const poly_t		*RouteSetsPdata;
+static int			RouteSetsNumPolys = -1;
+
+static int	SrW, SrH;
+static uint8_t	*SrFree;
+static float	*SrPenalty;
+static uint8_t	*SrCorr;
+static float	*SrDist;
+static int32_t	*SrPrev;
+static float	*SrWall;
+typedef struct sr_heap_entry { float f; int32_t c; } sr_heap_entry_t;
+static sr_heap_entry_t	*SrHeap;
+static int		SrHeapN, SrHeapCap;
+
+static void Smart_sr_push(float f, int32_t c)
+{
+    int i;
+
+    if (SrHeapN >= SrHeapCap)
+	return;
+    i = SrHeapN++;
+    while (i > 0) {
+	int parent = (i - 1) / 2;
+	if (SrHeap[parent].f <= f)
+	    break;
+	SrHeap[i] = SrHeap[parent];
+	i = parent;
+    }
+    SrHeap[i].f = f;
+    SrHeap[i].c = c;
+}
+
+static sr_heap_entry_t Smart_sr_pop(void)
+{
+    sr_heap_entry_t top = SrHeap[0], last = SrHeap[--SrHeapN];
+    int i = 0;
+
+    while (SrHeapN > 0) {
+	int child = 2 * i + 1;
+	if (child >= SrHeapN)
+	    break;
+	if (child + 1 < SrHeapN && SrHeap[child + 1].f < SrHeap[child].f)
+	    child++;
+	if (SrHeap[child].f >= last.f)
+	    break;
+	SrHeap[i] = SrHeap[child];
+	i = child;
+    }
+    if (SrHeapN > 0)
+	SrHeap[i] = last;
+    return top;
+}
+
+static clpos_t Smart_sr_pos(int c)
+{
+    clpos_t pos;
+
+    pos.cx = (c % SrW) * SR_CELL + SR_CELL / 2;
+    pos.cy = (c / SrW) * SR_CELL + SR_CELL / 2;
+    return pos;
+}
+
+static int Smart_sr_cell(clpos_t pos)
+{
+    int x = pos.cx / SR_CELL, y = pos.cy / SR_CELL;
+
+    LIMIT(x, 0, SrW - 1);
+    LIMIT(y, 0, SrH - 1);
+    return y * SrW + x;
+}
+
+static bool Smart_sr_neighbour(int c, int dx, int dy, int *n)
+{
+    int x = c % SrW + dx, y = c / SrW + dy;
+
+    if (BIT(world->rules->mode, WRAP_PLAY)) {
+	x = (x + SrW) % SrW;
+	y = (y + SrH) % SrH;
+    } else if (x < 0 || x >= SrW || y < 0 || y >= SrH)
+	return false;
+    *n = y * SrW + x;
+    return true;
+}
+
+static const int	sr_dx[8] = { 1, -1, 0, 0, 1, 1, -1, -1 };
+static const int	sr_dy[8] = { 0, 0, 1, -1, 1, -1, 1, -1 };
+
+/* Grid of free cells (with wall clearance); false if it cannot be built. */
+static bool Smart_sr_build_grid(void)
+{
+    float cell_px = (float)SR_CELL / CLICK;
+    int cells, c, k;
+
+    SrW = world->cwidth / SR_CELL;
+    SrH = world->cheight / SR_CELL;
+    cells = SrW * SrH;
+    free(SrFree); free(SrPenalty); free(SrCorr); free(SrDist);
+    free(SrPrev); free(SrWall); free(SrHeap);
+    SrFree = malloc((size_t)cells);
+    SrPenalty = malloc((size_t)cells * sizeof(*SrPenalty));
+    SrCorr = malloc((size_t)cells);
+    SrDist = malloc((size_t)cells * sizeof(*SrDist));
+    SrPrev = malloc((size_t)cells * sizeof(*SrPrev));
+    SrWall = malloc((size_t)cells * sizeof(*SrWall));
+    SrHeapCap = cells * 8;
+    SrHeap = malloc((size_t)SrHeapCap * sizeof(*SrHeap));
+    if (!SrFree || !SrPenalty || !SrCorr || !SrDist || !SrPrev || !SrWall || !SrHeap)
+	return false;
+
+    /* Distance to the nearest wall (BallAreas count as walls) */
+    SrHeapN = 0;
+    for (c = 0; c < cells; c++) {
+	clpos_t pos = Smart_sr_pos(c);
+
+	if (is_inside(pos.cx, pos.cy, NONBALL_BIT, NULL) != NO_GROUP) {
+	    SrWall[c] = 0.0f;
+	    Smart_sr_push(0.0f, c);
+	} else
+	    SrWall[c] = 1e30f;
+    }
+    while (SrHeapN > 0) {
+	sr_heap_entry_t e = Smart_sr_pop();
+
+	if (e.f > SrWall[e.c] || e.f > 2.0f * SR_CLEARANCE)
+	    continue;
+	for (k = 0; k < 8; k++) {
+	    int n;
+	    float d = e.f + cell_px * (k < 4 ? 1.0f : 1.414f);
+
+	    if (Smart_sr_neighbour(e.c, sr_dx[k], sr_dy[k], &n) && d < SrWall[n]) {
+		SrWall[n] = d;
+		Smart_sr_push(d, n);
+	    }
+	}
+    }
+    for (c = 0; c < cells; c++)
+	SrFree[c] = SrWall[c] > SR_CLEARANCE;
+    return true;
+}
+
+/* Cheapest grid path from near 'from' to near 'to'; returns its length. */
+static int Smart_sr_search(clpos_t from, clpos_t to, int *path, int max_len)
+{
+    float cell_px = (float)SR_CELL / CLICK;
+    int cells = SrW * SrH, c, k, goal = -1, len = 0, r;
+    int fc = Smart_sr_cell(from), tc = Smart_sr_cell(to);
+    int src_r = (int)(0.9 * options.ballConnectorLength / cell_px);
+    int dst_r = (int)(3.0 * BLOCK_SZ / cell_px);
+
+    for (c = 0; c < cells; c++)
+	SrDist[c] = 1e30f;
+    SrHeapN = 0;
+    for (r = -src_r; r <= src_r; r++) {
+	for (k = -src_r; k <= src_r; k++) {
+	    int n = fc;
+
+	    if (k * k + r * r > src_r * src_r)
+		continue;
+	    if (Smart_sr_neighbour(fc, k, r, &n) && SrFree[n]) {
+		SrDist[n] = 0.0f;
+		SrPrev[n] = -1;
+		Smart_sr_push(0.0f, n);
+	    }
+	}
+    }
+    while (SrHeapN > 0) {
+	sr_heap_entry_t e = Smart_sr_pop();
+	int ex = e.c % SrW - tc % SrW, ey = e.c / SrW - tc / SrW;
+
+	if (e.f > SrDist[e.c])
+	    continue;
+	if (BIT(world->rules->mode, WRAP_PLAY)) {
+	    if (ex > SrW / 2) ex -= SrW;
+	    if (ex < -SrW / 2) ex += SrW;
+	    if (ey > SrH / 2) ey -= SrH;
+	    if (ey < -SrH / 2) ey += SrH;
+	}
+	if (ex * ex + ey * ey <= dst_r * dst_r) {
+	    goal = e.c;
+	    break;
+	}
+	for (k = 0; k < 8; k++) {
+	    int n, a, b;
+	    float d;
+
+	    if (!Smart_sr_neighbour(e.c, sr_dx[k], sr_dy[k], &n) || !SrFree[n])
+		continue;
+	    if (k >= 4 && (!Smart_sr_neighbour(e.c, sr_dx[k], 0, &a) || !SrFree[a]
+			   || !Smart_sr_neighbour(e.c, 0, sr_dy[k], &b) || !SrFree[b]))
+		continue;
+	    d = e.f + (k < 4 ? 1.0f : 1.414f) * (1.0f + SrPenalty[n]);
+	    if (d < SrDist[n]) {
+		SrDist[n] = d;
+		SrPrev[n] = e.c;
+		Smart_sr_push(d, n);
+	    }
+	}
+    }
+    if (goal < 0)
+	return 0;
+    for (c = goal; c >= 0 && len < max_len; c = SrPrev[c])
+	path[len++] = c;
+    for (k = 0; k < len / 2; k++) {
+	int t = path[k];
+	path[k] = path[len - 1 - k];
+	path[len - 1 - k] = t;
+    }
+    return len;
+}
+
+/* Douglas-Peucker on unwrapped pixel points; marks kept points. */
+static void Smart_sr_simplify(const double *x, const double *y, int a, int b,
+			      double tol, uint8_t *keep)
+{
+    double dx = x[b] - x[a], dy = y[b] - y[a], l = MAX(LENGTH(dx, dy), 1e-9);
+    double best = 0.0;
+    int i, bi = -1;
+
+    for (i = a + 1; i < b; i++) {
+	double d = fabs(dx * (y[a] - y[i]) - (x[a] - x[i]) * dy) / l;
+	if (d > best) {
+	    best = d;
+	    bi = i;
+	}
+    }
+    if (bi < 0 || best <= tol)
+	return;
+    keep[bi] = 1;
+    Smart_sr_simplify(x, y, a, bi, tol, keep);
+    Smart_sr_simplify(x, y, bi, b, tol, keep);
+}
+
+/* Turn a grid path into a straightened route and rate it. */
+static bool Smart_sr_make_route(const int *path, int len, smart_route_t *r)
+{
+    static double x[4096], y[4096];
+    static uint8_t keep[4096];
+    double acc = 0.6 * MAX_PLAYER_POWER / MAX(options.shipMass + options.ballMass, 1.0);
+    double tol = SR_SIMPLIFY, pdx = 0.0, pdy = 0.0, plen = 0.0;
+    int i, n;
+
+    if (len < 2 || len > 4096)
+	return false;
+    for (i = 0; i < len; i++) {
+	clpos_t pos = Smart_sr_pos(path[i]);
+	x[i] = CLICK_TO_PIXEL(pos.cx);
+	y[i] = CLICK_TO_PIXEL(pos.cy);
+	if (i > 0) {	/* unwrap across the map edge */
+	    x[i] = x[i - 1] + WRAP_DX(x[i] - x[i - 1]);
+	    y[i] = y[i - 1] + WRAP_DY(y[i] - y[i - 1]);
+	}
+    }
+    do {
+	memset(keep, 0, (size_t)len);
+	keep[0] = keep[len - 1] = 1;
+	Smart_sr_simplify(x, y, 0, len - 1, tol, keep);
+	for (n = 0, i = 0; i < len; i++)
+	    n += keep[i];
+	tol *= 1.5;
+    } while (n > SR_MAX_POINTS);
+
+    r->num = 0;
+    r->time = r->length = 0.0;
+    r->turns = 0;
+    for (i = 0; i < len; i++) {
+	double dx, dy, l;
+
+	if (!keep[i])
+	    continue;
+	if (r->num > 0) {
+	    clpos_t prev = r->pts[r->num - 1];
+	    double px = x[i] - WRAP_DX(x[i] - CLICK_TO_PIXEL(prev.cx));
+	    double py = y[i] - WRAP_DY(y[i] - CLICK_TO_PIXEL(prev.cy));
+
+	    dx = x[i] - px;
+	    dy = y[i] - py;
+	    l = LENGTH(dx, dy);
+	    r->length += l;
+	    r->time += l / SR_SPEED;
+	    if (plen > 1.0 && l > 1.0) {
+		double c = (dx * pdx + dy * pdy) / (l * plen);
+		double vc = MAX(3.0, SR_SPEED * (1.0 + c) / 2.0);
+
+		r->time += (SR_SPEED - vc) * (SR_SPEED - vc) / (acc * SR_SPEED);
+		if (c < cos(25.0 * PI / 180.0))
+		    r->turns++;
+	    }
+	    pdx = dx;
+	    pdy = dy;
+	    plen = l;
+	}
+	r->pts[r->num].cx = PIXEL_TO_CLICK(x[i]);
+	r->pts[r->num].cy = PIXEL_TO_CLICK(y[i]);
+	r->pts[r->num] = World_wrap_clpos(r->pts[r->num]);
+	r->num++;
+    }
+    return r->num >= 2;
+}
+
+/* Compute the route variants from treasure 'from' to treasure 'to'. */
+static void Smart_sr_compute(treasure_t *from, treasure_t *to, smart_route_set_t *set)
+{
+    static int path[8192];
+    int cells = SrW * SrH, tries, k, len;
+    struct timespec t0, t1;
+
+    clock_gettime(CLOCK_MONOTONIC, &t0);
+    set->computed = true;
+    set->num = 0;
+    memset(SrPenalty, 0, (size_t)cells * sizeof(*SrPenalty));
+    memset(SrCorr, 0, (size_t)cells);
+
+    for (tries = 0; tries < SR_MAX_TRIES && set->num < SR_VARIANTS; tries++) {
+	int inside = 0;
+
+	len = Smart_sr_search(from->pos, to->pos, path, (int)NELEM(path));
+	if (len < 2)
+	    break;
+	for (k = 0; k < len; k++)
+	    inside += SrCorr[path[k]];
+	/* Penalise the corridor around this route for the next search */
+	for (k = 0; k < len; k++) {
+	    int r, q, n;
+	    for (r = -SR_CORRIDOR; r <= SR_CORRIDOR; r++) {
+		for (q = -SR_CORRIDOR; q <= SR_CORRIDOR; q++) {
+		    if (Smart_sr_neighbour(path[k], q, r, &n) && SrPenalty[n] < 8.0f * SR_PENALTY)
+			SrPenalty[n] += SR_PENALTY / (2 * SR_CORRIDOR + 1);
+		}
+	    }
+	}
+	if (set->num > 0 && inside > SR_MAX_OVERLAP * len)
+	    continue;		/* not clearly different from an accepted route */
+	if (!Smart_sr_make_route(path, len, &set->r[set->num]))
+	    continue;
+	for (k = 0; k < len; k++) {
+	    int r, q, n;
+	    for (r = -SR_CORRIDOR; r <= SR_CORRIDOR; r++) {
+		for (q = -SR_CORRIDOR; q <= SR_CORRIDOR; q++) {
+		    if (Smart_sr_neighbour(path[k], q, r, &n))
+			SrCorr[n] = 1;
+		}
+	    }
+	}
+	set->num++;
+    }
+    clock_gettime(CLOCK_MONOTONIC, &t1);
+    if (options.logRobots) {
+	xpprintf("%s Smartbot routes team %d -> %d: %d variants in %.0f ms\n",
+		 showtime(), from->team, to->team, set->num,
+		 (t1.tv_sec - t0.tv_sec) * 1e3 + (t1.tv_nsec - t0.tv_nsec) / 1e6);
+	for (k = 0; k < set->num; k++)
+	    xpprintf("%s Smartbot route team %d -> %d #%d: %.0f px, %d turns, time %.1f\n",
+		     showtime(), from->team, to->team, k + 1, set->r[k].length,
+		     set->r[k].turns, set->r[k].time);
+    }
+}
+
+static int Smart_treasure_index(treasure_t *tr)
+{
+    int i;
+
+    for (i = 0; i < Num_treasures() && i < SR_MAX_TREASURES; i++) {
+	if (Treasure_by_index(i) == tr)
+	    return i;
+    }
+    return -1;
+}
+
+/* Route variants from 'from' to 'to', computed on first use; NULL if none. */
+static smart_route_set_t *Smart_route_set(treasure_t *from, treasure_t *to)
+{
+    int fi = Smart_treasure_index(from), ti = Smart_treasure_index(to);
+    smart_route_set_t *set;
+
+    if (fi < 0 || ti < 0)
+	return NULL;
+    if (RouteSetsPdata != pdata || RouteSetsNumPolys != num_polys) {
+	memset(RouteSets, 0, sizeof(RouteSets));
+	RouteSetsPdata = pdata;
+	RouteSetsNumPolys = num_polys;
+	if (!Smart_sr_build_grid()) {
+	    RouteSetsNumPolys = -1;
+	    return NULL;
+	}
+    }
+    set = &RouteSets[fi][ti];
+    if (!set->computed)
+	Smart_sr_compute(from, to, set);
+    return set->num > 0 ? set : NULL;
+}
+
+/* Is a visible enemy within 4 blocks of the route from point 'from' on? */
+static bool Smart_route_guarded(player_t *pl, const smart_route_t *r, int from)
+{
+    int i, k, s;
+
+    for (i = 0; i < NumPlayers; i++) {
+	player_t *ship = Player_by_index(i);
+
+	if (ship->id == pl->id || !Player_is_active(ship) || Team_immune(pl->id, ship->id)
+	    || !Smart_detect_ship(pl, ship))
+	    continue;
+	for (k = MAX(from, 0); k < r->num - 1; k++) {
+	    clpos_t a = r->pts[k], b = r->pts[k + 1];
+	    double l = Wrap_length(b.cx - a.cx, b.cy - a.cy) / CLICK;
+	    int steps = MAX(1, (int)(l / (2.0 * BLOCK_SZ)));
+
+	    for (s = 0; s <= steps; s++) {
+		clpos_t p;
+
+		p.cx = a.cx + (click_t)((double)WRAP_DCX(b.cx - a.cx) * s / steps);
+		p.cy = a.cy + (click_t)((double)WRAP_DCY(b.cy - a.cy) * s / steps);
+		p = World_wrap_clpos(p);
+		if (Wrap_length(p.cx - ship->pos.cx, p.cy - ship->pos.cy) / CLICK
+		    < 4.0 * BLOCK_SZ)
+		    return true;
+	    }
+	}
+    }
+    return false;
+}
+
+/*
+ * Choose the route for the next ball run: at random, weighted by quality
+ * (estimated flight time incl. corners), routes with enemies on them only
+ * as a last resort.
+ */
+static void Smart_choose_route(player_t *pl, treasure_t *from, treasure_t *to)
+{
+    robot_smart_data_t *my_data = Robot_smart_get_data(pl);
+    smart_route_set_t *set = Smart_route_set(from, to);
+    double w[SR_VARIANTS], sum = 0.0, best = 1e30, pick;
+    int k;
+
+    my_data->route_valid = false;
+    my_data->route_checked_at = my_data->robot_count;
+    if (set == NULL)
+	return;
+    for (k = 0; k < set->num; k++)
+	best = MIN(best, set->r[k].time);
+    for (k = 0; k < set->num; k++) {
+	w[k] = sqr(best / set->r[k].time);	/* (best time / time)^2 */
+	if (Smart_route_guarded(pl, &set->r[k], 0))
+	    w[k] *= 0.05;
+	sum += w[k];
+    }
+    pick = rfrac() * sum;
+    for (k = 0; k < set->num - 1 && pick > w[k]; k++)
+	pick -= w[k];
+
+    my_data->route = &set->r[k];
+    my_data->route_from = from;
+    my_data->route_to = to;
+    my_data->route_cur = 0;
+    my_data->route_lost = 0;
+    my_data->route_valid = true;
+}
+
+/* Direction (dir units) in which the chosen route leaves the ball at bpos. */
+static int Smart_route_exit_dir(const smart_route_t *r, clpos_t bpos)
+{
+    int k;
+
+    for (k = 0; k < r->num - 1; k++) {
+	if (Wrap_length(r->pts[k].cx - bpos.cx, r->pts[k].cy - bpos.cy) / CLICK
+	    >= 1.5 * BLOCK_SZ)
+	    break;
+    }
+    return (int)(Wrap_cfindDir(r->pts[k].cx - bpos.cx, r->pts[k].cy - bpos.cy) + 0.5);
+}
+
+/* A route point pushed away from enemies close to it, if there is room. */
+static clpos_t Smart_route_nudge(player_t *pl, clpos_t pt)
+{
+    double px = 0.0, py = 0.0;
+    clpos_t moved;
+    int i;
+
+    for (i = 0; i < NumPlayers; i++) {
+	player_t *ship = Player_by_index(i);
+	double dx, dy, d;
+
+	if (ship->id == pl->id || !Player_is_active(ship) || Team_immune(pl->id, ship->id)
+	    || !Smart_detect_ship(pl, ship))
+	    continue;
+	dx = WRAP_DX(CLICK_TO_PIXEL(pt.cx - ship->pos.cx));
+	dy = WRAP_DY(CLICK_TO_PIXEL(pt.cy - ship->pos.cy));
+	d = MAX(LENGTH(dx, dy), 1.0);
+	if (d < 5.0 * BLOCK_SZ) {
+	    px += dx / d * (5.0 * BLOCK_SZ - d) * 0.5;
+	    py += dy / d * (5.0 * BLOCK_SZ - d) * 0.5;
+	}
+    }
+    {
+	double l = LENGTH(px, py);
+	if (l < 1.0)
+	    return pt;
+	if (l > 2.5 * BLOCK_SZ) {
+	    px *= 2.5 * BLOCK_SZ / l;
+	    py *= 2.5 * BLOCK_SZ / l;
+	}
+    }
+    moved.cx = pt.cx + PIXEL_TO_CLICK(px);
+    moved.cy = pt.cy + PIXEL_TO_CLICK(py);
+    moved = World_wrap_clpos(moved);
+    return Smart_spot_is_free(pl, moved) ? moved : pt;
+}
+
+/*
+ * Follow the chosen route while towing.  With a clear line to the next
+ * point the remaining points go to the towing controller (which plans the
+ * speed for the corners ahead); otherwise the local path finder (with its
+ * enemy penalty) leads there.  Returns false when there is no route (left).
+ */
+static bool Smart_follow_route(player_t *pl, vector_t repulse_vec)
+{
+    robot_smart_data_t *my_data = Robot_smart_get_data(pl);
+    const smart_route_t *r = my_data->route;
+    clpos_t target;
+    int k, n;
+
+    while (my_data->route_cur < r->num - 1) {
+	clpos_t cur = r->pts[my_data->route_cur], next = r->pts[my_data->route_cur + 1];
+
+	if (Wrap_length(cur.cx - pl->pos.cx, cur.cy - pl->pos.cy) / CLICK < 2.5 * BLOCK_SZ
+	    || (Smart_has_line_of_sight(pl, pl->pos, next, false)
+		&& Smart_has_line_of_sight(pl, pl->pos, next, true)))
+	    my_data->route_cur++;
+	else
+	    break;
+    }
+    if (my_data->route_cur == r->num - 1) {
+	clpos_t last = r->pts[my_data->route_cur];
+	if (Wrap_length(last.cx - pl->pos.cx, last.cy - pl->pos.cy) / CLICK < 2.5 * BLOCK_SZ) {
+	    my_data->route_valid = false;	/* done; the throwing run takes over */
+	    return false;
+	}
+    }
+
+    target = Smart_route_nudge(pl, r->pts[my_data->route_cur]);
+    if (Smart_has_line_of_sight(pl, pl->pos, target, false)) {
+	my_data->route_lost = 0;
+	my_data->waypoints[0] = target;
+	for (n = 1, k = my_data->route_cur + 1; k < r->num && n < ASTAR_MAX_WAYPOINTS; k++, n++)
+	    my_data->waypoints[n] = r->pts[k];
+	my_data->num_waypoints = n;
+	my_data->cur_waypoint = 0;
+	/* Not an A* path: keep Smart_find_next_waypoint from reusing it */
+	my_data->last_astar_tick = my_data->robot_count + 10 * ASTAR_RECALC_TICKS;
+	Smart_fly_towards(pl, target, 24.0, repulse_vec, NULL);
+    } else {
+	if (++my_data->route_lost > 40) {
+	    my_data->route_valid = false;	/* lost it: plain path finding home */
+	    return false;
+	}
+	Smart_fly_towards(pl, Smart_find_next_waypoint(pl, target), 24.0, repulse_vec, NULL);
+    }
+    return true;
+}
+
+/*
  * Where to fly to grab the enemy ball: the connector arms anywhere within
  * ballConnectorLength, so hover well inside that range on our side of the
  * ball instead of flying into its deadly BallArea.
@@ -2171,6 +2916,13 @@ static clpos_t Smart_pick_pickup_spot(player_t *pl, treasure_t *tr)
     }
 
     base = (int)(Wrap_cfindDir(pl->pos.cx - bpos.cx, pl->pos.cy - bpos.cy) + 0.5);
+    {
+	robot_smart_data_t *my_data = Robot_smart_get_data(pl);
+
+	/* Grab from the side where the chosen route leaves */
+	if (my_data->route_valid && my_data->route_from == tr)
+	    base = Smart_route_exit_dir(my_data->route, bpos);
+    }
     for (k = 0; k < (int)NELEM(offs); k++) {
 	clpos_t p = Smart_offset_pos(bpos, base + offs[k] * RES / 128, r);
 	if (Smart_spot_is_free(pl, p))
@@ -2223,18 +2975,47 @@ static bool Smart_handle_ctf(player_t *pl, vector_t repulse_vec,
 	double pull = 2.5 * options.ballConnectorLength;
 	clpos_t away;
 
-	away.cx = ball->pos.cx + PIXEL_TO_CLICK(ax / alen * pull);
-	away.cy = ball->pos.cy + PIXEL_TO_CLICK(ay / alen * pull);
-	away = World_wrap_clpos(away);
-	SET_BIT(pl->used, USES_CONNECTOR);
-	Smart_fly_towards(pl, away, 10.0, repulse_vec, NULL);
-	return true;
+	/*
+	 * Keep the connector only with a clear line to the ball; otherwise it
+	 * drops (it was armed through a wall) and the approach goes on below.
+	 */
+	if (Smart_has_line_of_sight(pl, pl->pos, ball->pos, true)) {
+	    if (my_data->route_valid && my_data->route_from == ball->ball_treasure)
+		/* Pull out along the chosen route */
+		away = Smart_offset_pos(ball->pos,
+					Smart_route_exit_dir(my_data->route, ball->pos), pull);
+	    else {
+		away.cx = ball->pos.cx + PIXEL_TO_CLICK(ax / alen * pull);
+		away.cy = ball->pos.cy + PIXEL_TO_CLICK(ay / alen * pull);
+		away = World_wrap_clpos(away);
+	    }
+	    SET_BIT(pl->used, USES_CONNECTOR);
+	    Smart_fly_towards(pl, away, 10.0, repulse_vec, NULL);
+	    return true;
+	}
     }
 
     /* Case 1: We are carrying a ball -> Navigate home & release it on target */
     if (BIT(pl->have, HAS_BALL) && home_tr != NO_IND) {
 	treasure_t *htr = Treasure_by_index(home_tr);
 	ballobject_t *ball = Smart_carried_ball(pl);
+
+	/* Just stole the enemy ball: a small reward on the way to the big one */
+	if (ball != NULL && ball->ball_treasure != NULL
+	    && ball->ball_treasure->team != pl->team && !my_data->had_enemy_ball) {
+	    my_data->accumulated_reward += REWARD_BALL_STOLEN;
+	    my_data->had_enemy_ball = true;
+	}
+
+	/* Ball stuck behind a wall: let go, it is grabbed again properly */
+	if (ball != NULL && !Smart_has_line_of_sight(pl, pl->pos, ball->pos, true)) {
+	    if (++my_data->ball_blocked > 12) {
+		Detach_ball(pl, NULL);
+		my_data->ball_blocked = 0;
+		return true;
+	    }
+	} else
+	    my_data->ball_blocked = 0;
 
 	if (ball != NULL && Smart_ball_on_target(pl, ball, htr)
 	    && Smart_clear_of_ball_path(pl, ball)) {
@@ -2278,6 +3059,12 @@ static bool Smart_handle_ctf(player_t *pl, vector_t repulse_vec,
 	}
 	my_data->throw_side = 0;
 
+	/* The route chosen before the grab, as long as it fits */
+	if (ball != NULL && my_data->route_valid && my_data->route_to == htr
+	    && my_data->route_from == ball->ball_treasure
+	    && Smart_follow_route(pl, repulse_vec))
+	    return true;
+
 	{
 	    clpos_t wp = Smart_find_next_waypoint(pl, htr->pos);
 	    /* Speed is planned along the path by the towing controller */
@@ -2308,9 +3095,16 @@ static bool Smart_handle_ctf(player_t *pl, vector_t repulse_vec,
 	}
 
 	if (loose_ball_i != NO_IND && loose_ball_dist < enemy_tr_dist) {
-	    clpos_t wp = Smart_find_next_waypoint(pl, Obj[loose_ball_i]->pos);
-	    SET_BIT(pl->used, USES_CONNECTOR);
-	    Smart_fly_towards(pl, wp, 15.0, repulse_vec, has_aim_dir ? aim_dir : NULL);
+	    ballobject_t *ball = BALL_IND(loose_ball_i);
+	    clpos_t spot = ball->ball_treasure != NULL
+			   ? Smart_pick_pickup_spot(pl, ball->ball_treasure) : ball->pos;
+	    clpos_t wp = Smart_find_next_waypoint(pl, spot);
+	    double d = Wrap_length(spot.cx - pl->pos.cx, spot.cy - pl->pos.cy) / CLICK;
+
+	    my_data->route_valid = false;	/* loose in the field: no base route */
+	    Smart_use_connector(pl, ball->pos);
+	    Smart_fly_towards(pl, wp, (d < 4.0 * BLOCK_SZ) ? 9.0 : 15.0,
+			      repulse_vec, has_aim_dir ? aim_dir : NULL);
 	    return true;
 	}
     }
@@ -2318,11 +3112,30 @@ static bool Smart_handle_ctf(player_t *pl, vector_t repulse_vec,
     /* Case 3: Go steal enemy treasure */
     if (enemy_tr != NO_IND) {
 	treasure_t *etr = Treasure_by_index(enemy_tr);
-	clpos_t spot = Smart_pick_pickup_spot(pl, etr);
-	clpos_t wp = Smart_find_next_waypoint(pl, spot);
-	double d = Wrap_length(spot.cx - pl->pos.cx, spot.cy - pl->pos.cy) / CLICK;
+	treasure_t *htr = (home_tr != NO_IND) ? Treasure_by_index(home_tr) : NULL;
+	clpos_t spot, wp, bpos;
+	double d;
 
-	SET_BIT(pl->used, USES_CONNECTOR);
+	/*
+	 * Choose the route home before the grab; until the ball is ours,
+	 * choose again when an enemy shows up on it.
+	 */
+	if (htr != NULL
+	    && (!my_data->route_valid || my_data->route_from != etr || my_data->route_to != htr))
+	    Smart_choose_route(pl, etr, htr);
+	else if (htr != NULL && ABS(my_data->route_checked_at - my_data->robot_count) > 12) {
+	    my_data->route_checked_at = my_data->robot_count;
+	    if (Smart_route_guarded(pl, my_data->route, 0))
+		Smart_choose_route(pl, etr, htr);
+	}
+
+	spot = Smart_pick_pickup_spot(pl, etr);
+	wp = Smart_find_next_waypoint(pl, spot);
+	d = Wrap_length(spot.cx - pl->pos.cx, spot.cy - pl->pos.cy) / CLICK;
+
+	/* Grab only at the spot, so the ball comes out on the route side */
+	if (d < 1.5 * BLOCK_SZ && Smart_free_ball_pos(etr, &bpos))
+	    Smart_use_connector(pl, bpos);
 	Smart_fly_towards(pl, wp, (d < 4.0 * BLOCK_SZ) ? 9.0 : 16.0,
 			  repulse_vec, has_aim_dir ? aim_dir : NULL);
 	return true;
@@ -2534,8 +3347,8 @@ static void Smart_set_role(player_t **pool, int idx, int role, int escort_id)
  * - bots towing a ball are carriers,
  * - our ball stolen or loose: everybody hunts it, but with three or more
  *   bots one keeps attacking the enemy ball,
- * - otherwise: attacker, defender, then escorts (at most two) for the
- *   carrier or attacker; any further bots attack too.
+ * - otherwise: attacker, then (from three bots on) a defender, then
+ *   escorts (at most two) for the carrier or attacker; further bots attack.
  */
 static void Smart_assign_roles(void)
 {
@@ -2566,6 +3379,18 @@ static void Smart_assign_roles(void)
 	return;
 
     Smart_update_team_knowledge();
+
+    /* Precompute the ball run routes early instead of at the first grab */
+    for (i = 0; i < Num_treasures(); i++) {
+	int j;
+
+	for (j = 0; j < Num_treasures(); j++) {
+	    treasure_t *a = Treasure_by_index(i), *b = Treasure_by_index(j);
+
+	    if (a->team != b->team && !a->empty && !b->empty)
+		(void)Smart_route_set(a, b);
+	}
+    }
 
     /* Which teammate tows an enemy ball? (a team always knows its own members) */
     for (i = 0; i < NumObjs; i++) {
@@ -2635,9 +3460,8 @@ static void Smart_assign_roles(void)
 	    Smart_set_role(pool, k, ROLE_ATTACKER, NO_ID);
 	    left--;
 	}
-	/* Defender, unless a lone bot should rather cover a teammate's ball run */
-	if (home != NULL && left > 0
-	    && (left >= 2 || carrier_of_enemy_ball[t] == NO_ID)) {
+	/* Defender only with enough bots: stealing the ball comes first */
+	if (home != NULL && left >= 2) {
 	    k = Smart_pick_closest(pool, n, home->pos, ROLE_DEFENDER);
 	    Smart_set_role(pool, k, ROLE_DEFENDER, NO_ID);
 	    left--;
@@ -2682,8 +3506,11 @@ static bool Smart_play_role(player_t *pl, player_t *enemy, double enemy_dist,
 	return Smart_handle_ctf(pl, repulse_vec, aim_dir, has_aim_dir);
 
     case ROLE_ATTACKER:
-	/* Only fight enemies right in our way */
-	if (!focus && enemy != NULL && enemy_los && enemy_dist < 8.0 * BLOCK_SZ)
+	/*
+	 * Stealing the ball comes first: only fight enemies right in our way
+	 * (never with the CTF tactic).
+	 */
+	if (!focus && enemy != NULL && enemy_los && enemy_dist < 6.0 * BLOCK_SZ)
 	    return false;
 	return Smart_handle_ctf(pl, repulse_vec, aim_dir, has_aim_dir);
 
@@ -2698,8 +3525,8 @@ static bool Smart_play_role(player_t *pl, player_t *enemy, double enemy_dist,
 	    double lead_t = MIN(d / 20.0, 15.0);
 	    clpos_t aim, wp;
 
-	    /* Close and in sight: the combat code keeps distance and shoots */
-	    if (enemy == carrier && enemy_los && d < 10.0 * BLOCK_SZ)
+	    /* In sight: the combat code presses him and shoots */
+	    if (enemy == carrier && enemy_los && d < 18.0 * BLOCK_SZ)
 		return false;
 	    aim.cx = carrier->pos.cx + PIXEL_TO_CLICK(carrier->vel.x * lead_t);
 	    aim.cy = carrier->pos.cy + PIXEL_TO_CLICK(carrier->vel.y * lead_t);
@@ -2720,7 +3547,7 @@ static bool Smart_play_role(player_t *pl, player_t *enemy, double enemy_dist,
 		    double d = Wrap_length(spot.cx - pl->pos.cx,
 					   spot.cy - pl->pos.cy) / CLICK;
 
-		    SET_BIT(pl->used, USES_CONNECTOR);
+		    Smart_use_connector(pl, Obj[i]->pos);
 		    Smart_fly_towards(pl, wp, (d < 4.0 * BLOCK_SZ) ? 9.0 : 18.0,
 				      repulse_vec, *has_aim_dir ? aim_dir : NULL);
 		    return true;
@@ -2737,10 +3564,10 @@ static bool Smart_play_role(player_t *pl, player_t *enemy, double enemy_dist,
 
 	if (target == NULL || !Player_is_alive(target))
 	    return false;
-	/* Fight enemies close to the one we cover */
-	if (!focus && enemy != NULL
+	/* Fight enemies approaching the one we cover: that is the job */
+	if (enemy != NULL
 	    && Wrap_length(enemy->pos.cx - target->pos.cx,
-			   enemy->pos.cy - target->pos.cy) / CLICK < 12.0 * BLOCK_SZ)
+			   enemy->pos.cy - target->pos.cy) / CLICK < 18.0 * BLOCK_SZ)
 	    return false;
 
 	/* Fly ahead and to the side, away from a towed ball trailing behind */
@@ -2768,8 +3595,8 @@ static bool Smart_play_role(player_t *pl, player_t *enemy, double enemy_dist,
 
 	if (home == NULL)
 	    return false;
-	/* Fight enemies near our treasure */
-	if (!focus && enemy != NULL
+	/* Fight enemies near our treasure: that is the job */
+	if (enemy != NULL
 	    && Wrap_length(enemy->pos.cx - home->pos.cx,
 			   enemy->pos.cy - home->pos.cy) / CLICK < 16.0 * BLOCK_SZ)
 	    return false;
@@ -2821,7 +3648,7 @@ static void Robot_smart_round_tick(void)
 	Smart_assign_roles();
 }
 
-static void Robot_smart_ball_event(player_t *pl, int event)
+static void Robot_smart_game_event(player_t *pl, int event, player_t *other)
 {
     robot_smart_data_t *my_data = Robot_smart_get_data(pl);
     double reward = 0.0;
@@ -2831,6 +3658,24 @@ static void Robot_smart_ball_event(player_t *pl, int event)
     case ROBOT_BALL_WON:	reward = REWARD_BALL_WON;	break;
     case ROBOT_BALL_LOST:	reward = REWARD_BALL_LOST;	break;
     case ROBOT_BALL_SAVED:	reward = REWARD_BALL_SAVED;	break;
+    case ROBOT_KILLED_PLAYER: {
+	treasure_t *home;
+
+	/* The kill itself counts in Smart_rl_step; ball games add context */
+	if (other == NULL || !BIT(world->rules->mode, TEAM_PLAY)
+	    || Num_treasures() <= 0 || other->team == pl->team)
+	    return;
+	if (BIT(other->have, HAS_BALL))
+	    reward += REWARD_KILL_CARRIER;
+	home = Smart_team_treasure(pl->team, other->pos, false);
+	if (home != NULL
+	    && Wrap_length(other->pos.cx - home->pos.cx, other->pos.cy - home->pos.cy) / CLICK
+	       < 16.0 * BLOCK_SZ)
+	    reward += REWARD_KILL_AT_HOME;
+	if (reward == 0.0)
+	    return;
+	break;
+    }
     default:			return;
     }
     my_data->accumulated_reward += reward;
@@ -2910,6 +3755,8 @@ static void Robot_smart_go_home(player_t *pl)
 
     my_data->num_waypoints = 0;
     my_data->cur_waypoint = 0;
+    my_data->route_valid = false;
+    my_data->ball_blocked = 0;
     Smart_pick_new_patrol_target(pl);
     Smart_evolve_genes_on_respawn(pl);
     my_data->tactic_timer = 0;	/* choose a fresh tactic after respawn */
@@ -3028,9 +3875,20 @@ static void Robot_smart_play(player_t *pl)
 	my_data->robot_count = 2000 + (int)(rfrac() * 64);
     my_data->robot_count--;
     my_data->turn_budget = Smart_max_turn_per_tick(Smart_get_effective_level(my_data));
+    {
+	ballobject_t *towed = Smart_carried_ball(pl);
 
-    /* Default equipment state per tick (shields stay OFF unless needed to save fuel!) */
-    CLR_BIT(pl->used, USES_SHOT | USES_SHIELD | USES_LASER);
+	if (towed == NULL || towed->ball_treasure == NULL
+	    || towed->ball_treasure->team == pl->team)
+	    my_data->had_enemy_ball = false;
+    }
+
+    /*
+     * Default equipment state per tick (shields stay OFF unless needed to
+     * save fuel!).  The connector is only switched on for a deliberate grab
+     * (Smart_use_connector); a towed ball stays attached without it.
+     */
+    CLR_BIT(pl->used, USES_SHOT | USES_SHIELD | USES_LASER | USES_CONNECTOR);
 
     if (BIT(pl->have, HAS_EMERGENCY_SHIELD) && !BIT(pl->used, HAS_EMERGENCY_SHIELD))
 	Emergency_shield(pl, true);
@@ -3140,8 +3998,8 @@ static void Robot_smart_play(player_t *pl)
 
     /*
      * Engage enemy with ballistic lead prediction if in range.  While towing
-     * a ball the ship's heading belongs to the towing controller: only fire
-     * when the aim happens to fit.
+     * a ball the ship's heading belongs to the towing controller, which turns
+     * to the enemy only while the pair coasts (carrier_aim).
      */
     if (best_enemy != NULL) {
 	Smart_engage_enemy(pl, best_enemy, best_enemy_dist, best_enemy_los,
@@ -3149,6 +4007,9 @@ static void Robot_smart_play(player_t *pl)
 			   || BIT(pl->have, HAS_BALL),
 			   &aim_dir, &has_aim_dir);
     }
+    my_data->carrier_aim = BIT(pl->have, HAS_BALL) && has_aim_dir
+			   && best_enemy_dist < 12.0 * BLOCK_SZ;
+    my_data->carrier_aim_dir = aim_dir;
 
     /* Raise shield only if we did not just fire and a threat is imminent */
     if (need_shield_now && BIT(pl->have, HAS_SHIELD) && !BIT(pl->used, HAS_SHOT | HAS_LASER)) {
@@ -3241,6 +4102,11 @@ static void Robot_smart_play(player_t *pl)
 	    pref_dist *= 1.35;
 	else if (my_data->current_tactic == TACTIC_DOGFIGHT_AGGR)
 	    pref_dist *= 0.60;
+	/* The thief of our ball (or a carrier near the one we cover): press him */
+	if (BIT(best_enemy->have, HAS_BALL)
+	    && (my_data->role == ROLE_HUNTER || my_data->role == ROLE_ESCORT
+		|| my_data->role == ROLE_DEFENDER))
+	    pref_dist = 3.0 * BLOCK_SZ;
 
 	if (best_enemy_dist > pref_dist * 1.20
 	    || !best_enemy_los) {

@@ -82,7 +82,7 @@ static robot_type_t robot_suibot_type = {
     Robot_suibot_message,
     Robot_suibot_destroy,
     Robot_suibot_invite,
-    NULL			/* no ball event handling */
+    NULL			/* no game event handling */
 };
 
 
