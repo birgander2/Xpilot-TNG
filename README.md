@@ -27,9 +27,10 @@ First conceived in 1991 by Bjørn Stabell and Ken Ronny Schouten, XPilot reliabl
 
 - 🤖 **Smartbots**: Strong AI-powered robots that will make you suffer (see below)
 - 🚀 **Launcher**: A cool new launcher app for both client and server. 
+- 🎧 **Voice chat**: Bark orders at your team over crackling radio, or trash-talk everyone within earshot — headset not included.
 - 🤝 **Teamplay**: Better team selection and balancing, now with robots on your side — or against you. Try Blood's Music against a smartbot team if you dare.
 - 🐣 **Newbie mode**: Finally repaired after 30 years — now you can learn to fly without being fed to the cannons on day one.
-- 🎧 **Voice chat**: Bark orders at your team over crackling radio, or trash-talk everyone within earshot — headset not included.
+- 🗺️ **Map editor**: Draw your own battlefields: bases, fuel depots and cannons placed by click; every map option at your fingertips. No more counting ASCII characters.
 
 ---
 
@@ -81,31 +82,24 @@ The resulting binaries will be right inside `build/` (and symlinked directly int
 
 ## 🎮 Quickstart: Jumping into Battle
 
-XPilot uses a client-server architecture. You can host your own server (and test your skills against AI bots) or battle friends across a local network or the internet.
-
-### 1. Launch a Local Server
-
-Fire up a server running a map of your choice (such as the classic *New Dark Hell* map `ndh.xp2`):
+The easiest way to fly is the graphical **launcher**. It starts the server and the client for you, so there is no command line involved:
 
 ```bash
-./xpilot-tng-server -map lib/maps/ndh.xp2 -noQuit
-```
-*Pro tip:* If you play alone, the server automatically spawns merciless combat robots (`Wimpy`, `Terminator`, `Sparky`, and `Sniper`) to keep you on your toes!
-And even worse, there are also intelligent "smart" robots now, add for example 3 of them with the option `-smartrobots 3`.
-
-### 2. Connect Your Ship
-
-Open a new terminal and fire up the client:
-
-```bash
-./xpilot-tng-client localhost -name Maverick
+./xpilot-tng-launcher
 ```
 
-*Helpful client options:*
-- `-fullScreen`: Start directly in fullscreen mode.
-- `-showSidebar false`: Hide the sidebar (radar & scores) to start with a full-window playfield.
+### Play against bots
 
-... and **BOOM!** You are strapped into the cockpit of your starfighter, surrounded by asteroids, fueling bases, and trigger-happy bots!
+1. Click **Start Local Game** (or press `L`).
+2. Pick a map on the left, for example the classic *New Dark Hell*, and set your name, ship and the number of bots on the right. Smartbots are in there, too.
+3. Press **PLAY**. The launcher starts a local server, connects your client, and you are strapped into the cockpit.
+
+### Play with others
+
+- **Join Network Game** (`J`) lists servers in your local network and on the internet. Pick one and fly.
+- **Launch Server** (`S`) hosts a game for friends. It can also register at the meta server. See [Hosting an internet server](doc/HOWTO-INTERNET-SERVER.md) for port forwarding and public setup.
+
+... and **BOOM!** You are surrounded by asteroids, fueling bases, and trigger-happy bots!
 
 ---
 
