@@ -96,6 +96,7 @@ void Ball_is_replaced(ballobject_t *ball)
     Set_message_f(" < %s (team %d) has replaced the treasure >",
 		  pl->name, pl->team);
     Rank_saved_ball(pl);
+    Robot_ball_event(pl, ROBOT_BALL_SAVED);
 }
 
 

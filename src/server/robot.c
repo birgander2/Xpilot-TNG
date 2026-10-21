@@ -997,6 +997,30 @@ void Robot_invite(player_t *pl, player_t *inviter)
 }
 
 /*
+ * Tell a robot about a ball game event; pl may be any player.
+ */
+void Robot_ball_event(player_t *pl, int event)
+{
+    robot_type_t *rob_type;
+
+    if (pl == NULL || !Player_is_robot(pl) || pl->robot_data_ptr == NULL)
+	return;
+    rob_type = &robot_types[pl->robot_data_ptr->robot_types_ind];
+    if (rob_type->robot_ball_event != NULL)
+	(*rob_type->robot_ball_event)(pl, event);
+}
+
+/*
+ * Name of the robot type driving this robot, NULL for non-robots.
+ */
+const char *Robot_type_name(player_t *pl)
+{
+    if (pl == NULL || !Player_is_robot(pl) || pl->robot_data_ptr == NULL)
+	return NULL;
+    return robot_types[pl->robot_data_ptr->robot_types_ind].name;
+}
+
+/*
  * Turn on a war lock.
  */
 static void Robot_set_war(player_t *pl, int victim_id)
@@ -1241,16 +1265,15 @@ void Robot_update(bool tick)
 	Robot_match_humans(can_spawn_more, num_playing_ships, num_any_ships,
 			   &new_robot_delay);
     } else {
+	    /* maxRobots / maxSmartRobots count robots only, not humans */
 	    if (NumSmartRobots < MAX_SMART_ROBOTS
 		&& (NumSmartRobots < options.minSmartRobots
-		    || (NumSmartRobots < options.maxSmartRobots
-			&& num_playing_ships < total_max_robots)))
+		    || NumSmartRobots < options.maxSmartRobots))
 		need_smart = true;
 
 	    if (num_default_robots < MAX_ROBOTS
 		&& (num_default_robots < options.minRobots
-		    || (num_default_robots < options.maxRobots
-			&& num_playing_ships < total_max_robots)))
+		    || num_default_robots < options.maxRobots))
 		need_default = true;
 
 	    if (can_spawn_more && (need_smart || need_default)) {
@@ -1279,7 +1302,7 @@ void Robot_update(bool tick)
 			     && NumSmartRobots > options.minSmartRobots) {
 			Robot_delete_type(true, false);
 		    }
-		    else if (num_playing_ships > total_max_robots) {
+		    else if (NumRobots > total_max_robots) {
 			if (num_default_robots > options.minRobots)
 			    Robot_delete_type(false, false);
 			else if (NumSmartRobots > options.minSmartRobots)

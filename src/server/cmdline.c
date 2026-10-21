@@ -287,9 +287,6 @@ static option_desc opts[] = {
 	"Number of ticks per automatic laser pulse fire (0=off).\n",
 	OPT_ORIGIN_ANY | OPT_VISIBLE
     },
-    /* kps - this is stupid */
-    /* 1. default should be 0 */
-    /* 2. robots = 4 should mean 4 robots, not 4 - numplayers robots */
     {
 	"maxRobots",
 	"robots",
@@ -297,8 +294,9 @@ static option_desc opts[] = {
 	&options.maxRobots,
 	valInt,
 	tuner_maxrobots,
-	"The maximum number of robots wanted.\n"
-	"Adds robots if there are less than maxRobots players.\n",
+	"The number of robots wanted.\n"
+	"Robots are added until there are maxRobots of them, human players\n"
+	"are not counted. Robots leave if the server runs out of bases.\n",
 	OPT_ORIGIN_ANY | OPT_VISIBLE
     },
     {

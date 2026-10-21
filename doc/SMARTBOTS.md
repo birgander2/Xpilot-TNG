@@ -15,10 +15,11 @@ XPilot TNG introduces **Smartbots** (`smart`), an advanced autonomous AI driver 
    - [Threat Scanner & CPA Evasion](#threat-scanner--cpa-evasion)
    - [A* Grid Pathfinding](#a-grid-pathfinding)
    - [Potential Field Maneuvering](#potential-field-maneuvering)
-   - [Capture-the-Flag (CTF) Intelligence](#capture-the-flag-ctf-intelligence)
+   - [Ball Game: Handling, Delivery & Team Play](#ball-game-handling-delivery--team-play)
 6. [Reinforcement Learning & Shared Brain](#reinforcement-learning--shared-brain)
    - [State & Action Space](#state--action-space)
    - [Evolutionary Policy Genes](#evolutionary-policy-genes)
+   - [Rewards](#rewards)
    - [Brain Persistence (`smartbot_brain.dat`)](#brain-persistence-smartbot_braindat)
 7. [Skill Level Matrix (Levels 1–100)](#skill-level-matrix-levels-1100)
 8. [Tactical Advice for Human Pilots](#tactical-advice-for-human-pilots)
@@ -33,7 +34,8 @@ Classic XPilot robots rely on simple line-of-sight heuristics and fixed reaction
 - **Dynamic Threat Assessment:** Computes the *Closest Point of Approach (CPA)* for incoming bullets, smart missiles, and torpedoes to initiate micro-dodges and shield deployments.
 - **Topological Navigation:** Navigates labyrinthine polygon and block maps using bounded grid A\* pathfinding to reach fuel stations, items, and team objectives.
 - **Tactical Versatility:** Dynamically shifts between close-quarters dogfighting, long-range sniper kiting, survival evasion, harvesting/refueling, and CTF flag-running.
-- **Online Learning:** Uses Tabular Q-Learning and continuous evolutionary policy adaptation that learns from combat outcomes (kills, deaths, damage) and persists across server runs in `smartbot_brain.dat`.
+- **Team Ball Play:** Tows the ball as a pair (ship + ball) instead of just flying the ship, throws it into the goal in a swing manoeuvre, and plays as a team with roles (attacker, defender, escort, hunter).
+- **Online Learning:** Uses Tabular Q-Learning and continuous evolutionary policy adaptation that learns from combat outcomes (kills, deaths) and ball-game results, and persists across server runs in `smartbot_brain.dat`.
 
 ---
 
@@ -45,9 +47,9 @@ Smartbots can be enabled via command-line arguments or server defaults files (`d
 
 | Option | Command Line Alias | Default | Description |
 | :--- | :--- | :---: | :--- |
-| `maxSmartRobots` | `-smartRobots` | `0` | Maximum number of smart learning robots active in the game. |
+| `maxSmartRobots` | `-smartRobots` | `0` | Number of smart learning robots wanted. Only robots are counted, human players do not reduce it. With `botsMatchHumans` it only sets the ratio of normal to smart bots. |
 | `minSmartRobots` | `-minSmartRobots` | `-1` | Minimum number of smart robots kept in the server (`-1` = follow `maxSmartRobots`). |
-| `smartRobotLevel` | `-smartLevel` | `75` | Global skill and intelligence level (**1 to 100**). Controls aiming precision, pathfinding depth, and reaction times. |
+| `smartRobotLevel` | `-smartLevel` | `75` | Global skill and intelligence level (**1 to 100**). Controls aiming precision, pathfinding depth, turn rate, and several ball-handling skills (see [Skill Level Matrix](#skill-level-matrix-levels-1100)). |
 | `smartRobotsLaser` | `-smartRobotsLaser` / `-smartLaser` | `true` | When `false`, Smartbots will neither pick up nor use laser pulses. |
 
 ### Example Startup Commands
@@ -62,6 +64,9 @@ Smartbots can be enabled via command-line arguments or server defaults files (`d
 # 3. Mix classic robots with smart learning bots
 ./xpilot-tng-server -map lib/maps/ndh.xp2 -robots 3 -smartRobots 3 -noQuit
 ```
+
+> [!NOTE]
+> Bots are only added while there are free bases, and with `restrictRobots` also only while the bot team has free bases. `maxRobots` and `maxSmartRobots` count robots only; human players do not count against them.
 
 > [!TIP]
 > If human players leave, setting `-noQuit` keeps the server running so Smartbots can continue training against each other in the background.
@@ -176,13 +181,65 @@ Movement combines attractive and repulsive force vectors:
 - **Wall Repulsion:** Increases exponentially as the bot approaches solid terrain.
 - **Hazard Repulsion:** Pushes the bot away from floating mines, cannon fire, and asteroid fields.
 
-### Capture-the-Flag (CTF) Intelligence
+### Ball Game: Handling, Delivery & Team Play
 
-On maps with treasures/balls, Smartbots implement dedicated CTF heuristics:
-- **Ball Stealing:** Prioritizes navigating to the enemy team's treasure vault.
-- **Ball Carrying:** Modulates engine thrust to compensate for ball tether physics and inertia.
-- **Catapulting & Throwing:** Flings the ball toward the scoring goal before reaching base.
-- **Interception & Defense:** Targets enemy carriers to recover stolen treasures.
+On team maps with treasures (balls), Smartbots play the ball game with dedicated flight control and team roles. Ships die on contact with a ball area (`treasureCollisionKills`), so a large part of this logic is about handling the ball without crashing.
+
+#### Treasure box avoidance
+
+- The outline of every ball area (the box around a treasure) is read from the map polygons and avoided exactly, with **no extra safety margin**: bots may fly closely past a box.
+- Only the velocity component *towards* a box is limited, to what the ship can still brake away. The braking estimate includes the time to turn around (so low-level bots brake earlier) and the mass of a towed ball.
+- Walls are still repelled block-wise, but ball areas are no longer treated as a block-sized wall. The path planner (A\*) routes around them.
+
+#### Picking up the ball
+
+- The connector arms as soon as the ship comes within `ballConnectorLength` of the ball, and the ball attaches when the ship moves out of that range again. The bot therefore flies to a free spot at about half that distance on its own side of the ball, never to the ball or the treasure centre.
+- Once the connector is armed, it backs away until the ball is attached.
+
+#### Towing: flying a ship-and-ball pair
+
+The ball is heavier than the ship and hangs on a stiff, barely damped spring, so steering the ship alone makes the pair jerk and oscillate. While towing, the bot therefore:
+
+- flies the **centre of mass** of ship and ball, using the acceleration the pair really has (thrust / total mass),
+- **plans the speed along the whole remaining path**: straight runs are flown fast, and the bot slows down early enough for every later turn,
+- **damps the spring** by pulling away while the connector is compressed,
+- keeps the **ball behind the ship** and never pushes towards it, except in an emergency; a small overspeed is simply coasted out,
+- checks the **ball's path for walls** too, not only the ship's,
+- limits its top speed with the skill level.
+
+#### Scoring: the swing throw
+
+- Once the ball has a clear line to the goal and the treasure is close (about 10 blocks), the bot starts a **throwing run**: the pair's centre of mass flies parallel to the line ball → goal while the ship swings 90° out to one side of the ball, towards the free side.
+- The ball is released when its predicted flight path hits the goal and the ship is **not** in that path. The ball area is permeable for balls, so the ball only has to touch the goal.
+- If the ball misses, the bot swings out sideways and starts a new straight run.
+- After a throw the bot does not chase the ball again for a few seconds.
+
+#### Team roles
+
+Roles are assigned per team about once per second. A bot that already has a role is favoured, so roles do not flap. Human players are never assigned roles, but are covered as carriers.
+
+| Situation | Roles |
+| :--- | :--- |
+| Own ball at home | **Attacker** (the bot closest to the enemy ball), **Defender**, up to two **Escorts** for the carrier or attacker, any further bots attack too |
+| Own ball stolen or loose | Everybody becomes a **Hunter**; with 3 or more free bots one keeps attacking |
+| Towing a ball | **Carrier** (always) |
+
+- **Attacker:** fetches the enemy ball and only fights enemies that are directly in the way (closer than 8 blocks, in line of sight).
+- **Defender:** circles the own treasure at about 4 blocks and fights enemies that come within 16 blocks of it.
+- **Escort:** flies ahead of and beside the carrier, away from the trailing ball, and fights enemies that approach the carrier (within 12 blocks).
+- **Hunter:** intercepts the enemy carrier of the own ball, aiming at its predicted position; if the ball lies loose, it picks it up and brings it home with the same logic as the enemy ball.
+- If the RL picks `TACTIC_CTF_OBJECTIVE`, the bot sticks strictly to its role objective instead of fighting.
+
+#### What a team knows (fairness)
+
+Bots get no information a human team would not have. The radar shows only plain dots (no hint who carries a ball, balls only with `treasuresOnRadar`), and the server prints no message when a ball is picked up. The team knowledge is therefore limited to view range (`Visibility_distance`, the same range a human sees):
+
+- **Own ball is away:** known as soon as any living teammate (human or bot) sees the empty treasure **or the ball anywhere** (loose or towed). It is remembered until a teammate sees the ball at home again.
+- **Thief:** known only while a teammate sees him (cloaking hides him as for humans). Hunters chase him then; when nobody sees him any more they search for the loose ball instead.
+- **Enemy ball at home:** assumed to be there until a teammate actually sees the enemy treasure. An attacker therefore simply flies to the enemy treasure, as a human would, and only learns on arrival if the ball is gone.
+- **Own towing:** a team always knows which of its own members tows an enemy ball.
+
+---
 
 ---
 
@@ -195,7 +252,7 @@ The Q-Learning agent discretizes environmental state into **72 states**:
 - **Fuel Bins (3):** Critical ($<25\%$), Normal ($25\%-65\%$), High ($>65\%$).
 - **Enemy Distance (4):** Close ($<6$ blocks), Medium ($<16$ blocks), Far, or None in sight.
 - **Threat State (2):** Safe vs. Imminent projectile/wall hazard.
-- **CTF Context (3):** Neutral, Carrying enemy ball, or Enemy carrying our ball.
+- **CTF Context (3):** Neutral, carrying a ball, or our own ball is away from its treasure.
 
 The agent selects between **5 High-Level Tactics**:
 
@@ -203,7 +260,7 @@ The agent selects between **5 High-Level Tactics**:
 2. `TACTIC_SNIPE_KITE` — Standoff range maintenance with precision lead shooting.
 3. `TACTIC_EVADE_SURVIVE` — Shield conservation, defensive mine dropping, and retreat.
 4. `TACTIC_HARVEST_REFUEL` — Seeking fuel stations and item concentrators.
-5. `TACTIC_CTF_OBJECTIVE` — Attacking the enemy base, flag running, and escorting.
+5. `TACTIC_CTF_OBJECTIVE` — Sticking to the ball-game role objective (attack, defend, escort, hunt) instead of fighting.
 
 ### Evolutionary Policy Genes
 
@@ -219,13 +276,30 @@ typedef struct smart_genes {
 } smart_genes_t;
 ```
 
-Bots receiving high episode rewards (kills, CTF captures, survival) propagate their gene weights to the shared server brain.
+Bots receiving high episode rewards (kills, ball scores, survival) propagate their gene weights to the shared server brain.
+
+### Rewards
+
+| Event | Reward |
+| :--- | :---: |
+| Kill | +12 |
+| Death | −10 |
+| Scored an enemy ball yourself (wins the round) | **+60** |
+| A teammate scored an enemy ball | +25 |
+| The enemy scored our ball | −20 |
+| Brought our own ball back home | +4 |
+| Released the ball on a goal course | +2 |
+| Score change since the last decision | ×0.25, limited to ±3 |
+| Survival, per decision (about once per second) | +0.05 |
+
+A ball score is worth far more than a kill because it wins the round. Bringing the own ball back scores few points, so its reward stays small and below a kill. The score term is capped so a large ball score swing is not counted twice. The server tells the bots about ball events through `Robot_ball_event()`.
 
 ### Brain Persistence (`smartbot_brain.dat`)
 
 - All smartbots on a server share a single persistent brain.
 - At the end of matches, upon server shutdown, or when `/msg <BotName> save` is issued, the state table and optimal policy genes are written to `smartbot_brain.dat`.
 - When the server boots up, existing knowledge is loaded automatically, preventing bots from having to relearn basic tactics.
+- The file carries a format version. A file written by an older version (for example before the team roles and ball rewards were introduced, version 2) is ignored, so the bots start learning from scratch and overwrite it on the next save. Back it up first if you want to keep it.
 - Location: `$XDG_DATA_HOME/xpilot-tng/smartbot_brain.dat` (default `~/.local/share/xpilot-tng/smartbot_brain.dat`). The directory is created on first save. If no file exists there, a legacy `smartbot_brain.dat` in the server's working directory is loaded once and subsequently saved to the new location.
 
 ---
@@ -241,6 +315,17 @@ The `smartRobotLevel` option scales AI behavior across several parameters:
 | **61 – 85** *(Veteran)* | **75% – 88% lead** *(Default)* | **$\pm 1.5^\circ$** | **Enabled** | **Every 18 ticks** | **Coordinated dodging & shields** |
 | **86 – 100** *(Master)* | 90% – 100% exact lead | $0^\circ$ (Pinpoint) | Enabled | Real-time adaptive | Frame-perfect evasion & kiting |
 
+### Level effects in the ball game
+
+| Effect | Level 1 | Level 50 | Level 75 | Level 100 |
+| :--- | :---: | :---: | :---: | :---: |
+| Top speed with ball (`14 + 14 · level/100`) | 14 | 21 | 24.5 | 28 |
+| Connector damping | 40% | 70% | 85% | 100% |
+| Allowed miss distance when releasing the ball | ~37 px | ~27 px | ~22 px | 17 px |
+| Turn rate (direction units per decision) | 3 | 7 | 9 | 12 |
+
+Higher levels carry the ball faster and more smoothly, and wait for a cleaner throw. Low levels stay safe but are slow and throw less accurately. Path search depth (A\*) and wall-ray resolution scale with the level as well.
+
 ---
 
 ## Tactical Advice for Human Pilots
@@ -254,3 +339,5 @@ Smartbots are formidable opponents, but human pilots can exploit their algorithm
    - **Phasing (`p`):** Dive through solid rock walls where bots are forced to take the long A\* path around.
 3. **Exploit Fuel Depletion:** Watch for bots entering `Harvest/Refuel` mode. When a bot is low on fuel, it prioritizes fuel depots and becomes vulnerable to ambushes.
 4. **Use Obstacles:** Ricochet shots around corners; while Smartbots understand wall avoidance, human players can set traps using stationary mines and gravitational wells.
+5. **Hit the carrier, not the escort:** A bot towing a ball flies a heavy, sluggish pair and brakes early for every turn. Disrupting the connector or shooting the ball carrier is the best way to stop a run, and killing it returns the ball.
+6. **Watch the swing:** Before a throw the carrier swings out sideways beside the ball's line to the goal. That is the moment it is slow to dodge, and it announces where the ball will fly.

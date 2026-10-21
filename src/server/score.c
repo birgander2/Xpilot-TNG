@@ -475,6 +475,7 @@ void Handle_Scoring(scoretype_t st, player_t * killer, player_t * victim,
 		if (pl_i->team == treasure->team) {
 		    Score(pl_i, -sc, treasure->pos, "Treasure: ");
 		    Rank_lost_ball(pl_i);
+		    Robot_ball_event(pl_i, ROBOT_BALL_LOST);
 		    if (options.treasureKillTeam)
 			Player_set_state(pl_i, PL_STATE_KILLED);
 		} else if (pl_i->team == killer->team &&
@@ -484,6 +485,8 @@ void Handle_Scoring(scoretype_t st, player_t * killer, player_t * victim,
 			if (pl_i->id == killer->id)
 			    Rank_cashed_ball(pl_i);
 			Rank_won_ball(pl_i);
+			Robot_ball_event(pl_i, pl_i->id == killer->id
+					 ? ROBOT_BALL_CASHED : ROBOT_BALL_WON);
 		    }
 		    Score(pl_i,
 			  (pl_i->id == killer->id ? 3 * por : 2 * por),

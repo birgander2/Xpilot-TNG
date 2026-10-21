@@ -81,7 +81,8 @@ static robot_type_t robot_suibot_type = {
     Robot_suibot_war_on_player,
     Robot_suibot_message,
     Robot_suibot_destroy,
-    Robot_suibot_invite
+    Robot_suibot_invite,
+    NULL			/* no ball event handling */
 };
 
 

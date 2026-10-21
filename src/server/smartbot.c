@@ -25,7 +25,7 @@
 #define SMART_BRAIN_FILE	"smartbot_brain.dat"
 #define SMART_BRAIN_SUBDIR	"xpilot-tng"
 #define SMART_BRAIN_MAGIC	0x58505342U /* "XPSB" */
-#define SMART_BRAIN_VERSION	1U
+#define SMART_BRAIN_VERSION	2U	/* 2: team roles & ball event rewards */
 #define SMART_BRAIN_SAVE_SECS	300	/* periodic save interval */
 
 /*
@@ -143,7 +143,51 @@ typedef struct robot_smart_data {
     int			throw_side;		/* Swing side (+1/-1) of a throw, 0 = none */
     bool		deliver_retreat;	/* Swinging out for another delivery run */
     clpos_t		deliver_pt;		/* Swing-out point next to the home treasure */
+
+    /* Team play */
+    int			role;			/* enum SmartRole */
+    int			escort_id;		/* Player to cover as ROLE_ESCORT */
 } robot_smart_data_t;
+
+/*
+ * Team play roles in ball games, assigned per team about once per second
+ * (Smart_assign_roles).  The RL tactic still picks the fighting style; the
+ * role decides which objective a bot works on when it is not fighting.
+ */
+enum SmartRole {
+    ROLE_NONE = 0,	/* no ball game: free play */
+    ROLE_CARRIER,	/* towing a ball home */
+    ROLE_ATTACKER,	/* fetch the enemy ball */
+    ROLE_ESCORT,	/* cover a ball carrier or the attacker */
+    ROLE_DEFENDER,	/* guard our treasure */
+    ROLE_HUNTER		/* get our ball back: chase its carrier or pick it up */
+};
+
+#define ROLE_UPDATE_TICKS	12	/* robot ticks between role assignments */
+
+typedef struct smart_team {
+    int		enemy_carrier_id;	/* thief of our ball a teammate sees right now, else NO_ID */
+} smart_team_t;
+
+/*
+ * What a team knows about its treasures is limited like a human team's: it
+ * learns that its ball is gone by seeing the empty treasure or the ball
+ * anywhere, and remembers that until it sees the ball at home again.
+ */
+#define MAX_KNOWN_TREASURES	64
+static bool	TreasureAwayKnown[MAX_KNOWN_TREASURES];
+
+static smart_team_t	SmartTeams[MAX_TEAMS];
+
+/*
+ * Q-learning rewards for ball game events (Robot_smart_ball_event).  Scoring
+ * a ball wins the round, so it outweighs everything else; bringing our own
+ * ball back scores little and is rewarded less than a kill.
+ */
+#define REWARD_BALL_CASHED	60.0
+#define REWARD_BALL_WON		25.0
+#define REWARD_BALL_LOST	-20.0
+#define REWARD_BALL_SAVED	4.0
 
 /*
  * BallArea outlines (treasure boxes), in pixels.  Ships die on contact
@@ -178,6 +222,7 @@ static int  Robot_smart_war_on_player(player_t *pl);
 static void Robot_smart_message(player_t *pl, const char *str);
 static void Robot_smart_destroy(player_t *pl);
 static void Robot_smart_invite(player_t *pl, player_t *inviter);
+static void Robot_smart_ball_event(player_t *pl, int event);
 int         Robot_smart_setup(robot_type_t *type_ptr);
 
 static robot_type_t robot_smart_type = {
@@ -190,7 +235,8 @@ static robot_type_t robot_smart_type = {
     Robot_smart_war_on_player,
     Robot_smart_message,
     Robot_smart_destroy,
-    Robot_smart_invite
+    Robot_smart_invite,
+    Robot_smart_ball_event
 };
 
 static inline robot_smart_data_t *Robot_smart_get_data(player_t *pl)
@@ -328,6 +374,9 @@ static void Smart_brain_init(void)
     BrainInitialized = true;
 }
 
+static bool Smart_team_ball_away(int team);
+static bool Smart_believes_ball_home(int team, treasure_t *tr);
+
 static int Smart_encode_rl_state(player_t *pl, double enemy_dist, bool high_threat)
 {
     robot_smart_data_t *my_data = Robot_smart_get_data(pl);
@@ -357,14 +406,8 @@ static int Smart_encode_rl_state(player_t *pl, double enemy_dist, bool high_thre
 	if (BIT(pl->have, HAS_BALL) || pl->ball != NULL) {
 	    ctf_bin = 1;
 	} else {
-	    int i;
-	    for (i = 0; i < Num_treasures(); i++) {
-		treasure_t *tr = Treasure_by_index(i);
-		if (tr->team == pl->team && !tr->have) {
-		    ctf_bin = 2;
-		    break;
-		}
-	    }
+	    if (Smart_team_ball_away(pl->team))
+		ctf_bin = 2;
 	}
     }
 
@@ -393,7 +436,15 @@ static void Smart_rl_step(player_t *pl, int next_state)
     my_data->last_kills  = pl->kills;
     my_data->last_deaths = pl->deaths;
 
-    reward += score_delta * 0.25;
+    /*
+     * Ball scores are rewarded through Robot_smart_ball_event(); cap the
+     * plain score signal so its large ball swings are not counted twice.
+     */
+    {
+	double score_reward = score_delta * 0.25;
+	LIMIT(score_reward, -3.0, 3.0);
+	reward += score_reward;
+    }
     if (kills_delta > 0) {
 	reward += 12.0 * kills_delta;
 	SharedBrain.total_kills += kills_delta;
@@ -2150,7 +2201,8 @@ static bool Smart_handle_ctf(player_t *pl, vector_t repulse_vec,
 		home_tr_dist = d;
 		home_tr = i;
 	    }
-	} else if (Team_by_index(tr->team)->NumMembers > 0 && tr->have) {
+	} else if (Team_by_index(tr->team)->NumMembers > 0
+		   && Smart_believes_ball_home(pl->team, tr)) {
 	    if (d < enemy_tr_dist) {
 		enemy_tr_dist = d;
 		enemy_tr = i;
@@ -2191,7 +2243,8 @@ static bool Smart_handle_ctf(player_t *pl, vector_t repulse_vec,
 	    my_data->last_thrown_ball = my_data->robot_count;
 	    my_data->throw_side = 0;
 	    my_data->deliver_retreat = false;
-	    my_data->accumulated_reward += 6.0;
+	    /* Small shaping only: the real reward comes with the score */
+	    my_data->accumulated_reward += 2.0;
 	    return true;
 	}
 
@@ -2279,6 +2332,470 @@ static bool Smart_handle_ctf(player_t *pl, vector_t repulse_vec,
 }
 
 /* =========================================================================
+ * Team Play: Role Assignment & Role Objectives
+ * ========================================================================= */
+
+static smart_team_t *Smart_team(int team)
+{
+    if (team < 0 || team >= MAX_TEAMS)
+	return NULL;
+    return &SmartTeams[team];
+}
+
+static bool Smart_is_smartbot(player_t *pl)
+{
+    const char *name = Robot_type_name(pl);
+
+    return name != NULL && strcmp(name, robot_smart_type.name) == 0;
+}
+
+/* Does a living teammate see pos (within a human's view range)? */
+static bool Smart_team_sees(int team, clpos_t pos)
+{
+    int i;
+
+    for (i = 0; i < NumPlayers; i++) {
+	player_t *pl_i = Player_by_index(i);
+
+	if (pl_i->team != team || Player_is_tank(pl_i) || !Player_is_alive(pl_i)
+	    || Player_is_paused(pl_i) || Player_is_waiting(pl_i))
+	    continue;
+	if (Wrap_length(pl_i->pos.cx - pos.cx, pl_i->pos.cy - pos.cy) / CLICK
+	    <= Visibility_distance)
+	    return true;
+    }
+    return false;
+}
+
+/*
+ * Does a team believe the ball of treasure tr is at home?  A team that
+ * sees the treasure knows; otherwise it assumes the ball is still there
+ * (own and enemy treasures alike; for the own ones see TreasureAwayKnown).
+ */
+static bool Smart_believes_ball_home(int team, treasure_t *tr)
+{
+    return Smart_team_sees(team, tr->pos) ? tr->have : true;
+}
+
+/* Does the team know that (one of) its own balls is away from its treasure? */
+static bool Smart_team_ball_away(int team)
+{
+    int i;
+
+    for (i = 0; i < Num_treasures() && i < MAX_KNOWN_TREASURES; i++) {
+	if (TreasureAwayKnown[i] && Treasure_by_index(i)->team == team)
+	    return true;
+    }
+    return false;
+}
+
+/*
+ * Update what the teams know: who has stolen their ball (only while a
+ * teammate sees the thief) and whether their own balls are away.  A ball
+ * is seen anywhere within view range of a living teammate, loose or towed.
+ */
+static void Smart_update_team_knowledge(void)
+{
+    int i, j, t;
+
+    for (t = 0; t < MAX_TEAMS; t++)
+	SmartTeams[t].enemy_carrier_id = NO_ID;
+
+    for (i = 0; i < NumObjs; i++) {
+	ballobject_t *ball;
+	player_t *owner;
+	int bt;
+
+	if (Obj[i]->type != OBJ_BALL)
+	    continue;
+	ball = BALL_IND(i);
+	if (ball->id == NO_ID || ball->ball_treasure == NULL)
+	    continue;
+	bt = ball->ball_treasure->team;
+	owner = Player_by_id(ball->id);
+	if (owner == NULL || owner->team == bt || Smart_team(bt) == NULL)
+	    continue;
+	/* A teammate has to see the thief; cloaking hides him as for humans */
+	for (j = 0; j < NumPlayers; j++) {
+	    player_t *mate = Player_by_index(j);
+
+	    if (mate->team == bt && !Player_is_tank(mate) && Player_is_alive(mate)
+		&& !Player_is_paused(mate) && Smart_detect_ship(mate, owner)) {
+		SmartTeams[bt].enemy_carrier_id = owner->id;
+		break;
+	    }
+	}
+    }
+
+    for (i = 0; i < Num_treasures() && i < MAX_KNOWN_TREASURES; i++) {
+	treasure_t *tr = Treasure_by_index(i);
+
+	if (tr->have || tr->empty) {
+	    TreasureAwayKnown[i] = false;
+	    continue;
+	}
+	if (TreasureAwayKnown[i])
+	    continue;
+	if (Smart_team_sees(tr->team, tr->pos)) {
+	    TreasureAwayKnown[i] = true;
+	    continue;
+	}
+	for (j = 0; j < NumObjs; j++) {
+	    if (Obj[j]->type == OBJ_BALL && BALL_IND(j)->ball_treasure == tr
+		&& Smart_team_sees(tr->team, Obj[j]->pos)) {
+		TreasureAwayKnown[i] = true;
+		break;
+	    }
+	}
+    }
+}
+
+/* Nearest treasure of a team to pos, NULL if the team has none. */
+static treasure_t *Smart_team_treasure(int team, clpos_t pos, bool need_ball_home)
+{
+    treasure_t *best = NULL;
+    double best_d = 1e19;
+    int i;
+
+    for (i = 0; i < Num_treasures(); i++) {
+	treasure_t *tr = Treasure_by_index(i);
+	double d;
+
+	if (tr->team != team || (need_ball_home && !tr->have))
+	    continue;
+	d = Wrap_length(tr->pos.cx - pos.cx, tr->pos.cy - pos.cy);
+	if (d < best_d) {
+	    best_d = d;
+	    best = tr;
+	}
+    }
+    return best;
+}
+
+/* Nearest enemy treasure with its ball at home, NULL if none. */
+static treasure_t *Smart_enemy_treasure(int team, clpos_t pos)
+{
+    treasure_t *best = NULL;
+    double best_d = 1e19;
+    int i;
+
+    for (i = 0; i < Num_treasures(); i++) {
+	treasure_t *tr = Treasure_by_index(i);
+	double d;
+
+	if (tr->team == team || !Smart_believes_ball_home(team, tr)
+	    || Team_by_index(tr->team)->NumMembers <= 0)
+	    continue;
+	d = Wrap_length(tr->pos.cx - pos.cx, tr->pos.cy - pos.cy);
+	if (d < best_d) {
+	    best_d = d;
+	    best = tr;
+	}
+    }
+    return best;
+}
+
+/*
+ * Pick the bot from pool[] (NULL entries are taken) closest to pos.  Bots
+ * already holding the role get a bonus, so roles do not flap back and forth.
+ */
+static int Smart_pick_closest(player_t **pool, int n, clpos_t pos, int role)
+{
+    double best_d = 1e19;
+    int i, best = -1;
+
+    for (i = 0; i < n; i++) {
+	double d;
+
+	if (pool[i] == NULL)
+	    continue;
+	d = Wrap_length(pool[i]->pos.cx - pos.cx, pool[i]->pos.cy - pos.cy);
+	if (Robot_smart_get_data(pool[i])->role == role)
+	    d *= 0.7;
+	if (d < best_d) {
+	    best_d = d;
+	    best = i;
+	}
+    }
+    return best;
+}
+
+static void Smart_set_role(player_t **pool, int idx, int role, int escort_id)
+{
+    robot_smart_data_t *my_data = Robot_smart_get_data(pool[idx]);
+
+    my_data->role = role;
+    my_data->escort_id = escort_id;
+    pool[idx] = NULL;
+}
+
+/*
+ * Assign roles to the smartbots of every team:
+ * - bots towing a ball are carriers,
+ * - our ball stolen or loose: everybody hunts it, but with three or more
+ *   bots one keeps attacking the enemy ball,
+ * - otherwise: attacker, defender, then escorts (at most two) for the
+ *   carrier or attacker; any further bots attack too.
+ */
+static void Smart_assign_roles(void)
+{
+    player_t *bots[MAX_TEAMS][NUM_IDS];
+    int nbots[MAX_TEAMS];
+    int carrier_of_enemy_ball[MAX_TEAMS];
+    int t, i;
+    bool ball_game = BIT(world->rules->mode, TEAM_PLAY) && Num_treasures() > 0;
+
+    for (t = 0; t < MAX_TEAMS; t++) {
+	nbots[t] = 0;
+	carrier_of_enemy_ball[t] = NO_ID;
+    }
+
+    for (i = 0; i < NumPlayers; i++) {
+	player_t *pl_i = Player_by_index(i);
+
+	if (!Smart_is_smartbot(pl_i))
+	    continue;
+	if (!ball_game || Smart_team(pl_i->team) == NULL) {
+	    Robot_smart_get_data(pl_i)->role = ROLE_NONE;
+	    continue;
+	}
+	if (Player_is_alive(pl_i) && nbots[pl_i->team] < NUM_IDS)
+	    bots[pl_i->team][nbots[pl_i->team]++] = pl_i;
+    }
+    if (!ball_game)
+	return;
+
+    Smart_update_team_knowledge();
+
+    /* Which teammate tows an enemy ball? (a team always knows its own members) */
+    for (i = 0; i < NumObjs; i++) {
+	ballobject_t *ball;
+	player_t *owner;
+
+	if (Obj[i]->type != OBJ_BALL)
+	    continue;
+	ball = BALL_IND(i);
+	if (ball->id == NO_ID || ball->ball_treasure == NULL)
+	    continue;
+	owner = Player_by_id(ball->id);
+	if (owner == NULL || Smart_team(owner->team) == NULL)
+	    continue;
+	if (owner->team != ball->ball_treasure->team)
+	    carrier_of_enemy_ball[owner->team] = owner->id;
+    }
+
+    for (t = 0; t < MAX_TEAMS; t++) {
+	player_t **pool = bots[t];
+	int n = nbots[t], left, k;
+	treasure_t *home, *enemy_tr;
+	bool our_ball_home = !Smart_team_ball_away(t);
+	int escort_target = carrier_of_enemy_ball[t];
+	clpos_t ref;
+
+	if (n == 0)
+	    continue;
+	ref = pool[0]->pos;
+
+	/* Carriers keep towing */
+	for (k = 0; k < n; k++) {
+	    if (BIT(pool[k]->have, HAS_BALL))
+		Smart_set_role(pool, k, ROLE_CARRIER, NO_ID);
+	}
+	left = 0;
+	for (k = 0; k < n; k++)
+	    if (pool[k] != NULL)
+		left++;
+
+	home = Smart_team_treasure(t, ref, false);
+	enemy_tr = NULL;
+	for (k = 0; k < n && enemy_tr == NULL; k++) {
+	    if (pool[k] != NULL)
+		enemy_tr = Smart_enemy_treasure(t, pool[k]->pos);
+	}
+
+	if (!our_ball_home) {
+	    if (left >= 3 && enemy_tr != NULL && escort_target == NO_ID) {
+		k = Smart_pick_closest(pool, n, enemy_tr->pos, ROLE_ATTACKER);
+		if (k >= 0) {
+		    Smart_set_role(pool, k, ROLE_ATTACKER, NO_ID);
+		    left--;
+		}
+	    }
+	    for (k = 0; k < n; k++) {
+		if (pool[k] != NULL)
+		    Smart_set_role(pool, k, ROLE_HUNTER, NO_ID);
+	    }
+	    continue;
+	}
+
+	/* Attacker, unless a teammate already tows the enemy ball */
+	if (escort_target == NO_ID && enemy_tr != NULL && left > 0) {
+	    k = Smart_pick_closest(pool, n, enemy_tr->pos, ROLE_ATTACKER);
+	    escort_target = pool[k]->id;
+	    Smart_set_role(pool, k, ROLE_ATTACKER, NO_ID);
+	    left--;
+	}
+	/* Defender, unless a lone bot should rather cover a teammate's ball run */
+	if (home != NULL && left > 0
+	    && (left >= 2 || carrier_of_enemy_ball[t] == NO_ID)) {
+	    k = Smart_pick_closest(pool, n, home->pos, ROLE_DEFENDER);
+	    Smart_set_role(pool, k, ROLE_DEFENDER, NO_ID);
+	    left--;
+	}
+	/* Up to two escorts */
+	if (escort_target != NO_ID) {
+	    player_t *target = Player_by_id(escort_target);
+	    int escorts = 0;
+
+	    while (target != NULL && left > 0 && escorts < 2) {
+		k = Smart_pick_closest(pool, n, target->pos, ROLE_ESCORT);
+		Smart_set_role(pool, k, ROLE_ESCORT, escort_target);
+		left--;
+		escorts++;
+	    }
+	}
+	/* The rest attack */
+	for (k = 0; k < n; k++) {
+	    if (pool[k] != NULL)
+		Smart_set_role(pool, k, enemy_tr != NULL ? ROLE_ATTACKER : ROLE_DEFENDER,
+			       NO_ID);
+	}
+    }
+}
+
+/*
+ * Work on the bot's role objective.  Returns false if the bot should fight
+ * (or do something else) instead.  With the CTF tactic picked by the RL the
+ * bot sticks to its objective; otherwise it fights enemies that matter for
+ * its role.
+ */
+static bool Smart_play_role(player_t *pl, player_t *enemy, double enemy_dist,
+			    bool enemy_los, vector_t repulse_vec,
+			    int *aim_dir, bool *has_aim_dir)
+{
+    robot_smart_data_t *my_data = Robot_smart_get_data(pl);
+    bool focus = (my_data->current_tactic == TACTIC_CTF_OBJECTIVE);
+    smart_team_t *team = Smart_team(pl->team);
+
+    switch (my_data->role) {
+    case ROLE_CARRIER:
+	return Smart_handle_ctf(pl, repulse_vec, aim_dir, has_aim_dir);
+
+    case ROLE_ATTACKER:
+	/* Only fight enemies right in our way */
+	if (!focus && enemy != NULL && enemy_los && enemy_dist < 8.0 * BLOCK_SZ)
+	    return false;
+	return Smart_handle_ctf(pl, repulse_vec, aim_dir, has_aim_dir);
+
+    case ROLE_HUNTER: {
+	player_t *carrier = (team != NULL && team->enemy_carrier_id != NO_ID)
+			    ? Player_by_id(team->enemy_carrier_id) : NULL;
+	treasure_t *home;
+
+	if (carrier != NULL && Player_is_alive(carrier)) {
+	    double d = Wrap_length(carrier->pos.cx - pl->pos.cx,
+				   carrier->pos.cy - pl->pos.cy) / CLICK;
+	    double lead_t = MIN(d / 20.0, 15.0);
+	    clpos_t aim, wp;
+
+	    /* Close and in sight: the combat code keeps distance and shoots */
+	    if (enemy == carrier && enemy_los && d < 10.0 * BLOCK_SZ)
+		return false;
+	    aim.cx = carrier->pos.cx + PIXEL_TO_CLICK(carrier->vel.x * lead_t);
+	    aim.cy = carrier->pos.cy + PIXEL_TO_CLICK(carrier->vel.y * lead_t);
+	    wp = Smart_find_next_waypoint(pl, World_wrap_clpos(aim));
+	    Smart_fly_towards(pl, wp, 22.0, repulse_vec, *has_aim_dir ? aim_dir : NULL);
+	    return true;
+	}
+	/* Our ball lies loose somewhere: pick it up and bring it home */
+	home = Smart_team_treasure(pl->team, pl->pos, false);
+	if (home != NULL && Smart_team_ball_away(pl->team)) {
+	    int i;
+
+	    for (i = 0; i < NumObjs; i++) {
+		if (Obj[i]->type == OBJ_BALL && Obj[i]->id == NO_ID
+		    && BALL_PTR(Obj[i])->ball_treasure == home) {
+		    clpos_t spot = Smart_pick_pickup_spot(pl, home);
+		    clpos_t wp = Smart_find_next_waypoint(pl, spot);
+		    double d = Wrap_length(spot.cx - pl->pos.cx,
+					   spot.cy - pl->pos.cy) / CLICK;
+
+		    SET_BIT(pl->used, USES_CONNECTOR);
+		    Smart_fly_towards(pl, wp, (d < 4.0 * BLOCK_SZ) ? 9.0 : 18.0,
+				      repulse_vec, *has_aim_dir ? aim_dir : NULL);
+		    return true;
+		}
+	    }
+	}
+	return false;
+    }
+
+    case ROLE_ESCORT: {
+	player_t *target = Player_by_id(my_data->escort_id);
+	double tspeed, d, speed, side = (pl->id & 1) ? 1.0 : -1.0;
+	clpos_t spot, wp;
+
+	if (target == NULL || !Player_is_alive(target))
+	    return false;
+	/* Fight enemies close to the one we cover */
+	if (!focus && enemy != NULL
+	    && Wrap_length(enemy->pos.cx - target->pos.cx,
+			   enemy->pos.cy - target->pos.cy) / CLICK < 12.0 * BLOCK_SZ)
+	    return false;
+
+	/* Fly ahead and to the side, away from a towed ball trailing behind */
+	tspeed = LENGTH(target->vel.x, target->vel.y);
+	if (tspeed > 3.0) {
+	    int vdir = (int)(findDir(target->vel.x, target->vel.y) + 0.5);
+	    spot = Smart_offset_pos(target->pos, vdir, 3.5 * BLOCK_SZ);
+	    spot = Smart_offset_pos(spot, vdir + (int)side * RES / 4, 2.0 * BLOCK_SZ);
+	} else
+	    spot = Smart_offset_pos(target->pos, (int)(side * RES / 4), 3.0 * BLOCK_SZ);
+
+	d = Wrap_length(spot.cx - pl->pos.cx, spot.cy - pl->pos.cy) / CLICK;
+	speed = tspeed + d / BLOCK_SZ * 1.5;
+	LIMIT(speed, 6.0, 22.0);
+	wp = Smart_find_next_waypoint(pl, spot);
+	Smart_fly_towards(pl, wp, speed, repulse_vec, *has_aim_dir ? aim_dir : NULL);
+	return true;
+    }
+
+    case ROLE_DEFENDER: {
+	treasure_t *home = Smart_team_treasure(pl->team, pl->pos, false);
+	int base, k;
+	clpos_t spot, wp;
+	double d;
+
+	if (home == NULL)
+	    return false;
+	/* Fight enemies near our treasure */
+	if (!focus && enemy != NULL
+	    && Wrap_length(enemy->pos.cx - home->pos.cx,
+			   enemy->pos.cy - home->pos.cy) / CLICK < 16.0 * BLOCK_SZ)
+	    return false;
+
+	/* Slowly circle the treasure */
+	base = (RoundCounter / 4 + pl->id * 37) % RES;
+	spot = Smart_offset_pos(home->pos, base, 4.0 * BLOCK_SZ);
+	for (k = 1; k < 8 && !Smart_spot_is_free(pl, spot); k++)
+	    spot = Smart_offset_pos(home->pos, base + k * RES / 8, 4.0 * BLOCK_SZ);
+
+	d = Wrap_length(spot.cx - pl->pos.cx, spot.cy - pl->pos.cy) / CLICK;
+	wp = Smart_find_next_waypoint(pl, spot);
+	Smart_fly_towards(pl, wp, MIN(16.0, 3.0 + d / BLOCK_SZ * 1.5),
+			  repulse_vec, *has_aim_dir ? aim_dir : NULL);
+	return true;
+    }
+
+    default:
+	/* No ball game role: the old behaviour */
+	if (focus || BIT(pl->have, HAS_BALL) || pl->ball != NULL)
+	    return Smart_handle_ctf(pl, repulse_vec, aim_dir, has_aim_dir);
+	return false;
+    }
+}
+
+/* =========================================================================
  * Lifecycle & Main Play Loop
  * ========================================================================= */
 
@@ -2299,6 +2816,25 @@ static void Robot_smart_round_tick(void)
 
     if (++RoundCounter % (SMART_BRAIN_SAVE_SECS * FPS) == 0 && BrainDirty)
 	Smart_brain_save();
+
+    if (RoundCounter % ROLE_UPDATE_TICKS == 0)
+	Smart_assign_roles();
+}
+
+static void Robot_smart_ball_event(player_t *pl, int event)
+{
+    robot_smart_data_t *my_data = Robot_smart_get_data(pl);
+    double reward = 0.0;
+
+    switch (event) {
+    case ROBOT_BALL_CASHED:	reward = REWARD_BALL_CASHED;	break;
+    case ROBOT_BALL_WON:	reward = REWARD_BALL_WON;	break;
+    case ROBOT_BALL_LOST:	reward = REWARD_BALL_LOST;	break;
+    case ROBOT_BALL_SAVED:	reward = REWARD_BALL_SAVED;	break;
+    default:			return;
+    }
+    my_data->accumulated_reward += reward;
+    my_data->episode_reward += reward;
 }
 
 static void Robot_smart_create(player_t *pl, char *str)
@@ -2339,6 +2875,8 @@ static void Robot_smart_create(player_t *pl, char *str)
 
     my_data->robot_lock = LOCK_NONE;
     my_data->robot_lock_id = NO_ID;
+    my_data->role = ROLE_NONE;
+    my_data->escort_id = NO_ID;
     my_data->current_state = -1;
     my_data->current_tactic = TACTIC_DOGFIGHT_AGGR;
     my_data->genes = SharedBrain.best_genes;
@@ -2557,10 +3095,13 @@ static void Robot_smart_play(player_t *pl)
 	player_t *ship = Player_by_index(i);
 	double d, priority_dist;
 	bool los;
+	/* A teammate in sight of the thief of our ball tells the others */
+	bool our_ball_thief = Smart_team(pl->team) != NULL
+			      && ship->id == SmartTeams[pl->team].enemy_carrier_id;
 
 	if (ship->id == pl->id || !Player_is_active(ship) || Team_immune(pl->id, ship->id))
 	    continue;
-	if (!Smart_detect_ship(pl, ship))
+	if (!our_ball_thief && !Smart_detect_ship(pl, ship))
 	    continue;
 
 	d = Wrap_length(ship->pos.cx - pl->pos.cx, ship->pos.cy - pl->pos.cy) / CLICK;
@@ -2574,6 +3115,8 @@ static void Robot_smart_play(player_t *pl)
 	    priority_dist *= 0.55;
 	if (BIT(ship->have, HAS_BALL) || ship->ball != NULL)
 	    priority_dist *= 0.45;
+	if (our_ball_thief && my_data->role == ROLE_HUNTER)
+	    priority_dist *= 0.2;
 	if (BIT(my_data->robot_lock, LOCK_PLAYER) && ship->id == my_data->robot_lock_id)
 	    priority_dist *= 0.60;
 
@@ -2675,13 +3218,10 @@ static void Robot_smart_play(player_t *pl)
 	return;
     }
 
-    /* Capture the Flag objectives */
-    if (my_data->current_tactic == TACTIC_CTF_OBJECTIVE
-	|| BIT(pl->have, HAS_BALL)
-	|| pl->ball != NULL) {
-	if (Smart_handle_ctf(pl, repulse_vec, &aim_dir, &has_aim_dir))
-	    return;
-    }
+    /* Ball game role objectives (or the plain CTF objective without roles) */
+    if (Smart_play_role(pl, best_enemy, best_enemy_dist, best_enemy_los,
+			repulse_vec, &aim_dir, &has_aim_dir))
+	return;
 
     /* Proactive item collection when no enemy is in immediate close quarters or item is very valuable */
     if (best_item_i >= 0
