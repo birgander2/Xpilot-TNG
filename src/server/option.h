@@ -33,7 +33,7 @@ extern struct options {
     int		minSmartRobots;
     int		smartRobotLevel;
     bool	smartRobotsLaser;
-    bool	smartBallBots;
+    char	*smartBotType;		/* see smart_bot_types[] in robot.c */
     bool	smartRobotsUseLaser;	/* alias of smartRobotsLaser */
     char	*robotFile;
     int		robotsTalk;

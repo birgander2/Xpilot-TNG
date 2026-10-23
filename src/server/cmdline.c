@@ -344,14 +344,19 @@ static option_desc opts[] = {
 	OPT_ORIGIN_ANY | OPT_VISIBLE
     },
     {
-	"smartBallBots",
-	"ballBots",
-	"true",
-	&options.smartBallBots,
-	valBool,
+	"smartBotType",
+	"smartType",
+	"auto",
+	&options.smartBotType,
+	valString,
 	tuner_dummy,
-	"Do smart robots use the dedicated ball game AI on maps with\n"
-	"team play and treasures? Affects robots that join afterwards.\n",
+	"Which AI the smart robots (maxSmartRobots) use. Affects robots\n"
+	"that join afterwards.\n"
+	"  auto    the best AI for the map: ball on team maps with treasures\n"
+	"          of at least two teams, smart everywhere else.\n"
+	"  smart   the learning smartbot.\n"
+	"  ball    the planning ball game bot, on any map. Without a ball\n"
+	"          game it only dogfights.\n",
 	OPT_ORIGIN_ANY | OPT_VISIBLE
     },
     {

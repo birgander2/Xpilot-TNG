@@ -379,6 +379,53 @@ static robot_t DefaultRobots[] = {
 #define SMART_ROBOT_TYPE	"smart"
 #define BALL_ROBOT_TYPE		"ball"
 
+/*
+ * The AIs smart robots can use, selected with the smartBotType option.
+ * A new AI needs an entry here, its driver in robot_type_setups[] and an
+ * entry in the launcher's list (kSmartBotTypes in launcher_app.cpp).
+ */
+static const struct {
+    const char	*name;			/* value of smartBotType */
+    const char	*driver;		/* robot driver, NULL: chosen per map */
+    bool	(*usable)(void);	/* can it play this map at all? NULL: always */
+    bool	(*fits)(void);		/* is it what "auto" picks here? */
+} smart_bot_types[] = {
+    { "auto",		NULL,			NULL, NULL },
+    { SMART_ROBOT_TYPE,	SMART_ROBOT_TYPE,	NULL, NULL },
+    { BALL_ROBOT_TYPE,	BALL_ROBOT_TYPE,	NULL, Robot_ball_game },
+};
+
+/* Driver for a new smart robot on the current map. */
+static const char *Smart_bot_driver(void)
+{
+    const char *want = options.smartBotType ? options.smartBotType : "auto";
+    static char warned[32];
+    int i, found = -1;
+
+    for (i = 0; i < (int)NELEM(smart_bot_types); i++) {
+	if (!strcasecmp(want, smart_bot_types[i].name))
+	    found = i;
+    }
+    if (found < 0) {
+	if (strncmp(warned, want, sizeof(warned) - 1)) {
+	    strlcpy(warned, want, sizeof(warned));
+	    warn("Unknown smartBotType \"%s\", using auto.", want);
+	}
+	found = 0;
+    }
+    if (smart_bot_types[found].driver != NULL) {
+	if (!smart_bot_types[found].usable || smart_bot_types[found].usable())
+	    return smart_bot_types[found].driver;
+	return SMART_ROBOT_TYPE;
+    }
+    /* auto: the first specialised AI that fits the map */
+    for (i = 1; i < (int)NELEM(smart_bot_types); i++) {
+	if (smart_bot_types[i].fits && smart_bot_types[i].fits())
+	    return smart_bot_types[i].driver;
+    }
+    return SMART_ROBOT_TYPE;
+}
+
 static robot_t SmartRobots[] = {
     {
 	SMART_ROBOT_TYPE,
@@ -837,10 +884,12 @@ static void Robot_create(bool want_smart)
 	if (!strcmp(robot_types[i].name, rob->driver))
 	    new_data->robot_types_ind = i;
     }
-    /* Smart robots play ball games with the dedicated ball driver */
-    if (want_smart && options.smartBallBots && Robot_ball_game()) {
+    /* Smart robots use the AI selected with smartBotType */
+    if (want_smart) {
+	const char *driver = Smart_bot_driver();
+
 	for (i = 1; i < num_robot_types; i++) {
-	    if (!strcmp(robot_types[i].name, BALL_ROBOT_TYPE))
+	    if (!strcmp(robot_types[i].name, driver))
 		new_data->robot_types_ind = i;
 	}
     }
@@ -860,10 +909,8 @@ static void Robot_create(bool want_smart)
     strlcpy(robot->name, rob->name, MAX_CHARS);
     strlcpy(robot->username, options.robotUserName, MAX_CHARS);
     strlcpy(robot->hostname, options.robotHostName, MAX_CHARS);
-    if (!strcmp(rob_type->name, SMART_ROBOT_TYPE))
-	strlcpy(robot->hostname, "smartbot.from.hell", MAX_CHARS);
-    else if (!strcmp(rob_type->name, BALL_ROBOT_TYPE))
-	strlcpy(robot->hostname, "ballbot.from.hell", MAX_CHARS);
+    if (strcmp(rob_type->name, DEFAULT_ROBOT_TYPE))
+	snprintf(robot->hostname, MAX_CHARS, "%sbot.from.hell", rob_type->name);
 
     robot->turnspeed = MAX_PLAYER_TURNSPEED;
     robot->turnspeed_s = MAX_PLAYER_TURNSPEED;

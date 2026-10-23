@@ -20,7 +20,7 @@
  * Ballbot: a robot driver ("ball") dedicated to team ball games.
  *
  * Smart robots use this driver instead of the learning smartbot on maps with
- * team play and treasures, unless the option smartBallBots is off.
+ * team play and treasures when smartBotType is "auto" or "ball".
  *
  *  - Map analysis (once per map): wall clearance on a fine grid (exact
  *    distance transform), a coarse navigation grid and Dijkstra distance
@@ -312,6 +312,33 @@ static inline bool Bb_is_ballbot(player_t *pl)
 	return false;
     name = Robot_type_name(pl);
     return name != NULL && strcmp(name, BB_TYPE_NAME) == 0;
+}
+
+/*
+ * Without team play (dogfight) there are no teams: every ballbot is its own
+ * "team" in BbTeams[], indexed by its id, and nobody else is an ally.
+ */
+static inline int Bb_slot(player_t *pl)
+{
+    if (BIT(world->rules->mode, TEAM_PLAY) && pl->team < MAX_TEAMS)
+	return pl->team;
+    return pl->id % MAX_TEAMS;
+}
+
+/* Is p a member of BbTeams[] slot 'team'? */
+static inline bool Bb_in_team(player_t *p, int team)
+{
+    if (BIT(world->rules->mode, TEAM_PLAY))
+	return p->team == team;
+    return Bb_is_ballbot(p) && Bb_slot(p) == team;
+}
+
+/* Are a and b on the same side (or the same ship)? */
+static inline bool Bb_ally(player_t *a, player_t *b)
+{
+    if (BIT(world->rules->mode, TEAM_PLAY))
+	return a->team == b->team;
+    return a == b;
 }
 
 static inline double Bb_px(click_t c)
@@ -1314,7 +1341,7 @@ static bool Bb_team_sees(int team, double x, double y)
     for (i = 0; i < NumPlayers; i++) {
 	player_t *pl = Player_by_index(i);
 
-	if (pl->team != team || !Bb_player_active(pl))
+	if (!Bb_in_team(pl, team) || !Bb_player_active(pl))
 	    continue;
 	if (Bb_dist(Bb_px(pl->pos.cx), Bb_px(pl->pos.cy), x, y) <= BbVisibility)
 	    return true;
@@ -1336,7 +1363,7 @@ static void Bb_update_team(int team)
 	if (e->id < 0 || e->id >= NUM_IDS)
 	    continue;
 	c = &tm->c[e->id];
-	if (e->team == team || !Bb_player_active(e) || Player_is_phasing(e)) {
+	if (Bb_in_team(e, team) || !Bb_player_active(e) || Player_is_phasing(e)) {
 	    c->known = c->seen = false;
 	    continue;
 	}
@@ -1536,14 +1563,14 @@ typedef struct {
 /* Seen enemies within range of pl. */
 static int Bb_threats(player_t *pl, double range)
 {
-    bb_team_t *tm = &BbTeams[pl->team];
+    bb_team_t *tm = &BbTeams[Bb_slot(pl)];
     double x = Bb_px(pl->pos.cx), y = Bb_px(pl->pos.cy);
     int i, n = 0;
 
     for (i = 0; i < NumPlayers; i++) {
 	player_t *e = Player_by_index(i);
 
-	if (e->team == pl->team || e->id < 0 || e->id >= NUM_IDS)
+	if (Bb_ally(e, pl) || e->id < 0 || e->id >= NUM_IDS)
 	    continue;
 	if (tm->c[e->id].seen && Bb_dist(x, y, tm->c[e->id].x, tm->c[e->id].y) < range)
 	    n++;
@@ -1554,14 +1581,14 @@ static int Bb_threats(player_t *pl, double range)
 /* Is pl the teammate closest to enemy e (i.e. the one to deal with him)? */
 static bool Bb_enemy_is_mine(player_t *pl, player_t *e)
 {
-    bb_contact_t *c = &BbTeams[pl->team].c[e->id];
+    bb_contact_t *c = &BbTeams[Bb_slot(pl)].c[e->id];
     double mine = Bb_dist(Bb_px(pl->pos.cx), Bb_px(pl->pos.cy), c->x, c->y);
     int i;
 
     for (i = 0; i < NumPlayers; i++) {
 	player_t *p = Player_by_index(i);
 
-	if (p == pl || p->team != pl->team || !Bb_player_active(p)
+	if (p == pl || !Bb_ally(p, pl) || !Bb_player_active(p)
 	    || BIT(p->have, HAS_BALL))
 	    continue;
 	if (Bb_dist(Bb_px(p->pos.cx), Bb_px(p->pos.cy), c->x, c->y) < mine - 50.0)
@@ -1599,7 +1626,7 @@ static void Bb_assign_roles(int team)
     for (i = 0; i < NumPlayers; i++) {
 	player_t *pl = Player_by_index(i);
 
-	if (pl->team != team || !Bb_player_active(pl))
+	if (!Bb_in_team(pl, team) || !Bb_player_active(pl))
 	    continue;
 	if (BIT(pl->have, HAS_BALL)) {
 	    ballobject_t *b = Bb_towed_ball(pl);
@@ -1630,7 +1657,7 @@ static void Bb_assign_roles(int team)
 
 	if (!Bb_player_active(p) || p->id < 0 || p->id >= NUM_IDS)
 	    continue;
-	if (p->team != team) {
+	if (!Bb_in_team(p, team)) {
 	    if (tm->c[p->id].known
 		&& Bb_dist(tm->c[p->id].x, tm->c[p->id].y, hx, hy) < 1300.0)
 		home_threat = true;
@@ -2536,7 +2563,7 @@ static void Bb_fly(player_t *pl, bb_data_t *d, const bb_goal_t *g, int level)
     cx.nen = 0;
     cx.has_target = false;
     {
-	bb_team_t *tm = &BbTeams[pl->team];
+	bb_team_t *tm = &BbTeams[Bb_slot(pl)];
 	int delay = (int)((1.0 - f) * 5.0 + 0.5);
 
 	for (i = 0; i < NumPlayers && cx.nen < BB_MAX_ENEMIES; i++) {
@@ -2544,7 +2571,7 @@ static void Bb_fly(player_t *pl, bb_data_t *d, const bb_goal_t *g, int level)
 	    bb_contact_t *c;
 	    double rx, ry;
 
-	    if (e->team == pl->team || e->id < 0 || e->id >= NUM_IDS)
+	    if (Bb_ally(e, pl) || e->id < 0 || e->id >= NUM_IDS)
 		continue;
 	    c = &tm->c[e->id];
 	    if (!c->known)
@@ -2748,7 +2775,7 @@ static bool Bb_lead(double rx, double ry, double wvx, double wvy, double s,
 
 static void Bb_fire(player_t *pl, bb_data_t *d, int level)
 {
-    bb_team_t *tm = &BbTeams[pl->team];
+    bb_team_t *tm = &BbTeams[Bb_slot(pl)];
     double ox = Bb_px(pl->pos.cx), oy = Bb_px(pl->pos.cy), f = level / 100.0;
     int i;
 
@@ -2800,7 +2827,7 @@ static void Bb_fire(player_t *pl, bb_data_t *d, int level)
 static player_t *Bb_pick_enemy(player_t *pl, double x, double y, double range,
 			       bool seen_only)
 {
-    bb_team_t *tm = &BbTeams[pl->team];
+    bb_team_t *tm = &BbTeams[Bb_slot(pl)];
     player_t *best = NULL;
     double bd = range;
     int i;
@@ -2810,7 +2837,7 @@ static player_t *Bb_pick_enemy(player_t *pl, double x, double y, double range,
 	bb_contact_t *c;
 	double dd;
 
-	if (e->team == pl->team || e->id < 0 || e->id >= NUM_IDS)
+	if (Bb_ally(e, pl) || e->id < 0 || e->id >= NUM_IDS)
 	    continue;
 	c = &tm->c[e->id];
 	if (!c->known || (seen_only && !c->seen))
@@ -2827,7 +2854,7 @@ static player_t *Bb_pick_enemy(player_t *pl, double x, double y, double range,
 /* Goal to fight enemy e: close in to the engagement distance. */
 static void Bb_goal_engage(player_t *pl, bb_goal_t *g, player_t *e, double range)
 {
-    bb_contact_t *c = &BbTeams[pl->team].c[e->id];
+    bb_contact_t *c = &BbTeams[Bb_slot(pl)].c[e->id];
     double ox = Bb_px(pl->pos.cx), oy = Bb_px(pl->pos.cy);
     double dist = Bb_dist(ox, oy, c->x, c->y), lead = MIN(dist / 20.0, 15.0);
 
@@ -2922,7 +2949,7 @@ static bool Bb_route_guarded(int team, const bb_routes_t *rs, int k, double from
 	player_t *e = Player_by_index(i);
 	bb_contact_t *c;
 
-	if (e->team == team || e->id < 0 || e->id >= NUM_IDS)
+	if (Bb_in_team(e, team) || e->id < 0 || e->id >= NUM_IDS)
 	    continue;
 	c = &tm->c[e->id];
 	if (!c->known)
@@ -3176,7 +3203,7 @@ static bool Bb_pick_spot(player_t *pl, bb_data_t *d, double bx, double by)
 /* Fetch a ball: own loose ball (return) or an enemy ball. */
 static void Bb_behave_fetch(player_t *pl, bb_data_t *d, bb_goal_t *g, int tr)
 {
-    bb_team_t *tm = &BbTeams[pl->team];
+    bb_team_t *tm = &BbTeams[Bb_slot(pl)];
     treasure_t *t = Treasure_by_index(tr);
     ballobject_t *ball = Bb_ball_of(tr);
     double x = Bb_px(pl->pos.cx), y = Bb_px(pl->pos.cy), bx, by, dist;
@@ -3338,7 +3365,7 @@ static player_t *Bb_team_carrier(int team)
 	player_t *p = Player_by_index(i);
 	ballobject_t *b;
 
-	if (p->team != team || !Bb_player_active(p) || !BIT(p->have, HAS_BALL))
+	if (!Bb_in_team(p, team) || !Bb_player_active(p) || !BIT(p->have, HAS_BALL))
 	    continue;
 	b = Bb_towed_ball(p);
 	if (b && b->ball_treasure && b->ball_treasure->team != team)
@@ -3351,7 +3378,7 @@ static player_t *Bb_team_carrier(int team)
 static void Bb_behave_guard(player_t *pl, bb_data_t *d, bb_goal_t *g, int tr,
 			    double radius, double engage)
 {
-    bb_team_t *tm = &BbTeams[pl->team];
+    bb_team_t *tm = &BbTeams[Bb_slot(pl)];
     treasure_t *t = Treasure_by_index(tr);
     double tx = Bb_px(t->pos.cx), ty = Bb_px(t->pos.cy), ux = 0.0, uy = 0.0;
     double gx, gy;
@@ -3394,7 +3421,7 @@ static void Bb_behave_guard(player_t *pl, bb_data_t *d, bb_goal_t *g, int tr,
  */
 static bool Bb_behave_ram(player_t *pl, bb_data_t *d, bb_goal_t *g, int tr)
 {
-    bb_ballinfo_t *bi = &BbTeams[pl->team].ball[tr];
+    bb_ballinfo_t *bi = &BbTeams[Bb_slot(pl)].ball[tr];
     double x = Bb_px(pl->pos.cx), y = Bb_px(pl->pos.cy), dist, lead;
 
     (void)d;
@@ -3414,7 +3441,7 @@ static bool Bb_behave_ram(player_t *pl, bb_data_t *d, bb_goal_t *g, int tr)
 /* Chase the thief of our ball, or wait for him at his home. */
 static void Bb_behave_hunt(player_t *pl, bb_data_t *d, bb_goal_t *g)
 {
-    bb_team_t *tm = &BbTeams[pl->team];
+    bb_team_t *tm = &BbTeams[Bb_slot(pl)];
     double x = Bb_px(pl->pos.cx), y = Bb_px(pl->pos.cy);
     player_t *thief = tm->thief_id != NO_ID ? Player_by_id(tm->thief_id) : NULL;
 
@@ -3505,7 +3532,7 @@ static void Bb_behave_escort(player_t *pl, bb_data_t *d, bb_goal_t *g)
      */
     e = Bb_pick_enemy(pl, cx, cy, 2000.0, false);
     if (e != NULL) {
-	bb_contact_t *ct = &BbTeams[pl->team].c[e->id];
+	bb_contact_t *ct = &BbTeams[Bb_slot(pl)].c[e->id];
 
 	ux = Bb_wdx(ct->x - cx);
 	uy = Bb_wdy(ct->y - cy);
@@ -3617,8 +3644,7 @@ static void Robot_ball_round_tick(void)
 
 	if (Bb_is_ballbot(pl)) {
 	    NumBallbots++;
-	    if (pl->team < MAX_TEAMS)
-		active[pl->team] = true;
+	    active[Bb_slot(pl)] = true;
 	}
     }
     if (NumBallbots == 0)

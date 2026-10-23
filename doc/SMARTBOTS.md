@@ -53,7 +53,7 @@ Smartbots can be enabled via command-line arguments or server defaults files (`d
 | `minSmartRobots` | `-minSmartRobots` | `-1` | Minimum number of smart robots kept in the server (`-1` = follow `maxSmartRobots`). |
 | `smartRobotLevel` | `-smartLevel` | `75` | Global skill and intelligence level (**1 to 100**). Controls aiming precision, pathfinding depth, turn rate, and several ball-handling skills (see [Skill Level Matrix](#skill-level-matrix-levels-1100)). |
 | `smartRobotsLaser` | `-smartRobotsLaser` / `-smartLaser` | `true` | When `false`, Smartbots will neither pick up nor use laser pulses. |
-| `smartBallBots` | `-ballBots` | `true` | On maps with team play and treasures, smart robots use the dedicated ball game driver instead of the learning smartbot. Affects robots that join afterwards. |
+| `smartBotType` | `-smartType` | `auto` | Which AI the smart robots use: `auto` (the ball driver on team maps with treasures, the learning smartbot elsewhere), `smart` (always the learning smartbot) or `ball` (the ball driver on every map; without a ball game it only dogfights, see below). Affects robots that join afterwards. The launcher offers the choice as a dropdown next to the number of smartbots. |
 
 ### Example Startup Commands
 
@@ -186,7 +186,7 @@ Movement combines attractive and repulsive force vectors:
 
 ### Ball Game: Handling, Delivery & Team Play
 
-This section describes the learning `smart` driver. With `smartBallBots` on (the default), ball maps use the [`ball` driver](#ball-game-bots-ball-driver) instead.
+This section describes the learning `smart` driver. With `smartBotType` `auto` (the default), ball maps use the [`ball` driver](#ball-game-bots-ball-driver) instead.
 
 On team maps with treasures (balls), Smartbots play the ball game with dedicated flight control and team roles. Ships die on contact with a ball area (`treasureCollisionKills`), so a large part of this logic is about handling the ball without crashing.
 
@@ -259,7 +259,7 @@ Bots get no information a human team would not have. The radar shows only plain 
 
 ## Ball Game Bots (`ball` driver)
 
-The `ball` driver (`src/server/ballbot.c`) is a second robot type made only for team ball games. Smart robots use it on maps with team play and treasures of at least two teams, unless `smartBallBots` is off. It does not learn; it plans. The robot names, the `S` marker and `smartRobotLevel` are shared with the smartbots.
+The `ball` driver (`src/server/ballbot.c`) is a second robot type made only for team ball games. Smart robots use it on maps with team play and treasures of at least two teams, when `smartBotType` is `auto` or `ball`. It does not learn; it plans. The robot names, the `S` marker and `smartRobotLevel` are shared with the smartbots.
 
 ### Map analysis
 
@@ -316,6 +316,8 @@ The best plan is kept and offered again the next tick, so longer manoeuvres stay
 **Scoring:** runs normally end with a throw. From about 1100 px out the carrier looks for a free straight line into the target (targets are often open to one side only) and first steers the ball to a gate 300 px out on that line, arriving with the ball moving along it. Near home (about 900 px) with a clear line from the ball to the goal, the rollouts reward a ball course that points closer at the goal. They reward highest any moment at which releasing the ball would let it fly into the target without hitting our own ship. The bot releases the ball as soon as its free flight would score and the ship can coast on without hitting the target. Towing the ball into the target also counts.
 
 On xp2 maps ball targets are not linked to a treasure. A target belongs to the nearest treasure of its team.
+
+On maps without a ball game (dogfight maps, no team play or no treasures of two teams) a `ball` bot has no ball roles. Every ballbot plays for itself, nobody counts as an ally, and each one hunts the nearest enemy it knows. The flight and combat code is the same, but there is no tactics beyond that, and `auto` keeps using the learning smartbot on such maps.
 
 ### Combat
 

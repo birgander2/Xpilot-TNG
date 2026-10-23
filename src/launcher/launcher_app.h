@@ -22,6 +22,13 @@ struct LauncherFonts {
     ImFont* subtitle = nullptr;
 };
 
+// One value of a string option shown as a dropdown.
+struct NamedChoice {
+    const char* value;   // what the server option is set to
+    const char* label;   // what the dropdown shows
+    const char* tip;     // tooltip, may be null
+};
+
 class LauncherApp {
 public:
     LauncherApp(SDL_Window* window, SDL_Renderer* renderer, const std::string& app_dir);
@@ -70,6 +77,7 @@ private:
     bool OptBool(const char* label, const char* key, const char* tip = nullptr);
     bool OptInt(const char* label, const char* key, int lo, int hi, const char* tip = nullptr);
     bool OptChoice(const char* label, const char* key, const char* const* items, int count, const char* tip = nullptr);
+    bool OptNamed(const char* label, const char* key, const NamedChoice* items, int count);
     bool OptFloat(const char* label, const char* key, float lo, float hi, const char* fmt,
                   bool logarithmic = false, const char* tip = nullptr);
     void ModifiedMenu(const char* key);
