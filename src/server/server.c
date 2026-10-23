@@ -254,6 +254,9 @@ void Main_loop(void)
 	    Frame_update();
     }
 
+    if (NumPlayers == NumRobots + NumPseudoPlayers && !options.RawMode)
+	Robot_prefill();
+
     if (!options.NoQuit
 	&& !options.RawMode
 	&& NumPlayers == NumRobots + NumPseudoPlayers

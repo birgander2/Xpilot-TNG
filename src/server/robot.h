@@ -205,6 +205,7 @@ void Robot_delete(player_t *robot, bool kicked);
 void Robot_delete_type(bool want_smart, bool kicked);
 void Robot_destroy(player_t *robot);
 void Robot_update(bool tick);
+void Robot_prefill(void);
 void Robot_invite(player_t *robot, player_t *inviter);
 void Robot_game_event(player_t *pl, int event, player_t *other);
 const char *Robot_type_name(player_t *robot);

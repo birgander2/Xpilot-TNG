@@ -1196,6 +1196,8 @@ static void Tank_play(player_t *pl)
 }
 
 
+static bool robot_prefill;
+
 /*
  * botsMatchHumans: keep NumRobots at botsPerHuman * (number of active
  * human players). maxRobots and maxSmartRobots only give the ratio of
@@ -1220,7 +1222,7 @@ static void Robot_match_humans(bool can_spawn_more, int num_playing_ships,
 
     if (NumRobots < target && can_spawn_more) {
 	*create_delay += timeStep;
-	if (*create_delay < ROBOT_CREATE_DELAY)
+	if (*create_delay < ROBOT_CREATE_DELAY && !robot_prefill)
 	    return;
 	*create_delay = 0;
 	if (weight_default + weight_smart > 0)
@@ -1251,6 +1253,26 @@ static void Robot_match_humans(bool can_spawn_more, int num_playing_ships,
 }
 
 /*
+ * While no human is connected the world is frozen and Robot_update() is
+ * not called, so robots would only trickle in after the first human joined.
+ * Create all missing robots at once while idle instead.
+ */
+void Robot_prefill(void)
+{
+    int i, n = MAX_ROBOTS + MAX_SMART_ROBOTS;
+
+    robot_prefill = true;
+    for (i = 0; i < n; i++) {
+	int before = NumRobots;
+
+	Robot_update(false);
+	if (NumRobots <= before)
+	    break;
+    }
+    robot_prefill = false;
+}
+
+/*
  * Update robots. If 'tick' is true, robot AI routines will be called.
  */
 void Robot_update(bool tick)
@@ -1273,6 +1295,9 @@ void Robot_update(bool tick)
 	     && options.restrictRobots
 	     && world->teams[options.robotTeam].NumMembers >=
 		world->teams[options.robotTeam].NumBases);
+
+    if (robot_prefill)
+	new_robot_delay = ROBOT_CREATE_DELAY;
 
     if (options.botsMatchHumans) {
 	Robot_match_humans(can_spawn_more, num_playing_ships, num_any_ships,
