@@ -262,6 +262,7 @@ void Fire_general_shot(int id, int team,
 		       clpos_t pos, int type, int dir,
 		       modifiers_t mods, int target_id);
 void Fire_normal_shots(player_t *pl);
+bool Can_shoot_normal_shot(player_t *pl);
 void Fire_main_shot(player_t *pl, int type, int dir);
 void Fire_left_shot(player_t *pl, int type, int dir, int gun);
 void Fire_right_shot(player_t *pl, int type, int dir, int gun);

@@ -844,6 +844,8 @@ void LauncherApp::RenderAdvanced(bool server_mode) {
                          "Used when 'Bots match humans' is on");
                 ImGui::PopItemWidth();
                 OptBool("Smartbots may use lasers", "smartRobotsLaser", "Allow smart robots to collect and fire lasers");
+                OptBool("Ball game AI for smartbots", "smartBallBots",
+                        "On maps with team play and treasures, smartbots use the dedicated ball game AI");
                 OptBool("Bots talk", "robotsTalk");
                 OptBool("Bots may leave", "robotsLeave");
                 ImGui::EndTabItem();

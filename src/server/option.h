@@ -33,6 +33,7 @@ extern struct options {
     int		minSmartRobots;
     int		smartRobotLevel;
     bool	smartRobotsLaser;
+    bool	smartBallBots;
     bool	smartRobotsUseLaser;	/* alias of smartRobotsLaser */
     char	*robotFile;
     int		robotsTalk;

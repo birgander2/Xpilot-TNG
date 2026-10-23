@@ -16,13 +16,14 @@ XPilot TNG introduces **Smartbots** (`smart`), an advanced autonomous AI driver 
    - [A* Grid Pathfinding](#a-grid-pathfinding)
    - [Potential Field Maneuvering](#potential-field-maneuvering)
    - [Ball Game: Handling, Delivery & Team Play](#ball-game-handling-delivery--team-play)
-6. [Reinforcement Learning & Shared Brain](#reinforcement-learning--shared-brain)
+6. [Ball Game Bots (`ball` driver)](#ball-game-bots-ball-driver)
+7. [Reinforcement Learning & Shared Brain](#reinforcement-learning--shared-brain)
    - [State & Action Space](#state--action-space)
    - [Evolutionary Policy Genes](#evolutionary-policy-genes)
    - [Rewards](#rewards)
    - [Brain Persistence (`smartbot_brain.dat`)](#brain-persistence-smartbot_braindat)
-7. [Skill Level Matrix (Levels 1–100)](#skill-level-matrix-levels-1100)
-8. [Tactical Advice for Human Pilots](#tactical-advice-for-human-pilots)
+8. [Skill Level Matrix (Levels 1–100)](#skill-level-matrix-levels-1100)
+9. [Tactical Advice for Human Pilots](#tactical-advice-for-human-pilots)
 
 ---
 
@@ -35,6 +36,7 @@ Classic XPilot robots rely on simple line-of-sight heuristics and fixed reaction
 - **Topological Navigation:** Navigates labyrinthine polygon and block maps using bounded grid A\* pathfinding to reach fuel stations, items, and team objectives.
 - **Tactical Versatility:** Dynamically shifts between close-quarters dogfighting, long-range sniper kiting, survival evasion, harvesting/refueling, and CTF flag-running.
 - **Team Ball Play:** Tows the ball as a pair (ship + ball) instead of just flying the ship, throws it into the goal in a swing manoeuvre, and plays as a team with roles (attacker, defender, escort, hunter).
+- **Dedicated Ball Game Driver:** On team maps with treasures, smart robots use a separate driver (`ball`, `src/server/ballbot.c`) that plans its flight with a physics model of ship and ball (see [Ball Game Bots](#ball-game-bots-ball-driver)).
 - **Online Learning:** Uses Tabular Q-Learning and continuous evolutionary policy adaptation that learns from combat outcomes (kills, deaths) and ball-game results, and persists across server runs in `smartbot_brain.dat`.
 
 ---
@@ -51,6 +53,7 @@ Smartbots can be enabled via command-line arguments or server defaults files (`d
 | `minSmartRobots` | `-minSmartRobots` | `-1` | Minimum number of smart robots kept in the server (`-1` = follow `maxSmartRobots`). |
 | `smartRobotLevel` | `-smartLevel` | `75` | Global skill and intelligence level (**1 to 100**). Controls aiming precision, pathfinding depth, turn rate, and several ball-handling skills (see [Skill Level Matrix](#skill-level-matrix-levels-1100)). |
 | `smartRobotsLaser` | `-smartRobotsLaser` / `-smartLaser` | `true` | When `false`, Smartbots will neither pick up nor use laser pulses. |
+| `smartBallBots` | `-ballBots` | `true` | On maps with team play and treasures, smart robots use the dedicated ball game driver instead of the learning smartbot. Affects robots that join afterwards. |
 
 ### Example Startup Commands
 
@@ -183,6 +186,8 @@ Movement combines attractive and repulsive force vectors:
 
 ### Ball Game: Handling, Delivery & Team Play
 
+This section describes the learning `smart` driver. With `smartBallBots` on (the default), ball maps use the [`ball` driver](#ball-game-bots-ball-driver) instead.
+
 On team maps with treasures (balls), Smartbots play the ball game with dedicated flight control and team roles. Ships die on contact with a ball area (`treasureCollisionKills`), so a large part of this logic is about handling the ball without crashing.
 
 #### Treasure box avoidance
@@ -249,6 +254,93 @@ Bots get no information a human team would not have. The radar shows only plain 
 - **Own towing:** a team always knows which of its own members tows an enemy ball.
 
 ---
+
+---
+
+## Ball Game Bots (`ball` driver)
+
+The `ball` driver (`src/server/ballbot.c`) is a second robot type made only for team ball games. Smart robots use it on maps with team play and treasures of at least two teams, unless `smartBallBots` is off. It does not learn; it plans. The robot names, the `S` marker and `smartRobotLevel` are shared with the smartbots.
+
+### Map analysis
+
+Done once per map (well under a second on a Raspberry Pi 4):
+
+- **Clearance grid:** every map cell (BLOCK_SZ/5, 7 px on bloods) gets the exact distance to the nearest obstacle (Euclidean distance transform, wrap-aware). There are two grids: ships hit walls and ball areas, balls only walls.
+- **Target zones:** the cells where a ball scores, grown by the ball radius, because the server scores as soon as the ball's edge touches the target.
+- **Navigation grid:** one node per block at its most open point. Edges cost extra where clearance is low, more so for a ship towing a ball.
+- **Distance fields:** Dijkstra fields to every treasure, for a ship alone and for a towing ship. Fields to moving goals are computed on demand, cached, and limited to three per tick.
+- **Ball run routes:** up to four clearly different routes per treasure pair. Each alternative is forced through a via point in the middle of the run, away from the routes already found. The quality accounts for length and turns, and the choice is weighted by (best time / time)². A route with enemies on it is avoided, and the carrier switches route underway if enemies show up and another route is not a large detour.
+
+### What the team knows
+
+A team uses only what a human team that talks could know:
+
+- Anything within a human's view range of a living teammate, humans included: ships, shots and balls.
+- Enemy positions on the radar when `playersOnRadar` is on. Radar speed is estimated from consecutive positions.
+- An own ball is known to be away when a teammate sees the empty treasure or the ball somewhere else.
+- A thief is known only while a teammate sees him tow the ball, and remembered for a while after.
+
+### Roles
+
+Every half second each team assigns roles by priority, each to the cheapest free bot (with hysteresis). The ball run comes first: the `grab` task goes to whichever bot is closest to the enemy ball and not in a fight (each enemy within 300 px adds to its cost), with little hysteresis, so the grabber changes as the bots move. A supporter that gets close becomes the grabber, and the former grabber covers it.
+
+| Role | Task |
+| :--- | :--- |
+| `carry` | Tow the ball home (whoever has it). |
+| `return` | Ram our own loose ball. With `treasureCollisionDestroys` any ship touching a ball sends it home. |
+| `hunt` | Our ball is stolen: ram the towed ball and shoot the thief. Intercepts on the thief's predicted way home; waits at his target if the thief is unseen. |
+| `grab` | Fetch the enemy ball. A ball at rest is picked up in passing: the bot lines up on a free line beside the ball (about 105 px off) close to the run's start direction, connects as it passes and attaches at about 20 px/tick, so the pair leaves already moving. Without such a line it uses a connect spot with room to manoeuvre. It fights only an enemy right on it that no teammate is closer to, and leaves the enemy base faster than normal towing speed, because their ships respawn there. |
+| `defend` | Guard the treasure between it and the main threat. Escorts our carrier while no enemy is near home. Comes before `support` only when a known enemy is near our base; a human teammate near our base takes this job. |
+| `escort` | Stay behind the carrier towards the pursuers and engage enemies near him. |
+| `support` / `mid` | Cover the grabber at the enemy base, or intercept in the middle. |
+
+With nothing threatening our base, two bots both attack: grabber and supporter. Human carriers in the team are escorted like bot carriers.
+
+### Flight: sampling model predictive control
+
+Each tick a bot simulates about 60–100 candidate manoeuvres 16 ticks ahead (22 ticks when towing). A candidate is a heading with thrust or coast for a few ticks, followed by a built-in policy. The model is the server's own physics: thrust, turn rate, `constantSpeed`/`oldThrust`, and the ball on its spring connector (simulated per frame). Candidates are scored on:
+
+- progress along the distance field (near the goal: the ball's straight distance to the target);
+- clearance to walls and ball areas, and whether the bot can still stop or turn before the next wall;
+- wall bounces: below `maxUnshieldedWallBounceSpeed` a ship only bounces (all `playerWallBounceType`s are modelled), a ball below `maxObjectWallBounceSpeed` too. A bounce costs the speed it loses and a little extra; touching a ball target kills the ship;
+- connector strain (the rope must not snap). When towing, only the centre of mass counts: a swinging ball or one that leads costs nothing by itself;
+- enemies reaching the towed ball: any ship touching it sends it home, so enemies are assumed to accelerate straight at it;
+- enemy shots in view, checked continuously along each tick, and virtual shots of enemies that point at the bot;
+- collisions with ships, and touching balls that must not be touched;
+- aiming: turning towards the lead direction of the target and being on it in the next ticks.
+
+The best plan is kept and offered again the next tick, so longer manoeuvres stay coherent.
+
+**Towing** follows one rule: always pull, never push. The rope (ball → ship) is turned to point along the wanted acceleration: ball behind when speeding up, swung ahead for braking. A cascade sets the rope's angular speed from the angle error and the thrust angle from the angular speed error. The gains were tuned offline on a copy of the model.
+
+**Scoring:** runs normally end with a throw. From about 1100 px out the carrier looks for a free straight line into the target (targets are often open to one side only) and first steers the ball to a gate 300 px out on that line, arriving with the ball moving along it. Near home (about 900 px) with a clear line from the ball to the goal, the rollouts reward a ball course that points closer at the goal. They reward highest any moment at which releasing the ball would let it fly into the target without hitting our own ship. The bot releases the ball as soon as its free flight would score and the ship can coast on without hitting the target. Towing the ball into the target also counts.
+
+On xp2 maps ball targets are not linked to a treasure. A target belongs to the nearest treasure of its team.
+
+### Combat
+
+The bot leads with the shot's inherited ship velocity. It fires when the shot would pass the target closer than the ship radius plus a margin (narrower at low levels), and only with a free line. Bots aim at the nearest enemy in view whenever it costs little, for example while coasting with a ball.
+
+### Skill levels
+
+| Effect | Level 30 | Level 75 | Level 100 |
+| :--- | :---: | :---: | :---: |
+| Turn rate (direction units per tick) | 5 | 9 | 12 |
+| Reaction delay for enemy movement | ~4 ticks | ~1 tick | none |
+| Aiming error (direction units) | ±2.8 | ±1 | 0 |
+| Fire tolerance beyond the ship radius | 0 px | +2.5 px | +4 px |
+| Extra wall margin | 6 px | 3.5 px | 2 px |
+| Sampled headings | 8 | 16 | 16 |
+| Towing speed limit | 16 | 18 | 19 |
+
+### CPU usage
+
+On a desktop CPU, 4 ball bots use about 1.6% and 8 ball bots about 3% of one core. Expect roughly 6–8 times that on a Raspberry Pi 4.
+
+### Chat commands
+
+- `/msg <bot> status`: skill level and current role.
+- `/msg <bot> level N`: individual skill level (0 = global `smartRobotLevel`).
 
 ---
 

@@ -344,6 +344,17 @@ static option_desc opts[] = {
 	OPT_ORIGIN_ANY | OPT_VISIBLE
     },
     {
+	"smartBallBots",
+	"ballBots",
+	"true",
+	&options.smartBallBots,
+	valBool,
+	tuner_dummy,
+	"Do smart robots use the dedicated ball game AI on maps with\n"
+	"team play and treasures? Affects robots that join afterwards.\n",
+	OPT_ORIGIN_ANY | OPT_VISIBLE
+    },
+    {
 	"smartRobotsLaser",
 	"smartLaser",
 	"true",

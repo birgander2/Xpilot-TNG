@@ -377,6 +377,7 @@ static robot_t DefaultRobots[] = {
 };
 
 #define SMART_ROBOT_TYPE	"smart"
+#define BALL_ROBOT_TYPE		"ball"
 
 static robot_t SmartRobots[] = {
     {
@@ -490,6 +491,7 @@ static int	MAX_SMART_ROBOTS = NELEM(SmartRobots);
 extern int Robot_default_setup(robot_type_t *type_ptr);
 extern int Robot_suibot_setup(robot_type_t *type_ptr);
 extern int Robot_smart_setup(robot_type_t *type_ptr);
+extern int Robot_ball_setup(robot_type_t *type_ptr);
 
 /*
  * Array to store function pointers to robot type setup routines.
@@ -502,6 +504,7 @@ static struct robot_setup {
     { Robot_default_setup },
     { Robot_suibot_setup },
     { Robot_smart_setup },
+    { Robot_ball_setup },
 };
 
 /*
@@ -834,6 +837,13 @@ static void Robot_create(bool want_smart)
 	if (!strcmp(robot_types[i].name, rob->driver))
 	    new_data->robot_types_ind = i;
     }
+    /* Smart robots play ball games with the dedicated ball driver */
+    if (want_smart && options.smartBallBots && Robot_ball_game()) {
+	for (i = 1; i < num_robot_types; i++) {
+	    if (!strcmp(robot_types[i].name, BALL_ROBOT_TYPE))
+		new_data->robot_types_ind = i;
+	}
+    }
     rob_type = &robot_types[new_data->robot_types_ind];
 
     Init_player(NumPlayers,
@@ -842,7 +852,7 @@ static void Robot_create(bool want_smart)
 
     robot = Player_by_index(NumPlayers);
     robot->robot_data_ptr = new_data;
-    if (!strcmp(rob_type->name, SMART_ROBOT_TYPE)) {
+    if (want_smart) {
 	robot->pl_type_mychar = 'S';
 	Player_set_mychar(robot, 'S');
     }
@@ -852,6 +862,8 @@ static void Robot_create(bool want_smart)
     strlcpy(robot->hostname, options.robotHostName, MAX_CHARS);
     if (!strcmp(rob_type->name, SMART_ROBOT_TYPE))
 	strlcpy(robot->hostname, "smartbot.from.hell", MAX_CHARS);
+    else if (!strcmp(rob_type->name, BALL_ROBOT_TYPE))
+	strlcpy(robot->hostname, "ballbot.from.hell", MAX_CHARS);
 
     robot->turnspeed = MAX_PLAYER_TURNSPEED;
     robot->turnspeed_s = MAX_PLAYER_TURNSPEED;
