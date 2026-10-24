@@ -391,7 +391,7 @@ Per map the bot keeps the fuel and the time of every course segment and its best
 
 ### Measured lap times
 
-Level 75, one bot, laps after the first, in ticks of game time:
+Level 100, one bot, laps after the first, in ticks of game time (level 75 is about 5 % slower, see the skill levels below):
 
 | Map | Race bot | Learning smartbot | Classic robots |
 | :--- | :---: | :---: | :---: |
@@ -402,15 +402,27 @@ Laps vary by about ±3 %. Items matter: a bot that happens to pick up an afterbu
 
 ### Skill levels
 
-| Effect | Level 30 | Level 75 | Level 100 |
-| :--- | :---: | :---: | :---: |
-| Turn rate (direction units per tick) | 5 | 9 | 12 |
-| Reaction delay for enemy movement | ~3 ticks | ~1 tick | none |
-| Aiming error (direction units) | ±2.8 | ±1 | 0 |
-| Extra wall margin | 5 px | 2.5 px | 1 px |
-| Sampled headings | 16 | 32 | 32 |
+Below level 100 the bot also loses thrust and flies less exactly, like a weaker pilot. These effects grow with u = ((100 − level) / 99)^0.7, so middle levels feel them too: u is 0 at level 100, 0.38 at level 75, 0.62 at level 50, 0.82 at level 25 and 1 at level 1.
 
-At level 25 laps on *Zandvoort* take a quarter to a half longer.
+| Effect | Level 1 | Level 25 | Level 50 | Level 75 | Level 100 |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| Turn rate (direction units per tick) | 3 | 5 | 7 | 9 | 12 |
+| Thrust lost (16 % · u; the model knows it) | 16 % | 13 % | 10 % | 6 % | 0 |
+| Steering error, drifting (±5 · u direction units; off in strong gravity) | ±5 | ±4.1 | ±3.1 | ±1.9 | 0 |
+| Noise on plan costs (600 · u px: now and then a worse plan wins) | 600 | 494 | 372 | 229 | 0 |
+| Sampled headings | 16 | 16 | 32 | 32 | 32 |
+| Extra wall margin | 7 px | 5.5 px | 4 px | 2.5 px | 1 px |
+| Reaction delay for enemy movement | ~4 ticks | ~3 ticks | ~2 ticks | ~1 tick | none |
+| Aiming error (direction units) | ±4 | ±3 | ±2 | ±1 | 0 |
+
+Measured laps (mean, ticks of game time, one bot):
+
+| Map | Level 1 | Level 25 | Level 50 | Level 75 | Level 100 |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| Grand Prix II | 1084 (+34 %) | 905 (+12 %) | 867 (+7 %) | 847 (+5 %) | 810 |
+| Zandvoort GP | 782 (+59 %) | 569 (+16 %) | 533 (+9 %) | 514 (+5 %) | 491 |
+
+The constants are `RB_POWER_LOSS`, `RB_STEER_ERR` and `RB_PLAN_NOISE` in `racebot.c`.
 
 ### CPU usage
 

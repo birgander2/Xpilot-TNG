@@ -68,6 +68,14 @@
 #define RB_BRAKE		0.5	/* policy: share of the thrust planned for braking */
 #define RB_BOUNCE_COST		80.0	/* a wall bounce, besides the speed lost */
 #define RB_HARD_COST		3000.0	/* a bounce only the shield survives */
+/*
+ * Skill below level 100 (see Rb_unskill(): 0 at level 100, 1 at level 1):
+ * a little less thrust and less exact manoeuvres, so lower levels lose
+ * time like a weaker human pilot.
+ */
+#define RB_POWER_LOSS		0.16	/* share of the thrust lost at level 1 */
+#define RB_STEER_ERR		5.0	/* heading error at level 1 (dir units) */
+#define RB_PLAN_NOISE		600.0	/* noise on plan costs at level 1 (px) */
 #define RB_THREAT_TICKS		(6 * 12)
 #define RB_STUCK_TICKS		120	/* no progress this long: self-destruct */
 #define RB_DETOUR_GAIN		120.0	/* plans gaining less: try the detour */
@@ -130,6 +138,8 @@ typedef struct {
     /* combat */
     unsigned long threat_time[NUM_IDS];
     double	aim_off;
+    double	steer_off;	/* heading error, drifts (low levels) */
+    unsigned long steer_time;
     unsigned long aim_time;
     double	pvx, pvy;	/* velocity last tick */
     unsigned long alive_ticks;
@@ -1279,9 +1289,24 @@ static double Rb_ship_radius(player_t *pl)
     return r + 1.0;
 }
 
+/*
+ * How far below level 100: 0 at level 100, 1 at level 1.  Rising faster
+ * than linear from level 100 down, so middle levels feel it too.
+ */
+static double Rb_unskill(int level)
+{
+    return pow((100 - level) / 99.0, 0.7);
+}
+
+/* Thrust power of the skill level; the model uses what the ship gets. */
+static double Rb_power(int level)
+{
+    return MAX_PLAYER_POWER * (1.0 - RB_POWER_LOSS * Rb_unskill(level));
+}
+
 static double Rb_thrust_acc(player_t *pl)
 {
-    double power = MAX_PLAYER_POWER;
+    double power = pl->power > 0.0 ? pl->power : MAX_PLAYER_POWER;
     int a = pl->item[ITEM_AFTERBURNER];
 
     if (pl->fuel.sum <= 0.0)
@@ -1984,6 +2009,9 @@ static rb_flags_t Rb_fly(player_t *pl, rb_data_t *d, int level, int pit,
     for (i = 0; i < nc; i++) {
 	double c = Rb_rollout(&cx, &cand[i], &rec, NULL);
 
+	/* lower levels misjudge: now and then a worse plan looks best */
+	c += rfrac() * RB_PLAN_NOISE * Rb_unskill(level);
+
 	/* a little inertia against dithering between equal plans */
 	if (i == prev_i)
 	    c -= 20.0;
@@ -2024,7 +2052,6 @@ static void Rb_steer(player_t *pl, int want, bool thrust)
 	pl->wanted_float_dir = pl->float_dir;
 	Turn_player(pl, true);
     }
-    pl->power = MAX_PLAYER_POWER;
     Thrust(pl, thrust);
 }
 
@@ -2442,6 +2469,7 @@ static void Robot_race_play(player_t *pl)
 
     CLR_BIT(pl->used, USES_SHOT | USES_SHIELD | USES_LASER | USES_CONNECTOR);
     Player_self_destruct(pl, d->destruct);
+    pl->power = Rb_power(level);	/* before planning: the model uses it */
     if (pl->damaged > 0 || !Robot_race_map() || !RbMapOk
 	|| BIT(pl->pl_status, FINISH | RACE_OVER)) {
 	Thrust(pl, false);
@@ -2492,8 +2520,21 @@ static void Robot_race_play(player_t *pl)
 	if (danger)
 	    SET_BIT(pl->used, USES_SHIELD);
     }
-    if (fl.valid)
-	Rb_steer(pl, fl.dir, fl.thrust);
+    if (fl.valid) {
+	int dir = fl.dir;
+
+	/*
+	 * Lower levels steer less exactly: an error that drifts slowly.  Not
+	 * in strong gravity, where it would only get the ship stuck.
+	 */
+	if (RbTick - d->steer_time > 10) {
+	    d->steer_off = (rfrac() - 0.5) * 2.0 * RB_STEER_ERR * Rb_unskill(level);
+	    d->steer_time = RbTick;
+	}
+	if (Rb_gravity_near(pl, 250.0) < 0.5 * Rb_thrust_acc(pl))
+	    dir = MOD2(dir + (int)(d->steer_off + (d->steer_off < 0 ? -0.5 : 0.5)), RES);
+	Rb_steer(pl, dir, fl.thrust);
+    }
     else
 	Thrust(pl, false);
     if (pit >= 0) {
