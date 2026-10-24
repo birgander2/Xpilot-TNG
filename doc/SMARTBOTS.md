@@ -56,6 +56,7 @@ Smartbots can be enabled via command-line arguments or server defaults files (`d
 | `minSmartRobots` | `-minSmartRobots` | `-1` | Minimum number of smart robots kept in the server (`-1` = follow `maxSmartRobots`). |
 | `smartRobotLevel` | `-smartLevel` | `75` | Global skill and intelligence level (**1 to 100**). Controls aiming precision, pathfinding depth, turn rate, and several ball-handling skills (see [Skill Level Matrix](#skill-level-matrix-levels-1100)). |
 | `smartRobotsLaser` | `-smartRobotsLaser` / `-smartLaser` | `true` | When `false`, Smartbots will neither pick up nor use laser pulses. |
+| `robotsFillTo` | `false` | Humans replace bots: the game is filled up to `maxRobots + maxSmartRobots` players in all (4 bots wanted, two humans: two bots). See [TEAMPLAY.md](TEAMPLAY.md). The race maps *grandprix* and *zandvoort* turn it on with 4 race bots at level 50. |
 | `smartBotType` | `-smartType` | `auto` | Which AI the smart robots use: `auto` (the ball driver on team maps with treasures, the race driver on race maps, the learning smartbot elsewhere), `smart` (always the learning smartbot), `ball` (the ball driver on every map; without a ball game it only dogfights, see below) or `race` (the race driver on race maps, the learning smartbot elsewhere). Affects robots that join afterwards. The launcher offers the choice as a dropdown next to the number of smartbots. |
 
 ### Example Startup Commands
@@ -407,7 +408,7 @@ Below level 100 the bot also loses thrust and flies less exactly, like a weaker 
 | Effect | Level 1 | Level 25 | Level 50 | Level 75 | Level 100 |
 | :--- | :---: | :---: | :---: | :---: | :---: |
 | Turn rate (direction units per tick) | 3 | 5 | 7 | 9 | 12 |
-| Thrust lost (16 % · u; the model knows it) | 16 % | 13 % | 10 % | 6 % | 0 |
+| Thrust lost (10 % · u; the model knows it) | 10 % | 8 % | 6 % | 4 % | 0 |
 | Steering error, drifting (±5 · u direction units; off in strong gravity) | ±5 | ±4.1 | ±3.1 | ±1.9 | 0 |
 | Noise on plan costs (600 · u px: now and then a worse plan wins) | 600 | 494 | 372 | 229 | 0 |
 | Sampled headings | 16 | 16 | 32 | 32 | 32 |
@@ -419,8 +420,8 @@ Measured laps (mean, ticks of game time, one bot):
 
 | Map | Level 1 | Level 25 | Level 50 | Level 75 | Level 100 |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| Grand Prix II | 1084 (+34 %) | 905 (+12 %) | 867 (+7 %) | 847 (+5 %) | 810 |
-| Zandvoort GP | 782 (+59 %) | 569 (+16 %) | 533 (+9 %) | 514 (+5 %) | 491 |
+| Grand Prix II | 1056 (+30 %) | 881 (+9 %) | 847 (+5 %) | 827 (+2 %) | 810 |
+| Zandvoort GP | 765 (+56 %) | 554 (+13 %) | 520 (+6 %) | 511 (+4 %) | 491 |
 
 The constants are `RB_POWER_LOSS`, `RB_STEER_ERR` and `RB_PLAN_NOISE` in `racebot.c`.
 

@@ -476,6 +476,19 @@ static option_desc opts[] = {
 	OPT_ORIGIN_ANY | OPT_VISIBLE
     },
     {
+	"robotsFillTo",
+	"robotsFillTo",
+	"false",
+	&options.robotsFillTo,
+	valBool,
+	tuner_dummy,
+	"Humans replace robots: the game is filled up with robots to\n"
+	"maxRobots + maxSmartRobots players in all. With 4 robots wanted and\n"
+	"two humans playing there are two robots. Each type keeps its share.\n"
+	"botsMatchHumans takes precedence.\n",
+	OPT_ORIGIN_ANY | OPT_VISIBLE
+    },
+    {
 	"robotUserName",
 	"robotRealName",
 	"robot",

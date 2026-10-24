@@ -876,8 +876,15 @@ void LauncherApp::RenderAdvanced(bool server_mode) {
                 OptBool("All bots in one team", "restrictRobots");
                 OptBool("No humans in bot team", "reserveRobotTeam", "Humans cannot join the bot team");
                 ImGui::Separator();
-                OptBool("Bots match humans", "botsMatchHumans",
-                        "One bot per human player. Bots / Smartbots then only set the normal-to-smart ratio");
+                if (OptBool("Bots match humans", "botsMatchHumans",
+                            "One bot per human player. Bots / Smartbots then only set the normal-to-smart ratio")
+                    && options_mgr_.GetBool("botsMatchHumans"))
+                    options_mgr_.SetBool("robotsFillTo", false);
+                ImGui::SameLine(0, 16);
+                if (OptBool("Humans replace bots", "robotsFillTo",
+                            "Fill the game up to Bots + Smartbots players: each human replaces a bot")
+                    && options_mgr_.GetBool("robotsFillTo"))
+                    options_mgr_.SetBool("botsMatchHumans", false);
                 ImGui::PushItemWidth(260);
                 OptFloat("Bots per human", "botsPerHuman", 0.25f, 4.0f, "%.2f", false,
                          "Used when 'Bots match humans' is on");

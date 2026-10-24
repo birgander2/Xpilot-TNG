@@ -1253,6 +1253,9 @@ static bool robot_prefill;
  * botsMatchHumans: keep NumRobots at botsPerHuman * (number of active
  * human players). maxRobots and maxSmartRobots only give the ratio of
  * normal to smart robots. Returns after at most one create/delete.
+ *
+ * robotsFillTo: keep humans + NumRobots at maxRobots + maxSmartRobots, each
+ * type with its own share of that.
  */
 static void Robot_match_humans(bool can_spawn_more, int num_playing_ships,
 			       int num_any_ships, double *create_delay)
@@ -1261,7 +1264,7 @@ static void Robot_match_humans(bool can_spawn_more, int num_playing_ships,
     int num_default_robots = NumRobots - NumSmartRobots;
     int weight_default = MAX(options.maxRobots, 0);
     int weight_smart = MAX(options.maxSmartRobots, 0);
-    bool want_smart;
+    bool want_smart, fill = !options.botsMatchHumans && options.robotsFillTo;
 
     for (i = 0; i < NumPlayers; i++) {
 	player_t *pl = Player_by_index(i);
@@ -1269,14 +1272,21 @@ static void Robot_match_humans(bool can_spawn_more, int num_playing_ships,
 	if (Player_is_human(pl) && !Player_is_paused(pl) && pl->rectype != 2)
 	    humans++;
     }
-    target = (int)(humans * MAX(options.botsPerHuman, 0.0) + 0.5);
+    if (fill)
+	target = MAX(weight_default + weight_smart - humans, 0);
+    else
+	target = (int)(humans * MAX(options.botsPerHuman, 0.0) + 0.5);
 
     if (NumRobots < target && can_spawn_more) {
 	*create_delay += timeStep;
 	if (*create_delay < ROBOT_CREATE_DELAY && !robot_prefill)
 	    return;
 	*create_delay = 0;
-	if (weight_default + weight_smart > 0)
+	if (fill && num_default_robots >= weight_default)
+	    want_smart = weight_smart > NumSmartRobots;
+	else if (fill && NumSmartRobots >= weight_smart)
+	    want_smart = false;
+	else if (weight_default + weight_smart > 0)
 	    want_smart = (int)(randomMT() % (weight_default + weight_smart))
 			 >= weight_default;
 	else
@@ -1297,8 +1307,12 @@ static void Robot_match_humans(bool can_spawn_more, int num_playing_ships,
 	|| num_any_ships > NUM_IDS) {
 	Robot_delete(NULL, false);
     } else if (NumRobots > target) {
-	/* Remove a type with probability proportional to its share. */
-	want_smart = (int)(randomMT() % NumRobots) < NumSmartRobots;
+	if (fill)	/* the type that is fuller compared to its share */
+	    want_smart = (double)NumSmartRobots * MAX(weight_default, 1)
+			 >= (double)num_default_robots * MAX(weight_smart, 1)
+			 && NumSmartRobots > 0;
+	else	/* Remove a type with probability proportional to its share. */
+	    want_smart = (int)(randomMT() % NumRobots) < NumSmartRobots;
 	Robot_delete_type(want_smart, false);
     }
 }
@@ -1352,7 +1366,7 @@ void Robot_update(bool tick)
     if (robot_prefill)
 	new_robot_delay = ROBOT_CREATE_DELAY;
 
-    if (options.botsMatchHumans) {
+    if (options.botsMatchHumans || options.robotsFillTo) {
 	Robot_match_humans(can_spawn_more, num_playing_ships, num_any_ships,
 			   &new_robot_delay);
     } else {

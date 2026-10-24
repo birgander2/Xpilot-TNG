@@ -208,7 +208,7 @@ static long Setup_mode_for_client(const setup_t *S)
 
     if (BIT(mode, TEAM_PLAY) && options.reserveRobotTeam
 	&& (options.maxRobots > 0 || options.maxSmartRobots > 0
-	    || options.botsMatchHumans)
+	    || options.botsMatchHumans || options.robotsFillTo)
 	&& options.robotTeam >= 0 && options.robotTeam < MAX_TEAMS)
 	mode |= SETUP_ROBOT_TEAM_LOCKED
 		| ((long)options.robotTeam << SETUP_ROBOT_TEAM_SHIFT);

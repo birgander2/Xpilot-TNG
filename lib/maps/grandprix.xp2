@@ -7,6 +7,10 @@
 <Option name="rogueMineProb" value="1.0"/>
 <Option name="allowShipShapes" value="yes"/>
 <Option name="maxRobots" value="0"/>
+<Option name="robotsFillTo" value="yes"/>
+<Option name="maxSmartRobots" value="4"/>
+<Option name="smartBotType" value="race"/>
+<Option name="smartRobotLevel" value="50"/>
 <Option name="framesPerSecond" value="50"/>
 <Option name="objectWallBounceLifeFactor" value="1.0"/>
 <Option name="maxShieldedWallBounceSpeed" value="80"/>

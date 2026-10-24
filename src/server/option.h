@@ -44,6 +44,7 @@ extern struct options {
     bool	reserveRobotTeam;
     bool	botsMatchHumans;
     double	botsPerHuman;
+    bool	robotsFillTo;		/* humans replace robots, see cmdline.c */
     int 	robotTicksPerSecond;
     list_t	expandList;		/* Predefined settings. */
     double	shotMass;

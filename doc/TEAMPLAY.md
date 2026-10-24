@@ -51,6 +51,7 @@ Set on the command line (`-option value`), in `lib/defaults.txt`, or in the map 
 | `reserveRobotTeam` | `true` | Humans cannot join `robotTeam`. |
 | `botsMatchHumans` | `false` | Keep the number of bots equal to the number of active humans (see below). |
 | `botsPerHuman` | `1.0` | Bots per human when `botsMatchHumans` is on. |
+| `robotsFillTo` | `false` | Humans replace bots: the game is filled up to `maxRobots + maxSmartRobots` players in all. With 4 bots wanted and two humans there are two bots, each type keeping its share. Excludes `botsMatchHumans`, which takes precedence. |
 
 Game modes built on teams (`captureTheFlag`, `treasureKillTeam`, `targetKillTeam`, team cup) are described in [GAMEMODES.md](GAMEMODES.md).
 

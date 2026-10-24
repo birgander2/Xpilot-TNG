@@ -63,6 +63,11 @@
 <Option name="targetkillteam" value="no"/>
 <Option name="teamcannons" value="no"/>
 <Option name="timing" value="yes"/>
+<Option name="maxRobots" value="0"/>
+<Option name="robotsFillTo" value="yes"/>
+<Option name="maxSmartRobots" value="4"/>
+<Option name="smartBotType" value="race"/>
+<Option name="smartRobotLevel" value="50"/>
 <Option name="itemlaserprob" value="0"/>
 <Option name="maxroundtime" value="0"/>
 <Option name="itemprobmult" value="0.02"/>

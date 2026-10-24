@@ -73,7 +73,7 @@
  * a little less thrust and less exact manoeuvres, so lower levels lose
  * time like a weaker human pilot.
  */
-#define RB_POWER_LOSS		0.16	/* share of the thrust lost at level 1 */
+#define RB_POWER_LOSS		0.10	/* share of the thrust lost at level 1 */
 #define RB_STEER_ERR		5.0	/* heading error at level 1 (dir units) */
 #define RB_PLAN_NOISE		600.0	/* noise on plan costs at level 1 (px) */
 #define RB_THREAT_TICKS		(6 * 12)
