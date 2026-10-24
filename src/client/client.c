@@ -170,6 +170,8 @@ homebase_t          *bases = NULL;
 int                 num_bases = 0;
 checkpoint_t        *checks = NULL;
 int                 num_checks = 0;
+mapobject_t         *mapobjects = NULL;
+int                 num_mapobjects = 0;
 xp_polygon_t        *polygons = NULL;
 int                 num_polygons = 0;
 edge_style_t        *edge_styles = NULL;
@@ -1048,6 +1050,30 @@ static int init_polymap(void)
 	checks[i].bounds.w = BLOCK_SZ;
 	checks[i].bounds.h = BLOCK_SZ;
     }
+    /*
+     * TNG servers append the map objects that are no polygons (gravs,
+     * concentrators); NG servers end here.
+     */
+    num_mapobjects = 0;
+    mapobjects = NULL;
+    if (version >= TNG_FIRST_VERSION
+	&& ptr + 2 <= (char *)Setup->map_data + Setup->map_data_len) {
+	int n = get_ushort(&ptr);
+
+	if (n > 0 && ptr + n * 5 <= (char *)Setup->map_data + Setup->map_data_len
+	    && (mapobjects = XMALLOC(mapobject_t, n)) != NULL) {
+	    for (i = 0; i < n; i++) {
+		mapobjects[i].type = *ptr++ & 0xff;
+		cx = get_ushort(&ptr);
+		cy = get_ushort(&ptr);
+		mapobjects[i].bounds.x = cx - BLOCK_SZ / 2;
+		mapobjects[i].bounds.y = cy - BLOCK_SZ / 2;
+		mapobjects[i].bounds.w = BLOCK_SZ;
+		mapobjects[i].bounds.h = BLOCK_SZ;
+	    }
+	    num_mapobjects = n;
+	}
+    }
 
     /*
      * kps - hack.
@@ -1204,6 +1230,10 @@ static int Map_cleanup(void)
     if (num_cannons > 0) {
 	XFREE(cannons);
 	num_cannons = 0;
+    }
+    if (num_mapobjects > 0) {
+	XFREE(mapobjects);
+	num_mapobjects = 0;
     }
     return 0;
 }

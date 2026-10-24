@@ -15,14 +15,17 @@ XPilot TNG introduces **Smartbots** (`smart`), an advanced autonomous AI driver 
    - [Threat Scanner & CPA Evasion](#threat-scanner--cpa-evasion)
    - [A* Grid Pathfinding](#a-grid-pathfinding)
    - [Potential Field Maneuvering](#potential-field-maneuvering)
+   - [Race Maps](#race-maps)
    - [Ball Game: Handling, Delivery & Team Play](#ball-game-handling-delivery--team-play)
-6. [Reinforcement Learning & Shared Brain](#reinforcement-learning--shared-brain)
+6. [Ball Game Bots (`ball` driver)](#ball-game-bots-ball-driver)
+7. [Race Bots (`race` driver)](#race-bots-race-driver)
+8. [Reinforcement Learning & Shared Brain](#reinforcement-learning--shared-brain)
    - [State & Action Space](#state--action-space)
    - [Evolutionary Policy Genes](#evolutionary-policy-genes)
    - [Rewards](#rewards)
    - [Brain Persistence (`smartbot_brain.dat`)](#brain-persistence-smartbot_braindat)
-7. [Skill Level Matrix (Levels 1–100)](#skill-level-matrix-levels-1100)
-8. [Tactical Advice for Human Pilots](#tactical-advice-for-human-pilots)
+9. [Skill Level Matrix (Levels 1–100)](#skill-level-matrix-levels-1100)
+10. [Tactical Advice for Human Pilots](#tactical-advice-for-human-pilots)
 
 ---
 
@@ -35,6 +38,8 @@ Classic XPilot robots rely on simple line-of-sight heuristics and fixed reaction
 - **Topological Navigation:** Navigates labyrinthine polygon and block maps using bounded grid A\* pathfinding to reach fuel stations, items, and team objectives.
 - **Tactical Versatility:** Dynamically shifts between close-quarters dogfighting, long-range sniper kiting, survival evasion, harvesting/refueling, and CTF flag-running.
 - **Team Ball Play:** Tows the ball as a pair (ship + ball) instead of just flying the ship, throws it into the goal in a swing manoeuvre, and plays as a team with roles (attacker, defender, escort, hunter).
+- **Dedicated Ball Game Driver:** On team maps with treasures, smart robots use a separate driver (`ball`, `src/server/ballbot.c`) that plans its flight with a physics model of ship and ball (see [Ball Game Bots](#ball-game-bots-ball-driver)).
+- **Dedicated Race Driver:** On race maps (timing mode with checkpoints), smart robots use the `race` driver (`src/server/racebot.c`), which plans the racing line with a physics model and manages laps and fuel (see [Race Bots](#race-bots-race-driver)).
 - **Online Learning:** Uses Tabular Q-Learning and continuous evolutionary policy adaptation that learns from combat outcomes (kills, deaths) and ball-game results, and persists across server runs in `smartbot_brain.dat`.
 
 ---
@@ -51,6 +56,8 @@ Smartbots can be enabled via command-line arguments or server defaults files (`d
 | `minSmartRobots` | `-minSmartRobots` | `-1` | Minimum number of smart robots kept in the server (`-1` = follow `maxSmartRobots`). |
 | `smartRobotLevel` | `-smartLevel` | `75` | Global skill and intelligence level (**1 to 100**). Controls aiming precision, pathfinding depth, turn rate, and several ball-handling skills (see [Skill Level Matrix](#skill-level-matrix-levels-1100)). |
 | `smartRobotsLaser` | `-smartRobotsLaser` / `-smartLaser` | `true` | When `false`, Smartbots will neither pick up nor use laser pulses. |
+| `robotsFillTo` | `false` | Humans replace bots: the game is filled up to `maxRobots + maxSmartRobots` players in all (4 bots wanted, two humans: two bots). See [TEAMPLAY.md](TEAMPLAY.md). The race maps *grandprix* and *zandvoort* turn it on with 4 race bots at level 50. |
+| `smartBotType` | `-smartType` | `auto` | Which AI the smart robots use: `auto` (the ball driver on team maps with treasures, the race driver on race maps, the learning smartbot elsewhere), `smart` (always the learning smartbot), `ball` (the ball driver on every map; without a ball game it only dogfights, see below) or `race` (the race driver on race maps, the learning smartbot elsewhere). Affects robots that join afterwards. The launcher offers the choice as a dropdown next to the number of smartbots. |
 
 ### Example Startup Commands
 
@@ -181,7 +188,13 @@ Movement combines attractive and repulsive force vectors:
 - **Wall Repulsion:** Increases exponentially as the bot approaches solid terrain.
 - **Hazard Repulsion:** Pushes the bot away from floating mines, cannon fire, and asteroid fields.
 
+### Race Maps
+
+With `smartBotType` `smart` the learning smartbot races too, just not well. Its bounded A\* gets lost on long winding tracks, so on race maps it follows one distance field per checkpoint, computed once over the whole map with the checkpoint's disk as the goal. Blocks next to walls and in strong gravity cost more, so the way keeps to the middle of the track. It flies at the farthest point along that way it can see without crossing strong gravity; the repelling gravs in the corners of *Grand Prix* would otherwise trap it. Its combat, dodging and shields work as everywhere else. A lap takes it about twice as long as the [`race` driver](#race-bots-race-driver).
+
 ### Ball Game: Handling, Delivery & Team Play
+
+This section describes the learning `smart` driver. With `smartBotType` `auto` (the default), ball maps use the [`ball` driver](#ball-game-bots-ball-driver) instead.
 
 On team maps with treasures (balls), Smartbots play the ball game with dedicated flight control and team roles. Ships die on contact with a ball area (`treasureCollisionKills`), so a large part of this logic is about handling the ball without crashing.
 
@@ -249,6 +262,179 @@ Bots get no information a human team would not have. The radar shows only plain 
 - **Own towing:** a team always knows which of its own members tows an enemy ball.
 
 ---
+
+---
+
+## Ball Game Bots (`ball` driver)
+
+The `ball` driver (`src/server/ballbot.c`) is a second robot type made only for team ball games. Smart robots use it on maps with team play and treasures of at least two teams, when `smartBotType` is `auto` or `ball`. It does not learn; it plans. The robot names, the `S` marker and `smartRobotLevel` are shared with the smartbots.
+
+### Map analysis
+
+Done once per map (well under a second on a Raspberry Pi 4):
+
+- **Clearance grid:** every map cell (BLOCK_SZ/5, 7 px on bloods) gets the exact distance to the nearest obstacle (Euclidean distance transform, wrap-aware). There are two grids: ships hit walls and ball areas, balls only walls.
+- **Target zones:** the cells where a ball scores, grown by the ball radius, because the server scores as soon as the ball's edge touches the target.
+- **Navigation grid:** one node per block at its most open point. Edges cost extra where clearance is low, more so for a ship towing a ball.
+- **Distance fields:** Dijkstra fields to every treasure, for a ship alone and for a towing ship. Fields to moving goals are computed on demand, cached, and limited to three per tick.
+- **Ball run routes:** up to four clearly different routes per treasure pair. Each alternative is forced through a via point in the middle of the run, away from the routes already found. The quality accounts for length and turns, and the choice is weighted by (best time / time)². A route with enemies on it is avoided, and the carrier switches route underway if enemies show up and another route is not a large detour.
+
+### What the team knows
+
+A team uses only what a human team that talks could know:
+
+- Anything within a human's view range of a living teammate, humans included: ships, shots and balls.
+- Enemy positions on the radar when `playersOnRadar` is on. Radar speed is estimated from consecutive positions.
+- An own ball is known to be away when a teammate sees the empty treasure or the ball somewhere else.
+- A thief is known only while a teammate sees him tow the ball, and remembered for a while after.
+
+### Roles
+
+Every half second each team assigns roles by priority, each to the cheapest free bot (with hysteresis). The ball run comes first: the `grab` task goes to whichever bot is closest to the enemy ball and not in a fight (each enemy within 300 px adds to its cost), with little hysteresis, so the grabber changes as the bots move. A supporter that gets close becomes the grabber, and the former grabber covers it.
+
+| Role | Task |
+| :--- | :--- |
+| `carry` | Tow the ball home (whoever has it). |
+| `return` | Ram our own loose ball. With `treasureCollisionDestroys` any ship touching a ball sends it home. |
+| `hunt` | Our ball is stolen: ram the towed ball and shoot the thief. Intercepts on the thief's predicted way home; waits at his target if the thief is unseen. |
+| `grab` | Fetch the enemy ball. A ball at rest is picked up in passing: the bot lines up on a free line beside the ball (about 105 px off) close to the run's start direction, connects as it passes and attaches at about 20 px/tick, so the pair leaves already moving. Without such a line it uses a connect spot with room to manoeuvre. It fights only an enemy right on it that no teammate is closer to, and leaves the enemy base faster than normal towing speed, because their ships respawn there. |
+| `defend` | Guard the treasure between it and the main threat. Escorts our carrier while no enemy is near home. Comes before `support` only when a known enemy is near our base; a human teammate near our base takes this job. |
+| `escort` | Stay behind the carrier towards the pursuers and engage enemies near him. |
+| `support` / `mid` | Cover the grabber at the enemy base, or intercept in the middle. |
+
+With nothing threatening our base, two bots both attack: grabber and supporter. Human carriers in the team are escorted like bot carriers.
+
+### Flight: sampling model predictive control
+
+Each tick a bot simulates about 60–100 candidate manoeuvres 16 ticks ahead (22 ticks when towing). A candidate is a heading with thrust or coast for a few ticks, followed by a built-in policy. The model is the server's own physics: thrust, turn rate, `constantSpeed`/`oldThrust`, and the ball on its spring connector (simulated per frame). Candidates are scored on:
+
+- progress along the distance field (near the goal: the ball's straight distance to the target);
+- clearance to walls and ball areas, and whether the bot can still stop or turn before the next wall;
+- wall bounces: below `maxUnshieldedWallBounceSpeed` a ship only bounces (all `playerWallBounceType`s are modelled), a ball below `maxObjectWallBounceSpeed` too. A bounce costs the speed it loses and a little extra; touching a ball target kills the ship;
+- connector strain (the rope must not snap). When towing, only the centre of mass counts: a swinging ball or one that leads costs nothing by itself;
+- enemies reaching the towed ball: any ship touching it sends it home, so enemies are assumed to accelerate straight at it;
+- enemy shots in view, checked continuously along each tick, and virtual shots of enemies that point at the bot;
+- collisions with ships, and touching balls that must not be touched;
+- aiming: turning towards the lead direction of the target and being on it in the next ticks.
+
+The best plan is kept and offered again the next tick, so longer manoeuvres stay coherent.
+
+**Towing** follows one rule: always pull, never push. The rope (ball → ship) is turned to point along the wanted acceleration: ball behind when speeding up, swung ahead for braking. A cascade sets the rope's angular speed from the angle error and the thrust angle from the angular speed error. The gains were tuned offline on a copy of the model.
+
+**Scoring:** runs normally end with a throw. From about 1100 px out the carrier looks for a free straight line into the target (targets are often open to one side only) and first steers the ball to a gate 300 px out on that line, arriving with the ball moving along it. Near home (about 900 px) with a clear line from the ball to the goal, the rollouts reward a ball course that points closer at the goal. They reward highest any moment at which releasing the ball would let it fly into the target without hitting our own ship. The bot releases the ball as soon as its free flight would score and the ship can coast on without hitting the target. Towing the ball into the target also counts.
+
+On xp2 maps ball targets are not linked to a treasure. A target belongs to the nearest treasure of its team.
+
+On maps without a ball game (dogfight maps, no team play or no treasures of two teams) a `ball` bot has no ball roles. Every ballbot plays for itself, nobody counts as an ally, and each one hunts the nearest enemy it knows. The flight and combat code is the same, but there is no tactics beyond that, and `auto` keeps using the learning smartbot on such maps.
+
+### Combat
+
+The bot leads with the shot's inherited ship velocity. It fires when the shot would pass the target closer than the ship radius plus a margin (narrower at low levels), and only with a free line. Bots aim at the nearest enemy in view whenever it costs little, for example while coasting with a ball.
+
+### Skill levels
+
+| Effect | Level 30 | Level 75 | Level 100 |
+| :--- | :---: | :---: | :---: |
+| Turn rate (direction units per tick) | 5 | 9 | 12 |
+| Reaction delay for enemy movement | ~4 ticks | ~1 tick | none |
+| Aiming error (direction units) | ±2.8 | ±1 | 0 |
+| Fire tolerance beyond the ship radius | 0 px | +2.5 px | +4 px |
+| Extra wall margin | 6 px | 3.5 px | 2 px |
+| Sampled headings | 8 | 16 | 16 |
+| Towing speed limit | 16 | 18 | 19 |
+
+### CPU usage
+
+On a desktop CPU, 4 ball bots use about 1.6% and 8 ball bots about 3% of one core. Expect roughly 6–8 times that on a Raspberry Pi 4.
+
+### Chat commands
+
+- `/msg <bot> status`: skill level and current role.
+- `/msg <bot> level N`: individual skill level (0 = global `smartRobotLevel`).
+
+---
+
+## Race Bots (`race` driver)
+
+The `race` driver (`src/server/racebot.c`) is a robot type made for race maps: `timing` on, at least one checkpoint, no `ballrace`. Smart robots use it there when `smartBotType` is `auto` or `race`. It aims at the best lap times the physics allow, keeps to the set `raceLaps` and the fuel it has, and defends itself. Names, the `S` marker and `smartRobotLevel` are shared with the other smart robots.
+
+### Map analysis
+
+Once per map the walls are rasterized on a fine grid (about 7 px; polygon edges are traced as well, so thin walls have no gaps) and an exact distance transform gives the wall clearance everywhere. A navigation grid of one cell per map block carries the shortest paths.
+
+For every checkpoint there are distance fields that do not stop at its disk (`checkpointRadius`): the disk's cells start with the cost of going on from there to the next checkpoints. The value of a position is the length of the way through the next checkpoint and the three after it. So passing a checkpoint is continuous in value, passing it at a bad spot costs exactly the way it wastes, and the paths of the deepest fields are the racing line: they cut through each disk where it sets up the next one. Near the finish the look-ahead ends with the race.
+
+### Flight
+
+Each tick the bot simulates about 130 candidate manoeuvres (about 85 below level 50) 40 ticks ahead: a heading with thrust or coast for 2–20 ticks, followed by a racing policy that flies at the farthest visible point of the racing line as fast as still allows slowing down for it. The model is the server's own physics, frame by frame: thrust, turn rate, `friction`, gravity of the map (repelling gravs at the corners of *Grand Prix* are part of the plan), `constantSpeed`, and wall bounces of every `playerWallBounceType`. The size of the ship comes from its shape. Candidates are scored on:
+
+- the course value reached at the end, and the course value along the way (progress made early counts, otherwise a plan that dawdles looks as good as one that goes);
+- checkpoint passes, judged against the disk as the server does; finishing earlier is worth more;
+- wall bounces: they cost the speed they lose plus a little. Above `maxUnshieldedWallBounceSpeed` a bounce is only survivable with a shield and costs a lot; faster than the shield allows is a crash;
+- enemy shots and virtual shots of attackers that point at the bot;
+- enemy ships: touching one kills (`allowPlayerCrashes`) or costs `playerCollisionFuelDrain` fuel (`allowPlayerBounces`). Enemies may change course any moment, so the berth widens with the time ahead. This matters at the start, when all ships leave the grid together.
+
+The best plan is kept and offered again the next tick.
+
+### Laps and fuel
+
+The bot counts the checkpoint passes left (`raceLaps` × checkpoints + the start). It measures the fuel each course segment uses. When the fuel left will not last for the rest of the race (with 10 % and 10 units to spare), it flies to the fuel station with the smallest detour, stops there and refuels until it has enough with a margin, then races on. Stations within reach on the way are always used in passing. Without measurements yet the need is estimated from the path lengths; the first lap corrects it.
+
+### Defence
+
+- Shots and ships are dodged by the flight model.
+- The shield goes up (when the bot has one) against a hit or ram the best plan cannot avoid, and whenever the ship heads for a wall within two ticks at a speed only a shield survives.
+- Players who shoot at the bot, push it or kill it count as attackers for a few seconds. The bot shoots back at them when the shot would hit and the line is free, and turns towards them only when it costs little. It does not start fights: racebots leave each other alone.
+
+### Learning
+
+Per map the bot keeps the fuel and the time of every course segment and its best lap in `$XDG_DATA_HOME/xpilot-tng/racebot/<map name>.txt` (default `~/.local/share/...`), keyed to the checkpoint layout. From the second race on its fuel planning uses what it measured, so it neither makes needless stops (*Zandvoort* starts with only 150 fuel) nor runs dry. A tuned corner speed per segment was tried as well, but made no measurable difference to the lap times, so the bot does not learn its driving.
+
+### Measured lap times
+
+Level 100, one bot, laps after the first, in ticks of game time (level 75 is about 5 % slower, see the skill levels below):
+
+| Map | Race bot | Learning smartbot | Classic robots |
+| :--- | :---: | :---: | :---: |
+| Grand Prix II (`grandprix`) | ~800 (about 62 s at its game speed 13) | ~1500 | – |
+| Zandvoort GP (`zandvoort`) | ~495 (about 40 s) | ~1200 | 2400–7000 |
+
+Laps vary by about ±3 %. Items matter: a bot that happens to pick up an afterburner is about 10 % faster for the rest of the race, and a light ship (little fuel) is faster too.
+
+### Skill levels
+
+Below level 100 the bot also loses thrust and flies less exactly, like a weaker pilot. These effects grow with u = ((100 − level) / 99)^0.7, so middle levels feel them too: u is 0 at level 100, 0.38 at level 75, 0.62 at level 50, 0.82 at level 25 and 1 at level 1.
+
+| Effect | Level 1 | Level 25 | Level 50 | Level 75 | Level 100 |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| Turn rate (direction units per tick) | 3 | 5 | 7 | 9 | 12 |
+| Thrust lost (10 % · u; the model knows it) | 10 % | 8 % | 6 % | 4 % | 0 |
+| Steering error, drifting (±5 · u direction units; off in strong gravity) | ±5 | ±4.1 | ±3.1 | ±1.9 | 0 |
+| Noise on plan costs (600 · u px: now and then a worse plan wins) | 600 | 494 | 372 | 229 | 0 |
+| Sampled headings | 16 | 16 | 32 | 32 | 32 |
+| Extra wall margin | 7 px | 5.5 px | 4 px | 2.5 px | 1 px |
+| Reaction delay for enemy movement | ~4 ticks | ~3 ticks | ~2 ticks | ~1 tick | none |
+| Aiming error (direction units) | ±4 | ±3 | ±2 | ±1 | 0 |
+
+Measured laps (mean, ticks of game time, one bot):
+
+| Map | Level 1 | Level 25 | Level 50 | Level 75 | Level 100 |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| Grand Prix II | 1056 (+30 %) | 881 (+9 %) | 847 (+5 %) | 827 (+2 %) | 810 |
+| Zandvoort GP | 765 (+56 %) | 554 (+13 %) | 520 (+6 %) | 511 (+4 %) | 491 |
+
+The constants are `RB_POWER_LOSS`, `RB_STEER_ERR` and `RB_PLAN_NOISE` in `racebot.c`.
+
+### CPU usage
+
+The map analysis takes a fraction of a second. Racing, 4 race bots use about 3 % of one desktop core.
+
+### Chat commands
+
+- `/msg <bot> status`: level, lap, checkpoint, fuel and what the rest of the race needs, best lap.
+- `/msg <bot> level N`: individual skill level (0 = global `smartRobotLevel`).
+- `/msg <bot> learn on|off`: keep or stop measuring.
+- `/msg <bot> forget`: drop what was learned about this map.
 
 ---
 

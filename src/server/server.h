@@ -159,6 +159,7 @@ int is_inside(int x, int y, hitmask_t hitmask, const object_t *obj);
 int shape_is_inside(int cx, int cy, hitmask_t hitmask, const object_t *obj,
 		    shape_t *s, int dir);
 int Polys_to_client(unsigned char **);
+int Map_objects_to_client(unsigned char **);
 void Ball_line_init(void);
 void Player_crash(player_t *pl, int crashtype, int mapobj_ind, int pt);
 void Object_crash(object_t *obj, int crashtype, int mapobj_ind);
@@ -262,6 +263,7 @@ void Fire_general_shot(int id, int team,
 		       clpos_t pos, int type, int dir,
 		       modifiers_t mods, int target_id);
 void Fire_normal_shots(player_t *pl);
+bool Can_shoot_normal_shot(player_t *pl);
 void Fire_main_shot(player_t *pl, int type, int dir);
 void Fire_left_shot(player_t *pl, int type, int dir, int gun);
 void Fire_right_shot(player_t *pl, int type, int dir, int gun);
@@ -351,6 +353,7 @@ void Set_swapper_state(player_t *pl);
  */
 void Race_compute_game_status(void);
 void Race_game_over(void);
+void Race_assign_startpos(void);
 void Player_reset_timing(player_t *pl);
 void Player_pass_checkpoint(player_t *pl);
 void PlayerCheckpointCollision(player_t *pl);

@@ -377,6 +377,56 @@ static robot_t DefaultRobots[] = {
 };
 
 #define SMART_ROBOT_TYPE	"smart"
+#define BALL_ROBOT_TYPE		"ball"
+#define RACE_ROBOT_TYPE		"race"
+
+/*
+ * The AIs smart robots can use, selected with the smartBotType option.
+ * A new AI needs an entry here, its driver in robot_type_setups[] and an
+ * entry in the launcher's list (kSmartBotTypes in launcher_app.cpp).
+ */
+static const struct {
+    const char	*name;			/* value of smartBotType */
+    const char	*driver;		/* robot driver, NULL: chosen per map */
+    bool	(*usable)(void);	/* can it play this map at all? NULL: always */
+    bool	(*fits)(void);		/* is it what "auto" picks here? */
+} smart_bot_types[] = {
+    { "auto",		NULL,			NULL, NULL },
+    { SMART_ROBOT_TYPE,	SMART_ROBOT_TYPE,	NULL, NULL },
+    { BALL_ROBOT_TYPE,	BALL_ROBOT_TYPE,	NULL, Robot_ball_game },
+    { RACE_ROBOT_TYPE,	RACE_ROBOT_TYPE,	Robot_race_map, Robot_race_map },
+};
+
+/* Driver for a new smart robot on the current map. */
+static const char *Smart_bot_driver(void)
+{
+    const char *want = options.smartBotType ? options.smartBotType : "auto";
+    static char warned[32];
+    int i, found = -1;
+
+    for (i = 0; i < (int)NELEM(smart_bot_types); i++) {
+	if (!strcasecmp(want, smart_bot_types[i].name))
+	    found = i;
+    }
+    if (found < 0) {
+	if (strncmp(warned, want, sizeof(warned) - 1)) {
+	    strlcpy(warned, want, sizeof(warned));
+	    warn("Unknown smartBotType \"%s\", using auto.", want);
+	}
+	found = 0;
+    }
+    if (smart_bot_types[found].driver != NULL) {
+	if (!smart_bot_types[found].usable || smart_bot_types[found].usable())
+	    return smart_bot_types[found].driver;
+	return SMART_ROBOT_TYPE;
+    }
+    /* auto: the first specialised AI that fits the map */
+    for (i = 1; i < (int)NELEM(smart_bot_types); i++) {
+	if (smart_bot_types[i].fits && smart_bot_types[i].fits())
+	    return smart_bot_types[i].driver;
+    }
+    return SMART_ROBOT_TYPE;
+}
 
 static robot_t SmartRobots[] = {
     {
@@ -490,6 +540,8 @@ static int	MAX_SMART_ROBOTS = NELEM(SmartRobots);
 extern int Robot_default_setup(robot_type_t *type_ptr);
 extern int Robot_suibot_setup(robot_type_t *type_ptr);
 extern int Robot_smart_setup(robot_type_t *type_ptr);
+extern int Robot_ball_setup(robot_type_t *type_ptr);
+extern int Robot_race_setup(robot_type_t *type_ptr);
 
 /*
  * Array to store function pointers to robot type setup routines.
@@ -502,6 +554,8 @@ static struct robot_setup {
     { Robot_default_setup },
     { Robot_suibot_setup },
     { Robot_smart_setup },
+    { Robot_ball_setup },
+    { Robot_race_setup },
 };
 
 /*
@@ -834,6 +888,15 @@ static void Robot_create(bool want_smart)
 	if (!strcmp(robot_types[i].name, rob->driver))
 	    new_data->robot_types_ind = i;
     }
+    /* Smart robots use the AI selected with smartBotType */
+    if (want_smart) {
+	const char *driver = Smart_bot_driver();
+
+	for (i = 1; i < num_robot_types; i++) {
+	    if (!strcmp(robot_types[i].name, driver))
+		new_data->robot_types_ind = i;
+	}
+    }
     rob_type = &robot_types[new_data->robot_types_ind];
 
     Init_player(NumPlayers,
@@ -842,7 +905,7 @@ static void Robot_create(bool want_smart)
 
     robot = Player_by_index(NumPlayers);
     robot->robot_data_ptr = new_data;
-    if (!strcmp(rob_type->name, SMART_ROBOT_TYPE)) {
+    if (want_smart) {
 	robot->pl_type_mychar = 'S';
 	Player_set_mychar(robot, 'S');
     }
@@ -850,8 +913,8 @@ static void Robot_create(bool want_smart)
     strlcpy(robot->name, rob->name, MAX_CHARS);
     strlcpy(robot->username, options.robotUserName, MAX_CHARS);
     strlcpy(robot->hostname, options.robotHostName, MAX_CHARS);
-    if (!strcmp(rob_type->name, SMART_ROBOT_TYPE))
-	strlcpy(robot->hostname, "smartbot.from.hell", MAX_CHARS);
+    if (strcmp(rob_type->name, DEFAULT_ROBOT_TYPE))
+	snprintf(robot->hostname, MAX_CHARS, "%sbot.from.hell", rob_type->name);
 
     robot->turnspeed = MAX_PLAYER_TURNSPEED;
     robot->turnspeed_s = MAX_PLAYER_TURNSPEED;
@@ -1184,10 +1247,15 @@ static void Tank_play(player_t *pl)
 }
 
 
+static bool robot_prefill;
+
 /*
  * botsMatchHumans: keep NumRobots at botsPerHuman * (number of active
  * human players). maxRobots and maxSmartRobots only give the ratio of
  * normal to smart robots. Returns after at most one create/delete.
+ *
+ * robotsFillTo: keep humans + NumRobots at maxRobots + maxSmartRobots, each
+ * type with its own share of that.
  */
 static void Robot_match_humans(bool can_spawn_more, int num_playing_ships,
 			       int num_any_ships, double *create_delay)
@@ -1196,7 +1264,7 @@ static void Robot_match_humans(bool can_spawn_more, int num_playing_ships,
     int num_default_robots = NumRobots - NumSmartRobots;
     int weight_default = MAX(options.maxRobots, 0);
     int weight_smart = MAX(options.maxSmartRobots, 0);
-    bool want_smart;
+    bool want_smart, fill = !options.botsMatchHumans && options.robotsFillTo;
 
     for (i = 0; i < NumPlayers; i++) {
 	player_t *pl = Player_by_index(i);
@@ -1204,14 +1272,21 @@ static void Robot_match_humans(bool can_spawn_more, int num_playing_ships,
 	if (Player_is_human(pl) && !Player_is_paused(pl) && pl->rectype != 2)
 	    humans++;
     }
-    target = (int)(humans * MAX(options.botsPerHuman, 0.0) + 0.5);
+    if (fill)
+	target = MAX(weight_default + weight_smart - humans, 0);
+    else
+	target = (int)(humans * MAX(options.botsPerHuman, 0.0) + 0.5);
 
     if (NumRobots < target && can_spawn_more) {
 	*create_delay += timeStep;
-	if (*create_delay < ROBOT_CREATE_DELAY)
+	if (*create_delay < ROBOT_CREATE_DELAY && !robot_prefill)
 	    return;
 	*create_delay = 0;
-	if (weight_default + weight_smart > 0)
+	if (fill && num_default_robots >= weight_default)
+	    want_smart = weight_smart > NumSmartRobots;
+	else if (fill && NumSmartRobots >= weight_smart)
+	    want_smart = false;
+	else if (weight_default + weight_smart > 0)
 	    want_smart = (int)(randomMT() % (weight_default + weight_smart))
 			 >= weight_default;
 	else
@@ -1232,10 +1307,36 @@ static void Robot_match_humans(bool can_spawn_more, int num_playing_ships,
 	|| num_any_ships > NUM_IDS) {
 	Robot_delete(NULL, false);
     } else if (NumRobots > target) {
-	/* Remove a type with probability proportional to its share. */
-	want_smart = (int)(randomMT() % NumRobots) < NumSmartRobots;
+	if (fill)	/* the type that is fuller compared to its share */
+	    want_smart = (double)NumSmartRobots * MAX(weight_default, 1)
+			 >= (double)num_default_robots * MAX(weight_smart, 1)
+			 && NumSmartRobots > 0;
+	else	/* Remove a type with probability proportional to its share. */
+	    want_smart = (int)(randomMT() % NumRobots) < NumSmartRobots;
 	Robot_delete_type(want_smart, false);
     }
+}
+
+/*
+ * While no human is connected the world is frozen and Robot_update() is
+ * not called, so robots would only trickle in after the first human joined
+ * (with idleRun they trickle in with ROBOT_CREATE_DELAY).  Create all
+ * missing robots at once while no human plays instead, so a round started
+ * by the first human has them all (limited lives makes latecomers wait).
+ */
+void Robot_prefill(void)
+{
+    int i, n = MAX_ROBOTS + MAX_SMART_ROBOTS;
+
+    robot_prefill = true;
+    for (i = 0; i < n; i++) {
+	int before = NumRobots;
+
+	Robot_update(false);
+	if (NumRobots <= before)
+	    break;
+    }
+    robot_prefill = false;
 }
 
 /*
@@ -1262,7 +1363,10 @@ void Robot_update(bool tick)
 	     && world->teams[options.robotTeam].NumMembers >=
 		world->teams[options.robotTeam].NumBases);
 
-    if (options.botsMatchHumans) {
+    if (robot_prefill)
+	new_robot_delay = ROBOT_CREATE_DELAY;
+
+    if (options.botsMatchHumans || options.robotsFillTo) {
 	Robot_match_humans(can_spawn_more, num_playing_ships, num_any_ships,
 			   &new_robot_delay);
     } else {

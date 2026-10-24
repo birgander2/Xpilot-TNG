@@ -33,6 +33,7 @@ extern struct options {
     int		minSmartRobots;
     int		smartRobotLevel;
     bool	smartRobotsLaser;
+    char	*smartBotType;		/* see smart_bot_types[] in robot.c */
     bool	smartRobotsUseLaser;	/* alias of smartRobotsLaser */
     char	*robotFile;
     int		robotsTalk;
@@ -43,6 +44,7 @@ extern struct options {
     bool	reserveRobotTeam;
     bool	botsMatchHumans;
     double	botsPerHuman;
+    bool	robotsFillTo;		/* humans replace robots, see cmdline.c */
     int 	robotTicksPerSecond;
     list_t	expandList;		/* Predefined settings. */
     double	shotMass;

@@ -264,64 +264,76 @@ void Race_compute_game_status(void)
     Race_game_over();
 }
 
+/*
+ * Starting grid order: players who sit out (paused) last, humans before
+ * robots (the race robots fly faster than most humans), then by personal
+ * best lap, players without a lap after those with one.  Ties keep their
+ * player order.
+ */
+static int Race_grid_cmp(int ia, int ib)
+{
+    player_t *a = Player_by_index(ia), *b = Player_by_index(ib);
+
+    if (Player_is_paused(a) != Player_is_paused(b))
+	return Player_is_paused(a) ? 1 : -1;
+    if (Player_is_robot(a) != Player_is_robot(b))
+	return Player_is_robot(a) ? 1 : -1;
+    if ((a->best_lap > 0) != (b->best_lap > 0))
+	return a->best_lap > 0 ? -1 : 1;
+    if (a->best_lap != b->best_lap)
+	return a->best_lap < b->best_lap ? -1 : 1;
+    return ia - ib;
+}
+
+/*
+ * Reassign the players' starting positions for the next race.  Maps list
+ * their bases from the front of the grid backwards.
+ */
+void Race_assign_startpos(void)
+{
+    int i, j, k, n = 0, *order;
+
+    if ((order = XMALLOC(int, NumPlayers)) == NULL)
+	return;
+    for (i = 0; i < NumPlayers; i++) {
+	if (Player_is_tank(Player_by_index(i)))
+	    continue;
+	/* insertion sort, stable */
+	for (j = n; j > 0 && Race_grid_cmp(i, order[j - 1]) < 0; j--)
+	    ;
+	for (k = n; k > j; k--)
+	    order[k] = order[k - 1];
+	order[j] = i;
+	n++;
+    }
+    for (i = 0; i < n && i < Num_bases(); i++) {
+	player_t *pl = Player_by_index(order[i]);
+
+	if (pl->home_base != NULL && pl->home_base->ind == i)
+	    continue;
+	pl->home_base = Base_by_index(i);
+	for (j = 0; j < spectatorStart + NumSpectators; j++) {
+	    if (j == NumPlayers) {
+		if (NumSpectators)
+		    j = spectatorStart;
+		else
+		    break;
+	    }
+	    if (Player_by_index(j)->conn != NULL)
+		Send_base(Player_by_index(j)->conn, pl->id, pl->home_base->ind);
+	}
+	if (Player_is_paused(pl))
+	    Go_home(pl);
+    }
+    free(order);
+}
+
 void Race_game_over(void)
 {
     player_t *pl;
-    int i, j, k,
-	bestlap = 0, num_best_players = 0,
-	num_active_players = 0, num_ordered_players = 0, *order;
+    int i, bestlap = 0, num_best_players = 0, num_active_players = 0;
 
-    /*
-     * Reassign players's starting positions based upon
-     * personal best lap times.
-     */
-    if ((order = XMALLOC(int, NumPlayers)) != NULL) {
-	for (i = 0; i < NumPlayers; i++) {
-	    pl = Player_by_index(i);
-	    if (Player_is_tank(pl))
-		continue;
-	    if (Player_is_paused(pl)
-		|| Player_is_waiting(pl)
-		|| pl->best_lap <= 0)
-		j = i;
-	    else {
-		for (j = 0; j < i; j++) {
-		    player_t *pl_j = Player_by_index(order[j]);
-
-		    if (pl->best_lap < pl_j->best_lap)
-			break;
-
-		    if (Player_is_paused(pl_j)
-			|| Player_is_waiting(pl_j))
-			break;
-		}
-	    }
-	    for (k = i - 1; k >= j; k--)
-		order[k + 1] = order[k];
-	    order[j] = i;
-	    num_ordered_players++;
-	}
-	for (i = 0; i < num_ordered_players; i++) {
-	    pl = Player_by_index(order[i]);
-	    if (pl->home_base->ind != i) {
-		pl->home_base = Base_by_index(i);
-		for (j = 0; j < spectatorStart + NumSpectators; j++) {
-		    if (j == NumPlayers) {
-			if (NumSpectators)
-			    j = spectatorStart;
-			else
-			    break;
-		    }
-		    if (Player_by_index(j)->conn != NULL)
-			Send_base(Player_by_index(j)->conn,
-				  pl->id, pl->home_base->ind);
-		}
-		if (Player_is_paused(pl))
-		    Go_home(pl);
-	    }
-	}
-	free(order);
-    }
+    Race_assign_startpos();
 
     for (i = NumPlayers - 1; i >= 0; i--)  {
 	pl = Player_by_index(i);

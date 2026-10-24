@@ -1627,6 +1627,58 @@ int Polys_to_client(unsigned char **start)
 }
 
 
+/*
+ * TNG addition to the polygon map data: map objects that are no polygons
+ * and that the block map used to carry (gravs, concentrators), as client
+ * block types (SETUP_*) with their position.  Only TNG clients get it.
+ */
+int Map_objects_to_client(unsigned char **start)
+{
+    int i, n = 0, size, offset;
+    static const struct { int type, setup; } gravs[] = {
+	{ POS_GRAV, SETUP_POS_GRAV }, { NEG_GRAV, SETUP_NEG_GRAV },
+	{ CWISE_GRAV, SETUP_CWISE_GRAV }, { ACWISE_GRAV, SETUP_ACWISE_GRAV },
+	{ UP_GRAV, SETUP_UP_GRAV }, { DOWN_GRAV, SETUP_DOWN_GRAV },
+	{ RIGHT_GRAV, SETUP_RIGHT_GRAV }, { LEFT_GRAV, SETUP_LEFT_GRAV },
+    };
+
+    *start = (unsigned char *)ralloc(NULL, 100);
+    size = 100;
+    offset = 0;
+
+    if (options.gravityVisible)
+	n += Num_gravs();
+    if (options.itemConcentratorVisible)
+	n += Num_itemConcs();
+    if (options.asteroidConcentratorVisible)
+	n += Num_asteroidConcs();
+    STORE2(n);
+    for (i = 0; options.gravityVisible && i < Num_gravs(); i++) {
+	grav_t *g = Grav_by_index(i);
+	int j, setup = SETUP_POS_GRAV;
+
+	for (j = 0; j < NELEM(gravs); j++) {
+	    if (gravs[j].type == g->type)
+		setup = gravs[j].setup;
+	}
+	STORE1(setup);
+	STORE2(g->pos.cx >> CLICK_SHIFT);
+	STORE2(g->pos.cy >> CLICK_SHIFT);
+    }
+    for (i = 0; options.itemConcentratorVisible && i < Num_itemConcs(); i++) {
+	STORE1(SETUP_ITEM_CONCENTRATOR);
+	STORE2(ItemConc_by_index(i)->pos.cx >> CLICK_SHIFT);
+	STORE2(ItemConc_by_index(i)->pos.cy >> CLICK_SHIFT);
+    }
+    for (i = 0; options.asteroidConcentratorVisible && i < Num_asteroidConcs(); i++) {
+	STORE1(SETUP_ASTEROID_CONCENTRATOR);
+	STORE2(AsteroidConc_by_index(i)->pos.cx >> CLICK_SHIFT);
+	STORE2(AsteroidConc_by_index(i)->pos.cy >> CLICK_SHIFT);
+    }
+    return offset;
+}
+
+
 struct tempy {
     short y;
     struct tempy *next;

@@ -254,6 +254,10 @@ void Main_loop(void)
 	    Frame_update();
     }
 
+    /* also with idleRun: robots would trickle in one by one otherwise */
+    if (NumPlayers == NumRobots + NumPseudoPlayers)
+	Robot_prefill();
+
     if (!options.NoQuit
 	&& !options.RawMode
 	&& NumPlayers == NumRobots + NumPseudoPlayers

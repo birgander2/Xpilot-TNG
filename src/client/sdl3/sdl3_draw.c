@@ -440,7 +440,13 @@ int SDL3_Triangulate_Polygon(const SDL_FPoint *points, int count, int *out_indic
         if (is_ear) {
             for (int j = 0; j < remaining; j++) {
                 if (j == prev || j == curr || j == next) continue;
-                if (is_point_in_triangle(points[V[j]], a, b, c)) {
+                SDL_FPoint q = points[V[j]];
+                /* Duplicate vertices (bridges / touching corners) coincide with
+                 * a triangle corner and must not block the ear. */
+                if ((q.x == a.x && q.y == a.y) || (q.x == b.x && q.y == b.y) ||
+                    (q.x == c.x && q.y == c.y))
+                    continue;
+                if (is_point_in_triangle(q, a, b, c)) {
                     is_ear = false;
                     break;
                 }

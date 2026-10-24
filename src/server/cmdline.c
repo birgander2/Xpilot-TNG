@@ -344,6 +344,25 @@ static option_desc opts[] = {
 	OPT_ORIGIN_ANY | OPT_VISIBLE
     },
     {
+	"smartBotType",
+	"smartType",
+	"auto",
+	&options.smartBotType,
+	valString,
+	tuner_dummy,
+	"Which AI the smart robots (maxSmartRobots) use. Affects robots\n"
+	"that join afterwards.\n"
+	"  auto    the best AI for the map: ball on team maps with treasures\n"
+	"          of at least two teams, race on race maps, smart\n"
+	"          everywhere else.\n"
+	"  smart   the learning smartbot.\n"
+	"  ball    the planning ball game bot, on any map. Without a ball\n"
+	"          game it only dogfights.\n"
+	"  race    the planning race bot on race maps (timing mode with\n"
+	"          checkpoints), the learning smartbot elsewhere.\n",
+	OPT_ORIGIN_ANY | OPT_VISIBLE
+    },
+    {
 	"smartRobotsLaser",
 	"smartLaser",
 	"true",
@@ -454,6 +473,19 @@ static option_desc opts[] = {
 	valReal,
 	tuner_dummy,
 	"Robots per human player when botsMatchHumans is on.\n",
+	OPT_ORIGIN_ANY | OPT_VISIBLE
+    },
+    {
+	"robotsFillTo",
+	"robotsFillTo",
+	"false",
+	&options.robotsFillTo,
+	valBool,
+	tuner_dummy,
+	"Humans replace robots: the game is filled up with robots to\n"
+	"maxRobots + maxSmartRobots players in all. With 4 robots wanted and\n"
+	"two humans playing there are two robots. Each type keeps its share.\n"
+	"botsMatchHumans takes precedence.\n",
 	OPT_ORIGIN_ANY | OPT_VISIBLE
     },
     {

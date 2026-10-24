@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <strings.h>
 #include <filesystem>
 #include <unistd.h>
 
@@ -643,6 +644,14 @@ void LauncherApp::ModifiedMenu(const char* key) {
     }
 }
 
+// AIs for smart robots, see smart_bot_types[] in the server (robot.c). Add new ones in both places.
+static const NamedChoice kSmartBotTypes[] = {
+    {"auto", "Automatic", "The best AI for the map: ball game bot on team maps with treasures, race bot on race maps, smartbot elsewhere"},
+    {"smart", "Smartbot", "The learning smartbot"},
+    {"ball", "Ball bot", "Planning bot for team ball games. On other maps it only dogfights"},
+    {"race", "Race bot", "Planning bot for race maps (timing mode). Elsewhere the smartbot plays"},
+};
+
 static std::string OptLabel(const char* label, const char* key, bool modified) {
     return std::string(label) + (modified ? "  *" : "") + "##" + key;
 }
@@ -677,6 +686,33 @@ bool LauncherApp::OptChoice(const char* label, const char* key, const char* cons
     if (changed) options_mgr_.SetInt(key, v);
     ModifiedMenu(key);
     if (tip && ImGui::IsItemHovered()) ImGui::SetTooltip("%s", tip);
+    return changed;
+}
+
+// String option with a fixed list of values, shown as a dropdown (no label text, put it next to
+// another widget). Unknown values from defaults or the map are shown as they are.
+bool LauncherApp::OptNamed(const char* label, const char* key, const NamedChoice* items, int count) {
+    if (!options_mgr_.Known(key)) return false;
+    std::string cur = options_mgr_.Get(key);
+    int sel = -1;
+    for (int i = 0; i < count; i++) {
+        if (strcasecmp(cur.c_str(), items[i].value) == 0) sel = i;
+    }
+    const char* preview = sel >= 0 ? items[sel].label : cur.c_str();
+    bool changed = false;
+    ImGui::PushID(key);
+    if (ImGui::BeginCombo(OptLabel(label, key, options_mgr_.IsModified(key)).c_str(), preview)) {
+        for (int i = 0; i < count; i++) {
+            if (ImGui::Selectable(items[i].label, i == sel)) {
+                options_mgr_.Set(key, items[i].value);
+                changed = true;
+            }
+            if (items[i].tip && ImGui::IsItemHovered()) ImGui::SetTooltip("%s", items[i].tip);
+        }
+        ImGui::EndCombo();
+    }
+    ImGui::PopID();
+    ModifiedMenu(key);
     return changed;
 }
 
@@ -831,14 +867,24 @@ void LauncherApp::RenderAdvanced(bool server_mode) {
                 ImGui::PushItemWidth(260);
                 OptInt("Bots", "maxRobots", 0, 16);
                 OptInt("Smartbots", "maxSmartRobots", 0, 16);
+                ImGui::SameLine(0, 16);
+                ImGui::SetNextItemWidth(150);
+                OptNamed("Type", "smartBotType", kSmartBotTypes, IM_ARRAYSIZE(kSmartBotTypes));
                 OptInt("Smartbot level", "smartRobotLevel", 1, 100, "Skill of the learning bots (1-100)");
                 OptInt("Bot team", "robotTeam", 0, 9);
                 ImGui::PopItemWidth();
                 OptBool("All bots in one team", "restrictRobots");
                 OptBool("No humans in bot team", "reserveRobotTeam", "Humans cannot join the bot team");
                 ImGui::Separator();
-                OptBool("Bots match humans", "botsMatchHumans",
-                        "One bot per human player. Bots / Smartbots then only set the normal-to-smart ratio");
+                if (OptBool("Bots match humans", "botsMatchHumans",
+                            "One bot per human player. Bots / Smartbots then only set the normal-to-smart ratio")
+                    && options_mgr_.GetBool("botsMatchHumans"))
+                    options_mgr_.SetBool("robotsFillTo", false);
+                ImGui::SameLine(0, 16);
+                if (OptBool("Humans replace bots", "robotsFillTo",
+                            "Fill the game up to Bots + Smartbots players: each human replaces a bot")
+                    && options_mgr_.GetBool("robotsFillTo"))
+                    options_mgr_.SetBool("botsMatchHumans", false);
                 ImGui::PushItemWidth(260);
                 OptFloat("Bots per human", "botsPerHuman", 0.25f, 4.0f, "%.2f", false,
                          "Used when 'Bots match humans' is on");
