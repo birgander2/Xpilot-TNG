@@ -538,7 +538,6 @@ static int	MAX_SMART_ROBOTS = NELEM(SmartRobots);
  * Add your own robot type setup routine here.
  */
 extern int Robot_default_setup(robot_type_t *type_ptr);
-extern int Robot_suibot_setup(robot_type_t *type_ptr);
 extern int Robot_smart_setup(robot_type_t *type_ptr);
 extern int Robot_ball_setup(robot_type_t *type_ptr);
 extern int Robot_race_setup(robot_type_t *type_ptr);
@@ -552,7 +551,6 @@ static struct robot_setup {
     int		(*setup_func)(robot_type_t *type_ptr);
 } robot_type_setups[] = {
     { Robot_default_setup },
-    { Robot_suibot_setup },
     { Robot_smart_setup },
     { Robot_ball_setup },
     { Robot_race_setup },

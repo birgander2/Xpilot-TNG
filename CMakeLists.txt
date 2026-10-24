@@ -210,7 +210,6 @@ if(BUILD_SERVER)
         src/server/ballbot.c
         src/server/racebot.c
         src/server/srecord.c
-        src/server/suibotdef.c
         src/server/tag.c
         src/server/target.c
         src/server/teamcup.c
