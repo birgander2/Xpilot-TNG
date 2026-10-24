@@ -208,6 +208,7 @@ if(BUILD_SERVER)
         src/server/showtime.c
         src/server/smartbot.c
         src/server/ballbot.c
+        src/server/racebot.c
         src/server/srecord.c
         src/server/suibotdef.c
         src/server/tag.c

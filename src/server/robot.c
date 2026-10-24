@@ -378,6 +378,7 @@ static robot_t DefaultRobots[] = {
 
 #define SMART_ROBOT_TYPE	"smart"
 #define BALL_ROBOT_TYPE		"ball"
+#define RACE_ROBOT_TYPE		"race"
 
 /*
  * The AIs smart robots can use, selected with the smartBotType option.
@@ -393,6 +394,7 @@ static const struct {
     { "auto",		NULL,			NULL, NULL },
     { SMART_ROBOT_TYPE,	SMART_ROBOT_TYPE,	NULL, NULL },
     { BALL_ROBOT_TYPE,	BALL_ROBOT_TYPE,	NULL, Robot_ball_game },
+    { RACE_ROBOT_TYPE,	RACE_ROBOT_TYPE,	Robot_race_map, Robot_race_map },
 };
 
 /* Driver for a new smart robot on the current map. */
@@ -539,6 +541,7 @@ extern int Robot_default_setup(robot_type_t *type_ptr);
 extern int Robot_suibot_setup(robot_type_t *type_ptr);
 extern int Robot_smart_setup(robot_type_t *type_ptr);
 extern int Robot_ball_setup(robot_type_t *type_ptr);
+extern int Robot_race_setup(robot_type_t *type_ptr);
 
 /*
  * Array to store function pointers to robot type setup routines.
@@ -552,6 +555,7 @@ static struct robot_setup {
     { Robot_suibot_setup },
     { Robot_smart_setup },
     { Robot_ball_setup },
+    { Robot_race_setup },
 };
 
 /*

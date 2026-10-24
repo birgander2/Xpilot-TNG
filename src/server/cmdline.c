@@ -353,10 +353,13 @@ static option_desc opts[] = {
 	"Which AI the smart robots (maxSmartRobots) use. Affects robots\n"
 	"that join afterwards.\n"
 	"  auto    the best AI for the map: ball on team maps with treasures\n"
-	"          of at least two teams, smart everywhere else.\n"
+	"          of at least two teams, race on race maps, smart\n"
+	"          everywhere else.\n"
 	"  smart   the learning smartbot.\n"
 	"  ball    the planning ball game bot, on any map. Without a ball\n"
-	"          game it only dogfights.\n",
+	"          game it only dogfights.\n"
+	"  race    the planning race bot on race maps (timing mode with\n"
+	"          checkpoints), the learning smartbot elsewhere.\n",
 	OPT_ORIGIN_ANY | OPT_VISIBLE
     },
     {

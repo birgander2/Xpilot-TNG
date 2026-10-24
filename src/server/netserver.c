@@ -1033,6 +1033,21 @@ static void LegalizeHost(char *string)
  * and if this succeeds update the player information
  * to all connected players.
  */
+/* Does a human other than 'pl' take part in the current round? */
+static bool Humans_in_round(player_t *pl)
+{
+    int i;
+
+    for (i = 0; i < NumPlayers; i++) {
+	player_t *pl_i = Player_by_index(i);
+
+	if (pl_i != pl && Player_is_human(pl_i)
+	    && !Player_is_waiting(pl_i) && !Player_is_paused(pl_i))
+	    return true;
+    }
+    return false;
+}
+
 static int Handle_login(connection_t *connp, char *errmsg, size_t errsize)
 {
     player_t *pl;
@@ -1205,6 +1220,15 @@ static int Handle_login(connection_t *connp, char *errmsg, size_t errsize)
 	    Set_message_f("%s (%s) has entered \"%s\", made by %s.",
 			  pl->name, pl->username, world->name, world->author);
     }
+
+    /*
+     * With limited lives a newcomer waits for the next round.  While only
+     * robots play (the world stands still until the first human comes),
+     * start that round now: humans and all robots begin together.
+     */
+    if (pl->rectype < 2 && BIT(world->rules->mode, LIMITED_LIVES)
+	&& Player_is_waiting(pl) && !Humans_in_round(pl))
+	Reset_all_players();
 
     if (options.greeting)
 	Set_player_message_f(pl, "%s [*Server greeting*]", options.greeting);

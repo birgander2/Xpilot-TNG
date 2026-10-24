@@ -17,13 +17,14 @@ XPilot TNG introduces **Smartbots** (`smart`), an advanced autonomous AI driver 
    - [Potential Field Maneuvering](#potential-field-maneuvering)
    - [Ball Game: Handling, Delivery & Team Play](#ball-game-handling-delivery--team-play)
 6. [Ball Game Bots (`ball` driver)](#ball-game-bots-ball-driver)
-7. [Reinforcement Learning & Shared Brain](#reinforcement-learning--shared-brain)
+7. [Race Bots (`race` driver)](#race-bots-race-driver)
+8. [Reinforcement Learning & Shared Brain](#reinforcement-learning--shared-brain)
    - [State & Action Space](#state--action-space)
    - [Evolutionary Policy Genes](#evolutionary-policy-genes)
    - [Rewards](#rewards)
    - [Brain Persistence (`smartbot_brain.dat`)](#brain-persistence-smartbot_braindat)
-8. [Skill Level Matrix (Levels 1–100)](#skill-level-matrix-levels-1100)
-9. [Tactical Advice for Human Pilots](#tactical-advice-for-human-pilots)
+9. [Skill Level Matrix (Levels 1–100)](#skill-level-matrix-levels-1100)
+10. [Tactical Advice for Human Pilots](#tactical-advice-for-human-pilots)
 
 ---
 
@@ -37,6 +38,7 @@ Classic XPilot robots rely on simple line-of-sight heuristics and fixed reaction
 - **Tactical Versatility:** Dynamically shifts between close-quarters dogfighting, long-range sniper kiting, survival evasion, harvesting/refueling, and CTF flag-running.
 - **Team Ball Play:** Tows the ball as a pair (ship + ball) instead of just flying the ship, throws it into the goal in a swing manoeuvre, and plays as a team with roles (attacker, defender, escort, hunter).
 - **Dedicated Ball Game Driver:** On team maps with treasures, smart robots use a separate driver (`ball`, `src/server/ballbot.c`) that plans its flight with a physics model of ship and ball (see [Ball Game Bots](#ball-game-bots-ball-driver)).
+- **Dedicated Race Driver:** On race maps (timing mode with checkpoints), smart robots use the `race` driver (`src/server/racebot.c`), which plans the racing line with a physics model and manages laps and fuel (see [Race Bots](#race-bots-race-driver)).
 - **Online Learning:** Uses Tabular Q-Learning and continuous evolutionary policy adaptation that learns from combat outcomes (kills, deaths) and ball-game results, and persists across server runs in `smartbot_brain.dat`.
 
 ---
@@ -53,7 +55,7 @@ Smartbots can be enabled via command-line arguments or server defaults files (`d
 | `minSmartRobots` | `-minSmartRobots` | `-1` | Minimum number of smart robots kept in the server (`-1` = follow `maxSmartRobots`). |
 | `smartRobotLevel` | `-smartLevel` | `75` | Global skill and intelligence level (**1 to 100**). Controls aiming precision, pathfinding depth, turn rate, and several ball-handling skills (see [Skill Level Matrix](#skill-level-matrix-levels-1100)). |
 | `smartRobotsLaser` | `-smartRobotsLaser` / `-smartLaser` | `true` | When `false`, Smartbots will neither pick up nor use laser pulses. |
-| `smartBotType` | `-smartType` | `auto` | Which AI the smart robots use: `auto` (the ball driver on team maps with treasures, the learning smartbot elsewhere), `smart` (always the learning smartbot) or `ball` (the ball driver on every map; without a ball game it only dogfights, see below). Affects robots that join afterwards. The launcher offers the choice as a dropdown next to the number of smartbots. |
+| `smartBotType` | `-smartType` | `auto` | Which AI the smart robots use: `auto` (the ball driver on team maps with treasures, the race driver on race maps, the learning smartbot elsewhere), `smart` (always the learning smartbot), `ball` (the ball driver on every map; without a ball game it only dogfights, see below) or `race` (the race driver on race maps, the learning smartbot elsewhere). Affects robots that join afterwards. The launcher offers the choice as a dropdown next to the number of smartbots. |
 
 ### Example Startup Commands
 
@@ -343,6 +345,78 @@ On a desktop CPU, 4 ball bots use about 1.6% and 8 ball bots about 3% of one cor
 
 - `/msg <bot> status`: skill level and current role.
 - `/msg <bot> level N`: individual skill level (0 = global `smartRobotLevel`).
+
+---
+
+## Race Bots (`race` driver)
+
+The `race` driver (`src/server/racebot.c`) is a robot type made for race maps: `timing` on, at least one checkpoint, no `ballrace`. Smart robots use it there when `smartBotType` is `auto` or `race`. It aims at the best lap times the physics allow, keeps to the set `raceLaps` and the fuel it has, and defends itself. Names, the `S` marker and `smartRobotLevel` are shared with the other smart robots.
+
+### Map analysis
+
+Once per map the walls are rasterized on a fine grid (about 7 px; polygon edges are traced as well, so thin walls have no gaps) and an exact distance transform gives the wall clearance everywhere. A navigation grid of one cell per map block carries the shortest paths.
+
+For every checkpoint there are distance fields that do not stop at its disk (`checkpointRadius`): the disk's cells start with the cost of going on from there to the next checkpoints. The value of a position is the length of the way through the next checkpoint and the three after it. So passing a checkpoint is continuous in value, passing it at a bad spot costs exactly the way it wastes, and the paths of the deepest fields are the racing line: they cut through each disk where it sets up the next one. Near the finish the look-ahead ends with the race.
+
+### Flight
+
+Each tick the bot simulates about 130 candidate manoeuvres (about 85 below level 50) 40 ticks ahead: a heading with thrust or coast for 2–20 ticks, followed by a racing policy that flies at the farthest visible point of the racing line as fast as still allows slowing down for it. The model is the server's own physics, frame by frame: thrust, turn rate, `friction`, gravity of the map (repelling gravs at the corners of *Grand Prix* are part of the plan), `constantSpeed`, and wall bounces of every `playerWallBounceType`. The size of the ship comes from its shape. Candidates are scored on:
+
+- the course value reached at the end, and the course value along the way (progress made early counts, otherwise a plan that dawdles looks as good as one that goes);
+- checkpoint passes, judged against the disk as the server does; finishing earlier is worth more;
+- wall bounces: they cost the speed they lose plus a little. Above `maxUnshieldedWallBounceSpeed` a bounce is only survivable with a shield and costs a lot; faster than the shield allows is a crash;
+- enemy shots and virtual shots of attackers that point at the bot;
+- enemy ships: touching one kills (`allowPlayerCrashes`) or costs `playerCollisionFuelDrain` fuel (`allowPlayerBounces`). Enemies may change course any moment, so the berth widens with the time ahead. This matters at the start, when all ships leave the grid together.
+
+The best plan is kept and offered again the next tick.
+
+### Laps and fuel
+
+The bot counts the checkpoint passes left (`raceLaps` × checkpoints + the start). It measures the fuel each course segment uses. When the fuel left will not last for the rest of the race (with 10 % and 10 units to spare), it flies to the fuel station with the smallest detour, stops there and refuels until it has enough with a margin, then races on. Stations within reach on the way are always used in passing. Without measurements yet the need is estimated from the path lengths; the first lap corrects it.
+
+### Defence
+
+- Shots and ships are dodged by the flight model.
+- The shield goes up (when the bot has one) against a hit or ram the best plan cannot avoid, and whenever the ship heads for a wall within two ticks at a speed only a shield survives.
+- Players who shoot at the bot, push it or kill it count as attackers for a few seconds. The bot shoots back at them when the shot would hit and the line is free, and turns towards them only when it costs little. It does not start fights: racebots leave each other alone.
+
+### Learning
+
+Per map the bot keeps the fuel and the time of every course segment and its best lap in `$XDG_DATA_HOME/xpilot-tng/racebot/<map name>.txt` (default `~/.local/share/...`), keyed to the checkpoint layout. From the second race on its fuel planning uses what it measured, so it neither makes needless stops (*Zandvoort* starts with only 150 fuel) nor runs dry. A tuned corner speed per segment was tried as well, but made no measurable difference to the lap times, so the bot does not learn its driving.
+
+### Measured lap times
+
+Level 75, one bot, laps after the first, in ticks of game time:
+
+| Map | Race bot | Learning smartbot | Classic robots |
+| :--- | :---: | :---: | :---: |
+| Grand Prix II (`grandprix`) | ~800 (about 62 s at its game speed 13) | no lap completed | – |
+| Zandvoort GP (`zandvoort`) | ~495 (about 40 s) | – | 2400–7000 |
+
+Laps vary by about ±3 %. Items matter: a bot that happens to pick up an afterburner is about 10 % faster for the rest of the race, and a light ship (little fuel) is faster too.
+
+### Skill levels
+
+| Effect | Level 30 | Level 75 | Level 100 |
+| :--- | :---: | :---: | :---: |
+| Turn rate (direction units per tick) | 5 | 9 | 12 |
+| Reaction delay for enemy movement | ~3 ticks | ~1 tick | none |
+| Aiming error (direction units) | ±2.8 | ±1 | 0 |
+| Extra wall margin | 5 px | 2.5 px | 1 px |
+| Sampled headings | 16 | 32 | 32 |
+
+At level 25 laps on *Zandvoort* take a quarter to a half longer.
+
+### CPU usage
+
+The map analysis takes a fraction of a second. Racing, 4 race bots use about 3 % of one desktop core.
+
+### Chat commands
+
+- `/msg <bot> status`: level, lap, checkpoint, fuel and what the rest of the race needs, best lap.
+- `/msg <bot> level N`: individual skill level (0 = global `smartRobotLevel`).
+- `/msg <bot> learn on|off`: keep or stop measuring.
+- `/msg <bot> forget`: drop what was learned about this map.
 
 ---
 

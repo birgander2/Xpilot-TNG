@@ -646,9 +646,10 @@ void LauncherApp::ModifiedMenu(const char* key) {
 
 // AIs for smart robots, see smart_bot_types[] in the server (robot.c). Add new ones in both places.
 static const NamedChoice kSmartBotTypes[] = {
-    {"auto", "Automatic", "The best AI for the map: ball game bot on team maps with treasures, smartbot elsewhere"},
+    {"auto", "Automatic", "The best AI for the map: ball game bot on team maps with treasures, race bot on race maps, smartbot elsewhere"},
     {"smart", "Smartbot", "The learning smartbot"},
     {"ball", "Ball bot", "Planning bot for team ball games. On other maps it only dogfights"},
+    {"race", "Race bot", "Planning bot for race maps (timing mode). Elsewhere the smartbot plays"},
 };
 
 static std::string OptLabel(const char* label, const char* key, bool modified) {

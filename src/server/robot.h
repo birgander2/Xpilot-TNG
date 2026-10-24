@@ -210,6 +210,7 @@ void Robot_invite(player_t *robot, player_t *inviter);
 void Robot_game_event(player_t *pl, int event, player_t *other);
 const char *Robot_type_name(player_t *robot);
 bool Robot_ball_game(void);
+bool Robot_race_map(void);
 void Robot_war(player_t *robot, player_t *killer);
 void Robot_reset_war(player_t *robot);
 int Robot_war_on_player(player_t *robot);
