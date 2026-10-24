@@ -1,5 +1,5 @@
 <XPilotMap version="1.1"
-           description="Deathmatch / dogfight"
+           description="Deathmatch / dogfight">
 <GeneralOptions>
 <Option name="allowPlayerBounces" value="yes"/>
 <Option name="allowPlayerCrashes" value="yes"/>
