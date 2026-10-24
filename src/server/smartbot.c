@@ -1307,6 +1307,269 @@ static clpos_t Smart_find_next_waypoint(player_t *pl, clpos_t goal_pos)
 }
 
 /* =========================================================================
+ * Race Maps: Checkpoint Distance Fields
+ * ========================================================================= */
+
+/*
+ * The bounded A* gets lost on long winding race tracks.  Race maps get one
+ * distance field (in blocks) per checkpoint instead, computed once over the
+ * whole map with the checkpoint's disk as the goal.  Blocks next to walls
+ * and in strong gravity cost more, so the way keeps to the middle of the
+ * track, where the wall repulsion does not fight it.
+ */
+static float	**RaceDist;
+static uint8_t	*RaceClear;	/* blocks to the nearest wall block, up to 3 */
+static int	RaceDistN, RaceDistW, RaceDistH;
+static const void *RaceDistPdata;
+
+typedef struct { float f; int c; } race_heap_t;
+
+static void Smart_race_free(void)
+{
+    int i;
+
+    for (i = 0; i < RaceDistN; i++)
+	free(RaceDist[i]);
+    free(RaceDist);
+    free(RaceClear);
+    RaceDist = NULL;
+    RaceClear = NULL;
+    RaceDistN = 0;
+}
+
+static const float *Smart_race_field(player_t *pl, int ci)
+{
+    static const int dx8[8] = { 1, -1, 0, 0, 1, 1, -1, -1 };
+    static const int dy8[8] = { 0, 0, 1, -1, 1, -1, 1, -1 };
+    static const float cost8[8] = { 1.0f, 1.0f, 1.0f, 1.0f, 1.414f, 1.414f, 1.414f, 1.414f };
+    int w = world->x, h = world->y, n = w * h, hn = 0, cap = n * 8 + 16, i;
+    double r = options.checkpointRadius - 0.5;
+    race_heap_t *heap;
+    float *dist;
+    blkpos_t cb;
+
+    if (RaceDistPdata != pdata || RaceDistW != w || RaceDistH != h
+	|| RaceDistN != world->NumChecks) {
+	Smart_race_free();
+	RaceDist = calloc(MAX(world->NumChecks, 1), sizeof(float *));
+	if (RaceDist == NULL)
+	    return NULL;
+	RaceDistN = world->NumChecks;
+	RaceDistW = w;
+	RaceDistH = h;
+	RaceDistPdata = pdata;
+	/* wall distance of every block: paths keep to the middle of the track */
+	RaceClear = malloc((size_t)n);
+	if (RaceClear == NULL)
+	    return NULL;
+	for (i = 0; i < n; i++)
+	    RaceClear[i] = Smart_block_passable(pl, i % w, i / w) ? 3 : 0;
+	{
+	    int pass, x, y, k;
+
+	    for (pass = 1; pass <= 2; pass++) {
+		for (i = 0; i < n; i++) {
+		    if (RaceClear[i] <= pass)
+			continue;
+		    for (k = 0; k < 8; k++) {
+			x = i % w + dx8[k];
+			y = i / w + dy8[k];
+			if (x >= 0 && x < w && y >= 0 && y < h
+			    && RaceClear[y * w + x] == pass - 1) {
+			    RaceClear[i] = (uint8_t)pass;
+			    break;
+			}
+		    }
+		}
+	    }
+	}
+    }
+    if (ci < 0 || ci >= RaceDistN)
+	return NULL;
+    if (RaceDist[ci] != NULL)
+	return RaceDist[ci];
+
+    dist = malloc(sizeof(float) * n);
+    heap = malloc(sizeof(race_heap_t) * cap);
+    if (dist == NULL || heap == NULL) {
+	free(dist);
+	free(heap);
+	return NULL;
+    }
+    for (i = 0; i < n; i++)
+	dist[i] = 1e30f;
+    cb = Clpos_to_blkpos(Check_by_index(ci)->pos);
+
+    /* the disk is the goal; blocks with a free centre in it are seeds */
+    {
+	int ri = (int)r + 1, bx, by;
+
+	for (by = cb.by - ri; by <= cb.by + ri; by++) {
+	    for (bx = cb.bx - ri; bx <= cb.bx + ri; bx++) {
+		int x = bx, y = by;
+
+		if (BIT(world->rules->mode, WRAP_PLAY)) {
+		    x = WRAP_XBLOCK(x);
+		    y = WRAP_YBLOCK(y);
+		}
+		if (x < 0 || x >= w || y < 0 || y >= h
+		    || (bx - cb.bx) * (bx - cb.bx) + (by - cb.by) * (by - cb.by) > r * r
+		    || !Smart_block_passable(pl, x, y))
+		    continue;
+		dist[y * w + x] = 0.0f;
+		heap[hn].f = 0.0f;
+		heap[hn].c = y * w + x;
+		hn++;	/* all seeds equal: already a valid heap */
+	    }
+	}
+    }
+    /* Dijkstra */
+    while (hn > 0) {
+	race_heap_t top = heap[0], last = heap[--hn];
+	int k = 0, d;
+
+	while (hn > 0) {
+	    int ch = 2 * k + 1;
+
+	    if (ch >= hn)
+		break;
+	    if (ch + 1 < hn && heap[ch + 1].f < heap[ch].f)
+		ch++;
+	    if (heap[ch].f >= last.f)
+		break;
+	    heap[k] = heap[ch];
+	    k = ch;
+	}
+	if (hn > 0)
+	    heap[k] = last;
+	if (top.f > dist[top.c])
+	    continue;
+	for (d = 0; d < 8; d++) {
+	    static const float wall_pen[4] = { 1.0f, 3.0f, 1.6f, 1.0f };
+	    int x = top.c % w + dx8[d], y = top.c / w + dy8[d], nc, j;
+	    float nd;
+
+	    if (BIT(world->rules->mode, WRAP_PLAY)) {
+		x = WRAP_XBLOCK(x);
+		y = WRAP_YBLOCK(y);
+	    }
+	    if (x < 0 || x >= w || y < 0 || y >= h)
+		continue;
+	    nc = y * w + x;
+	    nd = top.f + cost8[d] * wall_pen[RaceClear[nc]];
+	    /* strong gravity (bumpers in corners) is no place to fly through */
+	    if (world->gravity != NULL) {
+		double g = LENGTH(world->gravity[x][y].x, world->gravity[x][y].y);
+
+		if (g > 0.8)
+		    nd += cost8[d] * (float)MIN(g * 2.0, 12.0);
+	    }
+	    if (nd >= dist[nc] || !Smart_block_passable(pl, x, y))
+		continue;
+	    /* no diagonal corner cutting through walls */
+	    if (d >= 4 && (!Smart_block_passable(pl, top.c % w + dx8[d], top.c / w)
+			   || !Smart_block_passable(pl, top.c % w, top.c / w + dy8[d])))
+		continue;
+	    if (hn >= cap)
+		continue;
+	    dist[nc] = nd;
+	    j = hn++;
+	    while (j > 0 && heap[(j - 1) / 2].f > nd) {
+		heap[j] = heap[(j - 1) / 2];
+		j = (j - 1) / 2;
+	    }
+	    heap[j].f = nd;
+	    heap[j].c = nc;
+	}
+    }
+    free(heap);
+    RaceDist[ci] = dist;
+    return dist;
+}
+
+/* Is the straight way free of walls and of strong gravity? */
+static bool Smart_race_line_ok(player_t *pl, clpos_t to)
+{
+    double dx = WRAP_DX(CLICK_TO_PIXEL(to.cx - pl->pos.cx));
+    double dy = WRAP_DY(CLICK_TO_PIXEL(to.cy - pl->pos.cy));
+    double len = LENGTH(dx, dy), d;
+
+    if (!Smart_has_line_of_sight(pl, pl->pos, to, false))
+	return false;
+    if (world->gravity == NULL)
+	return true;
+    for (d = BLOCK_SZ; d < len; d += BLOCK_SZ * 0.5) {
+	clpos_t p;
+	vector_t g;
+
+	p.cx = pl->pos.cx + PIXEL_TO_CLICK(dx * d / len);
+	p.cy = pl->pos.cy + PIXEL_TO_CLICK(dy * d / len);
+	p = World_wrap_clpos(p);
+	g = World_gravity(p);
+	if (LENGTH(g.x, g.y) > 0.8)
+	    return false;
+    }
+    return true;
+}
+
+/*
+ * Where to fly for the next checkpoint: the farthest point visible from
+ * here along the way down its distance field.
+ */
+static clpos_t Smart_race_waypoint(player_t *pl)
+{
+    static const int dx8[8] = { 1, -1, 0, 0, 1, 1, -1, -1 };
+    static const int dy8[8] = { 0, 0, 1, -1, 1, -1, 1, -1 };
+    const float *dist = Smart_race_field(pl, pl->check);
+    clpos_t goal = Check_by_index(pl->check)->pos, wp;
+    blkpos_t b = Clpos_to_blkpos(pl->pos);
+    int w = world->x, h = world->y, cur, step, d;
+
+    if (dist == NULL)
+	return Smart_find_next_waypoint(pl, goal);
+    cur = b.by * w + b.bx;
+    if (dist[cur] >= 1e29f) {
+	/* inside a wall block (ship overlaps it): start from the best neighbour */
+	for (d = 0; d < 8; d++) {
+	    int x = b.bx + dx8[d], y = b.by + dy8[d];
+
+	    if (x >= 0 && x < w && y >= 0 && y < h && dist[y * w + x] < dist[cur])
+		cur = y * w + x;
+	}
+	if (dist[cur] >= 1e29f)
+	    return Smart_find_next_waypoint(pl, goal);
+    }
+    if (dist[cur] <= 0.0f)
+	return goal;
+    wp.cx = BLOCK_CENTER(cur % w);
+    wp.cy = BLOCK_CENTER(cur / w);
+    for (step = 0; step < 16 && dist[cur] > 0.0f; step++) {
+	int next = cur;
+	clpos_t p;
+
+	for (d = 0; d < 8; d++) {
+	    int x = cur % w + dx8[d], y = cur / w + dy8[d];
+
+	    if (BIT(world->rules->mode, WRAP_PLAY)) {
+		x = WRAP_XBLOCK(x);
+		y = WRAP_YBLOCK(y);
+	    }
+	    if (x >= 0 && x < w && y >= 0 && y < h && dist[y * w + x] < dist[next])
+		next = y * w + x;
+	}
+	if (next == cur)
+	    break;
+	p.cx = BLOCK_CENTER(next % w);
+	p.cy = BLOCK_CENTER(next / w);
+	if (step > 0 && !Smart_race_line_ok(pl, p))
+	    break;
+	wp = p;
+	cur = next;
+    }
+    return wp;
+}
+
+/* =========================================================================
  * Quadratic Ballistic Lead Solver & Precision Aiming
  * ========================================================================= */
 
@@ -4021,7 +4284,16 @@ static void Robot_smart_play(player_t *pl)
 
     /* Execute movement based on Race mode, CTF, Fuel need, Item collection, or Combat Hunt */
     if (BIT(world->rules->mode, TIMING) && world->NumChecks > 0) {
-	clpos_t wp = Smart_find_next_waypoint(pl, Check_by_index(pl->check)->pos);
+	clpos_t wp = Smart_race_waypoint(pl);
+	vector_t grav = World_gravity(pl->pos);
+
+	/*
+	 * The scan steers against local gravity.  Against the repelling
+	 * bumpers in race track corners that steers into them and traps the
+	 * ship; the race way avoids gravity instead.
+	 */
+	repulse_vec.x += grav.x * 5.0;
+	repulse_vec.y += grav.y * 5.0;
 	Smart_fly_towards(pl, wp, 24.0, repulse_vec, has_aim_dir ? &aim_dir : NULL);
 	return;
     }

@@ -15,6 +15,7 @@ XPilot TNG introduces **Smartbots** (`smart`), an advanced autonomous AI driver 
    - [Threat Scanner & CPA Evasion](#threat-scanner--cpa-evasion)
    - [A* Grid Pathfinding](#a-grid-pathfinding)
    - [Potential Field Maneuvering](#potential-field-maneuvering)
+   - [Race Maps](#race-maps)
    - [Ball Game: Handling, Delivery & Team Play](#ball-game-handling-delivery--team-play)
 6. [Ball Game Bots (`ball` driver)](#ball-game-bots-ball-driver)
 7. [Race Bots (`race` driver)](#race-bots-race-driver)
@@ -185,6 +186,10 @@ Movement combines attractive and repulsive force vectors:
 - **Attractive Vector:** Pulls the vessel toward the target or current A\* waypoint.
 - **Wall Repulsion:** Increases exponentially as the bot approaches solid terrain.
 - **Hazard Repulsion:** Pushes the bot away from floating mines, cannon fire, and asteroid fields.
+
+### Race Maps
+
+With `smartBotType` `smart` the learning smartbot races too, just not well. Its bounded A\* gets lost on long winding tracks, so on race maps it follows one distance field per checkpoint, computed once over the whole map with the checkpoint's disk as the goal. Blocks next to walls and in strong gravity cost more, so the way keeps to the middle of the track. It flies at the farthest point along that way it can see without crossing strong gravity; the repelling gravs in the corners of *Grand Prix* would otherwise trap it. Its combat, dodging and shields work as everywhere else. A lap takes it about twice as long as the [`race` driver](#race-bots-race-driver).
 
 ### Ball Game: Handling, Delivery & Team Play
 
@@ -390,8 +395,8 @@ Level 75, one bot, laps after the first, in ticks of game time:
 
 | Map | Race bot | Learning smartbot | Classic robots |
 | :--- | :---: | :---: | :---: |
-| Grand Prix II (`grandprix`) | ~800 (about 62 s at its game speed 13) | no lap completed | – |
-| Zandvoort GP (`zandvoort`) | ~495 (about 40 s) | – | 2400–7000 |
+| Grand Prix II (`grandprix`) | ~800 (about 62 s at its game speed 13) | ~1500 | – |
+| Zandvoort GP (`zandvoort`) | ~495 (about 40 s) | ~1200 | 2400–7000 |
 
 Laps vary by about ±3 %. Items matter: a bot that happens to pick up an afterburner is about 10 % faster for the rest of the race, and a light ship (little fuel) is faster too.
 
