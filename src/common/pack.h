@@ -116,6 +116,8 @@
  *
  * XPilot TNG (reserved range 4.F.2.0 - 4.F.2.F)
  * 4.F.2.0: voice chat (PKT_REQUEST_VOICE, PKT_VOICE).
+ *          Polygon map data: map objects without polygons (gravs,
+ *          concentrators) appended after the checkpoints.
  */
 #define MAGIC_WORD		0xF4ED
 #define POLYGON_VERSION		0x4F20

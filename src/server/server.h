@@ -159,6 +159,7 @@ int is_inside(int x, int y, hitmask_t hitmask, const object_t *obj);
 int shape_is_inside(int cx, int cy, hitmask_t hitmask, const object_t *obj,
 		    shape_t *s, int dir);
 int Polys_to_client(unsigned char **);
+int Map_objects_to_client(unsigned char **);
 void Ball_line_init(void);
 void Player_crash(player_t *pl, int crashtype, int mapobj_ind, int pt);
 void Object_crash(object_t *obj, int crashtype, int mapobj_ind);
@@ -352,6 +353,7 @@ void Set_swapper_state(player_t *pl);
  */
 void Race_compute_game_status(void);
 void Race_game_over(void);
+void Race_assign_startpos(void);
 void Player_reset_timing(player_t *pl);
 void Player_pass_checkpoint(player_t *pl);
 void PlayerCheckpointCollision(player_t *pl);

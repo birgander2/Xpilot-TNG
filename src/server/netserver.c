@@ -134,6 +134,7 @@ static int Send_motd(connection_t *connp);
 static connection_t	*Conn = NULL;
 static int		max_connections = 0;
 static setup_t		*Setup = NULL;
+static setup_t		*TngSetup = NULL;	/* Setup + map objects, for TNG clients */
 static setup_t		*Oldsetup = NULL;
 static int		(*playing_receive[256])(connection_t *connp),
 			(*login_receive[256])(connection_t *connp),
@@ -216,8 +217,8 @@ static long Setup_mode_for_client(const setup_t *S)
 
 static int Init_setup(void)
 {
-    size_t size;
-    unsigned char *mapdata;
+    size_t size, osize;
+    unsigned char *mapdata, *objdata;
 
     Oldsetup = Xpmap_init_setup();
 
@@ -249,6 +250,22 @@ static int Init_setup(void)
     strlcpy(Setup->name, world->name, sizeof(Setup->name));
     strlcpy(Setup->author, world->author, sizeof(Setup->author));
     strlcpy(Setup->data_url, options.dataURL, sizeof(Setup->data_url));
+
+    /*
+     * TNG clients get the map objects that are no polygons (gravs,
+     * concentrators) appended.  NG clients get exactly the data above.
+     */
+    osize = Map_objects_to_client(&objdata);
+    if ((TngSetup = (setup_t *)malloc(sizeof(setup_t) + size + osize)) == NULL) {
+	error("No memory to hold setup");
+	free(objdata);
+	return -1;
+    }
+    memcpy(TngSetup, Setup, sizeof(setup_t) + size);
+    memcpy(&TngSetup->map_data[size], objdata, osize);
+    free(objdata);
+    TngSetup->setup_size = Setup->setup_size + osize;
+    TngSetup->map_data_len = size + osize;
 
     return 0;
 }
@@ -903,7 +920,7 @@ static int Handle_setup(connection_t *connp)
     }
 
     if (FEATURE(connp, F_POLY))
-	S = Setup;
+	S = (connp->version >= TNG_FIRST_VERSION && TngSetup) ? TngSetup : Setup;
     else
 	S = Oldsetup;
 
@@ -1227,8 +1244,11 @@ static int Handle_login(connection_t *connp, char *errmsg, size_t errsize)
      * start that round now: humans and all robots begin together.
      */
     if (pl->rectype < 2 && BIT(world->rules->mode, LIMITED_LIVES)
-	&& Player_is_waiting(pl) && !Humans_in_round(pl))
+	&& Player_is_waiting(pl) && !Humans_in_round(pl)) {
+	if (BIT(world->rules->mode, TIMING))
+	    Race_assign_startpos();
 	Reset_all_players();
+    }
 
     if (options.greeting)
 	Set_player_message_f(pl, "%s [*Server greeting*]", options.greeting);

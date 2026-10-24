@@ -191,6 +191,37 @@ void Paint_objects(void)
             }
         }
     }
+
+    for (i = 0; i < num_mapobjects; i++) {
+
+        Compute_bounds(&min, &max, &mapobjects[i].bounds);
+
+        for (xoff = min.x; xoff <= max.x; xoff++) {
+            for (yoff = min.y; yoff <= max.y; yoff++) {
+		int x = mapobjects[i].bounds.x + xoff * Setup->width;
+		int y = mapobjects[i].bounds.y + yoff * Setup->height;
+
+		switch (mapobjects[i].type) {
+		case SETUP_ACWISE_GRAV: Gui_paint_setup_acwise_grav(x, y); break;
+		case SETUP_CWISE_GRAV:	Gui_paint_setup_cwise_grav(x, y); break;
+		case SETUP_POS_GRAV:	Gui_paint_setup_pos_grav(x, y); break;
+		case SETUP_NEG_GRAV:	Gui_paint_setup_neg_grav(x, y); break;
+		case SETUP_UP_GRAV:	Gui_paint_setup_up_grav(x, y); break;
+		case SETUP_DOWN_GRAV:	Gui_paint_setup_down_grav(x, y); break;
+		case SETUP_RIGHT_GRAV:	Gui_paint_setup_right_grav(x, y); break;
+		case SETUP_LEFT_GRAV:	Gui_paint_setup_left_grav(x, y); break;
+		case SETUP_ITEM_CONCENTRATOR:
+		    Gui_paint_setup_item_concentrator(x, y);
+		    break;
+		case SETUP_ASTEROID_CONCENTRATOR:
+		    Gui_paint_setup_asteroid_concentrator(x, y);
+		    break;
+		default:
+		    break;
+		}
+            }
+        }
+    }
 }
 
 

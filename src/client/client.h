@@ -247,6 +247,12 @@ typedef struct {
     irec_t	bounds;		/* Location on map */
 } checkpoint_t;
 
+/* Map object without a polygon (grav, concentrator) on a TNG polygon map. */
+typedef struct {
+    int		type;		/* SETUP_* block type */
+    irec_t	bounds;		/* Location on map */
+} mapobject_t;
+
 typedef struct {
     int width;			/* Line width, -1 means no line */
     unsigned long color;	/* Line color */
@@ -589,6 +595,8 @@ extern homebase_t	*bases;
 extern int		num_bases;
 extern checkpoint_t	*checks;
 extern int		num_checks;
+extern mapobject_t	*mapobjects;
+extern int		num_mapobjects;
 extern xp_polygon_t	*polygons;
 extern int		num_polygons, max_polygons;
 extern edge_style_t	*edge_styles;
