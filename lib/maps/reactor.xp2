@@ -1,6 +1,5 @@
 <XPilotMap version="1.1"
-           description="Deathmatch"
-           launcherprio="30">
+           description="Deathmatch / dogfight"
 <GeneralOptions>
 <Option name="allowPlayerBounces" value="yes"/>
 <Option name="allowPlayerCrashes" value="yes"/>
@@ -89,36 +88,36 @@
 <Edgestyle id="warpe" width="2" color="C040FF" style="0"/>
 <Polystyle id="warp" color="000000" defedge="warpe" flags="0"/>
 <Polygon x="113280" y="130560" style="core">
-<Offset x="0" y="3840"/>
-<Offset x="21120" y="0"/>
-<Offset x="0" y="-21120"/>
-<Offset x="-3840" y="0"/>
-<Offset x="0" y="17280"/>
-<Offset x="-17280" y="0"/>
+<Offset x="17280" y="0"/>
+<Offset x="0" y="-17280"/>
+<Offset x="3840" y="0"/>
+<Offset x="0" y="21120"/>
+<Offset x="-21120" y="0"/>
+<Offset x="0" y="-3840"/>
 </Polygon>
 <Polygon x="84480" y="113280" style="core">
-<Offset x="-3840" y="0"/>
-<Offset x="0" y="21120"/>
-<Offset x="21120" y="0"/>
-<Offset x="0" y="-3840"/>
-<Offset x="-17280" y="0"/>
-<Offset x="0" y="-17280"/>
+<Offset x="0" y="17280"/>
+<Offset x="17280" y="0"/>
+<Offset x="0" y="3840"/>
+<Offset x="-21120" y="0"/>
+<Offset x="0" y="-21120"/>
+<Offset x="3840" y="0"/>
 </Polygon>
 <Polygon x="101760" y="84480" style="core">
-<Offset x="0" y="-3840"/>
-<Offset x="-21120" y="0"/>
-<Offset x="0" y="21120"/>
-<Offset x="3840" y="0"/>
-<Offset x="0" y="-17280"/>
-<Offset x="17280" y="0"/>
+<Offset x="-17280" y="0"/>
+<Offset x="0" y="17280"/>
+<Offset x="-3840" y="0"/>
+<Offset x="0" y="-21120"/>
+<Offset x="21120" y="0"/>
+<Offset x="0" y="3840"/>
 </Polygon>
 <Polygon x="130560" y="101760" style="core">
-<Offset x="3840" y="0"/>
-<Offset x="0" y="-21120"/>
-<Offset x="-21120" y="0"/>
-<Offset x="0" y="3840"/>
-<Offset x="17280" y="0"/>
-<Offset x="0" y="17280"/>
+<Offset x="0" y="-17280"/>
+<Offset x="-17280" y="0"/>
+<Offset x="0" y="-3840"/>
+<Offset x="21120" y="0"/>
+<Offset x="0" y="21120"/>
+<Offset x="-3840" y="0"/>
 </Polygon>
 <Polygon x="117120" y="117120" style="rod">
 <Offset x="5120" y="0"/>

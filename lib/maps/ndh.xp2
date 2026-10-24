@@ -1,5 +1,5 @@
 <XPilotMap version="1.1"
-           description="Classical Death Match"
+           description="Classical Death Match (Xpilot Default)"
            launcherprio="99">
 <GeneralOptions>
 <Option name="allowAlliances" value="yes"/>

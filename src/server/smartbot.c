@@ -3216,7 +3216,8 @@ static bool Smart_handle_ctf(player_t *pl, vector_t repulse_vec,
 		home_tr_dist = d;
 		home_tr = i;
 	    }
-	} else if (Team_by_index(tr->team)->NumMembers > 0
+	} else if (Team_by_index(tr->team) != NULL
+		   && Team_by_index(tr->team)->NumMembers > 0
 		   && Smart_believes_ball_home(pl->team, tr)) {
 	    if (d < enemy_tr_dist) {
 		enemy_tr_dist = d;
@@ -3559,7 +3560,8 @@ static treasure_t *Smart_enemy_treasure(int team, clpos_t pos)
 	treasure_t *tr = Treasure_by_index(i);
 	double d;
 
-	if (tr->team == team || !Smart_believes_ball_home(team, tr)
+	if (tr->team == team || Team_by_index(tr->team) == NULL
+	    || !Smart_believes_ball_home(team, tr)
 	    || Team_by_index(tr->team)->NumMembers <= 0)
 	    continue;
 	d = Wrap_length(tr->pos.cx - pos.cx, tr->pos.cy - pos.cy);

@@ -243,6 +243,44 @@ void P_end_polygon(void)
     ptscount = -1;
 }
 
+/*
+ * Close the map edges with invisible wall polygons. The movement code
+ * always wraps positions, so without this a non-wrapping map would let
+ * objects fly through the edge wherever there is no wall.
+ */
+void P_add_edge_walls(void)
+{
+    const int t = 8 * CLICK;	/* thickness is irrelevant for collisions */
+    const int w = world->cwidth - 1, h = world->cheight - 1;
+    const int r[4][4] = {	/* x0, y0, x1, y1 */
+	{ 0, 0, w, t },
+	{ 0, h - t, w, h },
+	{ 0, 0, t, h },
+	{ w - t, 0, w, h }
+    };
+    int i, es, ps;
+
+    P_edgestyle("edge_es", -1, 0, 0);
+    es = P_get_edge_id("edge_es");
+    P_polystyle("edge_ps", 0, 0, es, STYLE_INVISIBLE | STYLE_INVISIBLE_RADAR);
+    ps = P_get_poly_id("edge_ps");
+
+    for (i = 0; i < 4; i++) {
+	clpos_t p = { r[i][0], r[i][3] };
+
+	P_start_polygon(p, ps);
+	p.cy = r[i][1];
+	P_vertex(p, es);
+	p.cx = r[i][2];
+	P_vertex(p, es);
+	p.cy = r[i][3];
+	P_vertex(p, es);
+	p.cx = r[i][0];
+	P_vertex(p, es);
+	P_end_polygon();
+    }
+}
+
 int P_start_ballarea(void)
 {
     return Create_group(TREASURE,

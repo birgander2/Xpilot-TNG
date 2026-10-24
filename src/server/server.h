@@ -490,6 +490,7 @@ void P_offset(clpos_t offset, int edgestyle);
 void P_vertex(clpos_t pos, int edgestyle);
 void P_style(const char *state, int style);
 void P_end_polygon(void);
+void P_add_edge_walls(void);
 int P_start_ballarea(void);
 void P_end_ballarea(void);
 int P_start_balltarget(int team, int treasure_ind);

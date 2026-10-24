@@ -714,6 +714,9 @@ bool Grok_map(void)
     if (!is_polygon_map)
 	Xpmap_blocks_to_polygons();
 
+    if (!BIT(world->rules->mode, WRAP_PLAY) && options.edgeBounce)
+	P_add_edge_walls();
+
     Compute_gravity();
     Find_base_direction();
 
