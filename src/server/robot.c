@@ -1305,8 +1305,10 @@ static void Robot_match_humans(bool can_spawn_more, int num_playing_ships,
 
 /*
  * While no human is connected the world is frozen and Robot_update() is
- * not called, so robots would only trickle in after the first human joined.
- * Create all missing robots at once while idle instead.
+ * not called, so robots would only trickle in after the first human joined
+ * (with idleRun they trickle in with ROBOT_CREATE_DELAY).  Create all
+ * missing robots at once while no human plays instead, so a round started
+ * by the first human has them all (limited lives makes latecomers wait).
  */
 void Robot_prefill(void)
 {

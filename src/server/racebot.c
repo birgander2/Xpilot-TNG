@@ -69,6 +69,9 @@
 #define RB_BOUNCE_COST		80.0	/* a wall bounce, besides the speed lost */
 #define RB_HARD_COST		3000.0	/* a bounce only the shield survives */
 #define RB_THREAT_TICKS		(6 * 12)
+#define RB_STUCK_TICKS		120	/* no progress this long: self-destruct */
+#define RB_DETOUR_GAIN		120.0	/* plans gaining less: try the detour */
+#define RB_STUCK_GAIN		40.0	/* progress that counts (px) */
 #define RB_LEARN_SUBDIR		"xpilot-tng/racebot"
 #define RB_LEARN_VERSION	2
 
@@ -117,6 +120,13 @@ typedef struct {
     int		pit_station;
     double	pit_target;
     double	refuel_ticks;
+    /* stuck (e.g. slow in the repelling gravs of a corner) */
+    double	stuck_best;	/* best distance to the next checkpoint */
+    unsigned long stuck_since;
+    int		stuck_check;
+    bool	destruct;
+    bool	detour;		/* avoiding gravity until the next checkpoint */
+    int		slow_ticks;	/* best plans gaining too little near gravity */
     /* combat */
     unsigned long threat_time[NUM_IDS];
     double	aim_off;
@@ -156,6 +166,9 @@ typedef struct {
     int		dir;
     bool	thrust;
     int		shot_t, ram_t, hard_t;
+    double	end_value;	/* course value at the end, -1e9 finished */
+    double	progress;	/* course value gained over the horizon */
+    double	end_x, end_y, end_speed;	/* where the plan ends (absolute) */
 } rb_flags_t;
 
 typedef struct {
@@ -210,6 +223,7 @@ static double		NavCX, NavCY;
 static float		*NavRX, *NavRY, *NavClear;
 static uint8_t		*NavEdge;
 static float		*NavCost;
+static float		*NavCostG;	/* NavCost, strong gravity costing more */
 
 typedef struct { float f; int32_t c; } rb_heap_t;
 static rb_heap_t	*Heap;
@@ -220,6 +234,11 @@ static int		HeapN, HeapCap;
  * it, from anywhere.  Only the deepest ones keep their paths (racing line).
  */
 static rb_field_t	*CheckF[RB_DEPTH + 1];
+/*
+ * The same avoiding strong gravity, computed when needed: for a ship too
+ * slow to get through the repelling gravs on the short way.
+ */
+static rb_field_t	*DetourF[RB_DEPTH + 1];
 static rb_field_t	*FuelF;		/* one per fuel station, lazy */
 static rb_field_t	PosF;		/* from a robot's position (station choice) */
 static int		NumFuelF;
@@ -573,11 +592,11 @@ static void Rb_map_free(void)
     int i, d;
 
     free(ShipClear); free(NavRX); free(NavRY); free(NavClear); free(Heap);
-    free(NavEdge); free(NavCost);
+    free(NavEdge); free(NavCost); free(NavCostG);
     ShipClear = NULL;
     NavRX = NavRY = NavClear = NULL;
     NavEdge = NULL;
-    NavCost = NULL;
+    NavCost = NavCostG = NULL;
     Heap = NULL;
     HeapCap = HeapN = 0;
     for (d = 0; d <= RB_DEPTH; d++) {
@@ -586,6 +605,12 @@ static void Rb_map_free(void)
 		Rb_field_free(&CheckF[d][i]);
 	    free(CheckF[d]);
 	    CheckF[d] = NULL;
+	}
+	if (DetourF[d]) {
+	    for (i = 0; i < RbNumChecks; i++)
+		Rb_field_free(&DetourF[d][i]);
+	    free(DetourF[d]);
+	    DetourF[d] = NULL;
 	}
     }
     if (FuelF) {
@@ -605,11 +630,14 @@ static void Rb_map_free(void)
  * 'then' the goal nodes start with its values: the way on from there.
  */
 static bool Rb_field_compute(rb_field_t *fd, double gx, double gy, double seed_r,
-			     const rb_field_t *then)
+			     const rb_field_t *then, const float *cost)
 {
     int c, r, gcell = Rb_nav_cell(gx, gy), seeded = 0;
 
-    if (fd->dist == NULL) {
+    if (cost == NULL)
+	cost = NavCost;
+    if (fd->dist == NULL || fd->next == NULL) {
+	Rb_field_free(fd);
 	fd->dist = malloc(sizeof(float) * NavN);
 	fd->next = malloc(sizeof(int32_t) * NavN);
 	if (!fd->dist || !fd->next) {
@@ -679,7 +707,7 @@ static bool Rb_field_compute(rb_field_t *fd, double gx, double gy, double seed_r
 	    if (!(NavEdge[e.c] & (1 << j)))
 		continue;
 	    n = Rb_nav_nb(e.c, nb_dx[j], nb_dy[j]);
-	    nd = e.f + NavCost[e.c * 8 + j];
+	    nd = e.f + cost[e.c * 8 + j];
 	    if (nd < fd->dist[n]) {
 		fd->dist[n] = nd;
 		fd->next[n] = e.c;
@@ -821,13 +849,17 @@ static bool Rb_map_build(void)
     Heap = malloc(sizeof(rb_heap_t) * HeapCap);
     NavEdge = calloc(NavN, 1);
     NavCost = malloc(sizeof(float) * NavN * 8);
-    for (d = 0; d <= RB_DEPTH; d++)
+    NavCostG = malloc(sizeof(float) * NavN * 8);
+    for (d = 0; d <= RB_DEPTH; d++) {
 	CheckF[d] = calloc(MAX(RbNumChecks, 1), sizeof(rb_field_t));
+	DetourF[d] = calloc(MAX(RbNumChecks, 1), sizeof(rb_field_t));
+    }
     NumFuelF = Num_fuels();
     FuelF = calloc(MAX(NumFuelF, 1), sizeof(rb_field_t));
     if (!ShipClear || !obs || !NavRX || !NavRY || !NavClear || !Heap
-	|| !NavEdge || !NavCost || !CheckF[0] || !CheckF[1] || !CheckF[2]
-	|| !CheckF[RB_DEPTH] || !FuelF) {
+	|| !NavEdge || !NavCost || !NavCostG || !CheckF[0] || !CheckF[1] || !CheckF[2]
+	|| !CheckF[RB_DEPTH] || !DetourF[0] || !DetourF[1] || !DetourF[2]
+	|| !DetourF[RB_DEPTH] || !FuelF) {
 	free(obs);
 	Rb_map_free();
 	return false;
@@ -916,6 +948,17 @@ static bool Rb_map_build(void)
 	    pen = MAX(0.0, (RB_PREF_R - m) / RB_PREF_R);
 	    NavEdge[c] |= (uint8_t)(1 << j);
 	    NavCost[c * 8 + j] = (float)(len * (1.0 + RB_PREF_W * pen * pen));
+	    NavCostG[c * 8 + j] = NavCost[c * 8 + j];
+	    if (world->gravity != NULL) {
+		int bx = (int)(NavRX[n] / BLOCK_SZ), by = (int)(NavRY[n] / BLOCK_SZ);
+		double g;
+
+		LIMIT(bx, 0, world->x - 1);
+		LIMIT(by, 0, world->y - 1);
+		g = LENGTH(world->gravity[bx][by].x, world->gravity[bx][by].y);
+		if (g > 0.5)
+		    NavCostG[c * 8 + j] *= (float)(1.0 + 2.0 * MIN(g, 8.0));
+	    }
 	}
     }
 
@@ -930,7 +973,7 @@ static bool Rb_map_build(void)
 	    const rb_field_t *then = d > 0 ? &CheckF[d - 1][(i + 1) % RbNumChecks] : NULL;
 
 	    if (!Rb_field_compute(&CheckF[d][i], Rb_px(ch->pos.cx), Rb_px(ch->pos.cy),
-				  MAX(CheckR - 12.0, 8.0), then)) {
+				  MAX(CheckR - 12.0, 8.0), then, NULL)) {
 		Rb_map_free();
 		return false;
 	    }
@@ -968,10 +1011,35 @@ static rb_field_t *Rb_fuel_field(int fs)
 	return NULL;
     if (!FuelF[fs].valid) {
 	f = Fuel_by_index(fs);
-	if (!Rb_field_compute(&FuelF[fs], Rb_px(f->pos.cx), Rb_px(f->pos.cy), 0.0, NULL))
+	if (!Rb_field_compute(&FuelF[fs], Rb_px(f->pos.cx), Rb_px(f->pos.cy), 0.0, NULL, NULL))
 	    return NULL;
     }
     return &FuelF[fs];
+}
+
+/* Course value avoiding strong gravity (see DetourF), NULL on failure. */
+static const rb_field_t *Rb_detour_field(int d, int i)
+{
+    rb_field_t *fd;
+
+    if (!RbMapOk || d < 0 || d > RB_DEPTH || i < 0 || i >= RbNumChecks)
+	return NULL;
+    fd = &DetourF[d][i];
+    if (!fd->valid) {
+	check_t *ch = Check_by_index(i);
+	const rb_field_t *then = NULL;
+
+	if (d > 0 && (then = Rb_detour_field(d - 1, (i + 1) % RbNumChecks)) == NULL)
+	    return NULL;
+	if (!Rb_field_compute(fd, Rb_px(ch->pos.cx), Rb_px(ch->pos.cy),
+			      MAX(CheckR - 12.0, 8.0), then, NavCostG))
+	    return NULL;
+	if (d < RB_DEPTH) {
+	    free(fd->next);	/* only the deepest give the line */
+	    fd->next = NULL;
+	}
+    }
+    return fd;
 }
 
 bool Robot_race_map(void)
@@ -1158,10 +1226,11 @@ static int Rb_passes_left(player_t *pl)
 {
     int n = world->NumChecks, done;
 
+    /* the round counts up at checkpoint 0, after the lap's last one */
     if (pl->round <= 0)
 	done = 0;
     else
-	done = (pl->round - 1) * n + pl->check;
+	done = (pl->round - 1) * n + (pl->check == 0 ? n : pl->check);
     return MAX(options.raceLaps * n + 1 - done, 0);
 }
 
@@ -1454,6 +1523,8 @@ static double Rb_rollout(const rb_ctx_t *cx, const rb_cand_t *cand, rb_cand_t *r
     need = MIN(need, cx->clear0 - 1.0);
     if (fl)
 	fl->shot_t = fl->ram_t = fl->hard_t = -1;
+    if (fl)
+	fl->end_value = 1e9;
 
     for (t = 0; t < RB_H; t++) {
 	int want;
@@ -1515,12 +1586,18 @@ static double Rb_rollout(const rb_ctx_t *cx, const rb_cand_t *cand, rb_cand_t *r
 		       || Rb_in_check(cx, cx->tgt[s.k], 0.5 * (s.x + px0),
 				      0.5 * (s.y + py0)))) {
 		s.k++;
-		if (s.k >= cx->left)
+		if (s.k >= cx->left) {
+		    if (fl)
+			fl->end_value = -1e9;
 		    return cost - (RB_H - t) * RB_FINISH_V;
+		}
 	    }
 	    /* rare: more checkpoints than the chain within the horizon */
-	    if (s.k >= RB_CHAIN)
+	    if (s.k >= RB_CHAIN) {
+		if (fl)
+		    fl->end_value = -1e9;
 		return cost - (RB_H - t) * RB_FINISH_V;
+	    }
 	}
 	/*
 	 * Progress made early counts: without this, plans that dawdle and
@@ -1587,7 +1664,15 @@ static double Rb_rollout(const rb_ctx_t *cx, const rb_cand_t *cand, rb_cand_t *r
 	double v = LENGTH(s.vx, s.vy), ctg, dneed, free;
 
 	if (cx->race)
+	{
 	    ctg = Rb_field_value(cx->vf[MIN(s.k, RB_CHAIN - 1)], cx->ox + s.x, cx->oy + s.y);
+	    if (fl) {
+		fl->end_value = ctg;
+		fl->end_x = cx->ox + s.x;
+		fl->end_y = cx->oy + s.y;
+		fl->end_speed = v;
+	    }
+	}
 	else {
 	    double gd;
 
@@ -1670,7 +1755,7 @@ static rb_flags_t Rb_fly(player_t *pl, rb_data_t *d, int level, int pit,
     static rb_ctx_t cx;
     static rb_cand_t cand[RB_MAX_CAND];
     rb_cand_t rec, best_rec;
-    rb_flags_t fl = { false, 0, false, -1, -1, -1 };
+    rb_flags_t fl = { false, 0, false, -1, -1, -1, 1e9, 0.0, 0.0, 0.0, 99.0 };
     double best_cost = 1e30, f = level / 100.0;
     int nc = 0, i, h, nheads, prev_i = -1;
     int specials[8], nspec = 0;
@@ -1723,6 +1808,16 @@ static rb_flags_t Rb_fly(player_t *pl, rb_data_t *d, int level, int pit,
 	    dep = MAX(dep, 0);
 	    cx.vf[i] = &CheckF[dep][cx.tgt[i]];
 	    cx.pf[i] = &CheckF[RB_DEPTH][cx.tgt[i]];
+	    /* too slow for the gravs on the short way: around them */
+	    if (d->detour && i < 2) {
+		const rb_field_t *v = Rb_detour_field(dep, cx.tgt[i]);
+		const rb_field_t *l = Rb_detour_field(RB_DEPTH, cx.tgt[i]);
+
+		if (v != NULL && l != NULL) {
+		    cx.vf[i] = v;
+		    cx.pf[i] = l;
+		}
+	    }
 	}
     } else {
 	fuel_t *fs = Fuel_by_index(pit);
@@ -1902,6 +1997,8 @@ static rb_flags_t Rb_fly(player_t *pl, rb_data_t *d, int level, int pit,
 
     best_rec.len = RB_H;
     Rb_rollout(&cx, &best_rec, &rec, &fl);
+    if (cx.race)
+	fl.progress = Rb_field_value(cx.vf[0], cx.ox, cx.oy) - fl.end_value;
     d->plan_len = RB_H;
     memcpy(d->plan_dir, best_rec.dir, sizeof(short) * RB_H);
     memcpy(d->plan_thr, best_rec.thr, sizeof(bool) * RB_H);
@@ -2068,7 +2165,7 @@ static int Rb_pick_station(player_t *pl, int exclude)
     double here = Rb_field_value(cf, ox, oy);
     int i, j, bi = -1;
 
-    if (!Rb_field_compute(&PosF, ox, oy, 0.0, NULL))
+    if (!Rb_field_compute(&PosF, ox, oy, 0.0, NULL, NULL))
 	return -1;
     for (i = 0; i < Num_fuels(); i++) {
 	fuel_t *fs = Fuel_by_index(i);
@@ -2199,6 +2296,7 @@ static void Robot_race_create(player_t *pl, char *str)
     memset(d, 0, sizeof(*d));
     d->learn = true;
     d->last_check = -1;
+    d->stuck_check = -1;
     d->pit_station = -1;
     if (str != NULL && *str != '\0') {
 	int a, b, lvl = 0;
@@ -2225,6 +2323,10 @@ static void Robot_race_go_home(player_t *pl)
     d->plan_len = 0;
     d->seg_valid = false;
     d->pit = false;
+    d->destruct = false;
+    d->detour = false;
+    d->slow_ticks = 0;
+    d->stuck_check = -1;
 }
 
 /* Keeps track of checkpoint passes, laps and the learning that goes with them. */
@@ -2252,8 +2354,83 @@ static void Rb_track_progress(player_t *pl, rb_data_t *d)
     d->last_check = pl->check;
     d->last_round = pl->round;
     d->seg_valid = pl->round > 0;
+    d->detour = false;
+    d->slow_ticks = 0;
     d->seg_fuel0 = pl->fuel.sum;
     Rb_segment_start(d);
+}
+
+/*
+ * Hanging somewhere without getting closer to the next checkpoint, which
+ * a slow ship among repelling gravs can do: self-destruct and start over,
+ * as a human would.  Standing at a fuel station is no hanging.
+ */
+static void Rb_check_stuck(player_t *pl, rb_data_t *d, int pit)
+{
+    double v = Rb_field_value(&CheckF[0][pl->check], Rb_px(pl->pos.cx), Rb_px(pl->pos.cy));
+
+    if (pl->check != d->stuck_check || pit >= 0 || Player_is_refueling(pl)
+	|| v < d->stuck_best - RB_STUCK_GAIN) {
+	d->stuck_check = pl->check;
+	d->stuck_best = v;
+	d->stuck_since = RbTick;
+	d->destruct = false;
+	return;
+    }
+    if (!d->destruct && RbTick - d->stuck_since > RB_STUCK_TICKS) {
+	d->destruct = true;
+	RB_LOG("[racebot] %s is stuck at %.0f,%.0f: self-destruct\n", pl->name,
+	       Rb_px(pl->pos.cx), Rb_px(pl->pos.cy));
+    }
+}
+
+/* Strongest gravity within 'range' px of the ship. */
+static double Rb_gravity_near(player_t *pl, double range)
+{
+    int bx0 = (int)(Rb_px(pl->pos.cx) / BLOCK_SZ), by0 = (int)(Rb_px(pl->pos.cy) / BLOCK_SZ);
+    int r = (int)(range / BLOCK_SZ) + 1, bx, by;
+    double g = 0.0;
+
+    if (world->gravity == NULL)
+	return 0.0;
+    for (by = MAX(by0 - r, 0); by <= MIN(by0 + r, world->y - 1); by++) {
+	for (bx = MAX(bx0 - r, 0); bx <= MIN(bx0 + r, world->x - 1); bx++)
+	    g = MAX(g, LENGTH(world->gravity[bx][by].x, world->gravity[bx][by].y));
+    }
+    return g;
+}
+
+/*
+ * Does the ship get through the gravity ahead at its speed?  The flight
+ * model knows: when the best plan ends slow in strong gravity, or gains
+ * little while strong gravity is near, the ship would hang there.  Then
+ * take the way around it up to the next checkpoint.  With speed the plans
+ * get through, and the bot keeps the short way.
+ */
+static void Rb_check_detour(player_t *pl, rb_data_t *d, const rb_flags_t *fl)
+{
+    double acc = Rb_thrust_acc(pl), g_end = 0.0;
+
+    if (d->detour || !fl->valid)
+	return;
+    if (world->gravity != NULL && fl->end_value > -1e8) {
+	int bx = (int)(fl->end_x / BLOCK_SZ), by = (int)(fl->end_y / BLOCK_SZ);
+
+	LIMIT(bx, 0, world->x - 1);
+	LIMIT(by, 0, world->y - 1);
+	g_end = LENGTH(world->gravity[bx][by].x, world->gravity[bx][by].y);
+    }
+    if ((g_end > 0.7 * acc && fl->end_speed < 10.0)
+	|| (fl->progress < RB_DETOUR_GAIN && Rb_gravity_near(pl, 300.0) > 0.7 * acc))
+	d->slow_ticks++;
+    else
+	d->slow_ticks = 0;
+    if (d->slow_ticks >= 3) {
+	d->detour = true;
+	d->plan_len = 0;
+	RB_LOG("[racebot] %s too slow for the gravity at %.0f,%.0f: detour\n",
+	       pl->name, Rb_px(pl->pos.cx), Rb_px(pl->pos.cy));
+    }
 }
 
 static void Robot_race_play(player_t *pl)
@@ -2264,7 +2441,7 @@ static void Robot_race_play(player_t *pl)
     rb_flags_t fl;
 
     CLR_BIT(pl->used, USES_SHOT | USES_SHIELD | USES_LASER | USES_CONNECTOR);
-    Player_self_destruct(pl, false);
+    Player_self_destruct(pl, d->destruct);
     if (pl->damaged > 0 || !Robot_race_map() || !RbMapOk
 	|| BIT(pl->pl_status, FINISH | RACE_OVER)) {
 	Thrust(pl, false);
@@ -2275,8 +2452,11 @@ static void Robot_race_play(player_t *pl)
     Rb_update_threats(pl, d);
 
     pit = Rb_fuel_plan(pl, d);
+    Rb_check_stuck(pl, d, pit);
     target = Rb_pick_target(pl, d);
     fl = Rb_fly(pl, d, level, pit, target);
+    if (pit < 0)
+	Rb_check_detour(pl, d, &fl);
     /*
      * Shield against what the best plan cannot avoid, and whenever the
      * model may be wrong in a deadly way: a wall close ahead at a speed
