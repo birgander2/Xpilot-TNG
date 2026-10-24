@@ -32,6 +32,8 @@ public:
 
     void Start();
     bool Busy() const { return busy_; }
+    // Internet only: meta server entries that did not answer the ping (before the per-IP limit)
+    int UnreachableTotal() const { return unreachable_total_; }
     std::vector<ServerEntry> Snapshot() const;
     std::string Message() const;
 
@@ -45,6 +47,7 @@ private:
     std::thread thread_;
     std::atomic<bool> busy_{false};
     std::atomic<bool> cancel_{false};
+    std::atomic<int> unreachable_total_{0};
     mutable std::mutex mtx_;
     std::vector<ServerEntry> servers_;
     std::string message_;

@@ -1088,21 +1088,34 @@ void LauncherApp::RenderSetup(bool server_mode) {
 // network browser
 // ============================================================================
 
-void LauncherApp::RenderServerList(const char* id, ServerSearch& search) {
-    const std::vector<ServerEntry> servers = search.Snapshot();
+void LauncherApp::RenderServerList(const char* id, ServerSearch& search, const bool* show_unreachable) {
+    std::vector<ServerEntry> servers = search.Snapshot();
     const std::string msg = search.Message();
+    if (show_unreachable && !*show_unreachable)
+        servers.erase(std::remove_if(servers.begin(), servers.end(), [](const ServerEntry& e) { return e.ping_ms < 0; }),
+                      servers.end());
+
+    // Internet list: last line counts the servers that did not answer (not while still measuring)
+    const bool footer = show_unreachable && !search.Busy();
+    auto draw_footer = [&] {
+        if (!footer) return;
+        const int n = search.UnreachableTotal();
+        ImGui::TextDisabled("%d unreachable server%s found", n, n == 1 ? "" : "s");
+    };
 
     if (search.Busy()) {
         ImGui::TextDisabled("%s", msg.c_str());
     } else if (servers.empty()) {
         ImGui::TextColored(kWarn, "%s", msg.c_str());
+        draw_footer();
         return;
     }
     if (servers.empty()) return;
 
     const ImGuiTableFlags tf = ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerH |
                                ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingStretchProp;
-    if (!ImGui::BeginTable(id, 7, tf, ImVec2(0, ImGui::GetContentRegionAvail().y))) return;
+    const float footer_h = footer ? ImGui::GetTextLineHeightWithSpacing() : 0.0f;
+    if (!ImGui::BeginTable(id, 7, tf, ImVec2(0, ImGui::GetContentRegionAvail().y - footer_h))) return;
     ImGui::TableSetupScrollFreeze(0, 1);
     ImGui::TableSetupColumn("Server", ImGuiTableColumnFlags_WidthStretch, 2.0f);
     ImGui::TableSetupColumn("Map", ImGuiTableColumnFlags_WidthStretch, 2.0f);
@@ -1157,6 +1170,7 @@ void LauncherApp::RenderServerList(const char* id, ServerSearch& search) {
         ImGui::PopID();
     }
     ImGui::EndTable();
+    draw_footer();
 }
 
 void LauncherApp::RenderNetworkBrowser() {
@@ -1176,15 +1190,20 @@ void LauncherApp::RenderNetworkBrowser() {
     const float lan_h = box_height(lan_search_, 4);
     const float custom_h = st.WindowPadding.y * 2 + 2 + ImGui::GetTextLineHeight() + st.ItemSpacing.y * 3 + 1 +
                            ImGui::GetFrameHeight();
-    auto section = [&](const char* title, const char* id, ServerSearch& search, float height) {
+    auto section = [&](const char* title, const char* id, ServerSearch& search, float height, bool* show_unreachable = nullptr) {
         ImGui::BeginChild(id, ImVec2(0, height), ImGuiChildFlags_Borders);
         ImGui::TextColored(kAccent, "%s", title);
+        if (show_unreachable) {
+            ImGui::SameLine(ImGui::GetWindowWidth() - 100 - ImGui::GetFrameHeight() - st.ItemInnerSpacing.x -
+                            ImGui::CalcTextSize("Show unreachable").x - st.ItemSpacing.x);
+            ImGui::Checkbox("Show unreachable", show_unreachable);
+        }
         ImGui::SameLine(ImGui::GetWindowWidth() - 100);
         ImGui::BeginDisabled(search.Busy());
         if (ImGui::SmallButton("Refresh")) search.Start();
         ImGui::EndDisabled();
         ImGui::Separator();
-        RenderServerList(id, search);
+        RenderServerList(id, search, show_unreachable);
         ImGui::EndChild();
     };
     section("Local network", "lan", lan_search_, lan_h);
@@ -1192,7 +1211,7 @@ void LauncherApp::RenderNetworkBrowser() {
     const float play_top = ImGui::GetWindowHeight() - 38 - 10;
     const float below_h = custom_h + st.ItemSpacing.y * 8 + 1 + ImGui::GetFrameHeight();
     const float net_h = std::max(box_height(internet_search_, 3), play_top - ImGui::GetCursorPosY() - below_h);
-    section("Internet", "internet", internet_search_, net_h);
+    section("Internet", "internet", internet_search_, net_h, &show_unreachable_);
 
     // custom address: a box like the server lists, highlighted while it is the active choice
     bool enter = false;

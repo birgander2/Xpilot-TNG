@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <map>
 #include <set>
 
 #include <arpa/inet.h>
@@ -31,6 +32,7 @@ constexpr uint32_t kMagic = (0x4F15u << 16) | 0xF4EDu;   // POLYGON_VERSION, MAG
 constexpr uint8_t kReportStatus = 0x21;     // REPORT_STATUS_pack
 constexpr uint8_t kContact = 0x31;          // CONTACT_pack
 constexpr int kMetaFields = 18;             // NUM_META_DATA_FIELDS
+constexpr int kMaxPerIp = 5;                // a single host can flood the meta server list
 
 long ElapsedMs(Clock::time_point since) {
     return std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - since).count();
@@ -356,12 +358,24 @@ void ServerSearch::RunInternet() {
     if (cancel_) return;
     if (!reachable) { Publish({}, "Could not contact any meta server (" + errors + ")."); return; }
 
-    Publish(found, "Measuring ping ...");
+    unreachable_total_ = 0;
+    Publish({}, "Measuring ping ...");
     PingServers(found, cancel_);
-    std::sort(found.begin(), found.end(), [](const ServerEntry& a, const ServerEntry& b) {
+    if (cancel_) return;
+    std::stable_sort(found.begin(), found.end(), [](const ServerEntry& a, const ServerEntry& b) {
         int pa = a.ping_ms < 0 ? 1 << 30 : a.ping_ms, pb = b.ping_ms < 0 ? 1 << 30 : b.ping_ms;
         return pa < pb;   // no answer last
     });
-    Publish(found, found.empty() ? "The meta server lists no servers."
-                                 : std::to_string(found.size()) + " server(s) listed.");
+    int unreachable = 0;
+    for (const auto& s : found) unreachable += s.ping_ms < 0;
+    // keep at most kMaxPerIp entries per address (reachable ones come first)
+    std::map<std::string, int> per_ip;
+    std::vector<ServerEntry> kept;
+    for (auto& s : found)
+        if (per_ip[s.ip]++ < kMaxPerIp) kept.push_back(std::move(s));
+    const int reachable_count = int(std::count_if(kept.begin(), kept.end(), [](const ServerEntry& s) { return s.ping_ms >= 0; }));
+    unreachable_total_ = unreachable;
+    Publish(std::move(kept), found.empty() ? "The meta server lists no servers."
+                           : reachable_count == 0 ? "No reachable servers found."
+                                                  : std::to_string(reachable_count) + " server(s) listed.");
 }

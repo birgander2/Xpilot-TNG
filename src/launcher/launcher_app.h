@@ -48,7 +48,7 @@ private:
     void RenderServerRunning();
     void RenderNetworkBrowser();
     void RenderProfile();
-    void RenderServerList(const char* id, ServerSearch& search);
+    void RenderServerList(const char* id, ServerSearch& search, const bool* show_unreachable = nullptr);
     void RenderIdentityRow();
     std::vector<std::string> ClientArgs(int port, const std::string& host = "localhost") const;
     void RenderHeader(const char* title, bool show_back);
@@ -136,6 +136,7 @@ private:
     std::string sel_ip_;              // selected server row (ip + port), empty = none
     std::string sel_host_;            // name to connect with (hostname if the server has one)
     int sel_port_ = 0;
+    bool show_unreachable_ = false;   // Internet list: also show servers that did not answer the ping
     bool custom_selected_ = false;    // the custom address box is the active choice
     int local_port_ = 0;              // 0 = pick a free port automatically
     bool local_meta_ = false;         // list the local game at the meta server
