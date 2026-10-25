@@ -47,11 +47,19 @@ target_link_libraries(xpilot-tng-launcher PRIVATE
     m
 )
 
+if(WIN32)
+    target_link_libraries(xpilot-tng-launcher PRIVATE ws2_32 iphlpapi)
+    # GUI subsystem: no console window next to the application
+    set_target_properties(xpilot-tng-launcher PROPERTIES WIN32_EXECUTABLE ON)
+endif()
+
 target_compile_definitions(xpilot-tng-launcher PRIVATE XPILOT_TNG_VERSION="${PROJECT_VERSION}")
 
 install(TARGETS xpilot-tng-launcher DESTINATION ${CMAKE_INSTALL_BINDIR})
 
+if(NOT WIN32)
 add_custom_target(xpilot-tng-launcher-symlink ALL
     COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_BINARY_DIR}/xpilot-tng-launcher ${PROJECT_SOURCE_DIR}/xpilot-tng-launcher
     DEPENDS xpilot-tng-launcher
 )
+endif()

@@ -8,6 +8,11 @@
 
 std::string XpilotrcPath() {
     if (const char* env = std::getenv("XPILOTRC")) return env;
+#ifdef _WIN32
+    // Same location as the client (Xpilotrc_get_filename)
+    if (const char* appdata = std::getenv("APPDATA"); appdata && *appdata)
+        return std::string(appdata) + "/xpilot-tng/xpilotrc";
+#endif
     const char* xdg = std::getenv("XDG_CONFIG_HOME");
     const char* home = std::getenv("HOME");
     std::string path;

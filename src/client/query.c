@@ -174,6 +174,85 @@ static int Query_fudged(sock_t *sock, int port, char *msg, size_t msglen)
  * we get multiple responses from the same server.
  */
 
+#ifdef _WIN32
+/*
+ * Windows has no SIOCGIFCONF: walk the adapter list instead and send to the
+ * directed broadcast address of every IPv4 network, plus the loopback.
+ */
+int Query_all(sock_t *sock, int port, char *msg, size_t msglen)
+{
+    ULONG size = 16 * 1024, rc;
+    IP_ADAPTER_ADDRESSES *list = NULL, *ad;
+    struct sockaddr_in addr;
+    int count = 0;
+
+    if (sock_set_broadcast(sock, 1) == -1) {
+	error("set broadcast");
+	return (-1);
+    }
+
+    for (int tries = 0; tries < 3; tries++) {
+	free(list);
+	if ((list = malloc(size)) == NULL)
+	    return -1;
+	rc = GetAdaptersAddresses(AF_INET,
+				  GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST
+				  | GAA_FLAG_SKIP_DNS_SERVER,
+				  NULL, list, &size);
+	if (rc != ERROR_BUFFER_OVERFLOW)
+	    break;
+    }
+    if (rc != NO_ERROR) {
+	free(list);
+	return Query_fudged(sock, port, msg, msglen);
+    }
+
+    for (ad = list; ad != NULL; ad = ad->Next) {
+	if (ad->OperStatus != IfOperStatusUp
+	    || ad->IfType == IF_TYPE_SOFTWARE_LOOPBACK)
+	    continue;
+	for (IP_ADAPTER_UNICAST_ADDRESS *ua = ad->FirstUnicastAddress;
+	     ua != NULL; ua = ua->Next) {
+	    struct sockaddr_in *sin = (struct sockaddr_in *)ua->Address.lpSockaddr;
+	    unsigned prefix = ua->OnLinkPrefixLength;
+	    uint32_t host, hostmask;
+
+	    if (sin->sin_family != AF_INET || prefix == 0 || prefix > 30)
+		continue;
+	    host = ntohl(sin->sin_addr.s_addr);
+	    hostmask = 0xFFFFFFFFu >> prefix;
+
+	    memset(&addr, 0, sizeof(addr));
+	    addr.sin_family = AF_INET;
+	    addr.sin_port = htons(port);
+	    addr.sin_addr.s_addr = htonl(host | hostmask);
+	    if (sendto(sock->fd, msg, msglen, 0, (struct sockaddr *)&addr,
+		       sizeof addr) == (int)msglen) {
+		D(printf("\tsendto %s/%d\n", inet_ntoa(addr.sin_addr), port));
+		count++;
+	    } else
+		error("sendto %s/%d failed", inet_ntoa(addr.sin_addr), port);
+	}
+    }
+    free(list);
+
+    /* Always reach a server on this machine too (see below) */
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(port);
+    addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    if (sendto(sock->fd, msg, msglen, 0, (struct sockaddr *)&addr,
+	       sizeof addr) == (int)msglen)
+	count++;
+
+    if (count == 0) {
+	errno = 0;
+	count = -1;
+    }
+    return count;
+}
+#else
+
 int Query_all(sock_t *sock, int port, char *msg, size_t msglen)
 {
 #ifdef QUERY_FUDGED
@@ -389,4 +468,5 @@ int Query_all(sock_t *sock, int port, char *msg, size_t msglen)
 
 #endif	/* QUERY_FUDGED */
 }
+#endif	/* _WIN32 */
 

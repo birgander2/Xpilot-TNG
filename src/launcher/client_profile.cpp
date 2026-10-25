@@ -8,7 +8,9 @@
 #include <cstring>
 #include <fstream>
 
+#ifndef _WIN32
 #include <pwd.h>
+#endif
 #include <strings.h>
 #include <unistd.h>
 
@@ -65,8 +67,12 @@ std::vector<std::string> ReadShipShapeNames(const char* path) {
 
 // Login name of the current account (empty if unavailable)
 std::string CurrentUserName() {
+#ifdef _WIN32
+    const char* user = std::getenv("USERNAME");
+#else
     if (const passwd* pw = getpwuid(getuid())) return pw->pw_name;
     const char* user = std::getenv("USER");
+#endif
     return user ? user : "";
 }
 

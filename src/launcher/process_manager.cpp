@@ -9,12 +9,23 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#ifdef _WIN32
+#include <map>
+#include <io.h>
+#include <winsock2.h>
+#include <windows.h>
+#else
+#include <netinet/in.h>
+#include <sys/socket.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#endif
 
 ProcessManager::ProcessManager() {
+#ifdef SIGPIPE
     // Writing to a pipe whose reader died must not kill the launcher.
     signal(SIGPIPE, SIG_IGN);
+#endif
     AddLog("LAUNCHER", "Process manager ready.");
 }
 
@@ -27,7 +38,11 @@ std::string ProcessManager::CurrentTimeStr() {
     auto now = std::chrono::system_clock::now();
     std::time_t t = std::chrono::system_clock::to_time_t(now);
     std::tm tm_now;
+#ifdef _WIN32
+    localtime_s(&tm_now, &t);
+#else
     localtime_r(&t, &tm_now);
+#endif
     std::ostringstream ss;
     ss << std::put_time(&tm_now, "%H:%M:%S");
     return ss.str();
@@ -49,6 +64,177 @@ int ProcessManager::HumanCount() const {
 // --- spawning --------------------------------------------------------------
 
 namespace {
+
+#ifdef _WIN32
+
+// Children are tracked by process id; the handles live here. Each child runs in its own job
+// object, so terminating it also ends anything it spawned, and closing the launcher (which
+// closes the job handles) kills leftover children.
+struct WinChild {
+    HANDLE process = nullptr;
+    HANDLE job = nullptr;
+};
+std::map<pid_t, WinChild> g_children;
+
+// Quotes one argument following the MSVCRT/CommandLineToArgvW rules.
+void AppendQuotedArg(std::string& cmd, const std::string& arg) {
+    if (!cmd.empty()) cmd += ' ';
+    if (!arg.empty() && arg.find_first_of(" \t\n\v\"") == std::string::npos) {
+        cmd += arg;
+        return;
+    }
+    cmd += '"';
+    size_t backslashes = 0;
+    for (char c : arg) {
+        if (c == '\\') {
+            ++backslashes;
+        } else if (c == '"') {
+            cmd.append(backslashes * 2 + 1, '\\');
+            cmd += '"';
+            backslashes = 0;
+        } else {
+            cmd.append(backslashes, '\\');
+            cmd += c;
+            backslashes = 0;
+        }
+    }
+    cmd.append(backslashes * 2, '\\');
+    cmd += '"';
+}
+
+// Starts bin; returns its process id (or -1) and a CRT fd for the read end of a stdout pipe
+// (stderr too unless discard_stderr). CreateProcess appends ".exe" and searches the launcher's
+// directory first.
+pid_t Spawn(const std::string& bin, const std::vector<std::string>& args, int* read_fd,
+            bool discard_stderr = false) {
+    SECURITY_ATTRIBUTES sa{sizeof(sa), nullptr, TRUE};
+    HANDLE rd = nullptr, wr = nullptr;
+    if (!CreatePipe(&rd, &wr, &sa, 0)) return -1;
+    SetHandleInformation(rd, HANDLE_FLAG_INHERIT, 0); // only the write end goes to the child
+    HANDLE nul = CreateFileA("NUL", GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, &sa,
+                             OPEN_EXISTING, 0, nullptr);
+
+    std::string cmd;
+    AppendQuotedArg(cmd, bin);
+    for (const auto& a : args) AppendQuotedArg(cmd, a);
+    std::vector<char> cmdline(cmd.begin(), cmd.end());
+    cmdline.push_back('\0');
+
+    // Pass exactly these handles: the launcher's other pipes must not leak into the child.
+    HANDLE inherit[2] = {wr, nul};
+    SIZE_T attr_size = 0;
+    InitializeProcThreadAttributeList(nullptr, 1, 0, &attr_size);
+    std::vector<char> attr_buf(attr_size);
+    auto* attrs = reinterpret_cast<LPPROC_THREAD_ATTRIBUTE_LIST>(attr_buf.data());
+    bool have_attrs = InitializeProcThreadAttributeList(attrs, 1, 0, &attr_size) &&
+                      UpdateProcThreadAttribute(attrs, 0, PROC_THREAD_ATTRIBUTE_HANDLE_LIST, inherit,
+                                                (nul != INVALID_HANDLE_VALUE ? 2 : 1) * sizeof(HANDLE),
+                                                nullptr, nullptr);
+
+    STARTUPINFOEXA si{};
+    si.StartupInfo.cb = sizeof(si);
+    si.StartupInfo.dwFlags = STARTF_USESTDHANDLES;
+    si.StartupInfo.hStdInput = nul != INVALID_HANDLE_VALUE ? nul : nullptr;
+    si.StartupInfo.hStdOutput = wr;
+    si.StartupInfo.hStdError = (discard_stderr && nul != INVALID_HANDLE_VALUE) ? nul : wr;
+    si.lpAttributeList = have_attrs ? attrs : nullptr;
+
+    // CREATE_NO_WINDOW: the console server gets a hidden console instead of a popup window.
+    // CREATE_NEW_PROCESS_GROUP: Terminate() can send it Ctrl+Break without hitting us.
+    // CREATE_SUSPENDED: it joins its job before it can spawn anything.
+    DWORD flags = CREATE_NO_WINDOW | CREATE_NEW_PROCESS_GROUP | CREATE_SUSPENDED |
+                  (have_attrs ? EXTENDED_STARTUPINFO_PRESENT : 0);
+    PROCESS_INFORMATION pi{};
+    BOOL ok = CreateProcessA(nullptr, cmdline.data(), nullptr, nullptr, TRUE, flags, nullptr, nullptr,
+                             &si.StartupInfo, &pi);
+    if (have_attrs) DeleteProcThreadAttributeList(attrs);
+    CloseHandle(wr);
+    if (nul != INVALID_HANDLE_VALUE) CloseHandle(nul);
+    if (!ok) {
+        CloseHandle(rd);
+        return -1;
+    }
+
+    WinChild child;
+    child.process = pi.hProcess;
+    child.job = CreateJobObjectA(nullptr, nullptr);
+    if (child.job) {
+        JOBOBJECT_EXTENDED_LIMIT_INFORMATION li{};
+        li.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+        SetInformationJobObject(child.job, JobObjectExtendedLimitInformation, &li, sizeof(li));
+        AssignProcessToJobObject(child.job, pi.hProcess);
+    }
+    ResumeThread(pi.hThread);
+    CloseHandle(pi.hThread);
+
+    pid_t pid = static_cast<pid_t>(pi.dwProcessId);
+    g_children[pid] = child;
+    *read_fd = _open_osfhandle(reinterpret_cast<intptr_t>(rd), _O_RDONLY | _O_BINARY);
+    if (*read_fd < 0) CloseHandle(rd);
+    return pid;
+}
+
+void ReleaseChild(pid_t pid) {
+    auto it = g_children.find(pid);
+    if (it == g_children.end()) return;
+    CloseHandle(it->second.process);
+    if (it->second.job) CloseHandle(it->second.job);
+    g_children.erase(it);
+}
+
+// Non-blocking: true once the child ended (exit code in *code); releases its handles.
+bool Reap(pid_t pid, int* code) {
+    auto it = g_children.find(pid);
+    if (it == g_children.end()) {
+        *code = -1;
+        return true;
+    }
+    if (WaitForSingleObject(it->second.process, 0) != WAIT_OBJECT_0) return false;
+    DWORD exit_code = 0;
+    GetExitCodeProcess(it->second.process, &exit_code);
+    *code = static_cast<int>(exit_code);
+    ReleaseChild(pid);
+    return true;
+}
+
+BOOL CALLBACK CloseWindowsOf(HWND hwnd, LPARAM lparam) {
+    DWORD owner = 0;
+    GetWindowThreadProcessId(hwnd, &owner);
+    if (owner == static_cast<DWORD>(lparam)) PostMessageA(hwnd, WM_CLOSE, 0, 0);
+    return TRUE;
+}
+
+// Asks a child to quit (WM_CLOSE for the SDL client, Ctrl+Break for the console server),
+// short grace period, then kills its job.
+void Terminate(pid_t pid) {
+    auto it = g_children.find(pid);
+    if (it == g_children.end()) return;
+    EnumWindows(CloseWindowsOf, static_cast<LPARAM>(pid));
+    if (AttachConsole(static_cast<DWORD>(pid))) {
+        SetConsoleCtrlHandler(nullptr, TRUE); // the launcher itself ignores the event
+        GenerateConsoleCtrlEvent(CTRL_BREAK_EVENT, static_cast<DWORD>(pid));
+        FreeConsole();
+        SetConsoleCtrlHandler(nullptr, FALSE);
+    }
+    if (WaitForSingleObject(it->second.process, 1000) != WAIT_OBJECT_0) {
+        if (it->second.job) TerminateJobObject(it->second.job, 1);
+        else TerminateProcess(it->second.process, 1);
+        WaitForSingleObject(it->second.process, 2000);
+    }
+    ReleaseChild(pid);
+}
+
+// Reads what is available without blocking; <= 0 when the pipe is empty or closed.
+ssize_t ReadAvailable(int fd, char* buf, size_t size) {
+    DWORD avail = 0;
+    HANDLE h = reinterpret_cast<HANDLE>(_get_osfhandle(fd));
+    if (h == INVALID_HANDLE_VALUE || !PeekNamedPipe(h, nullptr, 0, nullptr, &avail, nullptr) ||
+        avail == 0)
+        return 0;
+    return _read(fd, buf, static_cast<unsigned>(std::min<size_t>(size, avail)));
+}
+
+#else // POSIX
 
 // Forks and execs; returns pid (or -1) and the read end of a combined stdout/stderr pipe.
 pid_t Spawn(const std::string& bin, const std::vector<std::string>& args, int* read_fd) {
@@ -88,13 +274,6 @@ pid_t Spawn(const std::string& bin, const std::vector<std::string>& args, int* r
     return pid;
 }
 
-std::string Describe(const std::string& bin, const std::vector<std::string>& args) {
-    std::ostringstream ss;
-    ss << bin;
-    for (const auto& a : args) ss << " " << a;
-    return ss.str();
-}
-
 // Terminates a child: SIGTERM, short grace period, then SIGKILL.
 void Terminate(pid_t pid) {
     kill(-pid, SIGTERM);
@@ -108,7 +287,85 @@ void Terminate(pid_t pid) {
     waitpid(pid, &status, 0);
 }
 
+// Non-blocking: true once the child ended (exit code in *code, -1 if killed by a signal).
+bool Reap(pid_t pid, int* code) {
+    int status = 0;
+    if (waitpid(pid, &status, WNOHANG) <= 0) return false;
+    *code = WIFEXITED(status) ? WEXITSTATUS(status) : -1;
+    return true;
+}
+
+ssize_t ReadAvailable(int fd, char* buf, size_t size) {
+    return read(fd, buf, size);
+}
+
+#endif
+
+std::string Describe(const std::string& bin, const std::vector<std::string>& args) {
+    std::ostringstream ss;
+    ss << bin;
+    for (const auto& a : args) ss << " " << a;
+    return ss.str();
+}
+
 } // namespace
+
+std::string RunAndCapture(const std::string& bin, const std::vector<std::string>& args) {
+    std::string out;
+    char buf[4096];
+#ifdef _WIN32
+    int fd = -1;
+    pid_t pid = Spawn(bin, args, &fd, true);
+    if (pid < 0) return out;
+    if (fd >= 0) {
+        int n;
+        while ((n = _read(fd, buf, sizeof(buf))) > 0) out.append(buf, n); // EOF when it exits
+        _close(fd);
+    }
+    auto it = g_children.find(pid);
+    if (it != g_children.end()) WaitForSingleObject(it->second.process, 5000);
+    int code;
+    if (!Reap(pid, &code)) Terminate(pid);
+#else
+    auto quote = [](const std::string& s) {
+        std::string q = "'";
+        for (char c : s) q += (c == '\'') ? std::string("'\\''") : std::string(1, c);
+        return q + "'";
+    };
+    std::string cmd = quote(bin);
+    for (const auto& a : args) cmd += " " + quote(a);
+    cmd += " 2>/dev/null";
+    FILE* p = popen(cmd.c_str(), "r");
+    if (!p) return out;
+    size_t n;
+    while ((n = fread(buf, 1, sizeof(buf), p)) > 0) out.append(buf, n);
+    pclose(p);
+#endif
+    return out;
+}
+
+bool IsUdpPortFree(int port) {
+#ifdef _WIN32
+    static const bool wsa_ok = [] { WSADATA d; return WSAStartup(MAKEWORD(2, 2), &d) == 0; }();
+    if (!wsa_ok) return false;
+    SOCKET sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sock == INVALID_SOCKET) return false;
+#else
+    int sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sock < 0) return false;
+#endif
+    sockaddr_in addr{};
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = INADDR_ANY;
+    addr.sin_port = htons(static_cast<uint16_t>(port));
+    int res = bind(sock, reinterpret_cast<sockaddr*>(&addr), sizeof(addr));
+#ifdef _WIN32
+    closesocket(sock);
+#else
+    close(sock);
+#endif
+    return res == 0;
+}
 
 bool ProcessManager::StartServer(const std::string& binary_path, const std::vector<std::string>& args) {
     if (server_running_) {
@@ -247,7 +504,7 @@ void ProcessManager::ReadFromFd(int fd, std::string& line_buf, const std::string
     if (fd < 0) return;
     char buffer[2048];
     for (;;) {
-        ssize_t n = read(fd, buffer, sizeof(buffer));
+        ssize_t n = ReadAvailable(fd, buffer, sizeof(buffer));
         if (n <= 0) break;
         for (ssize_t i = 0; i < n; ++i) {
             char c = buffer[i];
@@ -288,8 +545,8 @@ void ProcessManager::Update() {
     // Server
     if (server_running_ && server_pid_ > 0) {
         ReadFromFd(server_read_fd_, server_line_buf_, "SERVER");
-        int status = 0;
-        if (waitpid(server_pid_, &status, WNOHANG) > 0) {
+        int code = 0;
+        if (Reap(server_pid_, &code)) {
             ReadFromFd(server_read_fd_, server_line_buf_, "SERVER"); // drain
             close(server_read_fd_);
             server_read_fd_ = -1;
@@ -297,7 +554,7 @@ void ProcessManager::Update() {
             server_ready_ = false;
             server_pid_ = -1;
             players_.clear();
-            server_exit_code_ = WIFEXITED(status) ? WEXITSTATUS(status) : -1;
+            server_exit_code_ = code;
             server_exited_ = true;
             AddLog("LAUNCHER", "Server exited with code " + std::to_string(server_exit_code_));
             if (pending_client_launch_) {
@@ -323,14 +580,14 @@ void ProcessManager::Update() {
     // Client
     if (client_running_ && client_pid_ > 0) {
         ReadFromFd(client_read_fd_, client_line_buf_, "CLIENT");
-        int status = 0;
-        if (waitpid(client_pid_, &status, WNOHANG) > 0) {
+        int code = 0;
+        if (Reap(client_pid_, &code)) {
             ReadFromFd(client_read_fd_, client_line_buf_, "CLIENT"); // drain
             close(client_read_fd_);
             client_read_fd_ = -1;
             client_running_ = false;
             client_pid_ = -1;
-            client_exit_code_ = WIFEXITED(status) ? WEXITSTATUS(status) : -1;
+            client_exit_code_ = code;
             client_exited_ = true;
             AddLog("LAUNCHER", "Client exited with code " + std::to_string(client_exit_code_));
         }

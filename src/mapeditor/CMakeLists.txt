@@ -45,9 +45,17 @@ target_link_libraries(xpilot-tng-mapeditor PRIVATE
     m
 )
 
+if(WIN32)
+    target_link_libraries(xpilot-tng-mapeditor PRIVATE ws2_32 iphlpapi)
+    # GUI subsystem: no console window next to the application
+    set_target_properties(xpilot-tng-mapeditor PROPERTIES WIN32_EXECUTABLE ON)
+endif()
+
 install(TARGETS xpilot-tng-mapeditor DESTINATION ${CMAKE_INSTALL_BINDIR})
 
+if(NOT WIN32)
 add_custom_target(xpilot-tng-mapeditor-symlink ALL
     COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_BINARY_DIR}/xpilot-tng-mapeditor ${PROJECT_SOURCE_DIR}/xpilot-tng-mapeditor
     DEPENDS xpilot-tng-mapeditor
 )
+endif()

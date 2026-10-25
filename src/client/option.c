@@ -1194,6 +1194,18 @@ void Xpilotrc_get_filename(char *path, size_t size)
 	strlcpy(path, optionalFile, size);
 	return;
     }
+#ifdef _WIN32
+    {
+	/* %APPDATA%\xpilot-tng\xpilotrc, same as the launcher */
+	const char *appdata = getenv("APPDATA");
+
+	if (appdata != NULL && appdata[0] != '\0') {
+	    strlcpy(path, appdata, size);
+	    strlcat(path, "/xpilot-tng/xpilotrc", size);
+	    return;
+	}
+    }
+#endif
     if (xdg != NULL && xdg[0] == '/') {
 	strlcpy(path, xdg, size);
 	strlcat(path, "/xpilot-tng/xpilotrc", size);

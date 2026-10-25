@@ -474,7 +474,7 @@ int Net_init(char *server, int port)
 
     assert(server != NULL);
 
-#ifndef _WINDOWS
+#ifdef SIGPIPE
     signal(SIGPIPE, SIG_IGN);
 #endif
 

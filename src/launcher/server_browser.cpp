@@ -10,6 +10,11 @@
 #include <map>
 #include <set>
 
+#ifdef _WIN32
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <iphlpapi.h>
+#else
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <ifaddrs.h>
@@ -19,10 +24,68 @@
 #include <poll.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#endif
 
 #include "metaserver.h"
 
 namespace {
+
+// --- socket portability (sockets are kept in ints, as in the game code) -------
+
+#ifdef _WIN32
+bool NetInit() {
+    static const bool ok = [] { WSADATA d; return WSAStartup(MAKEWORD(2, 2), &d) == 0; }();
+    return ok;
+}
+int OpenSocket(int family, int type) {
+    if (!NetInit()) return -1;
+    SOCKET s = socket(family, type, 0);
+    return s == INVALID_SOCKET ? -1 : int(s);
+}
+void CloseSocket(int fd) { closesocket(SOCKET(fd)); }
+void SetNonBlocking(int fd) { u_long on = 1; ioctlsocket(SOCKET(fd), FIONBIO, &on); }
+bool ConnectPending() { return WSAGetLastError() == WSAEWOULDBLOCK; }
+int PollOne(int fd, short events, int timeout_ms) {
+    WSAPOLLFD pfd{};
+    pfd.fd = SOCKET(fd);
+    pfd.events = events;
+    return WSAPoll(&pfd, 1, timeout_ms);
+}
+
+// Calls fn(address, broadcast address) for every IPv4 address of an interface that is up.
+template <typename Fn> void ForEachIPv4(Fn fn) {
+    ULONG size = 16 * 1024, rc = ERROR_BUFFER_OVERFLOW;
+    std::vector<char> buf;
+    for (int tries = 0; tries < 3 && rc == ERROR_BUFFER_OVERFLOW; tries++) {
+        buf.resize(size);
+        rc = GetAdaptersAddresses(AF_INET, GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST |
+                                  GAA_FLAG_SKIP_DNS_SERVER, nullptr,
+                                  reinterpret_cast<IP_ADAPTER_ADDRESSES*>(buf.data()), &size);
+    }
+    if (rc != NO_ERROR) return;
+    for (auto* ad = reinterpret_cast<IP_ADAPTER_ADDRESSES*>(buf.data()); ad; ad = ad->Next) {
+        if (ad->OperStatus != IfOperStatusUp) continue;
+        for (auto* ua = ad->FirstUnicastAddress; ua; ua = ua->Next) {
+            auto* sin = reinterpret_cast<sockaddr_in*>(ua->Address.lpSockaddr);
+            if (sin->sin_family != AF_INET) continue;
+            unsigned prefix = ua->OnLinkPrefixLength;
+            in_addr bcast = sin->sin_addr;
+            if (prefix > 0 && prefix <= 30)
+                bcast.s_addr = htonl(ntohl(sin->sin_addr.s_addr) | (0xFFFFFFFFu >> prefix));
+            fn(sin->sin_addr, bcast, ad->IfType != IF_TYPE_SOFTWARE_LOOPBACK && prefix <= 30);
+        }
+    }
+}
+#else
+int OpenSocket(int family, int type) { return socket(family, type, 0); }
+void CloseSocket(int fd) { close(fd); }
+void SetNonBlocking(int fd) { fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK); }
+bool ConnectPending() { return errno == EINPROGRESS; }
+int PollOne(int fd, short events, int timeout_ms) {
+    pollfd pfd{fd, events, 0};
+    return poll(&pfd, 1, timeout_ms);
+}
+#endif
 
 using Clock = std::chrono::steady_clock;
 
@@ -84,6 +147,13 @@ bool ParseStatusReply(const char* buf, int len, uint8_t expect, ServerEntry* out
 
 std::set<std::string> LocalAddresses() {
     std::set<std::string> addrs;
+#ifdef _WIN32
+    ForEachIPv4([&](in_addr a, in_addr, bool) {
+        char buf[INET_ADDRSTRLEN];
+        if (inet_ntop(AF_INET, &a, buf, sizeof buf)) addrs.insert(buf);
+    });
+    return addrs;
+#else
     ifaddrs* list = nullptr;
     if (getifaddrs(&list) != 0) return addrs;
     for (ifaddrs* a = list; a; a = a->ifa_next) {
@@ -94,6 +164,7 @@ std::set<std::string> LocalAddresses() {
     }
     freeifaddrs(list);
     return addrs;
+#endif
 }
 
 std::vector<sockaddr_in> BroadcastTargets(int port) {
@@ -111,6 +182,11 @@ std::vector<sockaddr_in> BroadcastTargets(int port) {
     in_addr lo{};
     lo.s_addr = htonl(INADDR_LOOPBACK);
     add(lo);
+#ifdef _WIN32
+    ForEachIPv4([&](in_addr, in_addr bcast, bool can_broadcast) {
+        if (can_broadcast) add(bcast);
+    });
+#else
     ifaddrs* list = nullptr;
     if (getifaddrs(&list) == 0) {
         for (ifaddrs* a = list; a; a = a->ifa_next) {
@@ -120,15 +196,16 @@ std::vector<sockaddr_in> BroadcastTargets(int port) {
         }
         freeifaddrs(list);
     }
+#endif
     return targets;
 }
 
 int OpenUdp(bool broadcast) {
-    int fd = socket(AF_INET, SOCK_DGRAM, 0);
+    int fd = OpenSocket(AF_INET, SOCK_DGRAM);
     if (fd < 0) return -1;
     if (broadcast) {
         int on = 1;
-        setsockopt(fd, SOL_SOCKET, SO_BROADCAST, &on, sizeof on);
+        setsockopt(fd, SOL_SOCKET, SO_BROADCAST, reinterpret_cast<const char*>(&on), sizeof on);
     }
     return fd;
 }
@@ -148,8 +225,7 @@ void PingServers(std::vector<ServerEntry>& servers, const std::atomic<bool>& can
     }
     int pending = int(servers.size());
     while (pending > 0 && !cancel && ElapsedMs(start) < 2000) {
-        pollfd pfd{fd, POLLIN, 0};
-        if (poll(&pfd, 1, 100) <= 0) continue;
+        if (PollOne(fd, POLLIN, 100) <= 0) continue;
         char buf[1024];
         sockaddr_in from{};
         socklen_t flen = sizeof from;
@@ -163,7 +239,7 @@ void PingServers(std::vector<ServerEntry>& servers, const std::atomic<bool>& can
                 pending--;
             }
     }
-    close(fd);
+    CloseSocket(fd);
 }
 
 // Whole body of a TCP connection to host:port (up to a time limit). Empty on failure.
@@ -171,42 +247,44 @@ bool FetchAll(const char* host, int port, std::string* body, std::string* err, c
     addrinfo hints{}, *res = nullptr;
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
+#ifdef _WIN32
+    if (!NetInit()) { *err = "no network"; return false; }
+#endif
     if (getaddrinfo(host, std::to_string(port).c_str(), &hints, &res) != 0 || !res) {
         *err = std::string("cannot resolve ") + host;
         return false;
     }
-    int fd = socket(res->ai_family, res->ai_socktype, 0);
+    int fd = OpenSocket(res->ai_family, res->ai_socktype);
     if (fd < 0) { freeaddrinfo(res); *err = "no socket"; return false; }
-    fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK);
-    int rc = connect(fd, res->ai_addr, res->ai_addrlen);
+    SetNonBlocking(fd);
+    int rc = connect(fd, res->ai_addr, int(res->ai_addrlen));
     freeaddrinfo(res);
-    if (rc != 0 && errno == EINPROGRESS) {
-        pollfd pfd{fd, POLLOUT, 0};
+    if (rc != 0 && ConnectPending()) {
         int waited = 0;
-        while (waited < 5000 && !cancel && (rc = poll(&pfd, 1, 100)) == 0) waited += 100;
+        while (waited < 5000 && !cancel && (rc = PollOne(fd, POLLOUT, 100)) == 0) waited += 100;
         int soerr = 0;
         socklen_t sl = sizeof soerr;
-        if (rc <= 0 || getsockopt(fd, SOL_SOCKET, SO_ERROR, &soerr, &sl) != 0 || soerr != 0) {
-            close(fd);
+        if (rc <= 0 || getsockopt(fd, SOL_SOCKET, SO_ERROR, reinterpret_cast<char*>(&soerr), &sl) != 0 ||
+            soerr != 0) {
+            CloseSocket(fd);
             *err = std::string("cannot connect to ") + host;
             return false;
         }
     } else if (rc != 0) {
-        close(fd);
+        CloseSocket(fd);
         *err = std::string("cannot connect to ") + host;
         return false;
     }
     auto start = Clock::now();
     char buf[4096];
     while (!cancel && ElapsedMs(start) < 8000) {
-        pollfd pfd{fd, POLLIN, 0};
-        if (poll(&pfd, 1, 100) <= 0) continue;
-        ssize_t n = read(fd, buf, sizeof buf);
+        if (PollOne(fd, POLLIN, 100) <= 0) continue;
+        int n = int(recv(fd, buf, sizeof buf, 0));
         if (n <= 0) break;
         body->append(buf, size_t(n));
         if (body->size() > (4u << 20)) break;
     }
-    close(fd);
+    CloseSocket(fd);
     return true;
 }
 
@@ -299,8 +377,7 @@ void ServerSearch::RunLan() {
             last_send = ElapsedMs(start);
             next_send += 600;
         }
-        pollfd pfd{fd, POLLIN, 0};
-        if (poll(&pfd, 1, 50) <= 0) continue;
+        if (PollOne(fd, POLLIN, 50) <= 0) continue;
         char buf[8192];
         sockaddr_in from{};
         socklen_t flen = sizeof from;
@@ -319,7 +396,7 @@ void ServerSearch::RunLan() {
         found.push_back(e);
         Publish(found, "Searching the local network ...");
     }
-    close(fd);
+    CloseSocket(fd);
     std::sort(found.begin(), found.end(), [](const ServerEntry& a, const ServerEntry& b) { return a.ping_ms < b.ping_ms; });
     Publish(found, found.empty() ? "No servers found on the local network."
                                  : std::to_string(found.size()) + " server(s) found.");

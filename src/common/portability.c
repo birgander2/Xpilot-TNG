@@ -32,11 +32,14 @@
 #ifdef __linux__
 #include <sys/random.h>
 #endif
+#ifdef _WIN32
+#include <bcrypt.h>
+#endif
 
 
 int Get_process_id(void)
 {
-#if defined(_WINDOWS)
+#if defined(_WIN32)
     return _getpid();
 #else
     return getpid();
@@ -45,10 +48,10 @@ int Get_process_id(void)
 
 void Get_login_name(char *buf, size_t size)
 {
-#if defined(_WINDOWS)
-    long nsize = size;
-    GetUserName(buf, &nsize);
-    buf[size - 1] = '\0';
+#if defined(_WIN32)
+    const char *name = getenv("USERNAME");
+
+    strlcpy(buf, (name && name[0]) ? name : "nameless", size);
 #else
     /* Unix */
     struct passwd *p;
@@ -77,7 +80,7 @@ int xpprintf(const char* fmt, ...)
 
 bool is_this_windows(void)
 {
-#ifdef _WINDOWS
+#ifdef _WIN32
     return true;
 #else
     return false;
@@ -134,6 +137,11 @@ int gettimeofday(struct timeval *tv, struct timezone *tz)
 
 int Get_random_bytes(void *buf, size_t n)
 {
+#ifdef _WIN32
+    return BCRYPT_SUCCESS(BCryptGenRandom(NULL, buf, (ULONG)n,
+					  BCRYPT_USE_SYSTEM_PREFERRED_RNG))
+	? 0 : -1;
+#endif
 #ifdef __linux__
     if (getrandom(buf, n, 0) == (ssize_t)n)
 	return 0;

@@ -5,6 +5,8 @@
 #include <cstdio>
 #include <sstream>
 
+#include "process_manager.h"
+
 namespace xpe {
 
 std::string Lower(std::string s) {
@@ -18,26 +20,6 @@ bool IsTrue(const std::string& v) {
 }
 
 namespace {
-
-std::string RunCommand(const std::string& cmd) {
-    std::string out;
-    FILE* p = popen(cmd.c_str(), "r");
-    if (!p) return out;
-    char buf[4096];
-    size_t n;
-    while ((n = fread(buf, 1, sizeof(buf), p)) > 0) out.append(buf, n);
-    pclose(p);
-    return out;
-}
-
-std::string ShellQuote(const std::string& s) {
-    std::string o = "'";
-    for (char c : s) {
-        if (c == '\'') o += "'\\''";
-        else o += c;
-    }
-    return o + "'";
-}
 
 bool Has(const std::string& lname, std::initializer_list<const char*> keys) {
     for (const char* k : keys)
@@ -92,7 +74,7 @@ const std::vector<std::string>& OptionCatalog::Categories() {
 bool OptionCatalog::Load(const std::string& server_bin) {
     all_.clear();
     index_.clear();
-    const std::string help = RunCommand(ShellQuote(server_bin) + " -help 2>/dev/null");
+    const std::string help = RunAndCapture(server_bin, {"-help"});
     if (help.empty()) return false;
 
     std::istringstream in(help);
@@ -147,7 +129,7 @@ bool OptionCatalog::Load(const std::string& server_bin) {
         for (const auto& a : all_[i].aliases) index_.emplace(Lower(a), i);
     }
 
-    const std::string dump = RunCommand(ShellQuote(server_bin) + " -dump 2>/dev/null");
+    const std::string dump = RunAndCapture(server_bin, {"-dump"});
     std::istringstream ds(dump);
     while (std::getline(ds, line)) {
         if (line.empty() || line[0] == '#' || line[0] == ' ') continue;

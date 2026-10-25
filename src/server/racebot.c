@@ -1065,8 +1065,7 @@ bool Robot_race_map(void)
 static const char *Rb_learn_path(bool mkdirs)
 {
     static char path[PATH_MAX];
-    const char *xdg = getenv("XDG_DATA_HOME");
-    const char *home = getenv("HOME");
+    const char *base = Conf_user_data_dir();
     char name[MAX_CHARS], *p;
     int i, n = 0;
 
@@ -1082,13 +1081,9 @@ static const char *Rb_learn_path(bool mkdirs)
     if (n == 0)
 	strlcpy(name, "unnamed", sizeof(name));
 
-    if (xdg && xdg[0] == '/')
-	snprintf(path, sizeof(path), "%s/" RB_LEARN_SUBDIR "/%s.txt", xdg, name);
-    else if (home && home[0])
-	snprintf(path, sizeof(path), "%s/.local/share/" RB_LEARN_SUBDIR "/%s.txt",
-		 home, name);
-    else
+    if (base == NULL)
 	return NULL;
+    snprintf(path, sizeof(path), "%s/" RB_LEARN_SUBDIR "/%s.txt", base, name);
     if (mkdirs) {
 	for (p = path + 1; (p = strchr(p, '/')) != NULL; p++) {
 	    *p = '\0';

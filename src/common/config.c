@@ -40,10 +40,19 @@ static char datadir[PATH_MAX] = "";
 void Conf_enter_bundle_dir(void)
 {
     char exe[PATH_MAX], probe[PATH_MAX + 16];
+#ifdef _WIN32
+    DWORD n = GetModuleFileNameA(NULL, exe, sizeof(exe));
+    if (n == 0 || n >= sizeof(exe))
+        return;
+    for (char *p = exe; *p; p++)
+        if (*p == '\\')
+            *p = '/';
+#else
     ssize_t n = readlink("/proc/self/exe", exe, sizeof(exe) - 1);
     if (n <= 0)
         return;
     exe[n] = '\0';
+#endif
     char *slash = strrchr(exe, '/');
     if (!slash)
         return;
@@ -52,6 +61,38 @@ void Conf_enter_bundle_dir(void)
     if (access(probe, R_OK) == 0 && chdir(exe) != 0)
         perror("chdir");
 }
+
+/*
+ * Per-user directory for data the programs learn at runtime:
+ * $XDG_DATA_HOME or ~/.local/share, %LOCALAPPDATA% on Windows.
+ * Uses '/' separators and has no trailing slash; NULL if unknown.
+ */
+const char *Conf_user_data_dir(void)
+{
+    static char dir[PATH_MAX];
+#ifdef _WIN32
+    const char *appdata = getenv("LOCALAPPDATA");
+
+    if (appdata == NULL || appdata[0] == '\0')
+	return NULL;
+    strlcpy(dir, appdata, sizeof(dir));
+    for (char *p = dir; *p; p++)
+	if (*p == '\\')
+	    *p = '/';
+#else
+    const char *xdg = getenv("XDG_DATA_HOME");
+    const char *home = getenv("HOME");
+
+    if (xdg && xdg[0] == '/')
+	strlcpy(dir, xdg, sizeof(dir));
+    else if (home && home[0])
+	snprintf(dir, sizeof(dir), "%s/.local/share", home);
+    else
+	return NULL;
+#endif
+    return dir;
+}
+
 static char path_bufs[16][PATH_MAX];
 static int path_buf_idx = 0;
 

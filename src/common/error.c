@@ -29,6 +29,19 @@ static const char *prog_basename(const char *prog)
     const char *p;
 
     p = strrchr(prog, '/');
+#ifdef _WIN32
+    {
+	/* C:\path\xpilot-tng-client.exe -> xpilot-tng-client */
+	static char name[64];
+	const char *b = strrchr(p ? p : prog, '\\');
+	char *dot;
+
+	strlcpy(name, b ? b + 1 : (p ? p + 1 : prog), sizeof(name));
+	if ((dot = strrchr(name, '.')) != NULL && strcasecmp(dot, ".exe") == 0)
+	    *dot = '\0';
+	return name;
+    }
+#endif
 
     return (p != NULL) ? (p + 1) : prog;
 #else
