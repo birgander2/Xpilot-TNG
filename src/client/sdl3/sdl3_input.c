@@ -184,6 +184,9 @@ void SDL3_Process_Events(void)
             if (SDL3_TeamSelect_Handle_Key_Down(evt.key.key)) {
                 break;
             }
+            if (!clData.talking && SDL3_RaceResult_Handle_Key_Down(evt.key.key)) {
+                break;
+            }
             if (clData.talking) {
                 if (SDL3_Talk_Handle_Key_Down(evt.key.key, evt.key.mod)) {
                     break;
@@ -203,6 +206,9 @@ void SDL3_Process_Events(void)
             int y = (int)evt.button.y;
 
             if (SDL3_TeamSelect_Handle_Mouse_Down(x, y, evt.button.button)) {
+                break;
+            }
+            if (SDL3_RaceResult_Handle_Mouse_Down(x, y, evt.button.button)) {
                 break;
             }
 

@@ -1493,6 +1493,9 @@ void SDL3_Render_UI_Overlays(void)
 
     /* 5. Team selection dialog */
     SDL3_TeamSelect_Render();
+
+    /* 6. Race result popup (end of a race) */
+    SDL3_RaceResult_Render();
 }
 
 /* =========================================================================

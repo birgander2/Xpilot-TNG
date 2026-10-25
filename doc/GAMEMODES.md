@@ -70,6 +70,8 @@ In XPilot TNG, game modes are defined through map properties (`.xp` / `.xp2` map
   ```bash
   ./xpilot-tng-server -map grandprix.xp -timing true
   ```
+- **End of a race:** after the first player finished, the race goes on for `raceFinishTime` seconds (default 60) so the others can finish too; it ends earlier when nobody races any more. `raceFinishTime 0` keeps the old rules (the race ends with the first finish, with limited lives when at most one player is still racing).
+- **Results and records:** when a race ends, TNG clients show a popup with your total time and best lap, the standings of the race and two top ten lists: whole races and single laps. The lists hold human players only, the best time of each nick, and are kept by the server per course (map and checkpoints), number of laps and game speed in `$XDG_DATA_HOME/xpilot-tng/racetimes/` (default `~/.local/share/xpilot-tng/racetimes/`), one text file per combination. Esc, Enter, Space or a click closes the popup; it closes by itself after 30 seconds. The next race starts when every player with a TNG client has closed it (at most 35 seconds); until then all ships wait at their bases.
 
 ---
 

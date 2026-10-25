@@ -121,6 +121,7 @@ static int Receive_audio_request(connection_t *connp);
 static int Receive_fps_request(connection_t *connp);
 static int Receive_voice_request(connection_t *connp);
 static int Receive_voice(connection_t *connp);
+static int Receive_race_result_done(connection_t *connp);
 
 static int Send_motd(connection_t *connp);
 
@@ -187,6 +188,8 @@ static void Feature_init(connection_t *connp)
 	/* 0x4F16 - 0x4F1F belong to XPilot Infinity, nothing new there. */
 	if (v >= TNG_VOICE_VERSION)
 	    SET_BIT(features, F_VOICE);
+	if (v >= TNG_FIRST_VERSION)
+	    SET_BIT(features, F_RACERESULT);
     }
     connp->features = features;
     return;
@@ -332,6 +335,7 @@ static void Init_receive(void)
     playing_receive[PKT_ASYNC_FPS]		= Receive_fps_request;
     playing_receive[PKT_REQUEST_VOICE]		= Receive_voice_request;
     playing_receive[PKT_VOICE]			= Receive_voice;
+    playing_receive[PKT_RACE_RESULT]		= Receive_race_result_done;
 }
 
 /*
@@ -3188,6 +3192,36 @@ static int Receive_audio_request(connection_t *connp)
 /*
  * Tell a voice capable client how voice chat is configured.
  */
+/*
+ * Race result popup (TNG clients): a header, lines of the race standings
+ * and of both top lists, then an end mark.  Times in milliseconds.  For
+ * top list lines 'other' is the unix time of the entry, for standings the
+ * best lap.
+ */
+int Send_race_result_head(connection_t *connp, const char *map, int laps, int speed10)
+{
+    if (!FEATURE(connp, F_RACERESULT))
+	return 0;
+    return Packet_printf(&connp->c, "%c%c%s%hd%hd", PKT_RACE_RESULT,
+			 RACE_RESULT_HEAD, map, laps, speed10);
+}
+
+int Send_race_result_line(connection_t *connp, int kind, int rank, int flags,
+			  int time_ms, int other, int lap, const char *name)
+{
+    if (!FEATURE(connp, F_RACERESULT))
+	return 0;
+    return Packet_printf(&connp->c, "%c%c%c%c%d%d%c%s", PKT_RACE_RESULT, kind,
+			 rank, flags, time_ms, other, lap, name);
+}
+
+int Send_race_result_end(connection_t *connp)
+{
+    if (!FEATURE(connp, F_RACERESULT))
+	return 0;
+    return Packet_printf(&connp->c, "%c%c", PKT_RACE_RESULT, RACE_RESULT_END);
+}
+
 int Send_voice_state(connection_t *connp)
 {
     int flags = 0;
@@ -3232,6 +3266,23 @@ static int Receive_voice_request(connection_t *connp)
 	return -1;
     }
 
+    return 1;
+}
+
+/* The client closed the race result popup: the next race may start. */
+static int Receive_race_result_done(connection_t *connp)
+{
+    int n;
+    unsigned char ch;
+    player_t *pl;
+
+    if ((n = Packet_scanf(&connp->r, "%c", &ch)) <= 0) {
+	if (n == -1)
+	    Destroy_connection(connp, "read error");
+	return n;
+    }
+    if (FEATURE(connp, F_RACERESULT) && (pl = Player_by_id(connp->id)) != NULL)
+	Race_result_done(pl);
     return 1;
 }
 

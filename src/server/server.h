@@ -354,6 +354,12 @@ void Set_swapper_state(player_t *pl);
 void Race_compute_game_status(void);
 void Race_game_over(void);
 void Race_assign_startpos(void);
+
+/* racerecords.c */
+void Race_note_finish(player_t *pl, int pos);
+void Race_records_finish(void);
+bool Race_records_pause(void);
+void Race_result_done(player_t *pl);
 void Player_reset_timing(player_t *pl);
 void Player_pass_checkpoint(player_t *pl);
 void PlayerCheckpointCollision(player_t *pl);

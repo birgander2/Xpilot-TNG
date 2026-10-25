@@ -17,6 +17,7 @@ add_executable(xpilot-tng-client
     sdl3_talk.c
     sdl3_voice.c
     sdl3_teamselect.c
+    sdl3_raceresult.c
     sdl3_welcome.c
     sdl3_bitmaps.c
 )

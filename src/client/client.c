@@ -172,6 +172,8 @@ checkpoint_t        *checks = NULL;
 int                 num_checks = 0;
 mapobject_t         *mapobjects = NULL;
 int                 num_mapobjects = 0;
+race_result_t       race_result;
+static race_result_t race_result_new;	/* while it arrives */
 xp_polygon_t        *polygons = NULL;
 int                 num_polygons = 0;
 edge_style_t        *edge_styles = NULL;
@@ -1236,6 +1238,47 @@ static int Map_cleanup(void)
 	num_mapobjects = 0;
     }
     return 0;
+}
+
+
+/* Race results arrive as a header, lines and an end mark. */
+void Race_result_head(const char *map, int laps, int speed10)
+{
+    unsigned serial = race_result.serial;
+
+    memset(&race_result_new, 0, sizeof(race_result_new));
+    strlcpy(race_result_new.map, map, sizeof(race_result_new.map));
+    race_result_new.laps = laps;
+    race_result_new.speed10 = speed10;
+    race_result_new.serial = serial;
+}
+
+void Race_result_line(int kind, int rank, int flags, int time_ms, int other,
+		      int lap, const char *name)
+{
+    race_result_line_t *l = NULL;
+    race_result_t *r = &race_result_new;
+
+    if (kind == RACE_RESULT_STANDING && r->nstand < RACE_RESULT_MAX_STANDINGS)
+	l = &r->stand[r->nstand++];
+    else if (kind == RACE_RESULT_TOP_TOTAL && r->ntotal < RACE_RESULT_MAX_TOP)
+	l = &r->total[r->ntotal++];
+    else if (kind == RACE_RESULT_TOP_LAP && r->nlap < RACE_RESULT_MAX_TOP)
+	l = &r->lap[r->nlap++];
+    if (l == NULL)
+	return;
+    l->rank = rank;
+    l->flags = flags;
+    l->time_ms = time_ms;
+    l->other = other;
+    l->lap = lap;
+    strlcpy(l->name, name, sizeof(l->name));
+}
+
+void Race_result_end(void)
+{
+    race_result_new.serial = race_result.serial + 1;
+    race_result = race_result_new;
 }
 
 

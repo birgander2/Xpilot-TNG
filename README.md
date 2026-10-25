@@ -31,6 +31,7 @@ First conceived in 1991 by Bjørn Stabell and Ken Ronny Schouten, XPilot reliabl
 - 🤝 **Teamplay**: Better team selection and balancing, now with robots on your side — or against you. Try Blood's Music against a smartbot team if you dare.
 - 🐣 **Newbie mode**: Finally repaired after 30 years — now you can learn to fly without being fed to the cannons on day one.
 - 🗺️ **Map editor**: Draw your own battlefields: bases, fuel depots and cannons placed by click; every map option at your fingertips. No more counting ASCII characters.
+- 🏁 **Highscores**: Race maps now keep a hall of fame — only humans count, so the bots can't hog the podium.
 
 ---
 
@@ -144,8 +145,7 @@ Behind the scenes, mainly because there are so few players around nowadays, the 
 - They bounce shots off walls with billiards-grade geometry.
 - They sense when your fuel is low and swarm in for the kill.
 
-Give them hell, or join forces with them in team-play mode! Ball-games against pure smartbot teams are possible, but the guys still have to 
-learn that a bit better.
+Give them hell, or join forces with them in team-play mode! Ball-games against pure smartbot teams are possible, but the guys still have to learn that a bit better.
 
 📖 **For detailed usage, configuration options, in-game chat commands, and AI architecture, see the [Smartbots Documentation](doc/SMARTBOTS.md).**
 

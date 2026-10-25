@@ -99,6 +99,10 @@ const char *Player_get_dpy(player_t *pl);
 int Send_shape(connection_t *connp, int shape);
 int Check_max_clients_per_IP(char *host_addr);
 int Send_voice_state(connection_t *connp);
+int Send_race_result_head(connection_t *connp, const char *map, int laps, int speed10);
+int Send_race_result_line(connection_t *connp, int kind, int rank, int flags,
+			  int time_ms, int other, int lap, const char *name);
+int Send_race_result_end(connection_t *connp);
 
 /* voicechat.c */
 void Voice_forward(player_t *speaker, unsigned seq, int channel,
@@ -120,5 +124,6 @@ void Voice_options_changed(void);
 #define F_BALLSTYLE		(1 << 10)
 #define F_POLYSTYLE		(1 << 11)
 #define F_VOICE			(1 << 12)
+#define F_RACERESULT		(1 << 13)
 
 #endif

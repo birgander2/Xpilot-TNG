@@ -3524,6 +3524,19 @@ static option_desc opts[] = {
 	OPT_ORIGIN_ANY | OPT_VISIBLE
     },
     {
+	"raceFinishTime",
+	"raceFinishTime",
+	"60",
+	&options.raceFinishTime,
+	valReal,
+	tuner_dummy,
+	"Seconds a race goes on after the first player finished, so the\n"
+	"others can finish too. It ends earlier when nobody races any more.\n"
+	"0: the old rules (the race ends with the first finish, with limited\n"
+	"lives when at most one player is still racing).\n",
+	OPT_ORIGIN_ANY | OPT_VISIBLE
+    },
+    {
 	"loseItemDestroys",
 	"loseItemDestroys",
 	"false",

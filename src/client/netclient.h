@@ -148,6 +148,7 @@ int Receive_motd(void);
 int Receive_magic(void);
 int Send_audio_request(int on);
 int Send_fps_request(int fps);
+int Net_race_result_done(void);
 int Receive_loseitem(void);
 
 #endif

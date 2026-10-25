@@ -191,6 +191,10 @@ bool SDL3_TeamSelect_Active(void);
 bool SDL3_TeamSelect_Handle_Key_Down(SDL_Keycode key);
 bool SDL3_TeamSelect_Handle_Mouse_Down(int x, int y, int button);
 void SDL3_TeamSelect_Render(void);
+bool SDL3_RaceResult_Active(void);
+bool SDL3_RaceResult_Handle_Key_Down(SDL_Keycode key);
+bool SDL3_RaceResult_Handle_Mouse_Down(int x, int y, int button);
+void SDL3_RaceResult_Render(void);
 
 /* Audio */
 int  SDL3_Init_Audio(void);

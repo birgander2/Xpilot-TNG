@@ -247,6 +247,34 @@ typedef struct {
     irec_t	bounds;		/* Location on map */
 } checkpoint_t;
 
+/* Race results from a TNG server (PKT_RACE_RESULT), see netclient.c. */
+#define RACE_RESULT_MAX_STANDINGS	32
+#define RACE_RESULT_MAX_TOP		10
+typedef struct {
+    int		rank;		/* finishing position (0: not finished) or list rank */
+    int		flags;		/* RACE_RESULT_F_* */
+    int		time_ms;
+    int		other;		/* standings: best lap (ms), top lists: unix time */
+    int		lap;		/* standings: laps raced */
+    char	name[MAX_CHARS];
+} race_result_line_t;
+
+typedef struct {
+    char		map[MAX_CHARS];
+    int			laps, speed10;
+    int			nstand, ntotal, nlap;
+    race_result_line_t	stand[RACE_RESULT_MAX_STANDINGS];
+    race_result_line_t	total[RACE_RESULT_MAX_TOP];
+    race_result_line_t	lap[RACE_RESULT_MAX_TOP];
+    unsigned		serial;	/* counts complete results */
+} race_result_t;
+
+extern race_result_t	race_result;	/* the last complete one */
+void Race_result_head(const char *map, int laps, int speed10);
+void Race_result_line(int kind, int rank, int flags, int time_ms, int other,
+		      int lap, const char *name);
+void Race_result_end(void);
+
 /* Map object without a polygon (grav, concentrator) on a TNG polygon map. */
 typedef struct {
     int		type;		/* SETUP_* block type */

@@ -25,6 +25,9 @@
 
 #include "xpserver.h"
 
+/* frame_loops when the first player of this race finished, -1: nobody yet */
+static long race_first_finish = -1;
+
 void Race_compute_game_status(void)
 {
     /*
@@ -51,9 +54,13 @@ void Race_compute_game_status(void)
     player_t *pl;
     int num_alive_players = 0, num_active_players = 0,
 	num_finished_players = 0, num_race_over_players = 0,
-	num_waiting_players = 0, pos = 1, total_pts, i;
+	num_waiting_players = 0, num_racing_players = 0, pos = 1, total_pts, i;
     double pts;
     char msg[MSG_LEN];
+
+    /* the next race waits for the result popups */
+    if (Race_records_pause())
+	return;
 
     /*
      * kps - ng wants to handle laps here, requires change in collision.c
@@ -171,6 +178,9 @@ void Race_compute_game_status(void)
 	    else
 		CLR_BIT(pl->pl_status, FINISH);
 	}
+	/* still on the course: not finished, not out of lives */
+	if (!BIT(pl->pl_status, RACE_OVER | FINISH) && !Player_is_dead(pl))
+	    num_racing_players++;
 
 	/*
 	 * An active player is one who is:
@@ -211,6 +221,7 @@ void Race_compute_game_status(void)
 	    if (BIT(pl->pl_status, FINISH)) {
 		CLR_BIT(pl->pl_status, FINISH);
 		SET_BIT(pl->pl_status, RACE_OVER);
+		Race_note_finish(pl, pos);
 		if (pts > 0) {
 		    sprintf(msg,
 			    "%s finishes %sin position %d "
@@ -246,10 +257,28 @@ void Race_compute_game_status(void)
     }
 
     /*
+     * With raceFinishTime the race goes on after the first finish until
+     * everybody finished or is out, at most raceFinishTime seconds.
+     */
+    if (options.raceFinishTime > 0.0) {
+	if (num_finished_players + num_race_over_players > 0) {
+	    if (race_first_finish < 0) {
+		race_first_finish = frame_loops;
+		if (num_racing_players > 0)
+		    Set_message_f("The race ends in %.0f seconds. [*Server notice*]",
+				  options.raceFinishTime);
+	    }
+	    if (num_racing_players > 0
+		&& frame_loops - race_first_finish < options.raceFinishTime * FPS)
+		return;
+	} else if (num_racing_players > 0)
+	    return;
+    }
+    /*
      * In limited lives mode, wait for everyone to die, except
      * for the last player.
      */
-    if (BIT(world->rules->mode, LIMITED_LIVES)) {
+    else if (BIT(world->rules->mode, LIMITED_LIVES)) {
 	if (num_alive_players > 1)
 	    return;
 	if (num_alive_players == 1 && num_active_players == 1)
@@ -333,6 +362,9 @@ void Race_game_over(void)
     player_t *pl;
     int i, bestlap = 0, num_best_players = 0, num_active_players = 0;
 
+    /* times, records and the result popup, before everything is reset */
+    Race_records_finish();
+    race_first_finish = -1;
     Race_assign_startpos();
 
     for (i = NumPlayers - 1; i >= 0; i--)  {

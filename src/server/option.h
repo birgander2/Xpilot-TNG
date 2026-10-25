@@ -270,6 +270,7 @@ extern struct options {
     double	coriolis;
     double	checkpointRadius;
     int		raceLaps;
+    double	raceFinishTime;		/* seconds after the first finish */
     bool	lockOtherTeam;
     bool	loseItemDestroys;
     int		maxOffensiveItems;

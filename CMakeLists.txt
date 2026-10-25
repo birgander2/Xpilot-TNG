@@ -291,6 +291,7 @@ if(BUILD_SERVER)
         src/server/smartbot.c
         src/server/ballbot.c
         src/server/racebot.c
+        src/server/racerecords.c
         src/server/srecord.c
         src/server/tag.c
         src/server/target.c
