@@ -712,6 +712,34 @@ void EditorApp::DrawMap(ImDrawList* dl) {
             DrawPolygon(dl, it.polys[pi], it.kind, IsSelected(i), hover_item_ == i,
                         it.polys[pi].pts.size() >= 3 ? &Triangles(i, pi) : nullptr);
     }
+    // edge wrap: polygons reaching over the border are shown as a faint, non-selectable outline on the opposite side
+    if (map_.OptionBool("edgeWrap")) {
+        const double mw = double(map_.WidthPx()) * kClick, mh = double(map_.HeightPx()) * kClick;
+        static std::vector<ImVec2> g;
+        for (int i = 0; i < n; i++) {
+            for (const Polygon& p : map_.items[i].polys) {
+                if (p.pts.size() < 2) continue;
+                double lx = 1e18, hx = -1e18, ly = 1e18, hy = -1e18;
+                for (const Pt& q : p.pts) {
+                    lx = std::min(lx, double(q.x));
+                    hx = std::max(hx, double(q.x));
+                    ly = std::min(ly, double(q.y));
+                    hy = std::max(hy, double(q.y));
+                }
+                if (lx >= 0 && hx <= mw && ly >= 0 && hy <= mh) continue;   // fully inside, no wrapped copy
+                for (int sy = -2; sy <= 2; sy++)
+                    for (int sx = -2; sx <= 2; sx++) {
+                        if (!sx && !sy) continue;
+                        const double ox = sx * mw, oy = sy * mh;
+                        if (hx + ox < 0 || lx + ox > mw || hy + oy < 0 || ly + oy > mh) continue;
+                        g.resize(p.pts.size());
+                        for (size_t k = 0; k < p.pts.size(); k++)
+                            g[k] = ToScreen(p.pts[k].x + ox, p.pts[k].y + oy);
+                        dl->AddPolyline(g.data(), int(g.size()), IM_COL32(150, 170, 200, 110), ImDrawFlags_Closed, 1.0f);
+                    }
+            }
+        }
+    }
     for (int i = 0; i < n; i++)
         if (KindHasPos(map_.items[i].kind))
             DrawPointObject(dl, map_.items[i], i, IsSelected(i), hover_item_ == i);
