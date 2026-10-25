@@ -740,6 +740,15 @@ void EditorApp::DrawMap(ImDrawList* dl) {
             }
         }
     }
+    // smoothing preview
+    if (show_smooth_) {
+        static std::vector<ImVec2> g;
+        for (const auto& r : smooth_preview_) {
+            g.resize(r.p.pts.size());
+            for (size_t k = 0; k < r.p.pts.size(); k++) g[k] = ToScreen(r.p.pts[k]);
+            dl->AddPolyline(g.data(), int(g.size()), IM_COL32(255, 210, 60, 230), ImDrawFlags_Closed, 1.5f);
+        }
+    }
     for (int i = 0; i < n; i++)
         if (KindHasPos(map_.items[i].kind))
             DrawPointObject(dl, map_.items[i], i, IsSelected(i), hover_item_ == i);

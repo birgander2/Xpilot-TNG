@@ -434,6 +434,19 @@ int SDL3_Triangulate_Polygon(const SDL_FPoint *points, int count, int *out_indic
         SDL_FPoint c = points[V[next]];
 
         float cross = (b.x - a.x) * (c.y - b.y) - (b.y - a.y) * (c.x - b.x);
+
+        /* Collinear or duplicate vertex (straight run, zero-width spike):
+         * it adds no area, drop it instead of letting it block every ear. */
+        if (fabsf(cross) <= 1e-5f) {
+            for (int k = curr; k < remaining - 1; k++) {
+                V[k] = V[k + 1];
+            }
+            remaining--;
+            curr %= remaining;
+            count_fails = 0;
+            continue;
+        }
+
         bool is_convex = ccw ? (cross > 1e-5f) : (cross < -1e-5f);
 
         bool is_ear = is_convex;

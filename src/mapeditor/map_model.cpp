@@ -516,6 +516,135 @@ void EnsureCCW(Polygon& p) {
     p.edges = std::move(edges);
 }
 
+namespace {
+
+// Working ring for smoothing: vertex, style of its outgoing edge, fixed flag.
+struct SVtx {
+    double x, y;
+    int edge;
+    bool fixed;
+};
+
+double SegDist(const SVtx& p, const SVtx& a, const SVtx& b) {
+    const double vx = b.x - a.x, vy = b.y - a.y, len2 = vx * vx + vy * vy;
+    const double t = len2 > 0 ? std::clamp(((p.x - a.x) * vx + (p.y - a.y) * vy) / len2, 0.0, 1.0) : 0.0;
+    return std::hypot(a.x + t * vx - p.x, a.y + t * vy - p.y);
+}
+
+// Douglas-Peucker on every chain between fixed vertices of the ring.
+void SimplifyRing(std::vector<SVtx>& v, double tol) {
+    const size_t n = v.size();
+    if (n < 4 || tol <= 0) return;
+    std::vector<char> keep(n, 0);
+    std::vector<size_t> splits;
+    for (size_t i = 0; i < n; i++)
+        if (v[i].fixed) splits.push_back(i);
+    if (splits.empty()) {                       // free ring: split at vertex 0 and the vertex farthest from it
+        size_t far = 0;
+        double best = -1;
+        for (size_t i = 1; i < n; i++) {
+            const double d = std::hypot(v[i].x - v[0].x, v[i].y - v[0].y);
+            if (d > best) best = d, far = i;
+        }
+        splits = {0, far};
+    }
+    for (size_t s : splits) keep[s] = 1;
+    std::vector<std::pair<size_t, size_t>> stack;   // chains as (start, length) along the ring
+    for (size_t k = 0; k < splits.size(); k++) {
+        const size_t a = splits[k], b = splits[(k + 1) % splits.size()];
+        stack.push_back({a, (b + n - a) % n == 0 ? n : (b + n - a) % n});
+    }
+    while (!stack.empty()) {
+        const auto [a, len] = stack.back();
+        stack.pop_back();
+        if (len < 2) continue;
+        const size_t b = (a + len) % n;
+        double best = -1;
+        size_t bi = 0;
+        for (size_t j = 1; j < len; j++) {
+            const double d = SegDist(v[(a + j) % n], v[a], v[b]);
+            if (d > best) best = d, bi = j;
+        }
+        if (best <= tol) continue;
+        keep[(a + bi) % n] = 1;
+        stack.push_back({a, bi});
+        stack.push_back({(a + bi) % n, len - bi});
+    }
+    std::vector<SVtx> out;
+    for (size_t i = 0; i < n; i++)
+        if (keep[i]) out.push_back(v[i]);
+    if (out.size() >= 3) v = std::move(out);
+}
+
+// One Chaikin pass; fixed vertices stay, all others are replaced by points at 1/4 and 3/4 of their edges.
+void ChaikinRing(std::vector<SVtx>& v) {
+    const size_t n = v.size();
+    std::vector<SVtx> out;
+    out.reserve(n * 2);
+    for (size_t i = 0; i < n; i++) {
+        const SVtx& a = v[i];
+        const SVtx& b = v[(i + 1) % n];
+        if (a.fixed) out.push_back(a);
+        if (a.fixed && b.fixed) continue;       // edge between fixed vertices is kept as is
+        if (!a.fixed) out.push_back({a.x * 0.75 + b.x * 0.25, a.y * 0.75 + b.y * 0.25, a.edge, false});
+        if (!b.fixed) out.push_back({a.x * 0.25 + b.x * 0.75, a.y * 0.25 + b.y * 0.75, a.edge, false});
+    }
+    v = std::move(out);
+}
+
+} // namespace
+
+Polygon SmoothPolygon(const Polygon& p, const SmoothParams& sp, const std::vector<Pt>& anchors) {
+    const size_t n = p.pts.size();
+    if (n < 3) return p;
+    auto edge = [&](size_t i) { return i < p.edges.size() ? p.edges[i] : kEdgeDefault; };
+    std::vector<SVtx> v(n);
+    for (size_t i = 0; i < n; i++) {
+        const int e = edge(i), ep = edge((i + n - 1) % n);
+        bool fixed = e != ep || e == kEdgeInternal;
+        for (size_t k = 0; !fixed && k < anchors.size(); k++)
+            fixed = std::hypot(double(p.pts[i].x - anchors[k].x), double(p.pts[i].y - anchors[k].y)) <= sp.anchor_radius;
+        v[i] = {double(p.pts[i].x), double(p.pts[i].y), e, fixed};
+    }
+    SimplifyRing(v, sp.tolerance);
+
+    // keep sharp corners of the simplified outline
+    const double keep = sp.keep_angle * M_PI / 180.0;
+    for (size_t i = 0, m = v.size(); i < m; i++) {
+        const SVtx& a = v[(i + m - 1) % m];
+        const SVtx& b = v[(i + 1) % m];
+        const double ax = a.x - v[i].x, ay = a.y - v[i].y, bx = b.x - v[i].x, by = b.y - v[i].y;
+        const double la = std::hypot(ax, ay), lb = std::hypot(bx, by);
+        if (la > 0 && lb > 0 && std::acos(std::clamp((ax * bx + ay * by) / (la * lb), -1.0, 1.0)) < keep)
+            v[i].fixed = true;
+    }
+    for (int k = 0; k < sp.iterations; k++) ChaikinRing(v);
+
+    // back to clicks; drop duplicates from rounding and points left on straight lines
+    std::vector<SVtx> r;
+    for (const SVtx& q : v) {
+        SVtx t{std::round(q.x), std::round(q.y), q.edge, q.fixed};
+        if (!r.empty() && r.back().x == t.x && r.back().y == t.y) {
+            if (t.fixed) r.back() = t;
+            continue;
+        }
+        r.push_back(t);
+    }
+    while (r.size() > 1 && r.front().x == r.back().x && r.front().y == r.back().y) r.pop_back();
+    if (sp.iterations > 0) SimplifyRing(r, kClick * 0.5);
+    if (r.size() < 3) return p;
+
+    Polygon out = p;
+    out.pts.clear();
+    out.edges.clear();
+    for (const SVtx& q : r) {
+        out.pts.push_back({int(q.x), int(q.y)});
+        out.edges.push_back(q.edge);
+    }
+    while (!out.edges.empty() && out.edges.back() == kEdgeDefault) out.edges.pop_back();
+    return out;
+}
+
 // ============================================================================
 // validation
 // ============================================================================

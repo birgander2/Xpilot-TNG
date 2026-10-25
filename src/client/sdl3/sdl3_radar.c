@@ -205,8 +205,10 @@ static void Render_static_radar_new(void)
                 for (int j = 0; j < npts; j++) {
                     x += polygons[i].points[j].x;
                     y += polygons[i].points[j].y;
-                    pts[j].x = (float)((x * 256) / Setup->width);
-                    pts[j].y = (float)(rh - ((y * rh) / Setup->height));
+                    /* no integer division: snapping to whole radar pixels collapses
+                     * the vertices of thin walls and breaks the triangulation */
+                    pts[j].x = (float)x * 256.0f / (float)Setup->width;
+                    pts[j].y = (float)rh - (float)y * (float)rh / (float)Setup->height;
                 }
                 if (fullColor && col) {
                     SDL3_Fill_Polygon_RGB(pts, npts, col);

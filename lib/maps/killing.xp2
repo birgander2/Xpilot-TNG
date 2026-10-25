@@ -137,7 +137,8 @@
 <Option name="maxdefensiveitems" value="5"/>
 </GeneralOptions>
 <Edgestyle id="wall" width="2" color="4E7CFF" style="0"/>
-<Polystyle id="wall" color="4E7CFF" defedge="wall" flags="1"/>
+<BmpStyle id="acwise_grav.ppm" filename="limestone.ppm"/>
+<Polystyle id="wall" color="4E7CFF" defedge="wall" flags="3"/>
 <Polygon x="0" y="67200" style="wall">
 <Offset x="0" y="2240"/>
 <Offset x="4480" y="4480"/>
@@ -875,26 +876,26 @@
 <Fuel x="169120" y="184800"/>
 <Fuel x="171360" y="184800"/>
 <Fuel x="173600" y="184800"/>
-<Base x="21280" y="92960" team="0" dir="32" order="0"/>
-<Base x="28000" y="196000" team="0" dir="32" order="0"/>
-<Base x="43680" y="12320" team="0" dir="32" order="0"/>
-<Base x="54880" y="41440" team="0" dir="32" order="0"/>
-<Base x="59360" y="12320" team="0" dir="32" order="0"/>
-<Base x="61600" y="160160" team="0" dir="32" order="0"/>
-<Base x="66080" y="95200" team="0" dir="32" order="0"/>
-<Base x="66080" y="113120" team="0" dir="32" order="0"/>
-<Base x="70560" y="263200" team="0" dir="32" order="0"/>
-<Base x="90720" y="70560" team="0" dir="32" order="0"/>
-<Base x="110880" y="222880" team="0" dir="32" order="0"/>
-<Base x="117600" y="81760" team="0" dir="32" order="0"/>
-<Base x="117600" y="274400" team="0" dir="32" order="0"/>
-<Base x="124320" y="23520" team="0" dir="32" order="0"/>
-<Base x="128800" y="48160" team="0" dir="32" order="0"/>
-<Base x="142240" y="182560" team="0" dir="32" order="0"/>
-<Base x="169120" y="231840" team="0" dir="32" order="0"/>
-<Base x="175840" y="39200" team="0" dir="32" order="0"/>
-<Base x="200480" y="137760" team="0" dir="32" order="0"/>
-<Base x="207200" y="75040" team="0" dir="32" order="0"/>
-<Base x="263200" y="119840" team="0" dir="32" order="0"/>
-<Base x="267680" y="84000" team="0" dir="32" order="0"/>
+<Base team="0" x="21280" y="92960" dir="32"/>
+<Base team="0" x="28000" y="196000" dir="32"/>
+<Base team="0" x="43680" y="12320" dir="32"/>
+<Base team="0" x="54880" y="41440" dir="32"/>
+<Base team="0" x="59360" y="12320" dir="32"/>
+<Base team="0" x="61600" y="160160" dir="32"/>
+<Base team="0" x="66080" y="95200" dir="32"/>
+<Base team="0" x="66080" y="113120" dir="32"/>
+<Base team="0" x="70560" y="263200" dir="32"/>
+<Base team="0" x="90720" y="70560" dir="32"/>
+<Base team="0" x="110880" y="222880" dir="32"/>
+<Base team="0" x="117600" y="81760" dir="32"/>
+<Base team="0" x="117600" y="274400" dir="32"/>
+<Base team="0" x="124320" y="23520" dir="32"/>
+<Base team="0" x="128800" y="48160" dir="32"/>
+<Base team="0" x="142240" y="182560" dir="32"/>
+<Base team="0" x="169120" y="231840" dir="32"/>
+<Base team="0" x="175840" y="39200" dir="32"/>
+<Base team="0" x="200480" y="137760" dir="32"/>
+<Base team="0" x="207200" y="75040" dir="32"/>
+<Base team="0" x="263200" y="119840" dir="32"/>
+<Base team="0" x="267680" y="84000" dir="32"/>
 </XPilotMap>

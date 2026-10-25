@@ -320,6 +320,8 @@ void EditorApp::DrawMenuBar() {
         if (ImGui::MenuItem("Fix orientation", nullptr, false))
             FixOrientation();
         ImGui::SetItemTooltip("Make polygons counter-clockwise (selection, or whole map if nothing is selected)");
+        if (ImGui::MenuItem("Smooth polygons...", nullptr, show_smooth_)) show_smooth_ = !show_smooth_;
+        ImGui::SetItemTooltip("Remove staircase steps and round the corners of walls and areas");
         ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("View")) {
@@ -1654,6 +1656,102 @@ void EditorApp::DrawPopups() {
         if (ImGui::Button("Cancel", ImVec2(120, 0))) ImGui::CloseCurrentPopup();
         ImGui::EndPopup();
     }
+}
+
+void EditorApp::UpdateSmoothPreview() {
+    char key[256];
+    std::snprintf(key, sizeof(key), "%ld %d %.0f %d %.1f %.0f |", revision_, smooth_all_, smooth_.tolerance,
+                  smooth_.iterations, smooth_.keep_angle, smooth_.anchor_radius);
+    std::string k = key;
+    for (int i : sel_) k += std::to_string(i) + ",";
+    if (k == smooth_key_) return;
+    smooth_key_ = k;
+    smooth_preview_.clear();
+    smooth_skipped_ = 0;
+
+    std::vector<Pt> anchors;
+    if (smooth_.anchor_radius > 0)
+        for (const Item& it : map_.items)
+            if (KindHasPos(it.kind)) anchors.push_back(it.pos);
+    for (int i = 0; i < int(map_.items.size()); i++) {
+        const Item& it = map_.items[i];
+        if (!KindIsContainer(it.kind) || (!smooth_all_ && !IsSelected(i))) continue;
+        for (int pi = 0; pi < int(it.polys.size()); pi++) {
+            const Polygon& p = it.polys[pi];
+            Polygon q = SmoothPolygon(p, smooth_, anchors);
+            if (q.pts == p.pts) continue;
+            if (SelfIntersects(q.pts) && !SelfIntersects(p.pts)) {
+                smooth_skipped_++;
+                continue;
+            }
+            smooth_preview_.push_back({i, pi, std::move(q)});
+        }
+    }
+}
+
+void EditorApp::ApplySmooth() {
+    size_t before = 0, after = 0;
+    for (auto& r : smooth_preview_) {
+        Polygon& p = map_.items[r.item].polys[r.poly];
+        before += p.pts.size();
+        after += r.p.pts.size();
+        p = std::move(r.p);
+    }
+    char m[128];
+    std::snprintf(m, sizeof(m), "Smoothed %zu polygons (%zu -> %zu vertices).", smooth_preview_.size(), before, after);
+    Message(m);
+    smooth_preview_.clear();
+    Changed();
+}
+
+void EditorApp::DrawSmoothWindow() {
+    ImGui::SetNextWindowSize(ImVec2(380, 0), ImGuiCond_FirstUseEver);
+    if (!ImGui::Begin("Smooth polygons", &show_smooth_, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::End();
+        return;
+    }
+    ImGui::TextWrapped("Removes staircase steps, then rounds the corners. The preview is drawn in yellow.");
+    ImGui::Spacing();
+    if (ImGui::RadioButton("Selection", !smooth_all_)) smooth_all_ = false;
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Whole map", smooth_all_)) smooth_all_ = true;
+
+    float tol = float(smooth_.tolerance / kBlockClicks);
+    ImGui::SetNextItemWidth(200);
+    if (ImGui::SliderFloat("Straighten (blocks)", &tol, 0.0f, 4.0f, "%.2f")) smooth_.tolerance = tol * kBlockClicks;
+    ImGui::SetItemTooltip("Vertices closer than this to a straight line are removed. About 1 block removes the steps of converted .xp maps.");
+    ImGui::SetNextItemWidth(200);
+    ImGui::SliderInt("Rounding passes", &smooth_.iterations, 0, 5);
+    ImGui::SetItemTooltip("Each pass cuts every corner; more passes give rounder curves and more vertices.");
+    float ang = float(smooth_.keep_angle);
+    ImGui::SetNextItemWidth(200);
+    if (ImGui::SliderFloat("Keep corners below", &ang, 0.0f, 180.0f, "%.0f deg")) smooth_.keep_angle = ang;
+    ImGui::SetItemTooltip("Corners sharper than this angle stay sharp.");
+    float rad = float(smooth_.anchor_radius / kBlockClicks);
+    ImGui::SetNextItemWidth(200);
+    if (ImGui::SliderFloat("Keep near objects (blocks)", &rad, 0.0f, 4.0f, "%.1f")) smooth_.anchor_radius = rad * kBlockClicks;
+    ImGui::SetItemTooltip("Walls within this distance of bases, fuel, cannons etc. are not moved. 0 = off.");
+
+    UpdateSmoothPreview();
+    ImGui::Separator();
+    if (!smooth_all_ && sel_.empty()) ImGui::TextDisabled("Select walls or areas, or choose 'Whole map'.");
+    else {
+        size_t before = 0, after = 0;
+        for (const auto& r : smooth_preview_) {
+            before += map_.items[r.item].polys[r.poly].pts.size();
+            after += r.p.pts.size();
+        }
+        ImGui::Text("%zu polygons, %zu -> %zu vertices", smooth_preview_.size(), before, after);
+        if (smooth_skipped_)
+            ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.3f, 1.0f), "%d polygons skipped (result would intersect itself)",
+                               smooth_skipped_);
+    }
+    ImGui::BeginDisabled(smooth_preview_.empty());
+    if (ImGui::Button("Apply", ImVec2(120, 0))) ApplySmooth();
+    ImGui::EndDisabled();
+    ImGui::SameLine();
+    if (ImGui::Button("Close", ImVec2(120, 0))) show_smooth_ = false;
+    ImGui::End();
 }
 
 void EditorApp::DrawHelpWindow() {

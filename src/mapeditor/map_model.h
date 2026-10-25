@@ -172,6 +172,17 @@ void TranslateItem(Item& it, int dx, int dy);
 // Maps use counter-clockwise outlines (y up); reverses p if needed, keeping edge styles.
 void EnsureCCW(Polygon& p);
 
+// Polygon smoothing: removes staircase vertices (Douglas-Peucker), then rounds corners
+// (Chaikin corner cutting). Vertices next to internal edges, at edge style changes,
+// near an anchor (object position) and corners sharper than keep_angle stay where they are.
+struct SmoothParams {
+    double tolerance = kBlockClicks;            // simplification tolerance in clicks
+    int iterations = 3;                         // rounding passes
+    double keep_angle = 60.0;                   // degrees; sharper corners are kept
+    double anchor_radius = kBlockClicks;        // clicks; vertices this close to an anchor are kept
+};
+Polygon SmoothPolygon(const Polygon& p, const SmoothParams& sp, const std::vector<Pt>& anchors);
+
 // --- validation -------------------------------------------------------------
 struct Problem {
     bool error = false;         // false = warning

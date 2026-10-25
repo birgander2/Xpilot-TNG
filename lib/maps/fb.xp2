@@ -51,7 +51,7 @@
 <Option name="timing" value="no"/>
 <Option name="edgewrap" value="no"/>
 <Option name="edgebounce" value="yes"/>
-<Option name="framesPerSecond" value="14"/>
+<Option name="framesPerSecond" value="50"/>
 <Option name="allowShipShapes" value="True"/>
 <Option name="playersOnRadar" value="True"/>
 <Option name="missilesOnRadar" value="True"/>
@@ -124,7 +124,7 @@
 </GeneralOptions>
 <Edgestyle id="wall_es" width="-1" color="6FC6EF" style="0"/>
 <Edgestyle id="treasure_es" width="-1" color="FF0000" style="0"/>
-<Polystyle id="wall_ps" color="4E7CFF" defedge="wall_es" flags="0"/>
+<Polystyle id="wall_ps" color="A3BBFF" defedge="wall_es" flags="1"/>
 <Polystyle id="treasure_ps" color="FF0000" defedge="treasure_es" flags="0"/>
 <Polygon x="123200" y="0" style="wall_ps">
 <Offset x="4480" y="0"/>
