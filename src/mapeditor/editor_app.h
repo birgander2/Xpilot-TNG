@@ -123,6 +123,9 @@ private:
     void DrawLogWindow();
     void DrawPopups();
     void DrawHelpWindow();
+    void DrawSmoothWindow();
+    void UpdateSmoothPreview();
+    void ApplySmooth();
     bool PolyStyleCombo(const char* label, int* style, bool allow_none, const char* none_label = "(none)");
     bool EdgeStyleCombo(const char* label, int* edge);
     bool TeamCombo(const char* label, int* team, bool allow_none);
@@ -235,6 +238,18 @@ private:
     long problems_rev_ = -1;
     bool show_help_ = false;
     bool show_log_ = false;
+
+    // polygon smoothing (Edit > Smooth polygons)
+    struct SmoothResult {
+        int item = -1, poly = -1;
+        xpe::Polygon p;
+    };
+    bool show_smooth_ = false;
+    bool smooth_all_ = false;           // whole map instead of the selection
+    xpe::SmoothParams smooth_;
+    std::vector<SmoothResult> smooth_preview_;
+    std::string smooth_key_;            // inputs of the current preview
+    int smooth_skipped_ = 0;            // polygons left alone because the result intersects itself
     bool open_new_popup_ = false, open_open_popup_ = false, open_save_popup_ = false;
     bool open_unsaved_popup_ = false, open_scale_popup_ = false;
     int new_w_ = 3500, new_h_ = 3500;

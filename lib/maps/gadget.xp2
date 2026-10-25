@@ -1,5 +1,5 @@
 <XPilotMap version="1.1"
-           description="Team deathmatch with 3 teams">
+           description="Dogfight / deathmatch">
 <GeneralOptions>
 <Option name="mapName" value="Inspector Gadget"/>
 <Option name="mapAuthor" value="John E. Norlin"/>
@@ -24,10 +24,15 @@
 <Edgestyle id="cannon_es" width="3" color="FFFFFF" style="0"/>
 <Edgestyle id="destroyed_es" width="3" color="FF0000" style="0"/>
 <Edgestyle id="wormhole_es" width="-1" color="00FFFF" style="0"/>
-<Polystyle id="wall_ps" color="4E7CFF" defedge="wall_es" flags="0"/>
+<BmpStyle id="asteroid" filename="asteroid.ppm"/>
+<Polystyle id="wall_ps" color="4E7CFF" defedge="wall_es" flags="2"/>
 <Polystyle id="cannon_ps" color="FFFFFF" defedge="cannon_es" flags="0"/>
 <Polystyle id="destroyed_ps" color="FF0000" defedge="destroyed_es" flags="12"/>
 <Polystyle id="wormhole_ps" color="00FFFF" defedge="wormhole_es" flags="8"/>
+<Polystyle id="wall_ps2" color="4E7CFF" defedge="wall_es" flags="2"/>
+<Polystyle id="wall_ps22" color="4E7CFF" defedge="wall_es" flags="2"/>
+<Polystyle id="wall_ps222" color="4E7CFF" defedge="wall_es" flags="2"/>
+<Polystyle id="wall_ps2222" color="4E7CFF" defedge="wall_es" flags="2"/>
 <Polygon x="313600" y="275520" style="wall_ps">
 <Offset x="2240" y="0"/>
 <Offset x="2240" y="2240"/>

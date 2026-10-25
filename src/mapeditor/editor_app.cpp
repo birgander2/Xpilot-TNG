@@ -734,6 +734,7 @@ void EditorApp::RenderUI() {
 
     DrawPopups();
     if (show_help_) DrawHelpWindow();
+    if (show_smooth_) DrawSmoothWindow();
     HandleShortcuts();
     CommitIfIdle();
 }
