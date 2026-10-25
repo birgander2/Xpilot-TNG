@@ -27,6 +27,10 @@ cmake -B build
 cmake --build build -j$(nproc)
 ```
 
+Without `-DCMAKE_BUILD_TYPE=...` the build type is `Release` (optimised). Use
+`-DCMAKE_BUILD_TYPE=RelWithDebInfo` or `Debug` for debugging; an unoptimised
+server is several times slower, too slow for robots on a Raspberry Pi.
+
 The binaries `xpilot-tng-server`, `xpilot-tng-client` and `xpilot-tng-launcher`
 end up directly in the build directory. `make` additionally creates symlinks
 for server and client in the project root, so you can run them from there:

@@ -138,7 +138,7 @@
 </GeneralOptions>
 <Edgestyle id="wall" width="2" color="4E7CFF" style="0"/>
 <BmpStyle id="acwise_grav.ppm" filename="limestone.ppm"/>
-<Polystyle id="wall" color="4E7CFF" defedge="wall" flags="3"/>
+<Polystyle id="wall" color="213368" defedge="wall" flags="1"/>
 <Polygon x="0" y="67200" style="wall">
 <Offset x="0" y="2240"/>
 <Offset x="4480" y="4480"/>

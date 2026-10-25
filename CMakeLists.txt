@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.25)
 project(xpilot-tng VERSION 5.0.2 LANGUAGES C CXX)
 
+# Without a build type CMake compiles without optimisation, which makes the
+# server's robots several times slower (too slow for a Raspberry Pi).
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type (Release, RelWithDebInfo, Debug)" FORCE)
+endif()
+
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 20)

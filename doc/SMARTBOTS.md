@@ -427,7 +427,7 @@ The constants are `RB_POWER_LOSS`, `RB_STEER_ERR` and `RB_PLAN_NOISE` in `racebo
 
 ### CPU usage
 
-The map analysis takes a fraction of a second. Racing, 4 race bots use about 3 % of one desktop core.
+The map analysis takes a fraction of a second. On *Grand Prix* at its normal speed, 4 racing race bots use about 9 % of one desktop core in an optimised build (the default build type is `Release`); an unoptimised build needs over four times that. Expect roughly 6–8 times the load on a Raspberry Pi 4. Most of the work are the rollouts; the farthest visible point of the racing line that their racing policy flies at is kept per navigation cell, which halved the load.
 
 ### Chat commands
 

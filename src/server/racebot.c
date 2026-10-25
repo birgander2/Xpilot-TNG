@@ -90,6 +90,7 @@
 typedef struct {
     float	*dist;		/* cost to the goal per nav cell (px) */
     int32_t	*next;		/* next cell towards the goal, -2 in the goal */
+    int32_t	*carrot;	/* per cell: carrot cell * 2 + is_goal, -1 unknown */
     double	gx, gy;		/* goal (px) */
     bool	valid;
 } rb_field_t;
@@ -590,8 +591,10 @@ static void Rb_field_free(rb_field_t *fd)
 	return;
     free(fd->dist);
     free(fd->next);
+    free(fd->carrot);
     fd->dist = NULL;
     fd->next = NULL;
+    fd->carrot = NULL;
     fd->valid = false;
 }
 
@@ -646,6 +649,8 @@ static bool Rb_field_compute(rb_field_t *fd, double gx, double gy, double seed_r
 
     if (cost == NULL)
 	cost = NavCost;
+    free(fd->carrot);		/* carrots of an old field are wrong */
+    fd->carrot = NULL;
     if (fd->dist == NULL || fd->next == NULL) {
 	Rb_field_free(fd);
 	fd->dist = malloc(sizeof(float) * NavN);
@@ -798,6 +803,39 @@ static bool Rb_field_carrot(const rb_field_t *fd, double x, double y,
 	*cy = NavRY[nx];
 	cur = nx;
     }
+    return true;
+}
+
+/*
+ * The carrot of the cell (x, y) lies in, seen from the cell's node, kept
+ * per cell: the rollouts' racing policy asks for it all the time.
+ */
+static bool Rb_field_carrot_cell(rb_field_t *fd, double x, double y,
+				 double *cx, double *cy, bool *is_goal)
+{
+    int c = Rb_field_best_cell(fd, x, y, NULL), k;
+
+    if (c < 0 || fd->next == NULL)
+	return false;
+    if (fd->carrot == NULL) {
+	fd->carrot = malloc(sizeof(int32_t) * NavN);
+	if (fd->carrot == NULL)
+	    return Rb_field_carrot(fd, x, y, RB_SHIP_R + 6.0, 10, cx, cy, is_goal);
+	for (k = 0; k < NavN; k++)
+	    fd->carrot[k] = -1;
+    }
+    if (fd->carrot[c] < 0) {
+	double rx, ry;
+	bool g;
+
+	if (!Rb_field_carrot(fd, NavRX[c], NavRY[c], RB_SHIP_R + 6.0, 10, &rx, &ry, &g))
+	    return false;
+	fd->carrot[c] = Rb_nav_cell(rx, ry) * 2 + (g ? 1 : 0);
+    }
+    k = fd->carrot[c] / 2;
+    *cx = NavRX[k];
+    *cy = NavRY[k];
+    *is_goal = fd->carrot[c] & 1;
     return true;
 }
 
@@ -1565,8 +1603,8 @@ static double Rb_rollout(const rb_ctx_t *cx, const rb_cand_t *cand, rb_cand_t *r
 		const rb_field_t *fd = Rb_cur_field(cx, &s);
 		double ax = cx->ox + s.x, ay = cx->oy + s.y, rx, ry;
 
-		if (fd && Rb_field_carrot(fd, ax, ay, RB_SHIP_R + 6.0, 10, &rx, &ry,
-					  &car_goal)) {
+		/* the cache is no change of the field: cast the const away */
+		if (fd && Rb_field_carrot_cell((rb_field_t *)fd, ax, ay, &rx, &ry, &car_goal)) {
 		    carx = Rb_wdx(rx - cx->ox);
 		    cary = Rb_wdy(ry - cx->oy);
 		} else if (!cx->race) {
