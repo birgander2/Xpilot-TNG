@@ -168,7 +168,10 @@ static void Convert_to_host(void *start, int len, int type)
 static void Dump_data(void)
 {
     int i, len, len2;
+    FILE *f = recf1;
 
+    if (f == NULL)
+	return;
     *playback_sched++ = 127;
 #ifdef RECSTAT
     printf("Recording sizes: ");
@@ -180,12 +183,12 @@ static void Dump_data(void)
 #endif
 	Convert_from_host(bufs[i].start, len, bufs[i].type);
 	len2 = htonl(len);
-	fwrite(&len2, 4, 1, recf1);
-	fwrite(bufs[i].start, 1, len, recf1);
+	fwrite(&len2, 4, 1, f);
+	fwrite(bufs[i].start, 1, len, f);
 	*bufs[i].curp = bufs[i].start;
     }
     if (options.recordFlushInterval)
-	fflush(recf1);
+	fflush(f);
 #ifdef RECSTAT
     printf("\n");
 #endif

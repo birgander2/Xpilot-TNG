@@ -3114,7 +3114,7 @@ static void Bb_behave_carry(player_t *pl, bb_data_t *d, bb_goal_t *g,
      * target, arriving with its velocity along the line.
      */
     if (ball->ball_treasure->team != pl->team) {
-	double gd = Bb_dist(bx, by, g->gx, g->gy), ux, uy, R = 300.0;
+	double gd = Bb_dist(bx, by, g->gx, g->gy), ux = 0.0, uy = 0.0, R = 300.0;
 
 	if (gd > 1100.0)
 	    d->in_line = false;
