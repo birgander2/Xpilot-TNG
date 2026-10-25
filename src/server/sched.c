@@ -29,13 +29,20 @@
 #include "xpserver.h"
 
 /* Windows incorrectly uses u_int in FD_CLR */
-#ifdef _WINDOWS
-typedef	u_int	FDTYPE;
+#ifdef _WIN32
+typedef	SOCKET	FDTYPE;
 #else
 typedef	int	FDTYPE;
 #endif
 
-#ifndef _WINDOWS
+#if defined(_WIN32)
+/*
+ * Winsock SOCKETs are kernel handles (multiples of 4, often in the
+ * thousands), not small consecutive descriptors: index the handler
+ * tables by the handle value itself (min_fd stays 0).
+ */
+#define NUM_SELECT_FD		16384
+#elif !defined(_WINDOWS)
 #define NUM_SELECT_FD		((int)sizeof(int) * 8)
 #else
 /*
@@ -93,7 +100,7 @@ void install_input(void (*func)(int, void *), int fd, void *arg)
     if (input_inited == false) {
 	input_inited = true;
 	FD_ZERO(&input_mask);
-#ifndef _WINDOWS
+#if !defined(_WINDOWS) && !defined(_WIN32)
 	min_fd = fd;
 #else
 	min_fd = 0;
@@ -263,7 +270,7 @@ void sched(void)
 	n = select(max_fd + 1, &readmask, NULL, NULL, &wait_tv);
 
 	if (n <= 0) {
-	    if (n == -1 && errno != EINTR)
+	    if (n == -1 && sock_last_error() != EINTR)
 		sched_select_error();
 
 	    /* RECORDING STUFF */
@@ -674,7 +681,7 @@ void sched(void)
 	    Handle_recording_buffers();
 	    n = select(max_fd + 1, &readmask, 0, 0, tvp);
 	    if (n <= 0) {
-		if (n == -1 && errno != EINTR)
+		if (n == -1 && sock_last_error() != EINTR)
 		    sched_select_error();
 		io_todo = 0;
 	    }
@@ -750,7 +757,7 @@ void sched(void)
 	readmask = input_mask;
 	n = select(max_fd + 1, &readmask, 0, 0, tvp);
 	if (n <= 0) {
-	    if (n == -1 && errno != EINTR) {
+	    if (n == -1 && sock_last_error() != EINTR) {
 		sched_select_error();
 	    }
 	    io_todo = 0;

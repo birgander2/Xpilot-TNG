@@ -32,6 +32,13 @@ void CopyTo(char* dst, size_t cap, const std::string& s) {
 // Returns a human-readable problem description, or "" if the binary looks runnable.
 // Missing shared libraries (e.g. libSDL3_ttf) are found via ldd without starting the binary.
 std::string CheckBinary(const std::string& label, const std::string& path) {
+#ifdef _WIN32
+    // Statically linked: there are no shared libraries to check.
+    if (path.find_first_of("/\\") == std::string::npos) return "";   // searched at start time
+    if (access(path.c_str(), R_OK) != 0)
+        return "The " + label + " was not found (" + path + "). Is the installation complete?";
+    return "";
+#else
     if (path.find('/') == std::string::npos) return "";   // resolved via PATH at exec time
     if (access(path.c_str(), X_OK) != 0)
         return "The " + label + " was not found or is not executable (" + path + "). Did the build finish?";
@@ -56,6 +63,7 @@ std::string CheckBinary(const std::string& label, const std::string& path) {
     if (missing.empty()) return "";
     return "The " + label + " cannot start: missing system library " + missing +
            ". Please install the matching package (e.g. SDL3_ttf) and restart the launcher.";
+#endif
 }
 
 } // namespace
@@ -81,7 +89,12 @@ std::string LauncherApp::FindRoot() const {
     return "";
 }
 
-std::string LauncherApp::ResolveBinaryPath(const std::string& bin_name) const {
+std::string LauncherApp::ResolveBinaryPath(const std::string& name) const {
+#ifdef _WIN32
+    const std::string bin_name = name + ".exe";
+#else
+    const std::string& bin_name = name;
+#endif
     std::vector<std::string> candidates = {
         root_dir_ + "/" + bin_name, root_dir_ + "/build/" + bin_name,
         app_dir_ + "/" + bin_name,  app_dir_ + "/../" + bin_name,

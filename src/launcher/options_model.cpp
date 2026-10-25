@@ -6,10 +6,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
-#include <netinet/in.h>
 #include <sstream>
-#include <sys/socket.h>
-#include <unistd.h>
+#include "process_manager.h"
 
 namespace {
 
@@ -80,15 +78,7 @@ bool OptionsManager::SameValue(const std::string& a, const std::string& b) {
 // --- ports -----------------------------------------------------------------
 
 bool OptionsManager::IsPortFree(int port) {
-    int sock = socket(AF_INET, SOCK_DGRAM, 0);
-    if (sock < 0) return false;
-    sockaddr_in addr{};
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = INADDR_ANY;
-    addr.sin_port = htons(static_cast<uint16_t>(port));
-    int res = bind(sock, reinterpret_cast<sockaddr*>(&addr), sizeof(addr));
-    close(sock);
-    return res == 0;
+    return IsUdpPortFree(port);
 }
 
 int OptionsManager::FindFreePort(int start_port) {
@@ -113,12 +103,10 @@ bool OptionsManager::LoadBaseline(const std::string& server_bin, const std::stri
     base_.clear();
     defaults_keys_.clear();
 
-    std::string cmd = "'" + server_bin + "' -dump 2>/dev/null";
-    FILE* p = popen(cmd.c_str(), "r");
-    if (!p) return false;
-    char buf[4096];
-    while (fgets(buf, sizeof(buf), p)) {
-        std::string line = Trim(buf);
+    std::istringstream dump(RunAndCapture(server_bin, {"-dump"}));
+    std::string raw;
+    while (std::getline(dump, raw)) {
+        std::string line = Trim(raw);
         if (line.empty() || line[0] == '#') continue;
         size_t colon = line.find(':');
         if (colon == std::string::npos) continue;
@@ -130,7 +118,6 @@ bool OptionsManager::LoadBaseline(const std::string& server_bin, const std::stri
         e.is_bool = (e.value == "true" || e.value == "false");
         base_[Lower(key)] = e;
     }
-    pclose(p);
     if (base_.empty()) return false;
 
     // lib/defaults.txt is honoured by a normal server start, so it is part of the baseline.

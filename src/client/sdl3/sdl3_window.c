@@ -221,7 +221,7 @@ void SDL3_Game_Loop(void)
         }
 
         if ((n = select(netfd + 1, &rfds, NULL, NULL, &tv)) == -1) {
-            if (errno == EINTR)
+            if (sock_last_error() == EINTR)
                 continue;
             error("Select failed");
             return;

@@ -78,6 +78,13 @@ The resulting binaries will be right inside `build/` (and symlinked directly int
 - `./xpilot-tng-server` (or `build/xpilot-tng-server`)
 - `./xpilot-tng-client` (or `build/xpilot-tng-client`)
 
+### Windows release (cross-compiled on Linux)
+Needs MinGW-w64 with the POSIX thread model (Debian/Ubuntu: `sudo apt install g++-mingw-w64-x86-64-posix`), `git` and `zip`:
+```bash
+./build_win.sh
+```
+The first run downloads and statically builds SDL3, SDL3_ttf, Opus, zlib and expat. The result is `Xpilot-TNG_windows.zip`: self-contained `.exe` files (no DLLs) next to `lib/`. Unpack it anywhere and start `xpilot-tng-launcher.exe`. Settings are stored in `%APPDATA%\xpilot-tng\`, learned bot data in `%LOCALAPPDATA%\xpilot-tng\`.
+
 ---
 
 ## 🎮 Quickstart: Jumping into Battle

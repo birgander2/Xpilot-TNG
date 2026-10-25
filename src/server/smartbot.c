@@ -283,16 +283,12 @@ static inline int Smart_get_effective_level(robot_smart_data_t *my_data)
 static const char *Smart_brain_path(bool mkdirs)
 {
     static char path[PATH_MAX];
-    const char *xdg = getenv("XDG_DATA_HOME");
-    const char *home = getenv("HOME");
+    const char *base = Conf_user_data_dir();
     char *p;
 
-    if (xdg && xdg[0] == '/')
-	snprintf(path, sizeof(path), "%s/" SMART_BRAIN_SUBDIR "/" SMART_BRAIN_FILE, xdg);
-    else if (home && home[0])
-	snprintf(path, sizeof(path), "%s/.local/share/" SMART_BRAIN_SUBDIR "/" SMART_BRAIN_FILE, home);
-    else
+    if (base == NULL)
 	return NULL;
+    snprintf(path, sizeof(path), "%s/" SMART_BRAIN_SUBDIR "/" SMART_BRAIN_FILE, base);
 
     if (mkdirs) {
 	for (p = path + 1; (p = strchr(p, '/')) != NULL; p++) {

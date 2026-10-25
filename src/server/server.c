@@ -78,6 +78,13 @@ int main(int argc, char **argv)
 	return 1;
     }
 
+#ifdef _WIN32
+    /* select() timeouts otherwise have ~15.6 ms granularity: no steady 50 fps */
+    timeBeginPeriod(1);
+    /* Log lines must appear immediately, also when piped to the launcher */
+    setvbuf(stdout, NULL, _IONBF, 0);
+#endif
+
     if (World_init() < 0) {
 	warn("Error initializing world\n");
 	return 1;
@@ -161,18 +168,23 @@ int main(int argc, char **argv)
     if (Setup_net_server() == -1)
 	End_game();
 
-#ifndef _WINDOWS
+#ifdef SIGHUP
     if (options.NoQuit || options.RawMode)
 	signal(SIGHUP, SIG_IGN);
     else
 	signal(SIGHUP, Handle_signal);
+#endif
     signal(SIGTERM, Handle_signal);
     signal(SIGINT, Handle_signal);
+#ifdef SIGBREAK
+    signal(SIGBREAK, Handle_signal);	/* Windows console Ctrl+Break / close */
+#endif
+#ifdef SIGPIPE
     signal(SIGPIPE, SIG_IGN);
+#endif
 #ifdef IGNORE_FPE
     signal(SIGFPE, SIG_IGN);
 #endif
-#endif	/* _WINDOWS */
 
     /*
      * Set the time the server started

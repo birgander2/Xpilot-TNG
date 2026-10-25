@@ -69,6 +69,13 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+#ifdef _WIN32
+    /* The game loop waits in 2 ms select() steps; default granularity is ~15.6 ms */
+    timeBeginPeriod(1);
+    /* A pipe (launcher log view) is fully buffered by the Windows CRT */
+    setvbuf(stdout, NULL, _IONBF, 0);
+#endif
+
     if (SDL3_Init_Window(DEF_TOP_WIDTH, DEF_TOP_HEIGHT) != 0) {
         fprintf(stderr, "Failed to initialize SDL3 window.\n");
         return 1;

@@ -37,6 +37,11 @@ target_link_libraries(xpilot-tng-client PRIVATE
     m
 )
 
+if(WIN32)
+    # GUI subsystem: no console window; output still reaches the launcher's log pipe
+    set_target_properties(xpilot-tng-client PROPERTIES WIN32_EXECUTABLE ON)
+endif()
+
 # Voice chat needs libopus; without it the client builds without voice.
 option(ENABLE_VOICE "Enable voice chat (requires libopus)" ON)
 if(ENABLE_VOICE)
@@ -95,10 +100,12 @@ if(ENABLE_VOICE)
     endif()
 endif()
 
+if(NOT WIN32)
 add_custom_target(xpilot-tng-sdl3 ALL
     COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE_NAME:xpilot-tng-client> ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/xpilot-tng-sdl3
     DEPENDS xpilot-tng-client
 )
+endif()
 
 install(TARGETS xpilot-tng-client DESTINATION ${CMAKE_INSTALL_BINDIR})
 

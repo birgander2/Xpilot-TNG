@@ -81,6 +81,8 @@ typedef struct sock_s {
 
 int sock_startup(void);
 void sock_cleanup(void);
+int sock_last_error(void);
+int sock_close_fd(int fd);
 int sock_init(sock_t *sock);
 int sock_close(sock_t *sock);
 int sock_set_non_blocking(sock_t *sock, int flag);

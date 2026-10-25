@@ -1603,7 +1603,7 @@ void EditorApp::DrawPopups() {
 
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
     if (ImGui::BeginPopupModal("Unsaved changes", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::Text("Save changes to %s?", path_.empty() ? "the new map" : fs::path(path_).filename().c_str());
+        ImGui::Text("Save changes to %s?", path_.empty() ? "the new map" : fs::path(path_).filename().string().c_str());
         ImGui::Spacing();
         if (ImGui::Button("Save", ImVec2(110, 0))) {
             ImGui::CloseCurrentPopup();

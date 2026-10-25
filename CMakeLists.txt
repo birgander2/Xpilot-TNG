@@ -23,16 +23,39 @@ option(SANITIZE "Build with AddressSanitizer and UndefinedBehaviorSanitizer (for
 option(BUILD_TESTS "Build the security regression and fuzz tests" OFF)
 option(FETCH_SDL3 "Download and build SDL3 / SDL3_ttf if not installed on system" OFF)
 option(FETCH_OPUS "Download and build Opus (static) if not installed on system" OFF)
+# Windows builds have no system libraries to link against: fetch everything by default
+if(WIN32)
+    set(_fetch_default ON)
+else()
+    set(_fetch_default OFF)
+endif()
+option(FETCH_DEPS "Download and build zlib / expat (static) instead of using system packages" ${_fetch_default})
+if(WIN32 AND FETCH_DEPS)
+    set(FETCH_SDL3 ON CACHE BOOL "" FORCE)
+    set(FETCH_OPUS ON CACHE BOOL "" FORCE)
+endif()
 
 # Compiler Definitions & Flags
 add_compile_definitions(_GNU_SOURCE HAVE_CONFIG_H)
+if(WIN32)
+    # Windows Vista+ API (inet_ntop, WSAPoll, GetAdaptersAddresses); no min/max macros
+    # FD_SETSIZE: Winsock's default fd_set holds only 64 sockets
+    add_compile_definitions(_WIN32_WINNT=0x0601 WIN32_LEAN_AND_MEAN NOMINMAX
+                            __USE_MINGW_ANSI_STDIO=1 FD_SETSIZE=1024)
+    # Self-contained executables: no libgcc / libstdc++ / winpthread DLLs
+    add_link_options(-static -static-libgcc -static-libstdc++)
+endif()
 
 if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
     add_compile_options(-Wall -Wextra -Wno-unused-parameter -Wno-sign-compare)
 
     # Hardening (FORTIFY_SOURCE needs optimization, so skip it for Debug)
     option(HARDENING "Enable compiler/linker hardening flags" ON)
-    if(HARDENING)
+    if(HARDENING AND WIN32)
+        add_compile_options(-fstack-protector-strong)
+        add_link_options(-fstack-protector-strong
+                         -Wl,--dynamicbase,--nxcompat,--high-entropy-va)
+    elseif(HARDENING)
         add_compile_options(-fstack-protector-strong -fstack-clash-protection
                             -fno-strict-overflow -fPIE
                             $<$<NOT:$<CONFIG:Debug>>:-U_FORTIFY_SOURCE>
@@ -48,8 +71,46 @@ endif()
 
 # Find System Dependencies
 find_package(Threads REQUIRED)
-find_package(ZLIB REQUIRED)
-find_package(EXPAT REQUIRED)
+if(FETCH_DEPS)
+    include(FetchContent)
+    message(STATUS "FETCH_DEPS enabled: downloading and compiling zlib & expat...")
+    set(_fetch_exclude)
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.28)
+        set(_fetch_exclude EXCLUDE_FROM_ALL)
+    endif()
+
+    set(ZLIB_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+    FetchContent_Declare(zlib
+        URL https://github.com/madler/zlib/releases/download/v1.3.1/zlib-1.3.1.tar.gz
+        URL_HASH SHA256=9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23
+        ${_fetch_exclude})
+    FetchContent_MakeAvailable(zlib)
+    # zlib's own targets carry no usage requirements; wrap the static one
+    add_library(xp_zlib INTERFACE)
+    target_link_libraries(xp_zlib INTERFACE zlibstatic)
+    target_include_directories(xp_zlib INTERFACE ${zlib_SOURCE_DIR} ${zlib_BINARY_DIR})
+    add_library(ZLIB::ZLIB ALIAS xp_zlib)
+
+    set(EXPAT_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
+    set(EXPAT_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+    set(EXPAT_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+    set(EXPAT_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+    set(EXPAT_BUILD_PKGCONFIG OFF CACHE BOOL "" FORCE)
+    set(EXPAT_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+    set(EXPAT_ENABLE_INSTALL OFF CACHE BOOL "" FORCE)
+    FetchContent_Declare(expat
+        URL https://github.com/libexpat/libexpat/releases/download/R_2_6_4/expat-2.6.4.tar.xz
+        ${_fetch_exclude})
+    FetchContent_MakeAvailable(expat)
+    add_library(xp_expat INTERFACE)
+    target_link_libraries(xp_expat INTERFACE expat)
+    target_include_directories(xp_expat INTERFACE ${expat_SOURCE_DIR}/lib ${expat_BINARY_DIR})
+    target_compile_definitions(xp_expat INTERFACE XML_STATIC)
+    add_library(EXPAT::EXPAT ALIAS xp_expat)
+else()
+    find_package(ZLIB REQUIRED)
+    find_package(EXPAT REQUIRED)
+endif()
 
 # Check SDL3 and SDL3_ttf for modern client
 find_package(SDL3 QUIET)
@@ -131,7 +192,12 @@ set(SELECT_SCHED 1)
 
 # Default data installation directory
 include(GNUInstallDirs)
-set(CONF_DATADIR "${CMAKE_INSTALL_FULL_DATADIR}/xpilot-tng/")
+if(WIN32)
+    # Windows builds are always relocatable bundles: lib/ next to the executables
+    set(CONF_DATADIR "lib/")
+else()
+    set(CONF_DATADIR "${CMAKE_INSTALL_FULL_DATADIR}/xpilot-tng/")
+endif()
 add_compile_definitions(CONF_DATADIR="${CONF_DATADIR}")
 
 # Generate config.h
@@ -139,6 +205,13 @@ configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake
     ${CMAKE_CURRENT_BINARY_DIR}/config.h
 )
+
+# Windows: icon and version resource, linked into every executable (see below)
+if(WIN32)
+    enable_language(RC)
+    set(XP_WIN_ICON "${CMAKE_CURRENT_SOURCE_DIR}/src/common/win/xpilot-tng.ico")
+    configure_file(src/common/win/xpilot-tng.rc.in ${CMAKE_CURRENT_BINARY_DIR}/xpilot-tng.rc @ONLY)
+endif()
 
 include_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
@@ -168,6 +241,9 @@ set(COMMON_SOURCES
 
 add_library(xpcommon STATIC ${COMMON_SOURCES})
 target_link_libraries(xpcommon PUBLIC m)
+if(WIN32)
+    target_link_libraries(xpcommon PUBLIC ws2_32 iphlpapi bcrypt winmm)
+endif()
 
 # -------------------------------------------------------------
 # Server Target: xpilot-ng-server
@@ -274,11 +350,24 @@ if(BUILD_CLIENT_SDL3)
     if(NOT (TARGET SDL3::SDL3 AND TARGET SDL3_ttf::SDL3_ttf) AND FETCH_SDL3)
         include(FetchContent)
         message(STATUS "FETCH_SDL3 enabled: downloading and compiling SDL3 & SDL3_ttf...")
+        if(WIN32)
+            # Static SDL3 / SDL3_ttf with bundled FreeType: no DLLs to ship
+            set(SDL_SHARED OFF CACHE BOOL "" FORCE)
+            set(SDL_STATIC ON CACHE BOOL "" FORCE)
+            set(SDL_TEST_LIBRARY OFF CACHE BOOL "" FORCE)
+            set(SDLTTF_VENDORED ON CACHE BOOL "" FORCE)
+            set(SDLTTF_HARFBUZZ OFF CACHE BOOL "" FORCE)
+            set(SDLTTF_PLUTOSVG OFF CACHE BOOL "" FORCE)
+            set(SDLTTF_SAMPLES OFF CACHE BOOL "" FORCE)
+            set(SDLTTF_INSTALL OFF CACHE BOOL "" FORCE)
+            set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+        endif()
         if(NOT TARGET SDL3::SDL3)
             FetchContent_Declare(
                 SDL3
                 GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-                GIT_TAG release-3.2.8
+                GIT_TAG release-3.4.2
+                GIT_SHALLOW TRUE
             )
             FetchContent_MakeAvailable(SDL3)
         endif()
@@ -286,7 +375,9 @@ if(BUILD_CLIENT_SDL3)
             FetchContent_Declare(
                 SDL3_ttf
                 GIT_REPOSITORY https://github.com/libsdl-org/SDL_ttf.git
-                GIT_TAG release-3.1.0
+                GIT_TAG release-3.2.2
+                GIT_SHALLOW TRUE
+                GIT_SUBMODULES external/freetype
             )
             FetchContent_MakeAvailable(SDL3_ttf)
         endif()
@@ -350,10 +441,16 @@ add_custom_target(dist
 )
 foreach(_t xpilot-tng-server xpilot-tng-client xpilot-tng-launcher xpilot-tng-mapeditor)
     if(TARGET ${_t})
+        if(WIN32)
+            target_sources(${_t} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/xpilot-tng.rc)
+        endif()
         add_dependencies(dist ${_t})
         add_custom_command(TARGET dist POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:${_t}>" "${DIST_DIR}/"
-            COMMAND chmod 755 "${DIST_DIR}/$<TARGET_FILE_NAME:${_t}>")
+            COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:${_t}>" "${DIST_DIR}/")
+        if(NOT WIN32)
+            add_custom_command(TARGET dist POST_BUILD
+                COMMAND chmod 755 "${DIST_DIR}/$<TARGET_FILE_NAME:${_t}>")
+        endif()
     endif()
 endforeach()
 

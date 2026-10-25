@@ -229,7 +229,7 @@ void Init_saved_scores(void)
     int i = 0;
 
     if (strlen(clientRankFile) > 0) {
-	FILE *file = fopen(clientRankFile, "r");
+	FILE *file = fopen(clientRankFile, "rb");
 
 	if (file != NULL) {
 	    const int actual = fread(scores, sizeof(ScoreNode),
@@ -326,7 +326,7 @@ void Print_saved_scores(void)
 
     Rank_score();
     if (strlen(clientRankFile) > 0 &&
-	(file = fopen(clientRankFile, "w")) != NULL) {
+	(file = fopen(clientRankFile, "wb")) != NULL) {
 	const int actual = fwrite(scores, sizeof(ScoreNode),
 				  MAX_SCORES, file);
 	if (actual != MAX_SCORES)

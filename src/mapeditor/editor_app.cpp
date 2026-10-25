@@ -1,13 +1,10 @@
 #include "editor_app.h"
 
 #include <algorithm>
-#include <arpa/inet.h>
 #include <cmath>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
-#include <netinet/in.h>
-#include <sys/socket.h>
 #include <unistd.h>
 
 #include "map_io.h"
@@ -21,21 +18,9 @@ constexpr int kDefaultServerPort = 15345;
 constexpr size_t kMaxUndo = 200;
 constexpr size_t kMaxRecent = 10;
 
-bool IsPortFree(int port) {
-    int sock = socket(AF_INET, SOCK_DGRAM, 0);
-    if (sock < 0) return false;
-    sockaddr_in addr{};
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = INADDR_ANY;
-    addr.sin_port = htons(static_cast<uint16_t>(port));
-    int res = bind(sock, reinterpret_cast<sockaddr*>(&addr), sizeof(addr));
-    close(sock);
-    return res == 0;
-}
-
 int FindFreePort() {
     for (int p = kDefaultServerPort; p < kDefaultServerPort + 100; ++p)
-        if (IsPortFree(p)) return p;
+        if (IsUdpPortFree(p)) return p;
     return kDefaultServerPort;
 }
 
@@ -81,7 +66,12 @@ std::string EditorApp::FindRoot() const {
     return "";
 }
 
-std::string EditorApp::ResolveBinary(const std::string& name) const {
+std::string EditorApp::ResolveBinary(const std::string& bin) const {
+#ifdef _WIN32
+    const std::string name = bin + ".exe";
+#else
+    const std::string& name = bin;
+#endif
     std::vector<std::string> candidates = {root_dir_ + "/" + name,  root_dir_ + "/build/" + name,
                                            app_dir_ + "/" + name,   app_dir_ + "/../" + name,
                                            "/usr/local/bin/" + name, "/usr/bin/" + name};
@@ -177,7 +167,11 @@ void EditorApp::OpenDropped(const std::string& path) { Guard(Pending::OpenPath, 
 // ============================================================================
 
 void EditorApp::NewDocument(int w, int h) {
+#ifdef _WIN32
+    const char* user = std::getenv("USERNAME");
+#else
     const char* user = std::getenv("USER");
+#endif
     map_ = NewMap(w, h, "New map", user ? user : "");
     path_.clear();
     stable_ = map_;

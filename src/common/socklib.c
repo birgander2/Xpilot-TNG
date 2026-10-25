@@ -39,6 +39,56 @@
 static int sock_resolve_addr(const char *name, struct sockaddr_storage *out,
                              socklen_t *out_len, int port, int socktype);
 
+#ifdef _WIN32
+/*
+ * Winsock reports errors through WSAGetLastError() and leaves errno alone,
+ * but callers test errno (EWOULDBLOCK, EINTR, ECONNREFUSED, ...).
+ * Translate the last Winsock error, store it in errno and return it.
+ */
+int sock_last_error(void)
+{
+    switch (WSAGetLastError()) {
+    case WSAEWOULDBLOCK:	errno = EWOULDBLOCK; break;
+    case WSAEINPROGRESS:	errno = EINPROGRESS; break;
+    case WSAEALREADY:		errno = EALREADY; break;
+    case WSAEINTR:		errno = EINTR; break;
+    case WSAECONNREFUSED:	errno = ECONNREFUSED; break;
+    case WSAECONNRESET:		errno = ECONNRESET; break;
+    case WSAECONNABORTED:	errno = ECONNABORTED; break;
+    case WSAENOTCONN:		errno = ENOTCONN; break;
+    case WSAEMSGSIZE:		errno = EMSGSIZE; break;
+    case WSAENOBUFS:		errno = ENOBUFS; break;
+    case WSAEINVAL:		errno = EINVAL; break;
+    case WSAEBADF:
+    case WSAENOTSOCK:		errno = EBADF; break;
+    case WSAEADDRINUSE:		errno = EADDRINUSE; break;
+    case WSAEADDRNOTAVAIL:	errno = EADDRNOTAVAIL; break;
+    case WSAEAFNOSUPPORT:	errno = EAFNOSUPPORT; break;
+    case WSAENETUNREACH:	errno = ENETUNREACH; break;
+    case WSAEHOSTUNREACH:	errno = EHOSTUNREACH; break;
+    case WSAETIMEDOUT:		errno = ETIMEDOUT; break;
+    case WSAEACCES:		errno = EACCES; break;
+    default:			errno = EIO; break;
+    }
+    return errno;
+}
+
+int sock_close_fd(int fd)
+{
+    return closesocket((SOCKET)fd);
+}
+#else
+int sock_last_error(void)
+{
+    return errno;
+}
+
+int sock_close_fd(int fd)
+{
+    return close(fd);
+}
+#endif
+
 
 static void sock_flags_add(sock_t *sock, unsigned bits)
 {
@@ -69,9 +119,6 @@ static int sock_set_error(sock_t *sock, int err, sock_call_t call, int line)
 {
     DEB(printf("set error %d, %d, %d.  \"%s\"\n",
 	       err, call, line, strerror(err)));
-#ifdef _WINDOWS
-	DEB(printf("WSAGetLastError: %d\n", WSAGetLastError()));
-#endif
     sock->error.error = err;
     sock->error.call = call;
     sock->error.line = line;
@@ -127,26 +174,32 @@ static void sock_free_lastaddr(sock_t *sock)
     }
 }
 
-int sock_startup()
-{
-#ifdef _WINDOWS
-
-	WORD wVersionRequested;
-	WSADATA wsaData;
-	
-	/* I have no idea which version of winsock supports
-	 * the required socket stuff. */
-	wVersionRequested = MAKEWORD( 1, 0 );
-	if (WSAStartup( wVersionRequested, &wsaData ))
-		return -1;
+#ifdef _WIN32
+static int sock_started;
 #endif
-	return 0; /* socket initialization only needed for windows */
+
+/* Idempotent; the sock_open_*() functions call it on demand. */
+int sock_startup(void)
+{
+#ifdef _WIN32
+    WSADATA wsaData;
+
+    if (sock_started)
+	return 0;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
+	return -1;
+    sock_started = 1;
+#endif
+    return 0; /* socket initialization only needed for windows */
 }
 
 void sock_cleanup(void)
 {
-#ifdef _WINDOWS
+#ifdef _WIN32
+    if (sock_started) {
 	WSACleanup();
+	sock_started = 0;
+    }
 #endif
 }
 
@@ -167,8 +220,8 @@ static int sock_close_tcp(sock_t *sock)
 {
     int			status = SOCK_IS_OK;
 
-    if (close(sock->fd) < 0) {
-	sock_set_error(sock, errno, SOCK_CALL_CLOSE, __LINE__);
+    if (sock_close_fd(sock->fd) < 0) {
+	sock_set_error(sock, sock_last_error(), SOCK_CALL_CLOSE, __LINE__);
 	status = SOCK_IS_ERROR;
     }
     sock_flags_remove(sock, SOCK_FLAG_TCP);
@@ -181,8 +234,8 @@ static int sock_close_udp(sock_t *sock)
 {
     int			status = SOCK_IS_OK;
 
-    if (close(sock->fd) < 0) {
-	sock_set_error(sock, errno, SOCK_CALL_CLOSE, __LINE__);
+    if (sock_close_fd(sock->fd) < 0) {
+	sock_set_error(sock, sock_last_error(), SOCK_CALL_CLOSE, __LINE__);
 	status = SOCK_IS_ERROR;
     }
     sock_flags_remove(sock, SOCK_FLAG_UDP);
@@ -204,11 +257,11 @@ int sock_close(sock_t *sock)
 
 int sock_open_tcp(sock_t *sock)
 {
-    if (sock_init(sock))
+    if (sock_init(sock) || sock_startup())
 	return SOCK_IS_ERROR;
 
-    if ((sock->fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-	return sock_set_error(sock, errno, SOCK_CALL_SOCKET, __LINE__);
+    if ((sock->fd = (int)socket(AF_INET, SOCK_STREAM, 0)) < 0)
+	return sock_set_error(sock, sock_last_error(), SOCK_CALL_SOCKET, __LINE__);
 
     sock_flags_add(sock, SOCK_FLAG_TCP);
 
@@ -265,6 +318,19 @@ int sock_set_non_blocking(sock_t *sock, int flag)
 
     char buf[128];
 
+#ifdef _WIN32
+    {
+	u_long arg = (flag != 0);
+
+	if (ioctlsocket((SOCKET)sock->fd, FIONBIO, &arg) == 0)
+	    return SOCK_IS_OK;
+	sock_set_error(sock, sock_last_error(), SOCK_CALL_FCNTL, __LINE__);
+	sprintf(buf, "ioctlsocket FIONBIO failed in socklib.c line %d", __LINE__);
+	perror(buf);
+	return SOCK_IS_ERROR;
+    }
+#else /* !_WIN32 */
+
 #ifdef USE_FCNTL_FNDELAY
     if (fcntl(sock->fd, F_SETFL, (flag != 0) ? FNDELAY : 0) != -1)
 	return SOCK_IS_OK;
@@ -296,6 +362,8 @@ int sock_set_non_blocking(sock_t *sock, int flag)
     sprintf(buf, "fcntl O_NDELAY failed in socklib.c line %d", __LINE__);
     perror(buf);
 #endif
+
+#endif /* _WIN32 */
 
     return SOCK_IS_ERROR;
 }
@@ -345,12 +413,14 @@ int sock_open_tcp_connected_non_blocking(sock_t *sock, char *host, int port)
     }
 
     if (connect(sock->fd, (struct sockaddr *)&dest, dest_len) < 0) {
-#ifndef _WINDOWS
-  	if (errno != EINPROGRESS) {
+	int err = sock_last_error();
+#ifdef _WIN32
+	/* Winsock signals a pending non-blocking connect with WSAEWOULDBLOCK */
+	if (err != EINPROGRESS && err != EWOULDBLOCK) {
 #else
- 	if (WSAGetLastError() != 10035) {
+	if (err != EINPROGRESS) {
 #endif
-		sock_set_error(sock, errno, SOCK_CALL_CONNECT, __LINE__);
+		sock_set_error(sock, err, SOCK_CALL_CONNECT, __LINE__);
 		sock_close(sock);
 		return SOCK_IS_ERROR;
 	}
@@ -364,20 +434,35 @@ int sock_open_udp(sock_t *sock, char *dotaddr, int port)
 {
     struct sockaddr_in	addr;
 
-    if (sock_init(sock))
+    if (sock_init(sock) || sock_startup())
 	return SOCK_IS_ERROR;
 
-    if ((sock->fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
-	return sock_set_error(sock, errno, SOCK_CALL_SOCKET, __LINE__);
+    if ((sock->fd = (int)socket(AF_INET, SOCK_DGRAM, 0)) < 0)
+	return sock_set_error(sock, sock_last_error(), SOCK_CALL_SOCKET, __LINE__);
 
     sock_flags_add(sock, SOCK_FLAG_UDP);
+
+#ifdef _WIN32
+    {
+	/*
+	 * An ICMP "port unreachable" for an earlier datagram makes Winsock
+	 * fail the next recvfrom() with WSAECONNRESET, which would read as a
+	 * broken connection.  Unix only reports this on connected sockets.
+	 */
+	BOOL report = FALSE;
+	DWORD bytes = 0;
+
+	WSAIoctl((SOCKET)sock->fd, SIO_UDP_CONNRESET, &report, sizeof(report),
+		 NULL, 0, &bytes, NULL, NULL);
+    }
+#endif
 
     memset(&addr, 0, sizeof(addr));
     addr.sin_family	 = AF_INET;
     addr.sin_port	 = htons((unsigned short)port);
     addr.sin_addr.s_addr = (dotaddr) ? inet_addr(dotaddr) : INADDR_ANY;
     if (bind(sock->fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
-	sock_set_error(sock, errno, SOCK_CALL_BIND, __LINE__);
+	sock_set_error(sock, sock_last_error(), SOCK_CALL_BIND, __LINE__);
 	sock_close(sock);
 	return SOCK_IS_ERROR;
     }
@@ -395,7 +480,7 @@ int sock_connect(sock_t *sock, char *host, int port)
     }
 
     if (connect(sock->fd, (struct sockaddr *)&dest, dest_len) < 0)
-	return sock_set_error(sock, errno, SOCK_CALL_CONNECT, __LINE__);
+	return sock_set_error(sock, sock_last_error(), SOCK_CALL_CONNECT, __LINE__);
 
     sock_flags_add(sock, SOCK_FLAG_CONNECT);
 
@@ -470,7 +555,7 @@ int sock_read(sock_t *sock, char *buf, int len)
 
     count = recv(sock->fd, buf, len, 0);
     if (count < 0)
-	sock_set_error(sock, errno, SOCK_CALL_IO, __LINE__);
+	sock_set_error(sock, sock_last_error(), SOCK_CALL_IO, __LINE__);
 
     return count;
 }
@@ -486,7 +571,7 @@ int sock_receive_any(sock_t *sock, char *buf, int len)
     count = recvfrom(sock->fd, buf, len, 0,
 		     (struct sockaddr *)(sock->lastaddr), &addrlen);
     if (count < 0)
-	sock_set_error(sock, errno, SOCK_CALL_IO, __LINE__);
+	sock_set_error(sock, sock_last_error(), SOCK_CALL_IO, __LINE__);
 
     return count;
 }
@@ -504,7 +589,7 @@ int sock_send_dest(sock_t *sock, char *host, int port, char *buf, int len)
     count = sendto(sock->fd, buf, len, 0,
 		   (struct sockaddr *)&dest, dest_len);
     if (count < 0)
-	sock_set_error(sock, errno, SOCK_CALL_IO, __LINE__);
+	sock_set_error(sock, sock_last_error(), SOCK_CALL_IO, __LINE__);
 
     return count;
 }
@@ -515,7 +600,7 @@ int sock_write(sock_t *sock, char *buf, int len)
 
     count = send(sock->fd, buf, len, 0);
     if (count < 0)
-	sock_set_error(sock, errno, SOCK_CALL_IO, __LINE__);
+	sock_set_error(sock, sock_last_error(), SOCK_CALL_IO, __LINE__);
 
     return count;
 }
@@ -524,6 +609,9 @@ char *sock_get_addr_by_name(const char *name)
 {
     static char		ip_buf[INET6_ADDRSTRLEN];
     struct addrinfo	hints, *res = NULL;
+
+    if (sock_startup())
+	return NULL;
 
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_INET;
@@ -550,6 +638,7 @@ void sock_get_local_hostname(char *name, unsigned size,
     (void)search_domain_for_xpilot;
     struct addrinfo hints, *res = NULL;
 
+    sock_startup();
     gethostname(name, size);
 
     memset(&hints, 0, sizeof(hints));
@@ -571,7 +660,7 @@ int sock_get_port(sock_t *sock)
     unsigned short	port;
 
     if (getsockname(sock->fd, (struct sockaddr *)&addr, &len) < 0) {
-	sock_set_error(sock, errno, SOCK_CALL_GETSOCKNAME, __LINE__);
+	sock_set_error(sock, sock_last_error(), SOCK_CALL_GETSOCKNAME, __LINE__);
 	return SOCK_IS_ERROR;
     }
 
@@ -587,10 +676,19 @@ int sock_get_error(sock_t *sock)
 
     if (getsockopt(sock->fd, SOL_SOCKET, SO_ERROR,
 		   (void *)&err, &size) < 0) {
-	sock_set_error(sock, errno, SOCK_CALL_GETSOCKOPT, __LINE__);
+	sock_set_error(sock, sock_last_error(), SOCK_CALL_GETSOCKOPT, __LINE__);
 	return SOCK_IS_ERROR;
     }
+#ifdef _WIN32
+    /* SO_ERROR holds a Winsock code; translate it like any other */
+    WSASetLastError(err);
+    if (err != 0)
+	sock_last_error();
+    else
+	errno = 0;
+#else
     errno = err;
+#endif
     return SOCK_IS_OK;
 }
 
@@ -598,7 +696,7 @@ int sock_set_broadcast(sock_t *sock, int flag)
 {
     if (setsockopt(sock->fd, SOL_SOCKET, SO_BROADCAST,
 		   (void *)&flag, sizeof(flag)) < 0) {
-	sock_set_error(sock, errno, SOCK_CALL_SETSOCKOPT, __LINE__);
+	sock_set_error(sock, sock_last_error(), SOCK_CALL_SETSOCKOPT, __LINE__);
 	return SOCK_IS_ERROR;
     }
     return SOCK_IS_OK;
@@ -608,7 +706,7 @@ int sock_set_receive_buffer_size(sock_t *sock, int size)
 {
     if (setsockopt(sock->fd, SOL_SOCKET, SO_RCVBUF,
 		   (void *)&size, sizeof(size)) < 0) {
-	sock_set_error(sock, errno, SOCK_CALL_SETSOCKOPT, __LINE__);
+	sock_set_error(sock, sock_last_error(), SOCK_CALL_SETSOCKOPT, __LINE__);
 	return SOCK_IS_ERROR;
     }
     return SOCK_IS_OK;
@@ -618,7 +716,7 @@ int sock_set_send_buffer_size(sock_t *sock, int size)
 {
     if (setsockopt(sock->fd, SOL_SOCKET, SO_SNDBUF,
 		   (void *)&size, sizeof(size)) < 0) {
-	sock_set_error(sock, errno, SOCK_CALL_SETSOCKOPT, __LINE__);
+	sock_set_error(sock, sock_last_error(), SOCK_CALL_SETSOCKOPT, __LINE__);
 	return SOCK_IS_ERROR;
     }
     return SOCK_IS_OK;
@@ -647,7 +745,7 @@ int sock_readable(sock_t *sock)
 
     n = select(sock->fd + 1, &readfds, NULL, NULL, &timeout);
     if (n == -1) {
-	if (errno != EINTR) {
+	if (sock_last_error() != EINTR) {
 	    sock_set_error(sock, errno, SOCK_CALL_SELECT, __LINE__);
 	    return SOCK_IS_ERROR;
 	}

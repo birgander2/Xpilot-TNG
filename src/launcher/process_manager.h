@@ -19,6 +19,13 @@ struct PlayerInfo {
     int team = 0;
 };
 
+// Runs bin with args to completion and returns its stdout (stderr is discarded).
+// No shell is involved on Windows, so no console window pops up.
+std::string RunAndCapture(const std::string& bin, const std::vector<std::string>& args);
+
+// True if a UDP socket can be bound to the port (no local server uses it).
+bool IsUdpPortFree(int port);
+
 class ProcessManager {
 public:
     ProcessManager();

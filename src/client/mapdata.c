@@ -125,6 +125,10 @@ int Mapdata_setup(const char *urlstr)
 	/* so lets create one into users home dir */
 
 	char *home = getenv("HOME");
+#ifdef _WIN32
+	if (home == NULL)
+	    home = getenv("LOCALAPPDATA");
+#endif
 	if (home == NULL) {
 	    error("couldn't access any dir in %s and HOME is unset", path);
 	    goto end;
@@ -352,7 +356,12 @@ static int Mapdata_download(const char *urlstr, const URL *url, const char *file
 	strpbrk(filePath, "'\"`$;|&<>") == NULL) {
 	char cmd[4096];
 	snprintf(cmd, sizeof(cmd),
+#ifdef _WIN32
+		 /* curl.exe ships with Windows 10 and later */
+		 "curl -fsSL --connect-timeout 5 --max-time 15 -o \"%s\" \"%s\" 2>NUL",
+#else
 		 "curl -fsSL --connect-timeout 5 --max-time 15 -o \"%s\" \"%s\" 2>/dev/null",
+#endif
 		 filePath, urlstr);
 	if (system(cmd) == 0 && access(filePath, R_OK) == 0) {
 	    return true;

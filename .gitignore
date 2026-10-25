@@ -37,5 +37,7 @@ build_dist.sh
 build_src.sh
 Xpilot-TNG_Sources.tgz
 Xpilot-TNG_portable.tgz
-Xpilot-TNG_windows.zip
 
+# Windows cross build (build_win.sh)
+build-win/
+Xpilot-TNG_windows.zip

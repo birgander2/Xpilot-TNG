@@ -227,37 +227,40 @@
 # include <values.h>
 #endif
 
-/* Evil Windows hacks. Yuck. */
-#ifdef _WINDOWS
-# include "NT/winNet.h"
-  /* need this for printf wrappers. */
-# ifdef	_XPILOTNTSERVER_
-#  include "../server/NT/winServer.h"
-#  include "../server/NT/winSvrThread.h"
-extern char *showtime(void);
-/*# elif !defined(_XPMONNT_)
-#  include "NT/winX.h"
-#  include "../client/NT/winClient.h"*/
-# endif
-static void Win_show_error(char *errmsg);
+/*
+ * Windows (MinGW-w64): Winsock instead of BSD sockets.  Socket handles
+ * are kept in plain ints like on Unix; closing and error reporting go
+ * through socklib (sock_close_fd(), sock_last_error()).
+ */
+#ifdef _WIN32
+  /* rpcndr.h has its own unsigned "byte"; keep ours (types.h) signed */
+# define byte win32_byte
+# include <winsock2.h>
+# include <ws2tcpip.h>
+# include <mswsock.h>
+# include <iphlpapi.h>
+# include <timeapi.h>
+# undef byte
+  /* minwindef.h leaves these 16-bit relics as empty macros */
+# undef near
+# undef far
+# undef NEAR
+# undef FAR
+# define NEAR
+# define FAR
 # include <io.h>
+# include <direct.h>
 # include <process.h>
-# include "NT/winNet.h"
-  /* Windows needs specific hacks for sockets: */
-# undef close
-# define close(x__) closesocket(x__)
-# undef ioctl
-# define ioctl(x__, y__, z__) ioctlsocket(x__, y__, z__)
-# undef read
-# define read(x__, y__, z__) recv(x__, y__, z__,0)
-# undef write
-# define write(x__, y__, z__) send(x__, y__, z__,0)
-  /* Windows some more hacks: */
-# define getpid() _getpid()
-#ifdef _MSC_VER
-typedef int socklen_t;
-#define inline __inline
-#endif
+# define mkdir(path, mode)	_mkdir(path)
+# define realpath(name, resolved) _fullpath((resolved), (name), PATH_MAX)
+# define popen			_popen
+# define pclose			_pclose
+/* POSIX rename() replaces an existing target, the CRT's fails instead */
+static inline int xp_rename(const char *from, const char *to)
+{
+    return MoveFileExA(from, to, MOVEFILE_REPLACE_EXISTING) ? 0 : -1;
+}
+# define rename(from, to)	xp_rename((from), (to))
 #endif
 
 /* Common XPilot header files. */
