@@ -16,6 +16,9 @@ static int fuelGaugeColor = 0;          /* Color index for fuel gauge drawing */
 static int dirPtrColor = 0;             /* Color index for dirptr drawing */
 int messagesColor = 12;                 /* Color index for messages */
 int oldMessagesColor = 13;              /* Color index for old messages */
+static char talkMessagesRGB[16] = "#E6F4FF";   /* talk messages (top), "" = messagesColor */
+static char gameMessagesRGB[16] = "#4CFF7A";   /* server messages (bottom), "" = messagesColor */
+static bool messageShadow = true;       /* dark shadow behind message text */
 static int msgScanBallColor = 3;        /* Color index for ball msg */
 static int msgScanSafeColor = 4;        /* Color index for safe msg */
 static int msgScanCoverColor = 2;       /* Color index for cover msg */
@@ -614,6 +617,8 @@ void Paint_messages(void)
               SPACING = 12;
     message_t *msg;
     int msg_color;
+    bool plain;                 /* normal or old message, not a scan or help one */
+    bool old;
 
     top_y = BORDER;
     bot_y = WINSCALE(ext_view_height) - SPACING - BORDER;
@@ -635,7 +640,9 @@ void Paint_messages(void)
             }
         }
 
-        if (msg->lifeTime <= MSG_FLASH_TIME)
+        plain = true;
+        old = msg->lifeTime <= MSG_FLASH_TIME;
+        if (old)
             msg_color = oldMessagesColor;
         else {
             /* If paused, don't bother to paint messages in msgScan* colors. */
@@ -643,10 +650,10 @@ void Paint_messages(void)
                 msg_color = messagesColor;
             else {
                 switch (msg->bmsinfo) {
-                case BmsBall:   msg_color = msgScanBallColor;   break;
-                case BmsSafe:   msg_color = msgScanSafeColor;   break;
-                case BmsCover:  msg_color = msgScanCoverColor;  break;
-                case BmsPop:    msg_color = msgScanPopColor;    break;
+                case BmsBall:   msg_color = msgScanBallColor;   plain = false; break;
+                case BmsSafe:   msg_color = msgScanSafeColor;   plain = false; break;
+                case BmsCover:  msg_color = msgScanCoverColor;  plain = false; break;
+                case BmsPop:    msg_color = msgScanPopColor;    plain = false; break;
                 default:        msg_color = messagesColor;      break;
                 }
             }
@@ -657,8 +664,10 @@ void Paint_messages(void)
             size_t sz = strlen(msg->txt);
             size_t hsz = strlen(help);
 
-            if (sz > hsz && !strcmp(help, &msg->txt[sz - hsz]))
+            if (sz > hsz && !strcmp(help, &msg->txt[sz - hsz])) {
                 msg_color = WHITE;
+                plain = false;
+            }
         }
 
         if (msg_color == 0)
@@ -685,7 +694,22 @@ void Paint_messages(void)
         memcpy(tmp, msg->txt, len);
         tmp[len] = '\0';
 
-        SDL3_Draw_Text(tmp, (float)x, (float)y, msg_color);
+        SDL_Color col = SDL3_Get_Color(msg_color);
+        if (plain) {
+            /* talk messages (top) and server messages (bottom) have their own colors */
+            SDL_Color rgb;
+
+            if (SDL3_Parse_Hex_Color(i < maxMessages ? talkMessagesRGB : gameMessagesRGB, &rgb))
+                col = rgb;
+            if (old)
+                col.a = (Uint8)(col.a * 0.6);   /* fade instead of turning dark gray */
+        }
+        if (messageShadow) {
+            SDL_Color shadow = { 0, 0, 0, (Uint8)(col.a * 0.85) };
+
+            SDL3_Draw_Text_Len_Color(tmp, (int)len, (float)(x + 1), (float)(y + 1), shadow);
+        }
+        SDL3_Draw_Text_Len_Color(tmp, (int)len, (float)x, (float)y, col);
     }
 }
 
@@ -720,6 +744,17 @@ static xp_option_t hud_options[] = {
     COLOR_INDEX_OPTION("dirPtrColor", 0, &dirPtrColor, "Which color number to use for drawing the direction pointer hack.\n"),
     COLOR_INDEX_OPTION("messagesColor", 12, &messagesColor, "Which color number to use for drawing messages.\n"),
     COLOR_INDEX_OPTION("oldMessagesColor", 13, &oldMessagesColor, "Which color number to use for drawing old messages.\n"),
+    XP_STRING_OPTION("talkMessagesRGB", "#E6F4FF", talkMessagesRGB, sizeof(talkMessagesRGB), NULL, NULL, NULL,
+                     XP_OPTFLAG_CONFIG_DEFAULT,
+                     "Color of talk messages (top of the screen) as #RRGGBB.\n"
+                     "Empty: use messagesColor.\n"),
+    XP_STRING_OPTION("gameMessagesRGB", "#4CFF7A", gameMessagesRGB, sizeof(gameMessagesRGB), NULL, NULL, NULL,
+                     XP_OPTFLAG_CONFIG_DEFAULT,
+                     "Color of server messages (bottom of the screen) as #RRGGBB.\n"
+                     "Empty: use messagesColor.\n"),
+    XP_BOOL_OPTION("messageShadow", true, &messageShadow, NULL, XP_OPTFLAG_CONFIG_DEFAULT,
+                   "Draw a dark shadow behind message text so that it stays readable\n"
+                   "on bright backgrounds.\n"),
     COLOR_INDEX_OPTION("msgScanBallColor", 3, &msgScanBallColor, "Which color number to use for drawing ball message warning.\n"),
     COLOR_INDEX_OPTION("msgScanSafeColor", 4, &msgScanSafeColor, "Which color number to use for drawing safe message.\n"),
     COLOR_INDEX_OPTION("msgScanCoverColor", 2, &msgScanCoverColor, "Which color number to use for drawing cover message.\n"),

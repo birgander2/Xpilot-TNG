@@ -243,10 +243,14 @@ float SDL3_Text_Width(const char *str)
 
 void SDL3_Draw_Text_Len(const char *str, int len, float x, float y, int color_idx)
 {
+    SDL3_Draw_Text_Len_Color(str, len, x, y, SDL3_Get_Color(color_idx));
+}
+
+void SDL3_Draw_Text_Len_Color(const char *str, int len, float x, float y, SDL_Color col)
+{
     if (!str || len <= 0 || !tng_renderer || !font_texture)
         return;
 
-    SDL_Color col = SDL3_Get_Color(color_idx);
     SDL_SetTextureColorMod(font_texture, col.r, col.g, col.b);
     SDL_SetTextureAlphaMod(font_texture, col.a);
 

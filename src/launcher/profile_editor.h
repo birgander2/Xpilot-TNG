@@ -78,7 +78,7 @@ private:
 
     // network: client options maxJitterBuffer, dirPrediction, keyTurnMouse, keyTurnRate
     struct Network {
-        bool jitter_buffer = true;       // maxJitterBuffer > 0
+        bool jitter_buffer = false;      // maxJitterBuffer > 0
         int jitter_ms = 150;             // upper limit of the buffer delay
         bool mouse_prediction = true;    // dirPrediction
         bool key_turn_mouse = false;     // keyTurnMouse

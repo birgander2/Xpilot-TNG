@@ -4023,7 +4023,7 @@ static option_desc opts[] = {
     {
 	"voiceRange",
 	"voiceRange",
-	"1500.0",
+	"0.0",
 	&options.voiceRange,
 	valReal,
 	Voice_options_changed,
@@ -4058,7 +4058,7 @@ static option_desc opts[] = {
     {
 	"voiceTeamFilter",
 	"voiceTeamFilter",
-	"1",
+	"0",
 	&options.voiceTeamFilter,
 	valInt,
 	Voice_options_changed,

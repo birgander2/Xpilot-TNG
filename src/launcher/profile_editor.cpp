@@ -335,7 +335,7 @@ void ProfileEditor::Load(const std::vector<std::string>& ship_names, bool keep_u
     audio_.voice_volume = get_int("voiceVolume", 100, 0, 200);
     audio_.voice_mic_gain = get_int("voiceMicGain", 100, 0, 400);
     {
-        const int jb = get_int("maxJitterBuffer", 150, 0, 500);
+        const int jb = get_int("maxJitterBuffer", 0, 0, 500);
         net_.jitter_buffer = jb > 0;
         net_.jitter_ms = jb > 0 ? jb : 150;
     }

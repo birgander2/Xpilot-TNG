@@ -84,6 +84,7 @@ int  Init_asteroids(void);
 void SDL3_Set_Draw_Color(int color_idx);
 void SDL3_Set_Draw_Color_RGB(Uint32 rgb);
 SDL_Color SDL3_Get_Color(int color_idx);
+bool  SDL3_Parse_Hex_Color(const char *str, SDL_Color *out);
 SDL_Color SDL3_Get_Color_RGB(Uint32 rgb);
 SDL_FColor SDL3_Get_FColor(int color_idx);
 SDL_FColor SDL3_Get_FColor_RGB(Uint32 rgb);
@@ -99,6 +100,7 @@ int   SDL3_Prop_Index_At(const char *str, float rel_x);
 void  SDL3_Prop_Draw_Text(const char *str, float x, float y, int color_idx);
 void  SDL3_Draw_Text(const char *str, float x, float y, int color_idx);
 void  SDL3_Draw_Text_Len(const char *str, int len, float x, float y, int color_idx);
+void  SDL3_Draw_Text_Len_Color(const char *str, int len, float x, float y, SDL_Color col);
 float SDL3_Text_Width(const char *str);
 float SDL3_Text_Width_Len(int len);
 

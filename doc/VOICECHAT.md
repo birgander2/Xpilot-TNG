@@ -65,10 +65,10 @@ stays open until the client quits.
 |---|---|---|
 | `voiceChat` | `true` | Allow voice chat on this server |
 | `voiceTeamOnly` | `false` | Only the team channel is allowed |
-| `voiceRange` | `1500` | Pixels after which the all channel is silent (0 = unlimited, full volume) |
+| `voiceRange` | `0` | Pixels after which the all channel is silent (0 = unlimited, full volume) |
 | `voiceTeamRange` | `0` | Same for the team channel (0 = radio, any distance) |
 | `voiceBitrate` | `24` | Opus bitrate in kbit/s (6–64) used by all clients. Each speaker is sent to every listener, so this sets the bandwidth |
-| `voiceTeamFilter` | `1` | Sound of the team channel: 0 = unfiltered, 1 = radio, 2 = telephone |
+| `voiceTeamFilter` | `0` | Sound of the team channel: 0 = unfiltered, 1 = radio, 2 = telephone |
 | `voiceAllFilter` | `0` | Same for the all channel |
 
 The **radio** filter is a 400–2800 Hz band pass with soft clipping, light

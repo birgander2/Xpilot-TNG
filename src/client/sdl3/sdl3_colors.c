@@ -184,6 +184,11 @@ void SDL3_Set_Draw_Color_RGB(Uint32 rgb)
     SDL_SetRenderDrawColor(tng_renderer, r, g, b, 255);
 }
 
+bool SDL3_Parse_Hex_Color(const char *str, SDL_Color *out)
+{
+    return Parse_hex_color(str, out);
+}
+
 SDL_Color SDL3_Get_Color(int color_idx)
 {
     if (color_idx < 0 || color_idx >= XP_NUM_PALETTE_COLORS)
