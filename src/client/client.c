@@ -76,6 +76,7 @@ int	eyeTeam = TEAM_NOT_SET;
 
 other_t	*self = NULL;	        /* player info */
 short	selfVisible;		/* Are we alive and playing? */
+bool	selfActive;		/* Our ship can turn (alive or being killed) */
 short	damaged;		/* Damaged by ECM */
 short	destruct;		/* If self destructing */
 short	shutdown_delay;
@@ -149,6 +150,9 @@ time_t	currentTime = 0;	/* Current value of time() */
 bool	newSecond = false;	/* Did time() increment this frame? */
 
 int	maxMouseTurnsPS = 0;
+bool	keyTurnMouse = false;	/* Turn with keys like with the mouse */
+int	keyTurnRate = 630;	/* ... at this many degrees per second */
+int	maxJitterBuffer = 150;	/* Max playout delay in ms, 0 = off */
 int	mouseMovementInterval = 0;
 int	cumulativeMouseMovement = 0;
 
@@ -1577,6 +1581,8 @@ int Handle_start(long server_loops)
 {
     int			i;
 
+    /* turn keys: send this frame's turn before our ship is predicted */
+    Key_turn_frame(server_loops);
     start_loops = server_loops;
 
     num_refuel = 0;
@@ -1664,7 +1670,8 @@ static void update_status(int status)
 	    Reset_shields();
     }
 
-    Newbie_status(BIT(status, OLD_PLAYING|OLD_PAUSE|OLD_GAME_OVER) == OLD_PLAYING);
+    selfActive = BIT(status, OLD_PLAYING|OLD_PAUSE|OLD_GAME_OVER) == OLD_PLAYING;
+    Newbie_status(selfActive);
     old_status = status;
 }
 
@@ -1831,16 +1838,30 @@ int Handle_ball(int x, int y, int id, int style)
     return 0;
 }
 
+/*
+ * Direction of our ship as painted: what the server sent, plus the turns we
+ * have sent that the server has not acknowledged yet.
+ *
+ * The server sends the direction rounded to whole direction units.  If that
+ * rounded value were used directly, the painted direction would jitter by
+ * a unit back and forth when a turn ends.  So instead the offset between
+ * the server's direction and the turns we sent (which the server has
+ * acknowledged) is smoothed: it only changes when something else turns the
+ * ship, and then it follows quickly.
+ */
 static int predict_self_dir(int received_dir)
 {
-    double pointer_delta = 0, dir_delta, new_dir;
+    static double offset;
+    static bool have_offset;
+    double pointer_delta = 0, unacked, acked, err, shown;
     int ind = pointer_move_next - 1;
     int count = 0, int_new_dir;
 
     if (ind < 0)
 	ind = MAX_POINTER_MOVES - 1;
-    
-    while (pointer_moves[ind].id > last_keyboard_ack && count < 50) {
+
+    while (pointer_moves[ind].id > last_keyboard_ack
+	   && count < MAX_POINTER_MOVES) {
         pointer_delta += pointer_moves[ind].movement
 	    * pointer_moves[ind].turnspeed;
 	ind--;
@@ -1848,14 +1869,26 @@ static int predict_self_dir(int received_dir)
 	    ind = MAX_POINTER_MOVES - 1;
 	count++;
     }
-    
-    dir_delta = pointer_delta / (RES/2);
-    new_dir = (received_dir - dir_delta);
-    while (new_dir < 0)
-	new_dir += RES;
-    while (new_dir >= RES)
-	new_dir -= RES;
-    int_new_dir = (int)(new_dir + 0.5);
+
+    unacked = -pointer_delta / (RES/2);		/* turns not in the server dir */
+    acked = pointer_total - unacked;		/* turns that are */
+    err = received_dir - acked - offset;
+    err = fmod(err, RES);
+    if (err > RES / 2)
+	err -= RES;
+    else if (err < -RES / 2)
+	err += RES;
+    if (!have_offset || fabs(err) > 3.0) {
+	offset += err;
+	have_offset = true;
+    } else
+	offset += 0.15 * err;
+    offset = fmod(offset, RES);
+
+    shown = fmod(offset + pointer_total, RES);
+    if (shown < 0)
+	shown += RES;
+    int_new_dir = (int)(shown + 0.5);
     while (int_new_dir >= RES)
 	/* might be == RES */
 	int_new_dir -= RES;

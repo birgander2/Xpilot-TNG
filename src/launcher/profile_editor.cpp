@@ -1,4 +1,5 @@
 #include "profile_editor.h"
+#include "client_profile.h"
 
 #include <algorithm>
 #include <cctype>
@@ -14,6 +15,7 @@ namespace {
 
 const ImVec4 kGood(0.45f, 0.85f, 0.50f, 1.0f);
 const ImVec4 kBad(0.95f, 0.40f, 0.40f, 1.0f);
+const ImVec4 kWarn(0.95f, 0.75f, 0.30f, 1.0f);
 
 // Key actions of the client (src/client/event.c) with their built-in defaults.
 struct KeyAction {
@@ -280,9 +282,9 @@ std::string ProfileEditor::ModBank::Serialize() const {
 // load / save
 // ---------------------------------------------------------------------------
 
-void ProfileEditor::Load(const std::vector<std::string>& ship_names, bool keep_audio) {
-    const Audio unsaved = audio_;
-    const bool had_audio = loaded_;
+void ProfileEditor::Load(const std::vector<std::string>& ship_names, bool keep_unsaved) {
+    const ProfileEditor unsaved = *this;   // the edits, if they are to be kept
+    const bool had_edits = loaded_;
     rc_.clear();
     ship_names_ = ship_names;
     auto get = [&](const std::string& key, const std::string& def) {
@@ -332,11 +334,19 @@ void ProfileEditor::Load(const std::vector<std::string>& ship_names, bool keep_a
     audio_.voice_level = get_int("voiceActivationLevel", -40, -80, 0);
     audio_.voice_volume = get_int("voiceVolume", 100, 0, 200);
     audio_.voice_mic_gain = get_int("voiceMicGain", 100, 0, 400);
+    {
+        const int jb = get_int("maxJitterBuffer", 150, 0, 500);
+        net_.jitter_buffer = jb > 0;
+        net_.jitter_ms = jb > 0 ? jb : 150;
+    }
+    net_.mouse_prediction = get_bool("dirPrediction", true);
+    net_.key_turn_mouse = get_bool("keyTurnMouse", false);
+    net_.key_turn_rate = get_int("keyTurnRate", 630, 30, 2000);
 
     shown_.clear();
     // snapshot of everything the editor can write, to detect edits
     for (const auto& kv : AudioValues()) shown_[kv.first] = kv.second;
-    if (keep_audio && had_audio) audio_ = unsaved;   // shown_ stays what the xpilotrc has
+    for (const auto& kv : NetworkValues()) shown_[kv.first] = kv.second;
     loaded_ = true;
     shown_["name"] = name_;
     shown_["shipShape"] = ship_ >= 0 ? ship_names_[ship_] : rc_ship_;
@@ -345,6 +355,16 @@ void ProfileEditor::Load(const std::vector<std::string>& ship_names, bool keep_a
         for (const auto& k : g.keys) shown_[k.option] = key_values_[n++];
     for (int i = 0; i < kButtons; ++i) shown_["pointerButton" + std::to_string(i + 1)] = Join(button_actions_[i]);
     for (int i = 0; i < kBanks; ++i) shown_["modifierBank" + std::to_string(i + 1)] = banks_[i].Serialize();
+
+    if (keep_unsaved && had_edits) {   // shown_ stays what the xpilotrc has
+        std::memcpy(name_, unsaved.name_, sizeof name_);
+        ship_ = unsaved.ship_;
+        key_values_ = unsaved.key_values_;
+        for (int i = 0; i < kButtons; ++i) button_actions_[i] = unsaved.button_actions_[i];
+        for (int i = 0; i < kBanks; ++i) banks_[i] = unsaved.banks_[i];
+        audio_ = unsaved.audio_;
+        net_ = unsaved.net_;
+    }
 }
 
 std::vector<std::pair<std::string, std::string>> ProfileEditor::AudioValues() const {
@@ -361,9 +381,20 @@ std::vector<std::pair<std::string, std::string>> ProfileEditor::AudioValues() co
     };
 }
 
+std::vector<std::pair<std::string, std::string>> ProfileEditor::NetworkValues() const {
+    auto b = [](bool v) { return std::string(v ? "true" : "false"); };
+    return {
+        {"maxJitterBuffer", std::to_string(net_.jitter_buffer ? net_.jitter_ms : 0)},
+        {"dirPrediction", b(net_.mouse_prediction)},
+        {"keyTurnMouse", b(net_.key_turn_mouse)},
+        {"keyTurnRate", std::to_string(net_.key_turn_rate)},
+    };
+}
+
 std::vector<std::pair<std::string, std::string>> ProfileEditor::Changes() const {
     std::vector<std::pair<std::string, std::string>> cur, changed;
     for (const auto& kv : AudioValues()) cur.push_back(kv);
+    for (const auto& kv : NetworkValues()) cur.push_back(kv);
     cur.emplace_back("name", name_);
     cur.emplace_back("shipShape", ship_ >= 0 ? ship_names_[ship_] : rc_ship_);
     int n = 0;
@@ -380,16 +411,25 @@ std::vector<std::pair<std::string, std::string>> ProfileEditor::Changes() const 
 
 bool ProfileEditor::Dirty() const { return !Changes().empty(); }
 
-std::vector<std::string> ProfileEditor::UnsavedAudioArgs() const {
+std::vector<std::string> ProfileEditor::UnsavedArgs() const {
     std::vector<std::string> args;
     if (!loaded_) return args;   // editor never opened: the xpilotrc is the truth
-    for (const auto& kv : AudioValues()) {
-        auto it = shown_.find(kv.first);
-        if (it != shown_.end() && it->second == kv.second) continue;
+    for (const auto& kv : Changes()) {
+        if (kv.first == "name" || kv.first == "shipShape") continue;   // see ApplyIdentityTo()
         args.push_back("-" + kv.first);
         args.push_back(kv.second);
     }
     return args;
+}
+
+void ProfileEditor::ApplyIdentityTo(ClientProfile& profile) const {
+    if (!loaded_) return;
+    auto it = shown_.find("name");
+    if (it != shown_.end() && it->second != name_)
+        std::snprintf(profile.name, sizeof profile.name, "%s", name_);
+    it = shown_.find("shipShape");
+    if (it != shown_.end() && it->second != (ship_ >= 0 ? ship_names_[ship_] : rc_ship_))
+        profile.ship_choice = ship_;
 }
 
 bool ProfileEditor::Save() {
@@ -629,6 +669,49 @@ void ProfileEditor::RenderAudio() {
     ImGui::TextDisabled("Mute a player in game with \\ignore <name>.");
 }
 
+void ProfileEditor::RenderNetwork() {
+    ImGui::Spacing();
+    ImGui::SeparatorText("Jitter buffer");
+    ImGui::Checkbox("Jitter buffer", &net_.jitter_buffer);
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Plays incoming frames at a steady rate (xpilot.maxJitterBuffer).\n"
+                          "The buffer only grows as far as frames really arrive late and shrinks again\n"
+                          "when the connection calms down. On a steady connection it adds almost nothing.");
+    ImGui::BeginDisabled(!net_.jitter_buffer);
+    ImGui::SetNextItemWidth(280);
+    ImGui::SliderInt("Maximum delay", &net_.jitter_ms, 10, 500, "%d ms");
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Upper limit of the extra delay. More smooths longer interruptions\n"
+                          "(unsteady Wi-Fi), but everything reacts later while the buffer is large.\n"
+                          "150 ms is a good start.");
+    ImGui::EndDisabled();
+    ImGui::TextDisabled("Smooths out stutter on unsteady connections (Wi-Fi, long distance).");
+
+    ImGui::Spacing();
+    ImGui::SeparatorText("Turning");
+    ImGui::Checkbox("Mouse prediction", &net_.mouse_prediction);
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Your ship turns on the screen right away when you move the mouse,\n"
+                          "instead of after the round trip to the server (xpilot.dirPrediction).");
+    ImGui::Checkbox("Keyboard turns emulate mouse turning", &net_.key_turn_mouse);
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("While a turn key is held, the client sends mouse-like turns at a fixed speed\n"
+                          "instead of telling the server about the key (xpilot.keyTurnMouse).\n"
+                          "The ship turns exactly as far as the key was held, however long the packets\n"
+                          "take, and mouse prediction applies. Needs turnResistance 0.");
+    ImGui::BeginDisabled(!net_.key_turn_mouse);
+    ImGui::SetNextItemWidth(280);
+    ImGui::SliderInt("Turn speed", &net_.key_turn_rate, 30, 1000, "%d deg/s");
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("How fast the ship turns while a key is held (xpilot.keyTurnRate).\n"
+                          "Without this option the speed comes from the server settings, usually\n"
+                          "about 630 deg/s. Lower is more precise, higher is quicker.");
+    ImGui::EndDisabled();
+    if (net_.key_turn_mouse && !net_.mouse_prediction)
+        ImGui::TextColored(kWarn, "Keyboard turning relies on mouse prediction to look smooth.");
+    ImGui::TextDisabled("Might help hiding the lag when turning. Thrust, shots and other ships are not affected.");
+}
+
 bool ProfileEditor::Render(float bottom_reserve) {
     bool saved = false;
     ImGui::BeginChild("ProfileBody", ImVec2(0, -bottom_reserve));
@@ -639,6 +722,7 @@ bool ProfileEditor::Render(float bottom_reserve) {
         if (ImGui::BeginTabItem("Mouse")) { RenderMouse(); ImGui::EndTabItem(); }
         if (ImGui::BeginTabItem("Modifier banks")) { RenderModBanks(); ImGui::EndTabItem(); }
         if (ImGui::BeginTabItem("Audio")) { RenderAudio(); ImGui::EndTabItem(); }
+        if (ImGui::BeginTabItem("Network")) { RenderNetwork(); ImGui::EndTabItem(); }
         ImGui::EndTabBar();
     }
     ImGui::EndChild();

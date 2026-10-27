@@ -104,6 +104,9 @@ int Sockbuf_advance(sockbuf_t *sbuf, int len)
     return 0;
 }
 
+/* Optional replacement for datagram reads (client jitter buffer). */
+int (*sockbuf_read_hook)(sock_t *sock, char *buf, int len);
+
 int Sockbuf_flush(sockbuf_t *sbuf)
 {
     int			len,
@@ -266,8 +269,8 @@ int Sockbuf_read(sockbuf_t *sbuf)
 	    len = sbuf->len;
 	else
 #endif
-	while ((len = sock_read(&sbuf->sock, sbuf->buf + sbuf->len, max))
-	       <= 0) {
+	while ((len = (sockbuf_read_hook ? sockbuf_read_hook : sock_read)
+		(&sbuf->sock, sbuf->buf + sbuf->len, max)) <= 0) {
 	    if (len == 0)
 		return 0;
 #ifdef _WINDOWS

@@ -731,6 +731,42 @@ xp_option_t default_options[] = {
 	"Set maximum number of mouse turns sent per second\n"
 	"Set to 0 to disable this feature (its mostly useful on modem)\n"),
 
+    XP_BOOL_OPTION(
+	"keyTurnMouse",
+	false,
+	&keyTurnMouse,
+	NULL,
+	XP_OPTFLAG_CONFIG_DEFAULT,
+	"Turn with the keyboard like with the mouse: while a turn key is\n"
+	"held the client sends mouse-like moves at the speed given by\n"
+	"keyTurnRate. The ship then turns exactly as far as the key was\n"
+	"held, even on a laggy or unsteady connection, and dirPrediction\n"
+	"applies. Only works with turnResistance 0.\n"),
+
+    XP_INT_OPTION(
+	"keyTurnRate",
+	630,
+	30,
+	2000,
+	&keyTurnRate,
+	NULL,
+	XP_OPTFLAG_CONFIG_DEFAULT,
+	"Turn speed in degrees per second when keyTurnMouse is on.\n"),
+
+    XP_INT_OPTION(
+	"maxJitterBuffer",
+	150,
+	0,
+	500,
+	&maxJitterBuffer,
+	NULL,
+	XP_OPTFLAG_CONFIG_DEFAULT,
+	"Adaptive jitter buffer: hold incoming frames and play them at a\n"
+	"steady rate. The delay follows the largest lateness seen recently\n"
+	"(up to this many milliseconds) and shrinks again when the network\n"
+	"calms down. Smooths out stutter on unsteady connections at the\n"
+	"price of some extra latency. Set to 0 to disable.\n"),
+
     XP_INT_OPTION(
 	"sparkSize",
 	2,

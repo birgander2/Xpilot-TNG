@@ -4,6 +4,7 @@
  */
 
 #include "sdl3_client.h"
+#include "../playout.h"
 #include "tng_app_icon.h"
 
 SDL_Window   *tng_window = NULL;
@@ -185,6 +186,7 @@ void SDL3_Game_Loop(void)
     struct timeval tv;
 
     tng_running = true;
+    Playout_start();
 
     if ((result = Net_input()) == -1) {
         error("Bad server input");
@@ -210,6 +212,7 @@ void SDL3_Game_Loop(void)
     for (tfds = rfds; tng_running; rfds = tfds) {
         tv.tv_sec = 0;
         tv.tv_usec = (result > 1) ? 0 : 2000; /* poll SDL input every 2 ms when idle */
+        tv.tv_usec = Playout_wait_us((int)tv.tv_usec);
 
         if (maxMouseTurnsPS > 0) {
             int t = Client_check_pointer_move_interval();
@@ -232,13 +235,14 @@ void SDL3_Game_Loop(void)
             return;
 
         Voice_update();
+        Key_turn_tick();
 
         if (Net_flush() == -1) {
             error("Bad net flush after input");
             return;
         }
 
-        if (FD_ISSET(netfd, &rfds) || result > 1) {
+        if (FD_ISSET(netfd, &rfds) || result > 1 || Playout_due()) {
             struct timeval tv1, tv2;
 
             gettimeofday(&tv1, NULL);

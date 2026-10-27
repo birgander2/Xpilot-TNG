@@ -26,6 +26,7 @@
  */
 
 #include "xpclient.h"
+#include "playout.h"
 
 #define TALK_RETRY	2
 #define MAX_MAP_ACK_LEN	500
@@ -49,6 +50,9 @@ long			last_loops;
 bool                    packetMeasurement;
 pointer_move_t		pointer_moves[MAX_POINTER_MOVES];
 int			pointer_move_next;
+double			pointer_total;	/* sum of all turns sent, dir units */
+static int		pointer_cum;	/* cumulative pointer movement sent */
+static bool		pointer_cum_in_wbuf;
 long			last_keyboard_ack;
 bool			dirPrediction;
 #ifdef _WINDOWS
@@ -639,6 +643,7 @@ int Net_flush(void)
 	return Key_update();
 
     Send_talk();
+    pointer_cum_in_wbuf = false;
     if (Sockbuf_flush(&wbuf) == -1)
 	return -1;
     Sockbuf_clear(&wbuf);
@@ -2386,12 +2391,26 @@ int Send_keyboard(u_byte *keyboard_vector)
     if (wbuf.size - wbuf.len < size + 1 + 4)
 	/* Not enough write buffer space for keyboard state */
 	return 0;
+    /*
+     * Keyboard updates are repeated until the server acks them, pointer
+     * moves are sent only once.  If a move got lost, the ack of a repeated
+     * keyboard update would claim turns the server never got: dirPrediction
+     * jumps back, and forward again once the next move brings the server
+     * up to date.  Moves are cumulative, so repeat the current total along
+     * with the keyboard; the server only turns by what it has not seen.
+     */
+    if (version >= 0x4F13 && dirPrediction && !pointer_cum_in_wbuf
+	&& pointer_moves[(pointer_move_next + MAX_POINTER_MOVES - 1)
+			 % MAX_POINTER_MOVES].id > last_keyboard_ack
+	&& wbuf.size - wbuf.len >= size + 1 + 4 + 3)
+	Packet_printf(&wbuf, "%c%hd", PKT_POINTER_MOVE, pointer_cum);
     Packet_printf(&wbuf, "%c%ld", PKT_KEYBOARD, last_keyboard_change);
     memcpy(&wbuf.buf[wbuf.len], keyboard_vector, (size_t)size);
     wbuf.len += size;
     last_keyboard_update = last_loops;
     Net_keyboard_track();
     Send_talk();
+    pointer_cum_in_wbuf = false;
     if (Sockbuf_flush(&wbuf) == -1) {
 	error("Can't send keyboard update");
 	return -1;
@@ -2588,8 +2607,6 @@ int Send_modifier_bank(int bank)
 
 int Send_pointer_move(int movement)
 {
-    static int total;
-
 #if 0
     struct timeval tv;
     static struct timeval old_tv;
@@ -2619,6 +2636,9 @@ int Send_pointer_move(int movement)
 	pointer_moves[pointer_move_next].movement = movement;
 	pointer_moves[pointer_move_next].turnspeed = turnspeed;
 	pointer_moves[pointer_move_next].id = last_keyboard_change + 1;
+	/* the server turns the ship by -movement * turnspeed / 64 dir units */
+	pointer_total = fmod(pointer_total
+			     - movement * turnspeed / (RES / 2), RES);
 	
         pointer_move_next++;
 	if (pointer_move_next >= MAX_POINTER_MOVES)
@@ -2626,12 +2646,13 @@ int Send_pointer_move(int movement)
     }
 
     if (version >= 0x4F13) {
-	total += movement;
-	movement = total;
+	pointer_cum += movement;
+	movement = pointer_cum;
     }
 
     if (Packet_printf(&wbuf, "%c%hd", PKT_POINTER_MOVE, movement) == -1)
 	return -1;
+    pointer_cum_in_wbuf = true;
     
     if (dirPrediction)
 	Net_key_change();	

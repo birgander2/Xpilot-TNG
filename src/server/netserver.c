@@ -3100,10 +3100,6 @@ static int Receive_pointer_move(connection_t *connp)
     }
     pl = Player_by_id(connp->id);
 
-    /* kps - ??? */
-    if (Player_is_hoverpaused(pl))
-	return 1;
-
     if (FEATURE(connp, F_CUMULATIVETURN)) {
 	int16_t delta;
 
@@ -3111,6 +3107,15 @@ static int Receive_pointer_move(connection_t *connp)
 	connp->last_mouse_pos = movement;
 	movement = delta;
     }
+
+    /*
+     * Players_turn() only turns active players, so turns received
+     * meanwhile would pile up in turnvel and be applied all at once when
+     * the ship appears.  The cumulative position above must still be
+     * kept up to date, or the next move would contain all of them.
+     */
+    if (Player_is_hoverpaused(pl) || !Player_is_active(pl))
+	return 1;
 
     if (Player_uses_autopilot(pl))
 	Autopilot(pl, false);

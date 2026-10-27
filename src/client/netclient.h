@@ -54,10 +54,11 @@ typedef struct {
     int id;
 } pointer_move_t;
 
-#define MAX_POINTER_MOVES 128
+#define MAX_POINTER_MOVES 512
 
 extern pointer_move_t pointer_moves[MAX_POINTER_MOVES];
 extern int pointer_move_next;
+extern double pointer_total;
 extern long last_keyboard_ack;
 extern bool dirPrediction;
 

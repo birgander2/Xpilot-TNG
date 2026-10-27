@@ -9,6 +9,9 @@
 #include <cstring>
 #include <map>
 #include <set>
+#include <thread>
+#include <unordered_map>
+#include <vector>
 
 #ifdef _WIN32
 #include <winsock2.h>
@@ -99,6 +102,10 @@ constexpr int kMaxPerIp = 5;                // a single host can flood the meta 
 
 long ElapsedMs(Clock::time_point since) {
     return std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - since).count();
+}
+
+long ElapsedUs(Clock::time_point since) {
+    return std::chrono::duration_cast<std::chrono::microseconds>(Clock::now() - since).count();
 }
 
 // Contact packet as built by Packet_printf("%u%s%hu%c", magic, name, port, type)
@@ -210,36 +217,64 @@ int OpenUdp(bool broadcast) {
     return fd;
 }
 
-// Sends a CONTACT to every server and fills in ping_ms from the replies.
-void PingServers(std::vector<ServerEntry>& servers, const std::atomic<bool>& cancel) {
-    int fd = OpenUdp(false);
-    if (fd < 0) return;
+// Measures the round-trip time to every server with unicast CONTACT packets (the server just answers
+// them, it does nothing else) and sets ping_ms to the median over several rounds, -1 = no answer.
+// Every round uses its own socket so a late reply can never be counted for the wrong round.
+// The first round waits up to first_timeout_ms for stragglers, later rounds only ask the servers
+// that have answered before and end as soon as all of them replied.
+void PingServers(std::vector<ServerEntry>& servers, const std::atomic<bool>& cancel, int rounds, int first_timeout_ms) {
     const std::string pkt = BuildPacket(kContact);
-    auto start = Clock::now();
-    for (const auto& s : servers) {
-        sockaddr_in sa{};
-        sa.sin_family = AF_INET;
-        sa.sin_port = htons(uint16_t(s.port));
-        if (inet_pton(AF_INET, s.ip.c_str(), &sa.sin_addr) != 1) continue;
-        sendto(fd, pkt.data(), pkt.size(), 0, reinterpret_cast<sockaddr*>(&sa), sizeof sa);
+    std::vector<sockaddr_in> addr(servers.size());
+    std::vector<std::vector<long>> samples(servers.size());
+    std::unordered_map<std::string, size_t> index;
+    std::vector<bool> valid(servers.size(), false);
+    for (size_t i = 0; i < servers.size(); i++) {
+        addr[i] = {};
+        addr[i].sin_family = AF_INET;
+        addr[i].sin_port = htons(uint16_t(servers[i].port));
+        valid[i] = inet_pton(AF_INET, servers[i].ip.c_str(), &addr[i].sin_addr) == 1;
+        if (valid[i]) index[servers[i].ip + ":" + std::to_string(servers[i].port)] = i;
     }
-    int pending = int(servers.size());
-    while (pending > 0 && !cancel && ElapsedMs(start) < 2000) {
-        if (PollOne(fd, POLLIN, 100) <= 0) continue;
-        char buf[1024];
-        sockaddr_in from{};
-        socklen_t flen = sizeof from;
-        int n = int(recvfrom(fd, buf, sizeof buf, 0, reinterpret_cast<sockaddr*>(&from), &flen));
-        if (n <= 0 || !ParseStatusReply(buf, n, kContact, nullptr)) continue;
-        char ip[INET_ADDRSTRLEN];
-        inet_ntop(AF_INET, &from.sin_addr, ip, sizeof ip);
-        for (auto& s : servers)
-            if (s.ping_ms < 0 && s.ip == ip && s.port == ntohs(from.sin_port)) {
-                s.ping_ms = int(ElapsedMs(start));
-                pending--;
-            }
+
+    for (int round = 0; round < rounds && !cancel; round++) {
+        int fd = OpenUdp(false);
+        if (fd < 0) break;
+        std::vector<bool> answered(servers.size(), false);
+        int pending = 0;
+        auto start = Clock::now();
+        for (size_t i = 0; i < servers.size(); i++) {
+            if (!valid[i] || (round > 0 && samples[i].empty())) continue;
+            sendto(fd, pkt.data(), pkt.size(), 0, reinterpret_cast<sockaddr*>(&addr[i]), sizeof addr[i]);
+            pending++;
+        }
+        const long timeout_ms = round == 0 ? first_timeout_ms : 500;
+        while (pending > 0 && !cancel && ElapsedMs(start) < timeout_ms) {
+            if (PollOne(fd, POLLIN, 20) <= 0) continue;
+            char buf[1024];
+            sockaddr_in from{};
+            socklen_t flen = sizeof from;
+            int n = int(recvfrom(fd, buf, sizeof buf, 0, reinterpret_cast<sockaddr*>(&from), &flen));
+            long us = ElapsedUs(start);
+            if (n <= 0 || !ParseStatusReply(buf, n, kContact, nullptr)) continue;
+            char ip[INET_ADDRSTRLEN];
+            inet_ntop(AF_INET, &from.sin_addr, ip, sizeof ip);
+            auto it = index.find(std::string(ip) + ":" + std::to_string(ntohs(from.sin_port)));
+            if (it == index.end() || answered[it->second]) continue;
+            answered[it->second] = true;
+            samples[it->second].push_back(us);
+            pending--;
+        }
+        CloseSocket(fd);
+        if (round + 1 < rounds && !cancel) std::this_thread::sleep_for(std::chrono::milliseconds(40));
     }
-    CloseSocket(fd);
+
+    for (size_t i = 0; i < servers.size(); i++) {
+        auto& v = samples[i];
+        if (v.empty()) continue;
+        std::sort(v.begin(), v.end());
+        long us = v[v.size() / 2];
+        servers[i].ping_ms = std::max(1, int((us + 500) / 1000));
+    }
 }
 
 // Whole body of a TCP connection to host:port (up to a time limit). Empty on failure.
@@ -369,12 +404,11 @@ void ServerSearch::RunLan() {
     std::vector<ServerEntry> found;
 
     auto start = Clock::now();
-    long next_send = 0, last_send = 0;
+    long next_send = 0;
     while (!cancel_ && ElapsedMs(start) < 1800) {
         if (ElapsedMs(start) >= next_send && next_send <= 600) {
             for (const auto& t : targets)
                 sendto(fd, pkt.data(), pkt.size(), 0, reinterpret_cast<const sockaddr*>(&t), sizeof t);
-            last_send = ElapsedMs(start);
             next_send += 600;
         }
         if (PollOne(fd, POLLIN, 50) <= 0) continue;
@@ -389,7 +423,7 @@ void ServerSearch::RunLan() {
         e.ip = local.count(ip) ? "127.0.0.1" : ip;   // same machine answers on several addresses
         e.port = ntohs(from.sin_port);
         e.host = (e.ip == "127.0.0.1") ? "localhost" : e.ip;
-        e.ping_ms = int(ElapsedMs(start) - last_send);
+        e.ping_ms = -1;   // measured with unicast pings once the search is over
         bool dup = std::any_of(found.begin(), found.end(),
                                [&](const ServerEntry& o) { return o.ip == e.ip && o.port == e.port; });
         if (dup) continue;
@@ -397,7 +431,18 @@ void ServerSearch::RunLan() {
         Publish(found, "Searching the local network ...");
     }
     CloseSocket(fd);
-    std::sort(found.begin(), found.end(), [](const ServerEntry& a, const ServerEntry& b) { return a.ping_ms < b.ping_ms; });
+    if (cancel_) return;
+    if (!found.empty()) {
+        // The broadcast reply time says nothing about the real latency (Wi-Fi delays broadcasts to
+        // sleeping stations until the next beacon), so ping every server directly.
+        Publish(found, "Measuring ping ...");
+        PingServers(found, cancel_, 5, 600);
+        if (cancel_) return;
+    }
+    std::stable_sort(found.begin(), found.end(), [](const ServerEntry& a, const ServerEntry& b) {
+        int pa = a.ping_ms < 0 ? 1 << 30 : a.ping_ms, pb = b.ping_ms < 0 ? 1 << 30 : b.ping_ms;
+        return pa < pb;
+    });
     Publish(found, found.empty() ? "No servers found on the local network."
                                  : std::to_string(found.size()) + " server(s) found.");
 }
@@ -437,7 +482,7 @@ void ServerSearch::RunInternet() {
 
     unreachable_total_ = 0;
     Publish({}, "Measuring ping ...");
-    PingServers(found, cancel_);
+    PingServers(found, cancel_, 3, 2000);
     if (cancel_) return;
     std::stable_sort(found.begin(), found.end(), [](const ServerEntry& a, const ServerEntry& b) {
         int pa = a.ping_ms < 0 ? 1 << 30 : a.ping_ms, pb = b.ping_ms < 0 ? 1 << 30 : b.ping_ms;

@@ -194,9 +194,9 @@ bool LauncherApp::BinariesOk(bool server, bool client) {
     return false;
 }
 
-// Client arguments: identity row plus audio edits that are not saved to the xpilotrc yet.
+// Client arguments: identity row plus all profile edits that are not saved to the xpilotrc yet.
 std::vector<std::string> LauncherApp::ClientArgs(int port, const std::string& host) const {
-    return profile_.BuildArgs(port, host, profile_editor_.UnsavedAudioArgs());
+    return profile_.BuildArgs(port, host, profile_editor_.UnsavedArgs());
 }
 
 void LauncherApp::GoTo(Screen s) {
@@ -205,7 +205,7 @@ void LauncherApp::GoTo(Screen s) {
     if (s == Screen::Menu) {
         banner_.clear();
     }
-    if (s == Screen::Profile) profile_editor_.Load(profile_.ship_names, true);   // keeps unsaved audio edits
+    if (s == Screen::Profile) profile_editor_.Load(profile_.ship_names, true);   // keeps unsaved edits
     if (s == Screen::NetworkBrowser) {
         lan_search_.Start();        // full refresh on every visit (no-op while a scan is still running)
         internet_search_.Start();
@@ -772,7 +772,7 @@ void LauncherApp::RenderIdentityRow() {
         profile_return_ = screen_;
         GoTo(Screen::Profile);
     }
-    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Edit keys, mouse buttons, modifier banks, audio and ship in the xpilotrc");
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Edit keys, mouse buttons, modifier banks, audio, network and ship in the xpilotrc");
 }
 
 void LauncherApp::RenderQuickSettings(bool server_mode) {
@@ -1463,7 +1463,7 @@ void LauncherApp::RenderProfileLeavePopup() {
     if (!ImGui::BeginPopupModal("Unsaved changes", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) return;
     ImGui::Text("The player profile has unsaved changes.");
     ImGui::Spacing();
-    if (ImGui::Button("Save", ImVec2(110, 0))) {
+    if (ImGui::Button("Save profile", ImVec2(110, 0))) {
         if (profile_editor_.Save()) {
             profile_.Load((data_dir_ + "/shipshapes.txt").c_str());
             ImGui::CloseCurrentPopup();
@@ -1473,12 +1473,20 @@ void LauncherApp::RenderProfileLeavePopup() {
         }
     }
     ImGui::SameLine();
-    if (ImGui::Button("Discard", ImVec2(110, 0))) {
+    if (ImGui::Button("Apply without saving", ImVec2(170, 0))) {
+        profile_editor_.ApplyIdentityTo(profile_);   // the other edits go to the client as arguments
         ImGui::CloseCurrentPopup();
         GoTo(profile_return_);
     }
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Use the changes for the next games, but do not write them to the xpilotrc.");
     ImGui::SameLine();
-    if (ImGui::Button("Cancel", ImVec2(110, 0)) || ImGui::IsKeyPressed(ImGuiKey_Escape))
+    if (ImGui::Button("Discard changes", ImVec2(150, 0))) {
+        profile_editor_.Load(profile_.ship_names);   // back to what the xpilotrc has
+        ImGui::CloseCurrentPopup();
+        GoTo(profile_return_);
+    }
+    if (ImGui::IsKeyPressed(ImGuiKey_Escape))   // Esc: stay in the profile editor
         ImGui::CloseCurrentPopup();
     ImGui::EndPopup();
 }

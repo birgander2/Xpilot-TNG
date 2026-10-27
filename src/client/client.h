@@ -601,6 +601,10 @@ extern int	recordFPS;		/* What FPS to record at */
 extern time_t	currentTime;	        /* Current value of time() */
 extern bool	newSecond;              /* Did time() increment this frame? */
 extern int	maxMouseTurnsPS;
+extern bool	keyTurnMouse;
+extern bool	selfActive;
+extern int	keyTurnRate;
+extern int	maxJitterBuffer;
 extern int	mouseMovementInterval;
 extern int	cumulativeMouseMovement;
 
@@ -720,6 +724,8 @@ void Keyboard_button_released(xp_keysym_t ks);
 
 int Key_init(void);
 int Key_update(void);
+void Key_turn_tick(void);
+void Key_turn_frame(long loops);
 void Key_clear_counts(void);
 bool Key_press(keys_t key);
 bool Key_release(keys_t key);

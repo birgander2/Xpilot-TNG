@@ -330,6 +330,7 @@ set(CLIENT_SOURCES
     src/client/newbie.c
     src/client/meta.c
     src/client/netclient.c
+    src/client/playout.c
     src/client/paint.c
     src/client/paintmap.c
     src/client/paintobjects.c

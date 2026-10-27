@@ -143,9 +143,104 @@ int Key_init(void)
     return 0;
 }
 
+/*
+ * keyTurnMouse: turn with the keyboard like with the mouse.  While a turn
+ * key is held the server is not told about it.  Instead the client sends a
+ * small pointer move for every frame it shows (keyTurnRate degrees per
+ * second of game time), and the mouse direction prediction applies.  So the
+ * ship turns exactly as far as the player saw it turn, however long the
+ * packets take: when no frames arrive (network outage) it does not turn
+ * blind and then jump.  Only the linear turn model (turnResistance 0) is
+ * supported.
+ */
+static int	key_turn_dir;		/* 1 left, -1 right, 0 none */
+static double	key_turn_pending;	/* pointer move units not sent yet */
+
+static bool Key_turn_mouse_active(void)
+{
+    return keyTurnMouse && turnresistance == 0.0;
+}
+
 int Key_update(void)
 {
+    if (Key_turn_mouse_active()
+	&& (BITV_ISSET(keyv, KEY_TURN_LEFT)
+	    || BITV_ISSET(keyv, KEY_TURN_RIGHT))) {
+	BITV_DECL(kv, NUM_KEYS);
+
+	memcpy(kv, keyv, sizeof(kv));
+	BITV_CLR(kv, KEY_TURN_LEFT);
+	BITV_CLR(kv, KEY_TURN_RIGHT);
+	return Send_keyboard(kv);
+    }
     return Send_keyboard(keyv);
+}
+
+/* Called from the main loop: reacts to pressing and releasing turn keys. */
+void Key_turn_tick(void)
+{
+    int dir, move;
+
+    dir = Key_turn_mouse_active()
+	? (BITV_ISSET(keyv, KEY_TURN_LEFT) ? 1 : 0)
+	  - (BITV_ISSET(keyv, KEY_TURN_RIGHT) ? 1 : 0)
+	: 0;
+    if (dir == key_turn_dir)
+	return;
+    /* released or switched: send what is still owed */
+    move = (int)(key_turn_pending < 0 ? key_turn_pending - 0.5
+		 : key_turn_pending + 0.5);
+    key_turn_pending = 0.0;
+    key_turn_dir = dir;
+    if (move != 0) {
+	Client_pointer_move(move);
+	Net_flush();
+    }
+}
+
+/* Called for every frame shown: turn one frame's worth while a key is held. */
+void Key_turn_frame(long loops)
+{
+    static long last_loops_seen, usual = 1;
+    long frames = loops - last_loops_seen;
+    double units_per_frame;
+    int move;
+
+    last_loops_seen = loops;
+    Key_turn_tick();
+    if (key_turn_dir == 0 || frames < 1)
+	return;
+    /*
+     * The server only turns active ships (not while dead or appearing).
+     * Older servers even pile up turns sent meanwhile and apply them all
+     * at once when the ship appears, so send none.
+     */
+    if (!selfActive) {
+	key_turn_pending = 0.0;
+	return;
+    }
+    /*
+     * After a gap (network outage, frames dropped) turn no further than
+     * for a normal frame: the player did not see the frames in between.
+     * Normally that is 1, more if the server sends us fewer frames.
+     */
+    if (frames <= 4)
+	usual = frames;
+    else
+	frames = usual;
+
+    /* pointer move units that turn the ship keyTurnRate degrees per second */
+    units_per_frame = keyTurnRate / 360.0 * RES
+	* (MAX_PLAYER_TURNSPEED / (turnspeed < 1.0 ? 1.0 : turnspeed))
+	/ (FPS > 0 ? FPS : 50);
+    /* turning left makes the direction grow, which is a negative move */
+    key_turn_pending -= key_turn_dir * units_per_frame * frames;
+    move = (int)key_turn_pending;	/* truncates toward zero */
+    if (move != 0) {
+	key_turn_pending -= move;
+	Client_pointer_move(move);
+	Net_flush();
+    }
 }
 
 static bool Key_check_talk_macro(keys_t key)

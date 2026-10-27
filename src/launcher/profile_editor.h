@@ -4,17 +4,25 @@
 #include <string>
 #include <vector>
 
+class ClientProfile;
+
 // Editor for the player profile in the xpilotrc: nickname, ship, key bindings,
-// mouse buttons, weapon modifier banks and audio (game sounds, voice chat).
+// mouse buttons, weapon modifier banks, audio (game sounds, voice chat) and
+// network settings (jitter buffer, turn prediction).
 class ProfileEditor {
 public:
     // Reads the xpilotrc. ship_names are the choices of lib/shipshapes.txt.
-    // keep_audio: keep audio edits that were not saved yet (they stay "unsaved").
-    void Load(const std::vector<std::string>& ship_names, bool keep_audio = false);
+    // keep_unsaved: keep all edits that were not saved yet (they stay "unsaved").
+    void Load(const std::vector<std::string>& ship_names, bool keep_unsaved = false);
 
-    // Client arguments for audio values that were changed but not saved to the
-    // xpilotrc, so they apply to the next game anyway.
-    std::vector<std::string> UnsavedAudioArgs() const;
+    // Client arguments for every value that was changed but not saved to the
+    // xpilotrc (keys, mouse buttons, modifier banks, audio, network), so they
+    // apply to the next game anyway. Name and ship: see ApplyIdentityTo().
+    std::vector<std::string> UnsavedArgs() const;
+
+    // Copies an unsaved nickname / ship choice into the profile the launcher
+    // starts clients with.
+    void ApplyIdentityTo(ClientProfile& profile) const;
 
     // Draws the editor into the current window. Returns true when the xpilotrc was written.
     bool Render(float bottom_reserve);
@@ -41,6 +49,7 @@ private:
     void RenderMouse();
     void RenderModBanks();
     void RenderAudio();
+    void RenderNetwork();
     std::vector<std::pair<std::string, std::string>> Changes() const;
 
     static constexpr int kButtons = 5, kBanks = 4;
@@ -66,6 +75,16 @@ private:
         int voice_mic_gain = 100;        // %
     } audio_;
     std::vector<std::pair<std::string, std::string>> AudioValues() const;
+
+    // network: client options maxJitterBuffer, dirPrediction, keyTurnMouse, keyTurnRate
+    struct Network {
+        bool jitter_buffer = true;       // maxJitterBuffer > 0
+        int jitter_ms = 150;             // upper limit of the buffer delay
+        bool mouse_prediction = true;    // dirPrediction
+        bool key_turn_mouse = false;     // keyTurnMouse
+        int key_turn_rate = 630;         // keyTurnRate, degrees per second
+    } net_;
+    std::vector<std::pair<std::string, std::string>> NetworkValues() const;
     bool loaded_ = false;
 
     std::map<std::string, std::string> rc_;      // values defined in the xpilotrc when loaded
