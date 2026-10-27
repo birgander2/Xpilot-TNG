@@ -16,7 +16,6 @@ First conceived in 1991 by Bjørn Stabell and Ken Ronny Schouten, XPilot reliabl
 - 🏎️ **No more Autotools headaches:** Rebuilt with a modern **CMake** & **Ninja** build system.
 - 🦾 **C23 & GCC 15 Ready:** Pure, type-safe C code, UTF-8 clean, and stripped of deprecated syntactic fossils.
 - 🎨 **SDL3 & GPU 2D Renderer:** Say goodbye to vintage OpenGL 1.1 immediate mode (`glBegin`/`glEnd`) and obsolete GLU. Crisp 2D vector rendering powered directly by `SDL_Renderer` with native Wayland and X11 support.
-- 🔤 **Razor-Sharp Typography:** TrueType font rendering with **SDL3_ttf**.
 - 🔊 **Modern Sound:** Crisp audio effects delivered through native **SDL3 Audio Streams**.
 - 🌐 **Modernized Networking:** Clean, thread-safe POSIX sockets (`getaddrinfo`, `getnameinfo`, `sockaddr_storage`) replacing archaic `SIGALRM` DNS timeouts from the 90s. Game traffic itself is still **IPv4 only** for now — full IPv6 is on the to-do list. 🚧
 - 🛡️ **Hardened Server:** Three decades of `strcpy` optimism met a fuzzer and lost. Buffer overflows are fixed, the network code is sanitizer-tested and the binary is built with modern compiler hardening. Old clients still connect just fine — they just won't be able to crash your lobby anymore.

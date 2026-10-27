@@ -260,6 +260,37 @@ static bool Contact_rate_ok(const char *addr)
     return true;
 }
 
+/*
+ * Log a request for information at most once per 10 seconds for each source
+ * address.  The launcher asks twice per search and every address of a
+ * machine answers, which filled the log with identical lines.  The request
+ * is answered either way.  The table is direct mapped, a collision only
+ * means one line more.
+ */
+#define LOG_SLOTS	64
+
+static bool Request_log_ok(const char *addr)
+{
+    static struct {
+	char	addr[INET6_ADDRSTRLEN];
+	time_t	last;
+    } seen[LOG_SLOTS];
+    unsigned h = 2166136261u;
+    time_t now = time(NULL);
+    const char *p;
+    int i;
+
+    for (p = addr; *p; p++)
+	h = (h ^ (unsigned char)*p) * 16777619u;
+    i = h % LOG_SLOTS;
+
+    if (!strcmp(seen[i].addr, addr) && now - seen[i].last < 10)
+	return false;
+    strlcpy(seen[i].addr, addr, sizeof(seen[i].addr));
+    seen[i].last = now;
+    return true;
+}
+
 /* Allow a log message about dropped packets at most every 10 seconds. */
 static bool Log_throttle_ok(void)
 {
@@ -510,8 +541,9 @@ void Contact(int fd, void *arg)
 	 * Someone asked for information.
 	 */
 
-	xpprintf("%s %s@%s asked for info about current game.\n",
-		 showtime(), user_name, host_addr);
+	if (Request_log_ok(host_addr))
+	    xpprintf("%s %s@%s asked for info about current game.\n",
+		     showtime(), user_name, host_addr);
 	Sockbuf_clear(&ibuf);
 	Packet_printf(&ibuf, "%u%c%c", my_magic, reply_to, SUCCESS);
 	assert(ibuf.size - ibuf.len >= 0);
@@ -660,8 +692,9 @@ void Contact(int fd, void *arg)
 	 */
 	bool		bad = false, full, change;
 
-	xpprintf("%s %s@%s asked for an option list.\n",
-		 showtime(), user_name, host_addr);
+	if (Request_log_ok(host_addr))
+	    xpprintf("%s %s@%s asked for an option list.\n",
+		     showtime(), user_name, host_addr);
 	i = 0;
 	do {
 	    Sockbuf_clear(&ibuf);
