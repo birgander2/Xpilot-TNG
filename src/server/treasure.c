@@ -115,6 +115,7 @@ void Ball_is_destroyed(ballobject_t *ball)
 		  "%.2f ticks (best %.2f) / %.2fs >",
 		  frames, ticks, Rank_get_best_ballrun(pl), seconds);
     Rank_ballrun(pl, ticks);
+    Ball_note_run(pl, seconds);
 }
 
 static int Punish_team(player_t *pl, treasure_t *td, clpos_t pos)

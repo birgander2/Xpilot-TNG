@@ -178,6 +178,8 @@ mapobject_t         *mapobjects = NULL;
 int                 num_mapobjects = 0;
 race_result_t       race_result;
 static race_result_t race_result_new;	/* while it arrives */
+ball_result_t       ball_result;
+static ball_result_t ball_result_new;	/* while it arrives */
 xp_polygon_t        *polygons = NULL;
 int                 num_polygons = 0;
 edge_style_t        *edge_styles = NULL;
@@ -1263,11 +1265,11 @@ void Race_result_line(int kind, int rank, int flags, int time_ms, int other,
     race_result_line_t *l = NULL;
     race_result_t *r = &race_result_new;
 
-    if (kind == RACE_RESULT_STANDING && r->nstand < RACE_RESULT_MAX_STANDINGS)
+    if (kind == HIGHSCORE_STANDING && r->nstand < RACE_RESULT_MAX_STANDINGS)
 	l = &r->stand[r->nstand++];
-    else if (kind == RACE_RESULT_TOP_TOTAL && r->ntotal < RACE_RESULT_MAX_TOP)
+    else if (kind == HIGHSCORE_TOP_TOTAL && r->ntotal < RACE_RESULT_MAX_TOP)
 	l = &r->total[r->ntotal++];
-    else if (kind == RACE_RESULT_TOP_LAP && r->nlap < RACE_RESULT_MAX_TOP)
+    else if (kind == HIGHSCORE_TOP_LAP && r->nlap < RACE_RESULT_MAX_TOP)
 	l = &r->lap[r->nlap++];
     if (l == NULL)
 	return;
@@ -1283,6 +1285,30 @@ void Race_result_end(void)
 {
     race_result_new.serial = race_result.serial + 1;
     race_result = race_result_new;
+}
+
+/* The ballrun top list: a header line, list lines and an end line. */
+void Ball_result_line(int kind, int rank, int flags, int time_ms, int other,
+		      const char *name)
+{
+    ball_result_t *r = &ball_result_new;
+
+    if (kind == HIGHSCORE_BALL_HEAD) {
+	memset(r, 0, sizeof(*r));
+	strlcpy(r->map, name, sizeof(r->map));
+	r->speed10 = other;
+    } else if (kind == HIGHSCORE_BALL_TOP && r->ntop < RACE_RESULT_MAX_TOP) {
+	race_result_line_t *l = &r->top[r->ntop++];
+
+	l->rank = rank;
+	l->flags = flags;
+	l->time_ms = time_ms;
+	l->other = other;
+	strlcpy(l->name, name, sizeof(l->name));
+    } else if (kind == HIGHSCORE_BALL_END) {
+	r->serial = ball_result.serial + 1;
+	ball_result = *r;
+    }
 }
 
 

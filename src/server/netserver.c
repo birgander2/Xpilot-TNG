@@ -121,7 +121,7 @@ static int Receive_audio_request(connection_t *connp);
 static int Receive_fps_request(connection_t *connp);
 static int Receive_voice_request(connection_t *connp);
 static int Receive_voice(connection_t *connp);
-static int Receive_race_result_done(connection_t *connp);
+static int Receive_highscore_done(connection_t *connp);
 
 static int Send_motd(connection_t *connp);
 
@@ -189,7 +189,7 @@ static void Feature_init(connection_t *connp)
 	if (v >= TNG_VOICE_VERSION)
 	    SET_BIT(features, F_VOICE);
 	if (v >= TNG_FIRST_VERSION)
-	    SET_BIT(features, F_RACERESULT);
+	    SET_BIT(features, F_HIGHSCORE);
     }
     connp->features = features;
     return;
@@ -335,7 +335,7 @@ static void Init_receive(void)
     playing_receive[PKT_ASYNC_FPS]		= Receive_fps_request;
     playing_receive[PKT_REQUEST_VOICE]		= Receive_voice_request;
     playing_receive[PKT_VOICE]			= Receive_voice;
-    playing_receive[PKT_RACE_RESULT]		= Receive_race_result_done;
+    playing_receive[PKT_HIGHSCORE]		= Receive_highscore_done;
 }
 
 /*
@@ -3203,28 +3203,28 @@ static int Receive_audio_request(connection_t *connp)
  * top list lines 'other' is the unix time of the entry, for standings the
  * best lap.
  */
-int Send_race_result_head(connection_t *connp, const char *map, int laps, int speed10)
+int Send_highscore_head(connection_t *connp, const char *map, int laps, int speed10)
 {
-    if (!FEATURE(connp, F_RACERESULT))
+    if (!FEATURE(connp, F_HIGHSCORE))
 	return 0;
-    return Packet_printf(&connp->c, "%c%c%s%hd%hd", PKT_RACE_RESULT,
-			 RACE_RESULT_HEAD, map, laps, speed10);
+    return Packet_printf(&connp->c, "%c%c%s%hd%hd", PKT_HIGHSCORE,
+			 HIGHSCORE_RACE_HEAD, map, laps, speed10);
 }
 
-int Send_race_result_line(connection_t *connp, int kind, int rank, int flags,
+int Send_highscore_line(connection_t *connp, int kind, int rank, int flags,
 			  int time_ms, int other, int lap, const char *name)
 {
-    if (!FEATURE(connp, F_RACERESULT))
+    if (!FEATURE(connp, F_HIGHSCORE))
 	return 0;
-    return Packet_printf(&connp->c, "%c%c%c%c%d%d%c%s", PKT_RACE_RESULT, kind,
+    return Packet_printf(&connp->c, "%c%c%c%c%d%d%c%s", PKT_HIGHSCORE, kind,
 			 rank, flags, time_ms, other, lap, name);
 }
 
-int Send_race_result_end(connection_t *connp)
+int Send_highscore_end(connection_t *connp)
 {
-    if (!FEATURE(connp, F_RACERESULT))
+    if (!FEATURE(connp, F_HIGHSCORE))
 	return 0;
-    return Packet_printf(&connp->c, "%c%c", PKT_RACE_RESULT, RACE_RESULT_END);
+    return Packet_printf(&connp->c, "%c%c", PKT_HIGHSCORE, HIGHSCORE_RACE_END);
 }
 
 int Send_voice_state(connection_t *connp)
@@ -3275,7 +3275,7 @@ static int Receive_voice_request(connection_t *connp)
 }
 
 /* The client closed the race result popup: the next race may start. */
-static int Receive_race_result_done(connection_t *connp)
+static int Receive_highscore_done(connection_t *connp)
 {
     int n;
     unsigned char ch;
@@ -3286,7 +3286,7 @@ static int Receive_race_result_done(connection_t *connp)
 	    Destroy_connection(connp, "read error");
 	return n;
     }
-    if (FEATURE(connp, F_RACERESULT) && (pl = Player_by_id(connp->id)) != NULL)
+    if (FEATURE(connp, F_HIGHSCORE) && (pl = Player_by_id(connp->id)) != NULL)
 	Race_result_done(pl);
     return 1;
 }

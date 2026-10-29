@@ -71,7 +71,7 @@
 <Option name="edgeBounce" value="no"/>
 <Option name="gravity" value="0"/>
 <Option name="mapName" value="The Hive"/>
-<Option name="mapAuthor" value="Claude"/>
+<Option name="mapAuthor" value="Dr. Haltenix"/>
 <Option name="mapWidth" value="3200"/>
 <Option name="mapHeight" value="2771"/>
 </GeneralOptions>

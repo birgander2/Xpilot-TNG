@@ -113,18 +113,22 @@
 #define PKT_REQUEST_VOICE	64	/* TNG >= 4.F.2.0 */
 #define PKT_VOICE		65	/* TNG >= 4.F.2.0 */
 #define PKT_VOICE_STATE		66	/* TNG >= 4.F.2.0 */
-#define PKT_RACE_RESULT		67	/* TNG >= 4.F.2.0 */
+#define PKT_HIGHSCORE		67	/* TNG >= 4.F.2.0 */
 
-/* PKT_RACE_RESULT: a header, lines and an end mark (see Send_race_result_*) */
-#define RACE_RESULT_HEAD	0	/* map name, laps, game speed * 10 */
-#define RACE_RESULT_STANDING	1	/* the race just finished */
-#define RACE_RESULT_TOP_TOTAL	2	/* top list: whole race */
-#define RACE_RESULT_TOP_LAP	3	/* top list: best lap */
-#define RACE_RESULT_END		4	/* complete, show it */
-#define RACE_RESULT_F_ROBOT	(1 << 0)
-#define RACE_RESULT_F_FINISHED	(1 << 1)
-#define RACE_RESULT_F_YOU	(1 << 2)	/* the receiving player */
-#define RACE_RESULT_F_NEW	(1 << 3)	/* entered the top list now */
+/* PKT_HIGHSCORE: race results or ballrun records, each a header, lines and
+ * an end mark (see Send_highscore_*); ballrun kinds use the line format */
+#define HIGHSCORE_RACE_HEAD	0	/* map name, laps, game speed * 10 */
+#define HIGHSCORE_STANDING	1	/* the race just finished */
+#define HIGHSCORE_TOP_TOTAL	2	/* top list: whole race */
+#define HIGHSCORE_TOP_LAP	3	/* top list: best lap */
+#define HIGHSCORE_RACE_END	4	/* complete, show it */
+#define HIGHSCORE_BALL_HEAD	5	/* name: map, other: game speed * 10 */
+#define HIGHSCORE_BALL_TOP	6	/* top list: ballruns */
+#define HIGHSCORE_BALL_END	7	/* complete, show it */
+#define HIGHSCORE_F_ROBOT	(1 << 0)
+#define HIGHSCORE_F_FINISHED	(1 << 1)
+#define HIGHSCORE_F_YOU		(1 << 2)	/* the receiving player */
+#define HIGHSCORE_F_NEW		(1 << 3)	/* entered the top list now */
 #define PKT_MODIFIERS		68
 #define PKT_FASTSHOT		69	/* replaces SHOT/TEAMSHOT */
 

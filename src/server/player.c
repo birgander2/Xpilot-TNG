@@ -992,6 +992,9 @@ void Team_game_over(int winning_team, const char *reason)
 
     teamcup_round_end(winning_team);
 
+    /* ballrun top list, popup only with a new record */
+    Ball_records_finish();
+
     Reset_all_players();
 
     Count_rounds();
@@ -1077,6 +1080,11 @@ void Compute_game_status(void)
 {
     int i;
     char msg[MSG_LEN];
+
+    /* the next round waits for the ballrun record popups */
+    if (!BIT(world->rules->mode, TIMING) && BIT(world->rules->mode, TEAM_PLAY)
+	&& Race_records_pause())
+	return;
 
     if (roundtime > 0)
 	roundtime--;

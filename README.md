@@ -30,7 +30,8 @@ First conceived in 1991 by Bjørn Stabell and Ken Ronny Schouten, XPilot reliabl
 - 🤝 **Teamplay**: Better team selection and balancing, now with robots on your side — or against you. Try Blood's Music against a smartbot team if you dare.
 - 🐣 **Newbie mode**: Finally repaired after 30 years — now you can learn to fly without being fed to the cannons on day one.
 - 🗺️ **Map editor**: Draw your own battlefields: bases, fuel depots and cannons placed by click; every map option at your fingertips. No more counting ASCII characters.
-- 🏁 **Highscores**: Race maps now keep a hall of fame — only humans count, so the bots can't hog the podium.
+- 🏁 **Highscores**: Race maps and ballruns (e.g. bloods-smartbots) now keep a hall of fame — only humans count, so the bots can't hog the podium.
+- 📡 **Lag countermeasures** (experimental): For smoother gamplay a jitter buffer - it doesn't wait for the server's opinion.
 
 ---
 

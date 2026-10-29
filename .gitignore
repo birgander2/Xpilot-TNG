@@ -30,13 +30,14 @@ build-deb/
 dist-deb/
 build-asan/
 build-win
+build-claude
 __pycache__/
 /tests/
 .claude/settings.local.json
-build_dist.sh
+build_linux.sh
 build_src.sh
 Xpilot-TNG_Sources.tgz
-Xpilot-TNG_portable.tgz
+Xpilot-TNG_Linux.tgz
 
 # Windows cross build (build_win.sh)
 build-win/

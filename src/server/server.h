@@ -360,6 +360,8 @@ void Race_note_finish(player_t *pl, int pos);
 void Race_records_finish(void);
 bool Race_records_pause(void);
 void Race_result_done(player_t *pl);
+void Ball_note_run(player_t *pl, double secs);
+void Ball_records_finish(void);
 void Player_reset_timing(player_t *pl);
 void Player_pass_checkpoint(player_t *pl);
 void PlayerCheckpointCollision(player_t *pl);

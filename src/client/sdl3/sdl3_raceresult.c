@@ -61,7 +61,7 @@ static void Rr_layout(float *x, float *y, float *w, float *h)
 static void Rr_close(void)
 {
     rr_active = false;
-    Net_race_result_done();
+    Net_highscore_done();
 }
 
 bool SDL3_RaceResult_Active(void)
@@ -112,12 +112,12 @@ static void Rr_draw_top(const char *title, const race_result_line_t *l, int n,
     for (int i = 0; i < n; i++, y += RR_ROW_H) {
         time_t when = (time_t)l[i].other;
         struct tm *tm = localtime(&when);
-        int color = (l[i].flags & RACE_RESULT_F_YOU) ? XP_COLOR_YELLOW : XP_COLOR_WHITE;
+        int color = (l[i].flags & HIGHSCORE_F_YOU) ? XP_COLOR_YELLOW : XP_COLOR_WHITE;
 
-        if (l[i].flags & RACE_RESULT_F_NEW)
+        if (l[i].flags & HIGHSCORE_F_NEW)
             color = XP_COLOR_GREEN;
         snprintf(buf, sizeof(buf), "%2d.%s", l[i].rank,
-                 (l[i].flags & RACE_RESULT_F_NEW) ? "*" : " ");
+                 (l[i].flags & HIGHSCORE_F_NEW) ? "*" : " ");
         SDL3_Draw_Text(buf, x, y, color);
         SDL3_Draw_Text_Len(l[i].name, (int)strnlen(l[i].name, 14), x + 34.0f, y, color);
         Rr_format(l[i].time_ms, buf, sizeof(buf));
@@ -163,12 +163,12 @@ void SDL3_RaceResult_Render(void)
         const race_result_line_t *me = NULL;
 
         for (int i = 0; i < r->nstand; i++) {
-            if (r->stand[i].flags & RACE_RESULT_F_YOU)
+            if (r->stand[i].flags & HIGHSCORE_F_YOU)
                 me = &r->stand[i];
         }
         if (me == NULL)
             snprintf(buf, sizeof(buf), "You did not race.");
-        else if (me->flags & RACE_RESULT_F_FINISHED) {
+        else if (me->flags & HIGHSCORE_F_FINISHED) {
             Rr_format(me->time_ms, t1, sizeof(t1));
             Rr_format(me->other, t2, sizeof(t2));
             snprintf(buf, sizeof(buf), "You finished %d. in %s   best lap %s",
@@ -189,18 +189,18 @@ void SDL3_RaceResult_Render(void)
     cy += RR_ROW_H;
     for (int i = 0; i < Rr_shown(); i++, cy += RR_ROW_H) {
         const race_result_line_t *l = &r->stand[i];
-        int color = (l->flags & RACE_RESULT_F_YOU) ? XP_COLOR_YELLOW
-            : (l->flags & RACE_RESULT_F_ROBOT) ? XP_COLOR_LIGHT_GRAY : XP_COLOR_WHITE;
+        int color = (l->flags & HIGHSCORE_F_YOU) ? XP_COLOR_YELLOW
+            : (l->flags & HIGHSCORE_F_ROBOT) ? XP_COLOR_LIGHT_GRAY : XP_COLOR_WHITE;
 
-        if (l->flags & RACE_RESULT_F_FINISHED)
+        if (l->flags & HIGHSCORE_F_FINISHED)
             snprintf(buf, sizeof(buf), "%2d.", l->rank);
         else
             snprintf(buf, sizeof(buf), "  -");
         SDL3_Draw_Text(buf, x + RR_PAD, cy, color);
         snprintf(buf, sizeof(buf), "%.24s%s", l->name,
-                 (l->flags & RACE_RESULT_F_ROBOT) ? " (bot)" : "");
+                 (l->flags & HIGHSCORE_F_ROBOT) ? " (bot)" : "");
         SDL3_Draw_Text(buf, x + RR_PAD + 40.0f, cy, color);
-        if (l->flags & RACE_RESULT_F_FINISHED)
+        if (l->flags & HIGHSCORE_F_FINISHED)
             Rr_format(l->time_ms, t1, sizeof(t1));
         else
             snprintf(t1, sizeof(t1), "lap %d", l->lap);

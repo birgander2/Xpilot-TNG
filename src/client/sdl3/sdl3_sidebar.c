@@ -1496,6 +1496,9 @@ void SDL3_Render_UI_Overlays(void)
 
     /* 6. Race result popup (end of a race) */
     SDL3_RaceResult_Render();
+
+    /* 7. Ballrun records popup (end of a round with a new record) */
+    SDL3_BallResult_Render();
 }
 
 /* =========================================================================

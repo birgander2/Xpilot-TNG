@@ -931,7 +931,8 @@ static bool Rb_map_build(void)
 	const int *e = edgeptr + p->edges;
 	double ex = Rb_px(p->pos.cx), ey = Rb_px(p->pos.cy);
 
-	if (p->is_decor || (gp != NULL && (gp->hitmask & NONBALL_BIT)))
+	if (p->is_decor || (gp != NULL && ((gp->hitmask & NONBALL_BIT)
+					   || gp->type == FRICTION)))
 	    continue;
 	for (j = 0; j < p->num_points; j++) {
 	    double dx = Rb_px(e[2 * j]), dy = Rb_px(e[2 * j + 1]);

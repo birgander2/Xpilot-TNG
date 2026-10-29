@@ -67,7 +67,7 @@ static sockbuf_t	rbuf,
 static frame_buf_t	*Frames;
 static int		Receive_voice(void);
 static int		Receive_voice_state(void);
-static int		Receive_race_result(void);
+static int		Receive_highscore(void);
 
 static int		(*receive_tbl[256])(void),
 			(*reliable_tbl[256])(void);
@@ -165,7 +165,7 @@ static void Receive_init(void)
     reliable_tbl[PKT_SCORE_OBJECT] = Receive_score_object;
     reliable_tbl[PKT_TALK_ACK]	= Receive_talk_ack;
     reliable_tbl[PKT_VOICE_STATE] = Receive_voice_state;
-    reliable_tbl[PKT_RACE_RESULT] = Receive_race_result;
+    reliable_tbl[PKT_HIGHSCORE] = Receive_highscore;
 }
 
 /*
@@ -2744,17 +2744,17 @@ static int Receive_voice_state(void)
 }
 
 /* Tell a TNG server that the race result popup was closed. */
-int Net_race_result_done(void)
+int Net_highscore_done(void)
 {
     if (version < TNG_FIRST_VERSION)
 	return 0;
-    if (Packet_printf(&wbuf, "%c", PKT_RACE_RESULT) == -1)
+    if (Packet_printf(&wbuf, "%c", PKT_HIGHSCORE) == -1)
 	return -1;
     return 0;
 }
 
 /* Race results (TNG): header, lines, end mark; see Send_race_result_*. */
-static int Receive_race_result(void)
+static int Receive_highscore(void)
 {
     int n;
     unsigned char pkt, kind, rank, flags, lap;
@@ -2765,12 +2765,12 @@ static int Receive_race_result(void)
     if (&cbuf.buf[cbuf.len] - cbuf.ptr < 2)
 	return 0;	/* the kind is not here yet */
     kind = (unsigned char)cbuf.ptr[1];
-    if (kind == RACE_RESULT_HEAD) {
+    if (kind == HIGHSCORE_RACE_HEAD) {
 	if ((n = Packet_scanf(&cbuf, "%c%c%s%hd%hd", &pkt, &kind, name, &laps,
 			      &speed10)) <= 0)
 	    return n;
 	Race_result_head(name, laps, speed10);
-    } else if (kind == RACE_RESULT_END) {
+    } else if (kind == HIGHSCORE_RACE_END) {
 	if ((n = Packet_scanf(&cbuf, "%c%c", &pkt, &kind)) <= 0)
 	    return n;
 	Race_result_end();
@@ -2778,7 +2778,10 @@ static int Receive_race_result(void)
 	if ((n = Packet_scanf(&cbuf, "%c%c%c%c%d%d%c%s", &pkt, &kind, &rank,
 			      &flags, &time_ms, &other, &lap, name)) <= 0)
 	    return n;
-	Race_result_line(kind, rank, flags, time_ms, other, lap, name);
+	if (kind >= HIGHSCORE_BALL_HEAD)
+	    Ball_result_line(kind, rank, flags, time_ms, other, name);
+	else
+	    Race_result_line(kind, rank, flags, time_ms, other, lap, name);
     }
     return 1;
 }
