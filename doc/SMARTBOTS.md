@@ -475,7 +475,8 @@ Most kills in a dogfight happen at about 70 px, with shots that cannot be dodged
 - **Fight:** the target is the closest known enemy, attackers first. Fresh spawn shields are left alone for a moment; the fighter keeps its own start shield until its first good shot.
 - **Attack run:** high speed past the enemy offset to one side, a volley across the way as it passes (the shots carry the ship's speed and form a line the enemy must cross), then extending and coming again. Which of fight and attack run is used against an opponent is learned (see below).
 - **Falling back:** under heavy fire, against several attackers or a much wider fan of shots, the fighter gains room for a moment and then attacks again.
-- **Refuel** when the fuel is low compared with what it started with and nobody is near; **fetch items** in view that the ship needs.
+- **Refuel** when the fuel is low compared with what it started with and nobody is near (with an empty tank also when someone is); **fetch items** in view that the ship needs and can reach on a straight way, flying through them; one not reached within a few seconds is left alone for a while.
+- **Never idle:** with no enemy known it searches actively (where one was last seen, bases, fuel stations, open places). A fighter that has not moved for three seconds without a fight in sight looks elsewhere; one that thrusts against a wall without moving turns to the most open way. Stuck for good (some maps put bases inside walls) or out of fuel with no station in reach, it self-destructs and starts over.
 - **Reprogrammed** by an ECM (`ecmsReprogramRobots`), or at war after a kill, it goes for that enemy only and searches him where he was last seen, then at bases and fuel stations.
 
 ### Firing and items

@@ -207,6 +207,15 @@ typedef struct {
     unsigned long search_time;
     int		station;
     double	item_x, item_y;
+    double	item_ban_x, item_ban_y;	/* an item we did not get to */
+    unsigned long item_ban_until;
+    unsigned long still_ticks;		/* ticks without moving */
+    unsigned long unstick_until;	/* searching elsewhere after standing */
+    int		push_ticks;		/* thrusting without moving */
+    int		frozen_ticks;		/* the same, escapes included */
+    int		escape_dir;
+    unsigned long escape_until;
+    bool	destruct;
     unsigned long last_missile, last_mine, last_ecm, last_transport;
     unsigned long last_hyper, last_eshield, last_phase;
     /* what this tick's scan found */
@@ -299,6 +308,7 @@ typedef struct {
     double	thrust_cost;		/* per tick of thrust: fuel is short */
     int		worm_ok;		/* the wormhole our way goes through, -1 */
     double	vlim;			/* faster than this costs */
+    bool	through;		/* point goal to fly through (items) */
 } fb_ctx_t;
 
 typedef struct {
@@ -2235,7 +2245,7 @@ static double Fb_rollout(const fb_ctx_t *cx, const fb_cand_t *cand, fb_cand_t *r
 			 fb_flags_t *fl)
 {
     fb_state_t s = cx->s0;
-    double cost = 0.0, need = cx->ship_r + cx->margin;
+    double cost = 0.0, need = cx->ship_r + cx->margin, gmin = 1e9;
     int t, i, hits = 0;
 
     need = MIN(need, cx->clear0 - 1.0);
@@ -2290,6 +2300,8 @@ static double Fb_rollout(const fb_ctx_t *cx, const fb_cand_t *cand, fb_cand_t *r
 	if (clear < need + 8.0)
 	    cost += sqr(need + 8.0 - clear) * 0.5;
 
+	if (cx->through)
+	    gmin = MIN(gmin, LENGTH(cx->gx - s.x, cx->gy - s.y) + t * 2.0);
 	if (cx->run_w > 0.0 && cx->field)
 	    cost += cx->run_w * MAX(0.0, Fb_field_value(cx->field, cx->ox + s.x, cx->oy + s.y)
 				    - cx->goal_slack);
@@ -2365,6 +2377,8 @@ static double Fb_rollout(const fb_ctx_t *cx, const fb_cand_t *cand, fb_cand_t *r
 	if (cx->field)
 	    cost += MAX(0.0, Fb_field_value(cx->field, cx->ox + s.x, cx->oy + s.y)
 			- cx->goal_slack);
+	else if (cx->point && cx->through)
+	    cost += gmin;	/* passing through it is enough (sooner is better) */
 	else if (cx->point) {
 	    double gd = LENGTH(cx->gx - s.x, cx->gy - s.y);
 
@@ -2447,6 +2461,7 @@ static void Fb_ctx_init(player_t *pl, fb_data_t *d, int level, fb_ctx_t *cx)
     cx->has_target = false;
     cx->engage = false;
     cx->run = false;
+    cx->through = false;
     cx->run_w = 0.0;
     cx->goal_slack = 0.0;
     cx->vmax = 16.0;
@@ -2646,6 +2661,18 @@ static fb_flags_t Fb_fly(player_t *pl, fb_data_t *d, int level, fb_ctx_t *cx)
     return fl;
 }
 
+/* Free way from (x, y) in direction dir (absolute px), up to max. */
+static double Fb_free_ray(double x, double y, int dir, double need, double max)
+{
+    double t;
+
+    for (t = FineStep; t < max; t += FineStep) {
+	if (Fb_ship_clear(x + t * tcos(dir), y + t * tsin(dir)) < need)
+	    return t;
+    }
+    return max;
+}
+
 static void Fb_steer(player_t *pl, int want, bool thrust)
 {
     if (want != pl->dir) {
@@ -2760,7 +2787,24 @@ static void Fb_pick_search(player_t *pl, fb_data_t *d)
     double ox = Fb_px(pl->pos.cx), oy = Fb_px(pl->pos.cy);
     int tries;
 
-    if (Fb_id_ok(d->target_id) && d->target_id != NO_ID
+    /* getting unstuck: a fuel station surely reachable from here */
+    if (FbTick < d->unstick_until && NumStationF > 0) {
+	for (tries = 0; tries < 12; tries++) {
+	    int k = (int)(rfrac() * NumStationF);
+	    fuel_t *fs = Fuel_by_index(k);
+	    double sx = Fb_px(fs->pos.cx), sy = Fb_px(fs->pos.cy);
+
+	    if (!StationF[k].valid || Fb_field_value(&StationF[k], ox, oy) >= 1e5
+		|| Fb_dist(ox, oy, sx, sy) < 400.0)
+		continue;
+	    d->search_x = sx;
+	    d->search_y = sy;
+	    d->search_valid = true;
+	    d->search_time = FbTick;
+	    return;
+	}
+    }
+    if (FbTick >= d->unstick_until && Fb_id_ok(d->target_id) && d->target_id != NO_ID
 	&& d->c[d->target_id].last_known > 0
 	&& FbTick - d->c[d->target_id].last_known < 12 * 12
 	&& Fb_dist(ox, oy, d->c[d->target_id].x, d->c[d->target_id].y) > 250.0
@@ -2855,9 +2899,13 @@ static bool Fb_pick_item(player_t *pl, fb_data_t *d, double max_dist)
 	dist = LENGTH(rx, ry);
 	if (dist > max_dist)
 	    continue;
+	/* only what can be reached straight away; one we failed to get: later */
+	if (Fb_segment_clear(ox, oy, ox + rx, oy + ry, FB_SHIP_R * 0.6) < FB_SHIP_R * 0.6)
+	    continue;
+	if (FbTick < d->item_ban_until
+	    && Fb_dist(ox + rx, oy + ry, d->item_ban_x, d->item_ban_y) < 60.0)
+	    continue;
 	score = Fb_item_value(pl, ITEM_PTR(o)->item_type) * 600.0 - dist;
-	if (!Fb_line_free(ox, oy, ox + rx, oy + ry))
-	    score -= 300.0;
 	if (score > best) {
 	    best = score;
 	    d->item_x = ox + rx + o->vel.x * 2.0;
@@ -2878,7 +2926,7 @@ static int Fb_pick_station(player_t *pl)
 	fuel_t *fs = Fuel_by_index(i);
 	double dist, c;
 
-	if (fs->fuel < 20.0
+	if (fs->fuel < (pl->fuel.sum < 20.0 ? 1.0 : 20.0)
 	    || (BIT(world->rules->mode, TEAM_PLAY) && options.teamFuel
 		&& fs->team != pl->team))
 	    continue;
@@ -2962,6 +3010,36 @@ static void Fb_think(player_t *pl, fb_data_t *d, int level)
 	    near_enemy = MIN(near_enemy, Fb_dist(ox, oy, d->c[e->id].x, d->c[e->id].y));
     }
 
+    /*
+     * Standing around is never the plan: not moving for a while without a
+     * fight in sight (or refueling), look elsewhere for a few seconds.
+     */
+    if (LENGTH(pl->vel.x, pl->vel.y) < 1.0 && !Player_is_refueling(pl))
+	d->still_ticks++;
+    else
+	d->still_ticks = 0;
+    if (d->still_ticks > 3 * 12
+	&& !(tgt && c->seen && Fb_line_free(ox, oy, c->x, c->y))) {
+	if (d->mode == FB_ITEM) {
+	    d->item_ban_x = d->item_x;
+	    d->item_ban_y = d->item_y;
+	    d->item_ban_until = FbTick + 15 * 12;
+	}
+	d->run_phase = 0;
+	d->search_valid = false;
+	d->unstick_until = FbTick + 5 * 12;
+	Fb_pick_search(pl, d);
+	d->still_ticks = 0;
+	FB_LOG("[fighter] %s was standing in %s: off to search\n", pl->name,
+	       fb_mode_name[d->mode]);
+	Fb_set_mode(d, FB_SEARCH);
+    }
+    if (FbTick < d->unstick_until && d->search_valid
+	&& !(tgt && c->seen && Fb_line_free(ox, oy, c->x, c->y))) {
+	Fb_set_mode(d, FB_SEARCH);
+	return;
+    }
+
     /* fuel: refuel when nobody is close, fight on when someone is */
     refuel_lo = MAX(Fb_fuel_ref(pl) * 0.25, 80.0);
     if (d->mode == FB_REFUEL) {
@@ -2971,12 +3049,13 @@ static void Fb_think(player_t *pl, fb_data_t *d, int level)
 		       Fb_px(Fuel_by_index(d->station)->pos.cy)) > 200.0)
 	    d->station = -1;
 	if (pl->fuel.sum >= MIN(Fb_fuel_ref(pl) * 0.9, pl->fuel.max - 1.0)
-	    || near_enemy < 600.0 || d->station < 0
+	    || (near_enemy < 600.0 && pl->fuel.sum >= 20.0) || d->station < 0
 	    || Fuel_by_index(d->station)->fuel < 5.0)
 	    Fb_set_mode(d, FB_HUNT);
 	else
 	    return;
-    } else if (pl->fuel.sum < refuel_lo && near_enemy > 600.0 && Num_fuels() > 0) {
+    } else if (pl->fuel.sum < refuel_lo && (near_enemy > 600.0 || pl->fuel.sum < 20.0)
+	       && Num_fuels() > 0) {
 	d->station = Fb_pick_station(pl);
 	if (d->station >= 0) {
 	    Fb_set_mode(d, FB_REFUEL);
@@ -2992,6 +3071,13 @@ static void Fb_think(player_t *pl, fb_data_t *d, int level)
 	Fb_set_mode(d, FB_ENGAGE);
     }
 
+    /* an item that takes too long to get: leave it for a while */
+    if (d->mode == FB_ITEM && FbTick - d->mode_since > 6 * 12) {
+	d->item_ban_x = d->item_x;
+	d->item_ban_y = d->item_y;
+	d->item_ban_until = FbTick + 15 * 12;
+	Fb_set_mode(d, FB_SEARCH);
+    }
     /* items in view when no fight is on */
     if (near_enemy > 700.0 && !(war && c && c->known && dist < 900.0)
 	&& Fb_pick_item(pl, d, 600.0)) {
@@ -3023,7 +3109,8 @@ static void Fb_think(player_t *pl, fb_data_t *d, int level)
 	    d->tac_active = true;
 	}
 	d->tac_seen = FbTick;
-	if (d->tac == FB_TAC_RUN && (d->mode == FB_RUN || dist > 350.0)) {
+	if (d->tac == FB_TAC_RUN && (d->mode == FB_RUN || dist > 350.0)
+	    && Fb_segment_clear(ox, oy, c->x, c->y, FB_SHIP_R) >= FB_SHIP_R) {
 	    Fb_set_mode(d, FB_RUN);
 	    return;
 	}
@@ -3209,6 +3296,7 @@ static void Fb_set_goal(player_t *pl, fb_data_t *d, int level, fb_ctx_t *cx)
 	break;
     case FB_ITEM:
 	cx->point = true;
+	cx->through = true;
 	cx->gx = Fb_wdx(d->item_x - cx->ox);
 	cx->gy = Fb_wdy(d->item_y - cx->oy);
 	cx->arrive_r = 0.0;
@@ -3637,6 +3725,14 @@ static void Robot_fighter_go_home(player_t *pl)
     d->search_valid = false;
     d->fallback_until = d->fallback_cool = 0;
     d->last_killer = NO_ID;
+    d->still_ticks = 0;
+    d->push_ticks = d->frozen_ticks = 0;
+    d->unstick_until = d->escape_until = 0;
+    d->run_phase = 0;
+    if (d->destruct) {
+	Player_self_destruct(pl, false);
+	d->destruct = false;
+    }
     if (d->mode == FB_REFUEL || d->mode == FB_FALLBACK || d->mode == FB_ITEM)
 	d->mode = FB_SEARCH;
     for (i = 0; i < NUM_IDS; i++)
@@ -3658,6 +3754,22 @@ static void Robot_fighter_play(player_t *pl)
     if (!spawn_shield)
 	CLR_BIT(pl->used, USES_SHIELD);
     pl->power = Fb_power(level);
+    /*
+     * Out of fuel with no station to get to, or not getting anywhere for
+     * long: start over, as a human would.
+     */
+    {
+	bool want = (pl->fuel.sum < 5.0
+		     && (d->mode != FB_REFUEL || d->station < 0 || d->still_ticks > 10 * 12))
+	    || d->frozen_ticks > 5 * 12	/* stuck in a wall (broken maps) */
+	    || (d->frozen_ticks > 12
+		&& Fb_ship_clear(Fb_px(pl->pos.cx), Fb_px(pl->pos.cy)) <= 0.0);
+
+	if (want != d->destruct) {
+	    Player_self_destruct(pl, want);
+	    d->destruct = want;
+	}
+    }
     if (!FbMapOk) {
 	Thrust(pl, false);
 	return;
@@ -3679,7 +3791,38 @@ static void Robot_fighter_play(player_t *pl)
 	&& ((fl.shot_t >= 0 && fl.shot_t <= 1) || (fl.ram_t >= 0 && fl.ram_t <= 1)))
 	SET_BIT(pl->used, USES_SHIELD);
 
-    if (fl.valid) {
+    /*
+     * Pushing against a wall without getting anywhere (tight spots the
+     * model does not see right): turn to the most open way and go.
+     */
+    if (((fl.valid && fl.thrust) || FbTick < d->escape_until)
+	&& LENGTH(pl->vel.x, pl->vel.y) < 1.0) {
+	d->push_ticks++;
+	d->frozen_ticks++;
+    } else if (LENGTH(pl->vel.x, pl->vel.y) >= 2.0)
+	d->push_ticks = d->frozen_ticks = 0;
+    if (d->push_ticks > 12 && FbTick >= d->escape_until) {
+	double best = -1.0;
+	int k;
+
+	for (k = 0; k < 32; k++) {
+	    int dir = k * RES / 32;
+	    double f = Fb_free_ray(cx.ox, cx.oy, dir, 4.0, 300.0);
+
+	    if (f > best) {
+		best = f;
+		d->escape_dir = dir;
+	    }
+	}
+	d->escape_until = FbTick + 10;
+	d->push_ticks = 0;
+	FB_LOG("[fighter] %s stuck: escaping towards %d\n", pl->name, d->escape_dir);
+    }
+    if (FbTick < d->escape_until) {
+	int dir = Fb_turn_toward(pl->dir, d->escape_dir, Fb_turn_rate(level));
+
+	Fb_steer(pl, dir, ABS(Fb_angle_diff(dir, d->escape_dir)) <= 8);
+    } else if (fl.valid) {
 	int dir = fl.dir;
 
 	/* lower levels steer less exactly: an error that drifts slowly */
