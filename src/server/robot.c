@@ -379,6 +379,7 @@ static robot_t DefaultRobots[] = {
 #define SMART_ROBOT_TYPE	"smart"
 #define BALL_ROBOT_TYPE		"ball"
 #define RACE_ROBOT_TYPE		"race"
+#define FIGHTER_ROBOT_TYPE	"fighter"
 
 /*
  * The AIs smart robots can use, selected with the smartBotType option.
@@ -395,6 +396,7 @@ static const struct {
     { SMART_ROBOT_TYPE,	SMART_ROBOT_TYPE,	NULL, NULL },
     { BALL_ROBOT_TYPE,	BALL_ROBOT_TYPE,	NULL, Robot_ball_game },
     { RACE_ROBOT_TYPE,	RACE_ROBOT_TYPE,	Robot_race_map, Robot_race_map },
+    { FIGHTER_ROBOT_TYPE, FIGHTER_ROBOT_TYPE,	NULL, Robot_fighter_map },
 };
 
 /* Driver for a new smart robot on the current map. */
@@ -541,6 +543,7 @@ extern int Robot_default_setup(robot_type_t *type_ptr);
 extern int Robot_smart_setup(robot_type_t *type_ptr);
 extern int Robot_ball_setup(robot_type_t *type_ptr);
 extern int Robot_race_setup(robot_type_t *type_ptr);
+extern int Robot_fighter_setup(robot_type_t *type_ptr);
 
 /*
  * Array to store function pointers to robot type setup routines.
@@ -554,6 +557,7 @@ static struct robot_setup {
     { Robot_smart_setup },
     { Robot_ball_setup },
     { Robot_race_setup },
+    { Robot_fighter_setup },
 };
 
 /*
@@ -1340,6 +1344,38 @@ void Robot_prefill(void)
 /*
  * Update robots. If 'tick' is true, robot AI routines will be called.
  */
+/*
+ * For tuning robots: with the environment variable XPILOT_BOT_STATS set
+ * to N, every N ticks of game time the server prints the kills and deaths
+ * of every player.  XPILOT_BOT_SEED seeds the random numbers, so test
+ * runs differ (or repeat).
+ */
+static void Robot_print_stats(void)
+{
+    static int every = -1;
+    static unsigned long ticks;
+    int i;
+
+    if (every < 0) {
+	const char *e = getenv("XPILOT_BOT_STATS"), *seed = getenv("XPILOT_BOT_SEED");
+
+	every = e ? atoi(e) : 0;
+	if (seed != NULL)
+	    seedMT((unsigned)strtoul(seed, NULL, 10));
+    }
+    if (every <= 0 || ++ticks % (unsigned long)every != 0)
+	return;
+    for (i = 0; i < NumPlayers; i++) {
+	player_t *pl = Player_by_index(i);
+
+	if (Player_is_tank(pl))
+	    continue;
+	printf("[stats] %lu %s|%s|%d|%d|%.1f\n", ticks, pl->name, pl->hostname,
+	       pl->kills, pl->deaths, Get_Score(pl));
+    }
+    fflush(stdout);
+}
+
 void Robot_update(bool tick)
 {
     int i;
@@ -1422,6 +1458,7 @@ void Robot_update(bool tick)
 	return;
 
     Robot_round_tick();
+    Robot_print_stats();
 
     for (i = 0; i < NumPlayers; i++) {
 	player_t *pl = Player_by_index(i);

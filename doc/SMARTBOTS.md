@@ -19,13 +19,14 @@ XPilot TNG introduces **Smartbots** (`smart`), an advanced autonomous AI driver 
    - [Ball Game: Handling, Delivery & Team Play](#ball-game-handling-delivery--team-play)
 6. [Ball Game Bots (`ball` driver)](#ball-game-bots-ball-driver)
 7. [Race Bots (`race` driver)](#race-bots-race-driver)
-8. [Reinforcement Learning & Shared Brain](#reinforcement-learning--shared-brain)
+8. [Fighter Bots (`fighter` driver)](#fighter-bots-fighter-driver)
+9. [Reinforcement Learning & Shared Brain](#reinforcement-learning--shared-brain)
    - [State & Action Space](#state--action-space)
    - [Evolutionary Policy Genes](#evolutionary-policy-genes)
    - [Rewards](#rewards)
    - [Brain Persistence (`smartbot_brain.dat`)](#brain-persistence-smartbot_braindat)
-9. [Skill Level Matrix (Levels 1–100)](#skill-level-matrix-levels-1100)
-10. [Tactical Advice for Human Pilots](#tactical-advice-for-human-pilots)
+10. [Skill Level Matrix (Levels 1–100)](#skill-level-matrix-levels-1100)
+11. [Tactical Advice for Human Pilots](#tactical-advice-for-human-pilots)
 
 ---
 
@@ -40,6 +41,7 @@ Classic XPilot robots rely on simple line-of-sight heuristics and fixed reaction
 - **Team Ball Play:** Tows the ball as a pair (ship + ball) instead of just flying the ship, throws it into the goal in a swing manoeuvre, and plays as a team with roles (attacker, defender, escort, hunter).
 - **Dedicated Ball Game Driver:** On team maps with treasures, smart robots use a separate driver (`ball`, `src/server/ballbot.c`) that plans its flight with a physics model of ship and ball (see [Ball Game Bots](#ball-game-bots-ball-driver)).
 - **Dedicated Race Driver:** On race maps (timing mode with checkpoints), smart robots use the `race` driver (`src/server/racebot.c`), which plans the racing line with a physics model and manages laps and fuel (see [Race Bots](#race-bots-race-driver)).
+- **Dedicated Dogfight Driver:** On deathmatch maps (no team ball game, no race), smart robots use the `fighter` driver (`src/server/fighterbot.c`), which sees only what a human sees and plans its dogfight with a physics model (see [Fighter Bots](#fighter-bots-fighter-driver)).
 - **Online Learning:** Uses Tabular Q-Learning and continuous evolutionary policy adaptation that learns from combat outcomes (kills, deaths) and ball-game results, and persists across server runs in `smartbot_brain.dat`.
 
 ---
@@ -57,7 +59,8 @@ Smartbots can be enabled via command-line arguments or server defaults files (`d
 | `smartRobotLevel` | `-smartLevel` | `75` | Global skill and intelligence level (**1 to 100**). Controls aiming precision, pathfinding depth, turn rate, and several ball-handling skills (see [Skill Level Matrix](#skill-level-matrix-levels-1100)). |
 | `smartRobotsLaser` | `-smartRobotsLaser` / `-smartLaser` | `true` | When `false`, Smartbots will neither pick up nor use laser pulses. |
 | `robotsFillTo` | `false` | Humans replace bots: the game is filled up to `maxRobots + maxSmartRobots` players in all (4 bots wanted, two humans: two bots). See [TEAMPLAY.md](TEAMPLAY.md). The race maps *grandprix* and *zandvoort* turn it on with 4 race bots at level 50. |
-| `smartBotType` | `-smartType` | `auto` | Which AI the smart robots use: `auto` (the ball driver on team maps with treasures, the race driver on race maps, the learning smartbot elsewhere), `smart` (always the learning smartbot), `ball` (the ball driver on every map; without a ball game it only dogfights, see below) or `race` (the race driver on race maps, the learning smartbot elsewhere). Affects robots that join afterwards. The launcher offers the choice as a dropdown next to the number of smartbots. |
+| `smartBotType` | `-smartType` | `auto` | Which AI the smart robots use: `auto` (the ball driver on team maps with treasures, the race driver on race maps, the fighter driver everywhere else), `smart` (always the learning smartbot), `ball` (the ball driver on every map; without a ball game it only dogfights, see below), `race` (the race driver on race maps, the learning smartbot elsewhere) or `fighter` (the dogfight driver on every map). Affects robots that join afterwards. The launcher offers the choice as a dropdown next to the number of smartbots. |
+| `fighterRobotLevel` | `-fighterLevel` | `75` | Skill level of the `fighter` driver (**1 to 100**): reaction delay, turn rate, aiming and steering errors, overlooked shots and aggression (see [Fighter Bots](#fighter-bots-fighter-driver)). |
 
 ### Example Startup Commands
 
@@ -325,7 +328,7 @@ The best plan is kept and offered again the next tick, so longer manoeuvres stay
 
 On xp2 maps ball targets are not linked to a treasure. A target belongs to the nearest treasure of its team.
 
-On maps without a ball game (dogfight maps, no team play or no treasures of two teams) a `ball` bot has no ball roles. Every ballbot plays for itself, nobody counts as an ally, and each one hunts the nearest enemy it knows. The flight and combat code is the same, but there is no tactics beyond that, and `auto` keeps using the learning smartbot on such maps.
+On maps without a ball game (dogfight maps, no team play or no treasures of two teams) a `ball` bot has no ball roles. Every ballbot plays for itself, nobody counts as an ally, and each one hunts the nearest enemy it knows. The flight and combat code is the same, but there is no tactics beyond that, and `auto` uses the [`fighter` driver](#fighter-bots-fighter-driver) on such maps.
 
 ### Combat
 
@@ -435,6 +438,103 @@ The map analysis takes a fraction of a second. On *Grand Prix* at its normal spe
 - `/msg <bot> level N`: individual skill level (0 = global `smartRobotLevel`).
 - `/msg <bot> learn on|off`: keep or stop measuring.
 - `/msg <bot> forget`: drop what was learned about this map.
+
+---
+
+## Fighter Bots (`fighter` driver)
+
+The `fighter` driver (`src/server/fighterbot.c`) is a robot type made for deathmatch and dogfight maps such as *New Dark Hell* (`ndh`) or *The Killing Field* (`killing`). Smart robots use it on every map without a team ball game and without a race when `smartBotType` is `auto` or `fighter`. It hunts the enemies fast, goes into the dogfight aggressively, and only ever falls back for a moment to attack again. Names and the `S` marker are shared with the other smart robots; the skill level is its own option, `fighterRobotLevel`.
+
+### What it knows (fairness)
+
+A fighter uses only what a human pilot in its ship could know:
+
+- Ships, shots, missiles, mines and items within the largest view a client can have (1600 × 1100 px around the ship), and only ships the server lets it see (cloaking, sensors, `limitedVisibility` with the sensor range).
+- Enemy positions on the radar when `playersOnRadar` is on, at the radar's resolution; their speed comes from consecutive dots. Under `limitedVisibility` the radar too only reaches as far as the sensors.
+- Everything is seen with the reaction delay of its skill level, from a short position history; a blinding ECM leaves it without new information until it can see again.
+- Missile and mine items that turned white (about to go off as rogue heat seekers or mines) are avoided, as a human would.
+
+### Map analysis
+
+As the race and ball bots: wall clearance on a fine grid (exact distance transform) and a navigation grid of one node per block. Narrow tubes (some bases sit in them) are part of the grid, with a high cost. Wormholes are not walls: an entrance is worth the mean of where its exits lead, so a way can go through a wormhole on purpose, while flying into one by accident costs. Distance fields to the enemies are shared by all fighters, computed only as far as needed around the fighter asking, and reused while the enemy has not moved far; with a free line the fighter flies straight at him. The ways to all fuel stations are computed once.
+
+### Flight and dogfight
+
+Each tick the fighter simulates about 50–100 candidate manoeuvres 18 ticks ahead with the server's physics (thrust, turn rate, friction, gravity, wall bounces of every `playerWallBounceType`). Two ticks in three, while no shot is close, only the last plan and a few special candidates are refined. Candidates are scored on:
+
+- dodging shots in view, along their real way: they fall in gravity (`shotsGravity`) and bounce off walls (`shotsWallBounce`, own shots included: they can come back or be overtaken);
+- virtual shots of enemies pointing at the fighter;
+- collisions: deadly (`allowPlayerCrashes`) only within the next ticks, because the other ship swerves too; with `allowPlayerBounces` a ram is only a bump, and the fighter stays close instead of turning away to keep distance;
+- pointing at the lead of the target soon, with a large reward for every tick in which a shot would hit; the distance cost only grows when the fighter is too far away, never when too close: backing off means turning away, which is how most fighters died;
+- walls, the fuel a tick of thrust burns (more when fuel is short) and speed beyond a margin below the deadly wall speed.
+
+Most kills in a dogfight happen at about 70 px, with shots that cannot be dodged once fired. What decides is being on the target first and not being where the enemy is about to shoot.
+
+### Tactics
+
+- **Fight:** the target is the closest known enemy, attackers first. Fresh spawn shields are left alone for a moment; the fighter keeps its own start shield until its first good shot.
+- **Attack run:** high speed past the enemy offset to one side, a volley across the way as it passes (the shots carry the ship's speed and form a line the enemy must cross), then extending and coming again. Which of fight and attack run is used against an opponent is learned (see below).
+- **Falling back:** under heavy fire, against several attackers or a much wider fan of shots, the fighter gains room for a moment and then attacks again.
+- **Refuel** when the fuel is low compared with what it started with and nobody is near; **fetch items** in view that the ship needs.
+- **Reprogrammed** by an ECM (`ecmsReprogramRobots`), or at war after a kill, it goes for that enemy only and searches him where he was last seen, then at bases and fuel stations.
+
+### Firing and items
+
+It fires when a shot of any gun (wide angle and rear guns included) would hit an enemy on his predicted course and the line is free, and at the target also shots that cover the ways he can dodge while shots are to spare. Items are used when they help: smart missiles, heat seekers (at thrusting targets) and torpedoes, mines for a pursuer, laser pulses on the lead, ECM against homing missiles, mines and enemies in reach (a robot in reach is reprogrammed to go after somebody else), cloak while hunting, deflector under fire, emergency shield, phasing or hyperjump against a hit the plan cannot avoid, transporter, tank decoys against heat seekers, emergency thrust for long ways, pressor beam against rams.
+
+### Learning
+
+- **Per opponent, for the session** (shared by all fighters): which motion model predicts his flight best (constant speed or with his acceleration), measured by comparing predictions with where he went, used for the lead; how dangerous he has been; and which tactic, fight or attack run, went best against him (a bandit with some exploration).
+- **Per map, kept on disk:** six genes (fighting distance, aggression, weights of evasion, aim and covering shots, how long to fall back) adapt with an evolution strategy: every life tries genes a little off the mean (mirrored every second life), rewarded with kills minus the death. They are stored in `$XDG_DATA_HOME/xpilot-tng/fighterbot/<map name>.txt` (default `~/.local/share/...`). In measurements learning raised the duel kill/death ratio on *The Killing Field* from 2.4 to 3.2 within a few minutes.
+
+### Measured results
+
+Headless tournaments at five times the normal speed, level 100 against ball bots at level 100 (`smartRobotLevel`), 10–16 runs of about 10 minutes of game time each. Kill/death ratios:
+
+| Map | Duel fighter vs. ball bot | Remarks |
+| :--- | :---: | :--- |
+| The Killing Field (`killing`) | 2.4 – 4.4 | rams only bump |
+| New Dark Hell (`ndh`) | 1.7 – 2.6 | crashes kill, wormholes |
+| Destiny (`destiny2`) | 2.1 | |
+| The Hive (`hive`) | 2.3 | |
+| Reactor (`reactor`) | 1.7 – 2.0 | |
+| Inspector Gadget (`gadget`) | 10 – 12 | gravity |
+| Arena (`arena2`) | > 10 | the ball bot rarely gets out of the base tubes |
+| Tourmination (`tourmination`) | 0.8 – 1.0 | no radar, little fuel, many rogue items: the fighter wins the fights (about 2.5 : 1) but dies more often to the map |
+
+With two fighters, two ball bots and two learning smartbots in one game the fighters make the most kills per bot on every map, and beat ball bots about 1.4 : 1 and smartbots about 2 : 1 in direct kills; fights among the fighters themselves cost them many deaths.
+
+### Skill levels
+
+Below level 100 the bot reacts later and makes more mistakes. The effects grow with u = ((100 − level) / 99)^0.7, as with the race bot:
+
+| Effect | Level 1 | Level 50 | Level 75 | Level 100 |
+| :--- | :---: | :---: | :---: | :---: |
+| Turn rate (direction units per tick) | 3 | 7 | 9 | 12 |
+| Reaction delay (ticks) | 4 | 2 | 1 | 0 |
+| Aiming error, drifting (±3 · u dir units) | ±3 | ±1.9 | ±1.1 | 0 |
+| Steering error, drifting (±4 · u) | ±4 | ±2.5 | ±1.5 | 0 |
+| Overlooked shots (30 % · u) | 30 % | 19 % | 11 % | 0 |
+| Thrust lost (8 % · u) | 8 % | 5 % | 3 % | 0 |
+| Noise on plan costs (500 · u) | 500 | 310 | 190 | 0 |
+| Opponent motion models | no | yes | yes | yes |
+
+Lower levels also reconsider their target less often and fall back more readily. Measured on *The Killing Field* against ball bots at level 100, the duel kill/death ratio is 2.4 at level 100, 0.9 at level 75, 0.4 at level 50 and 0.2 at level 25.
+
+### CPU usage
+
+Six fighters at normal speed use about 6 % of one desktop core on *The Killing Field* and 7 % on *New Dark Hell* (server included, Release build). A Raspberry Pi 500 should manage that with plenty to spare.
+
+### Chat commands
+
+- `/msg <bot> status`: level, what it is doing and against whom (war), fuel, kills and deaths, current genes, lives learned.
+- `/msg <bot> level N`: individual skill level (0 = global `fighterRobotLevel`).
+- `/msg <bot> learn on|off`: keep or stop learning.
+- `/msg <bot> forget`: drop what was learned about this map.
+
+### Testing tools
+
+For tuning, the server prints every player's kills and deaths every N ticks with the environment variable `XPILOT_BOT_STATS=N`, and `XPILOT_BOT_SEED` seeds the random numbers (odd values; even ones equal the next odd one). With `-idleRun` a server runs without human players, `+reportToMetaServer` keeps test servers off the meta server, and `-FPS 250 -gameSpeed 70` runs a map at five times the speed of 50 FPS / game speed 14 with the same physics. Mixed bot types come from a `-robotFile` with `type: fighter|smart|ball` entries.
 
 ---
 

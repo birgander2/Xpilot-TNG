@@ -115,7 +115,8 @@ enum robot_game_event_t {
     ROBOT_BALL_WON,		/* a teammate scored an enemy ball */
     ROBOT_BALL_LOST,		/* the enemy scored our ball */
     ROBOT_BALL_SAVED,		/* this robot brought our own ball home */
-    ROBOT_KILLED_PLAYER		/* this robot killed 'other' (before it drops a ball) */
+    ROBOT_KILLED_PLAYER,	/* this robot killed 'other' (before it drops a ball) */
+    ROBOT_KILLED_BY		/* this robot died; 'other' killed it (NULL: itself) */
 };
 
 /*
@@ -194,6 +195,7 @@ void Robot_game_event(player_t *pl, int event, player_t *other);
 const char *Robot_type_name(player_t *robot);
 bool Robot_ball_game(void);
 bool Robot_race_map(void);
+bool Robot_fighter_map(void);
 void Robot_war(player_t *robot, player_t *killer);
 void Robot_reset_war(player_t *robot);
 int Robot_war_on_player(player_t *robot);

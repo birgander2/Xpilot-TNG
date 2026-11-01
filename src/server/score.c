@@ -130,6 +130,17 @@ void Handle_Scoring(scoretype_t st, player_t * killer, player_t * victim,
 	    || st == SCORE_EXPLOSION))
 	Robot_game_event(killer, ROBOT_KILLED_PLAYER, victim);
 
+    /* Tell killed robots who did it (NULL: their own fault or no player) */
+    if (st == SCORE_SELF_DESTRUCT && killer != NULL)
+	Robot_game_event(killer, ROBOT_KILLED_BY, NULL);
+    else if (victim != NULL
+	     && (st == SCORE_WALL_DEATH || st == SCORE_COLLISION || st == SCORE_ROADKILL
+		 || st == SCORE_BALL_KILL || st == SCORE_HIT_MINE || st == SCORE_EXPLOSION
+		 || st == SCORE_ASTEROID_DEATH || st == SCORE_SHOT_DEATH
+		 || st == SCORE_LASER || st == SCORE_SHOVE_KILL || st == SCORE_SHOVE_DEATH))
+	Robot_game_event(victim, ROBOT_KILLED_BY,
+			 (st == SCORE_SHOVE_DEATH || killer == victim) ? NULL : killer);
+
     switch (st) {
     case SCORE_CANNON_KILL:
 	sc = Rate(Get_Score(killer), ((cannon_t *) extra)->score)
