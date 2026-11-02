@@ -20,6 +20,7 @@ settings.local.json
 /xpilot-tng-sdl3
 /xpilot-tng-launcher
 /xpilot-tng-mapeditor
+/xpilot-tng-shipeditor
 imgui.ini
 make-deb.sh
 tools/

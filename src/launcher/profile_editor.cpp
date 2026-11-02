@@ -217,15 +217,15 @@ std::string PressedKeyName(bool* cancel) {
     return "";
 }
 
-// Name of a full "(NM:...)" ship definition, else the text itself.
-std::string ShipName(const std::string& shape) {
-    size_t p = shape.find("(NM:");
-    if (p == std::string::npos) p = shape.find("(name:");
-    if (p == std::string::npos) return shape;
-    size_t b = shape.find(':', p) + 1, e = shape.find(')', b);
-    if (e == std::string::npos) return shape;
-    b = shape.find_first_not_of(' ', b);
-    return b == std::string::npos || b >= e ? "" : shape.substr(b, e - b);
+// The ship an xpilot.shipShape value stands for: a full definition, or the name of a ship in the
+// personal collection / stock list. False if it is neither.
+bool ResolveShip(const std::string& value, const std::vector<ss::Entry>& mine, const std::vector<ss::Entry>& stock,
+                 ss::ShipShape* out) {
+    if (value.find('(') != std::string::npos) return ss::Parse(value, out) && !out->hull().empty();
+    for (const auto* list : {&mine, &stock})
+        for (const auto& e : *list)
+            if (e.shape.name == value) { *out = e.shape; return true; }
+    return false;
 }
 
 int Digits(const std::string& s, size_t* i, int lo, int hi) {
@@ -282,11 +282,18 @@ std::string ProfileEditor::ModBank::Serialize() const {
 // load / save
 // ---------------------------------------------------------------------------
 
-void ProfileEditor::Load(const std::vector<std::string>& ship_names, bool keep_unsaved) {
+void ProfileEditor::Load(const std::string& stock_ships_path, bool keep_unsaved) {
     const ProfileEditor unsaved = *this;   // the edits, if they are to be kept
     const bool had_edits = loaded_;
     rc_.clear();
-    ship_names_ = ship_names;
+    stock_path_ = stock_ships_path;
+    {
+        std::string err;
+        stock_.clear();
+        mine_.clear();
+        ss::LoadShipFile(stock_path_, &stock_, &err);
+        ss::LoadShipFile(ss::CollectionPath(), &mine_, &err);   // does not exist until the first ship is saved
+    }
     auto get = [&](const std::string& key, const std::string& def) {
         std::string v;
         if (XpilotrcLookup(key.c_str(), &v)) { rc_[key] = v; return v; }
@@ -294,9 +301,8 @@ void ProfileEditor::Load(const std::vector<std::string>& ship_names, bool keep_u
     };
 
     std::snprintf(name_, sizeof name_, "%s", get("name", "").c_str());
-    rc_ship_ = ShipName(get("shipShape", ""));
-    auto it = std::find(ship_names_.begin(), ship_names_.end(), rc_ship_);
-    ship_ = it != ship_names_.end() ? int(it - ship_names_.begin()) : -1;
+    rc_ship_ = get("shipShape", "");
+    ship_ = rc_ship_;
 
     key_values_.clear();
     for (const auto& g : KeyGroups())
@@ -349,7 +355,7 @@ void ProfileEditor::Load(const std::vector<std::string>& ship_names, bool keep_u
     for (const auto& kv : NetworkValues()) shown_[kv.first] = kv.second;
     loaded_ = true;
     shown_["name"] = name_;
-    shown_["shipShape"] = ship_ >= 0 ? ship_names_[ship_] : rc_ship_;
+    shown_["shipShape"] = rc_ship_;
     int n = 0;
     for (const auto& g : KeyGroups())
         for (const auto& k : g.keys) shown_[k.option] = key_values_[n++];
@@ -358,7 +364,9 @@ void ProfileEditor::Load(const std::vector<std::string>& ship_names, bool keep_u
 
     if (keep_unsaved && had_edits) {   // shown_ stays what the xpilotrc has
         std::memcpy(name_, unsaved.name_, sizeof name_);
-        ship_ = unsaved.ship_;
+        // a ship picked in the editor stays; if it was not touched, the xpilotrc may have changed (ship editor)
+        auto sit = unsaved.shown_.find("shipShape");
+        if (sit != unsaved.shown_.end() && unsaved.ship_ != sit->second) ship_ = unsaved.ship_;
         key_values_ = unsaved.key_values_;
         for (int i = 0; i < kButtons; ++i) button_actions_[i] = unsaved.button_actions_[i];
         for (int i = 0; i < kBanks; ++i) banks_[i] = unsaved.banks_[i];
@@ -396,7 +404,7 @@ std::vector<std::pair<std::string, std::string>> ProfileEditor::Changes() const 
     for (const auto& kv : AudioValues()) cur.push_back(kv);
     for (const auto& kv : NetworkValues()) cur.push_back(kv);
     cur.emplace_back("name", name_);
-    cur.emplace_back("shipShape", ship_ >= 0 ? ship_names_[ship_] : rc_ship_);
+    cur.emplace_back("shipShape", ship_);
     int n = 0;
     for (const auto& g : KeyGroups())
         for (const auto& k : g.keys) cur.emplace_back(k.option, key_values_[n++]);
@@ -428,8 +436,7 @@ void ProfileEditor::ApplyIdentityTo(ClientProfile& profile) const {
     if (it != shown_.end() && it->second != name_)
         std::snprintf(profile.name, sizeof profile.name, "%s", name_);
     it = shown_.find("shipShape");
-    if (it != shown_.end() && it->second != (ship_ >= 0 ? ship_names_[ship_] : rc_ship_))
-        profile.ship_choice = ship_;
+    if (it != shown_.end() && it->second != ship_) profile.ship_shape = ship_;
 }
 
 bool ProfileEditor::Save() {
@@ -439,7 +446,7 @@ bool ProfileEditor::Save() {
         status_error_ = true;
         return false;
     }
-    Load(ship_names_);
+    Load(stock_path_);
     status_ = "Saved to " + XpilotrcPath();
     status_error_ = false;
     return true;
@@ -456,22 +463,43 @@ bool ProfileEditor::Capturing() const {
 void ProfileEditor::RenderIdentity() {
     ImGui::Spacing();
     ImGui::SetNextItemWidth(260);
-    ImGui::InputTextWithHint("Name", "(account name)", name_, sizeof name_);
+    ImGui::InputTextWithHint("Player name", "(account name)", name_, sizeof name_);
     if (ImGui::IsItemHovered()) ImGui::SetTooltip("Nickname (xpilot.name)");
 
-    ImGui::SetNextItemWidth(260);
-    const char* none = rc_ship_.empty() ? "(client default)" : rc_ship_.c_str();
-    const char* label = ship_ >= 0 ? ship_names_[ship_].c_str() : none;
-    if (ImGui::BeginCombo("Ship shape", label)) {
-        if (ImGui::Selectable(none, ship_ < 0)) ship_ = -1;
-        for (int i = 0; i < int(ship_names_.size()); ++i) {
-            ImGui::PushID(i);
-            if (ImGui::Selectable(ship_names_[i].c_str(), ship_ == i)) ship_ = i;
-            ImGui::PopID();
-        }
-        ImGui::EndCombo();
+    ss::ShipShape cur;
+    const bool have = !ship_.empty() && ResolveShip(ship_, mine_, stock_, &cur);
+    const bool valid = have && ss::Validate(cur).valid;
+    ImGui::AlignTextToFramePadding();
+    ImGui::TextUnformatted("Ship shape");
+    ImGui::SameLine(0, 12);
+    ss::ShipShape picked;
+    if (ship_picker_.Draw("ship", have ? &cur : nullptr, valid, stock_, mine_, &picked, 300))
+        ship_ = ss::Serialize(picked);   // the full definition: works without any ship file
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Stock ships and your own collection (xpilot.shipShape).\n"
+                          "The ship is stored in the xpilotrc when you press Save.");
+    ImGui::SameLine(0, 12);
+    ImGui::BeginDisabled(!editor_available_ || editor_running_);
+    if (ImGui::Button("Edit shipshape", ImVec2(0, ss::kShipRowH))) {
+        edit_request_ = true;
+        edit_shape_ = ship_ != rc_ship_ ? ship_ : "";   // an unsaved choice is handed over
     }
-    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Ship from lib/shipshapes.txt (xpilot.shipShape)");
+    ImGui::EndDisabled();
+    if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+        ImGui::SetTooltip("%s", !editor_available_ ? "xpilot-tng-shipeditor was not found."
+                          : editor_running_ ? "The ship editor is already open."
+                                            : "Open the ship editor with this ship.\n"
+                                              "Changes show up here when you close it.");
+    if (!ship_.empty() && !have)
+        ImGui::TextColored(kWarn, "The xpilotrc names the ship \"%s\", which was not found.", ship_.c_str());
+
+}
+
+bool ProfileEditor::TakeShipEditorRequest(std::string* shape) {
+    if (!edit_request_) return false;
+    edit_request_ = false;
+    *shape = edit_shape_;
+    return true;
 }
 
 void ProfileEditor::RenderKeys() {
@@ -732,7 +760,7 @@ bool ProfileEditor::Render(float bottom_reserve) {
     ImGui::BeginDisabled(!dirty);
     if (ImGui::Button("Save", ImVec2(110, 0))) saved = Save();
     ImGui::SameLine();
-    if (ImGui::Button("Revert", ImVec2(110, 0))) { Load(ship_names_); status_.clear(); }
+    if (ImGui::Button("Revert", ImVec2(110, 0))) { Load(stock_path_); status_.clear(); }
     ImGui::EndDisabled();
     ImGui::SameLine();
     if (!status_.empty()) ImGui::TextColored(status_error_ ? kBad : kGood, "%s", status_.c_str());
