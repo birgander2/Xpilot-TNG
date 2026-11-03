@@ -353,24 +353,24 @@ static option_desc opts[] = {
 	"Which AI the smart robots (maxSmartRobots) use. Affects robots\n"
 	"that join afterwards.\n"
 	"  auto    the best AI for the map: ball on team maps with treasures\n"
-	"          of at least two teams, race on race maps, fighter\n"
+	"          of at least two teams, race on race maps, fight\n"
 	"          everywhere else.\n"
 	"  smart   the learning smartbot.\n"
 	"  ball    the planning ball game bot, on any map. Without a ball\n"
 	"          game it only dogfights.\n"
 	"  race    the planning race bot on race maps (timing mode with\n"
 	"          checkpoints), the learning smartbot elsewhere.\n"
-	"  fighter the dogfight bot for deathmatch maps, on any map.\n",
+	"  fight   the dogfight bot for deathmatch maps, on any map.\n",
 	OPT_ORIGIN_ANY | OPT_VISIBLE
     },
     {
-	"fighterRobotLevel",
-	"fighterLevel",
+	"fightRobotLevel",
+	"fightLevel",
 	"75",
-	&options.fighterRobotLevel,
+	&options.fightRobotLevel,
 	valInt,
 	tuner_dummy,
-	"Skill level of the fighter robots (smartBotType fighter, 1-100).\n"
+	"Skill level of the fightbots (smartBotType fight, 1-100).\n"
 	"Sets reaction delay, turn rate, aiming and steering errors and\n"
 	"aggression.\n",
 	OPT_ORIGIN_ANY | OPT_VISIBLE

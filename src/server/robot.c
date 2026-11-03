@@ -379,7 +379,7 @@ static robot_t DefaultRobots[] = {
 #define SMART_ROBOT_TYPE	"smart"
 #define BALL_ROBOT_TYPE		"ball"
 #define RACE_ROBOT_TYPE		"race"
-#define FIGHTER_ROBOT_TYPE	"fighter"
+#define FIGHT_ROBOT_TYPE	"fight"
 
 /*
  * The AIs smart robots can use, selected with the smartBotType option.
@@ -396,7 +396,7 @@ static const struct {
     { SMART_ROBOT_TYPE,	SMART_ROBOT_TYPE,	NULL, NULL },
     { BALL_ROBOT_TYPE,	BALL_ROBOT_TYPE,	NULL, Robot_ball_game },
     { RACE_ROBOT_TYPE,	RACE_ROBOT_TYPE,	Robot_race_map, Robot_race_map },
-    { FIGHTER_ROBOT_TYPE, FIGHTER_ROBOT_TYPE,	NULL, Robot_fighter_map },
+    { FIGHT_ROBOT_TYPE, FIGHT_ROBOT_TYPE,	NULL, Robot_fight_map },
 };
 
 /* Driver for a new smart robot on the current map. */
@@ -430,7 +430,7 @@ static const char *Smart_bot_driver(void)
     return SMART_ROBOT_TYPE;
 }
 
-static robot_t SmartRobots[] = {
+static robot_t SmartRobotsBuiltin[] = {
     {
 	SMART_ROBOT_TYPE,
 	"AlphaPilot",
@@ -533,7 +533,12 @@ int		NumRobots = 0;		/* number of currently playing robots. */
 int		NumSmartRobots = 0;	/* number of currently playing smart robots. */
 static int	MAX_ROBOTS = 0;		/* number of different robot parameters. */
 static robot_t	*Robots;		/* array of robot parameters. */
-static int	MAX_SMART_ROBOTS = NELEM(SmartRobots);
+static int	MAX_SMART_ROBOTS = NELEM(SmartRobotsBuiltin);
+/* Smart robot names: "type: smart" entries of the robot file, else built in. */
+static robot_t	*SmartRobots = SmartRobotsBuiltin;
+/* Names reserved for one smart AI ("type: ball", "type: race", ...). */
+static robot_t	*TypedRobots;
+static int	MAX_TYPED_ROBOTS = 0;
 
 /*
  * Function prototype for robot type setup routines.
@@ -543,7 +548,7 @@ extern int Robot_default_setup(robot_type_t *type_ptr);
 extern int Robot_smart_setup(robot_type_t *type_ptr);
 extern int Robot_ball_setup(robot_type_t *type_ptr);
 extern int Robot_race_setup(robot_type_t *type_ptr);
-extern int Robot_fighter_setup(robot_type_t *type_ptr);
+extern int Robot_fight_setup(robot_type_t *type_ptr);
 
 /*
  * Array to store function pointers to robot type setup routines.
@@ -557,7 +562,7 @@ static struct robot_setup {
     { Robot_smart_setup },
     { Robot_ball_setup },
     { Robot_race_setup },
-    { Robot_fighter_setup },
+    { Robot_fight_setup },
 };
 
 /*
@@ -665,8 +670,48 @@ void Parse_robot_file(void)
 		}
 	    }
 	    if (num_robs > 0) {
-		Robots = robs;
-		MAX_ROBOTS = num_robs;
+		/*
+		 * Entries with the default driver are the normal robots,
+		 * "smart" entries replace the built-in smart robot names,
+		 * all others are name lists of one specific smart AI.
+		 */
+		int i, n_def = 0, n_smart = 0, n_typed = 0;
+		robot_t *def = XMALLOC(robot_t, num_robs);
+		robot_t *smart = XMALLOC(robot_t, num_robs);
+		robot_t *typed = XMALLOC(robot_t, num_robs);
+
+		if (!def || !smart || !typed) {
+		    error("Not enough memory to parse robotsfile");
+		    free(def);
+		    free(smart);
+		    free(typed);
+		    free(robs);
+		} else {
+		    for (i = 0; i < num_robs; i++) {
+			if (!strcasecmp(robs[i].driver, DEFAULT_ROBOT_TYPE))
+			    def[n_def++] = robs[i];
+			else if (!strcasecmp(robs[i].driver, SMART_ROBOT_TYPE))
+			    smart[n_smart++] = robs[i];
+			else
+			    typed[n_typed++] = robs[i];
+		    }
+		    free(robs);
+		    if (n_def > 0) {
+			Robots = def;
+			MAX_ROBOTS = n_def;
+		    } else
+			free(def);
+		    if (n_smart > 0) {
+			SmartRobots = smart;
+			MAX_SMART_ROBOTS = n_smart;
+		    } else
+			free(smart);
+		    if (n_typed > 0) {
+			TypedRobots = typed;
+			MAX_TYPED_ROBOTS = n_typed;
+		    } else
+			free(typed);
+		}
 	    }
 	}
     }
@@ -835,12 +880,57 @@ static void Robot_talks(enum robot_talk_t says_what,
 }
 
 
+/* Is a player (or robot) called 'name' playing right now? */
+static bool Robot_name_in_use(const char *name)
+{
+    int i;
+
+    for (i = 0; i < NumPlayers; i++) {
+	if (!strcasecmp(Player_by_index(i)->name, name))
+	    return true;
+    }
+    return false;
+}
+
+/*
+ * Pick a random, currently unused name from the entries of 'pool' that
+ * belong to 'driver' (NULL: all entries), preferring the least used ones.
+ * Returns the index into 'pool' or -1 if every name is taken.
+ */
+static int Robot_pick_free(robot_t *pool, int pool_size, const char *driver)
+{
+    int i, num, min_used = -1;
+
+    for (i = 0; i < pool_size; i++) {
+	if (driver && strcasecmp(pool[i].driver, driver))
+	    continue;
+	if (Robot_name_in_use(pool[i].name))
+	    continue;
+	if (min_used < 0 || (int)pool[i].used < min_used)
+	    min_used = pool[i].used;
+    }
+    if (min_used < 0)
+	return -1;
+    num = (int)(rfrac() * pool_size);
+    for (i = 0; i < pool_size; i++, num++) {
+	if (num >= pool_size)
+	    num = 0;
+	if (driver && strcasecmp(pool[num].driver, driver))
+	    continue;
+	if ((int)pool[num].used == min_used
+	    && !Robot_name_in_use(pool[num].name))
+	    return num;
+    }
+    return -1;
+}
+
 static void Robot_create(bool want_smart)
 {
     player_t *robot;
     robot_t *rob;
     robot_t *pool = want_smart ? SmartRobots : Robots;
     int pool_size = want_smart ? MAX_SMART_ROBOTS : MAX_ROBOTS;
+    const char *smart_driver = NULL;
     team_t *teamp = NULL;
     int i, num, most_used, least_used;
     robot_data_t *data, *new_data;
@@ -856,31 +946,53 @@ static void Robot_create(bool want_smart)
     new_data->private_data = NULL;
     new_data->is_smart = want_smart;
 
-    most_used = 0;
-    for (i = 0; i < pool_size; i++) {
-	if (pool[i].used > pool[most_used].used)
-	    most_used = i;
+    /*
+     * Smart robots first try the names reserved for their AI, then the
+     * general smart names; only when all of these are taken the least
+     * used name is reused.
+     */
+    num = -1;
+    if (want_smart) {
+	smart_driver = Smart_bot_driver();
+	if (strcasecmp(smart_driver, SMART_ROBOT_TYPE)) {
+	    num = Robot_pick_free(TypedRobots, MAX_TYPED_ROBOTS, smart_driver);
+	    if (num >= 0)
+		pool = TypedRobots;
+	}
+	if (num < 0)
+	    num = Robot_pick_free(SmartRobots, MAX_SMART_ROBOTS, NULL);
+	if (num >= 0 && pool == TypedRobots)
+	    pool_size = MAX_TYPED_ROBOTS;
     }
-    for (i = 0; i < NumPlayers; i++) {
-	player_t *pl_i = Player_by_index(i);
 
-	if (Player_is_robot(pl_i)) {
-	    data = (robot_data_t *)pl_i->robot_data_ptr;
-	    if (data->is_smart == want_smart && data->robots_ind < pool_size) {
-		if (pool[data->robots_ind].used < pool[most_used].used)
-		    pool[data->robots_ind].used = pool[most_used].used;
+    if (num < 0) {
+	most_used = 0;
+	for (i = 0; i < pool_size; i++) {
+	    if (pool[i].used > pool[most_used].used)
+		most_used = i;
+	}
+	for (i = 0; i < NumPlayers; i++) {
+	    player_t *pl_i = Player_by_index(i);
+
+	    if (Player_is_robot(pl_i)) {
+		data = (robot_data_t *)pl_i->robot_data_ptr;
+		if (data->is_smart == want_smart && data->robots_ind < pool_size
+		    && !strcmp(pool[data->robots_ind].name, pl_i->name)) {
+		    if (pool[data->robots_ind].used < pool[most_used].used)
+			pool[data->robots_ind].used = pool[most_used].used;
+		}
 	    }
 	}
-    }
-    least_used = 0;
-    for (i = 0; i < pool_size; i++) {
-	if (pool[i].used < pool[least_used].used)
-	    least_used = i;
-    }
-    num = (int)(rfrac() * pool_size);
-    while (pool[num].used > pool[least_used].used) {
-	if (++num >= pool_size)
-	    num = 0;
+	least_used = 0;
+	for (i = 0; i < pool_size; i++) {
+	    if (pool[i].used < pool[least_used].used)
+		least_used = i;
+	}
+	num = (int)(rfrac() * pool_size);
+	while (pool[num].used > pool[least_used].used) {
+	    if (++num >= pool_size)
+		num = 0;
+	}
     }
     rob = &pool[num];
     rob->used++;
@@ -892,7 +1004,7 @@ static void Robot_create(bool want_smart)
     }
     /* Smart robots use the AI selected with smartBotType */
     if (want_smart) {
-	const char *driver = Smart_bot_driver();
+	const char *driver = smart_driver;
 
 	for (i = 1; i < num_robot_types; i++) {
 	    if (!strcmp(robot_types[i].name, driver))

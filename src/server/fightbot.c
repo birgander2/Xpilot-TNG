@@ -17,11 +17,11 @@
  */
 
 /*
- * Fighterbot: a robot driver ("fighter") for deathmatch and dogfight maps
+ * Fightbot: a robot driver ("fightbot") for deathmatch and dogfight maps
  * such as New Dark Hell or The Killing Field.
  *
  * Smart robots use this driver on maps without a team ball game and
- * without a race when smartBotType is "auto" or "fighter".
+ * without a race when smartBotType is "auto" or "fight".
  *
  *  - Perception: only what a human pilot gets.  Ships, shots, mines and
  *    items within a human's view (the largest view a client may have)
@@ -51,16 +51,16 @@
  *    his flight best and how dangerous he is.  Per map, kept on disk, the
  *    fighting genes (distance, aggression, evasion, aim, spread, how long
  *    to fall back) adapt with an evolution strategy rewarded by kills and
- *    deaths, in $XDG_DATA_HOME/xpilot-tng/fighterbot/.
+ *    deaths, in $XDG_DATA_HOME/xpilot-tng/fightbot/.
  *
- * The skill level (fighterRobotLevel) sets turn rate, reaction delay, aim
+ * The skill level (fightRobotLevel) sets turn rate, reaction delay, aim
  * and steering errors, misjudged plans, overlooked shots and aggression.
  */
 
 #include "xpserver.h"
 #include <sys/stat.h>
 
-#define FB_TYPE_NAME		"fighter"
+#define FB_TYPE_NAME		"fight"
 
 #define FB_SHIP_R		16.0	/* collision radius of a ship (px) */
 #define FB_INF			1e30f
@@ -91,7 +91,7 @@
 #define FB_AIM_ERR		3.0	/* aiming error at level 1 (dir units) */
 #define FB_POWER_LOSS		0.08	/* share of the thrust lost at level 1 */
 #define FB_OVERLOOK		0.30	/* share of shots overlooked at level 1 */
-#define FB_LEARN_SUBDIR		"xpilot-tng/fighterbot"
+#define FB_LEARN_SUBDIR		"xpilot-tng/fightbot"
 #define FB_LEARN_VERSION	1
 #define FB_SAVE_TICKS		(300 * 12)
 
@@ -169,7 +169,7 @@ typedef struct {
     int		guns;		/* most shots he was seen to fire at once */
 } fb_contact_t;
 
-/* What all fighters learned about one opponent this session. */
+/* What all fightbots learned about one opponent this session. */
 typedef struct {
     char	name[MAX_CHARS];
     double	err[FB_NMODELS];	/* mean squared prediction error */
@@ -178,13 +178,13 @@ typedef struct {
     unsigned long pv_time;
     double	pred[FB_PRED_T][FB_NMODELS][2];
     unsigned long pred_time[FB_PRED_T];
-    double	kills_us;	/* fighters he killed */
-    double	killed;		/* times fighters killed him */
+    double	kills_us;	/* fightbots he killed */
+    double	killed;		/* times fightbots killed him */
     double	tac_n[2], tac_r[2];	/* fights per tactic and their outcome */
 } fb_opp_t;
 
 typedef struct {
-    int		level;		/* 0: use options.fighterRobotLevel */
+    int		level;		/* 0: use options.fightRobotLevel */
     bool	learn;
     int		mode;
     unsigned long mode_since;
@@ -362,12 +362,12 @@ static int		FieldBudget;
 
 static fb_snap_t	Hist[FB_HIST][NUM_IDS];
 static int		HistHead, HistCount;
-static unsigned long	SeenTick[NUM_IDS];	/* a fighter had him in view */
+static unsigned long	SeenTick[NUM_IDS];	/* a fightbot had him in view */
 static fb_opp_t		Opp[NUM_IDS];
 
 static fb_learn_t	Learn;
 static unsigned long	FbTick, LastSave;
-static int		NumFighters;
+static int		NumFightbots;
 
 static const int	nb_dx[8] = { 1, -1, 0, 0, 1, 1, -1, -1 };
 static const int	nb_dy[8] = { 0, 0, 1, -1, 1, -1, 1, -1 };
@@ -388,7 +388,7 @@ static inline fb_data_t *Fb_data(player_t *pl)
     return (fb_data_t *)pl->robot_data_ptr->private_data;
 }
 
-static inline bool Fb_is_fighter(player_t *pl)
+static inline bool Fb_is_fightbot(player_t *pl)
 {
     const char *name;
 
@@ -480,7 +480,7 @@ static inline int Fb_turn_toward(int dir, int want, int rate)
 
 static int Fb_level(const fb_data_t *d)
 {
-    int lvl = d->level > 0 ? d->level : options.fighterRobotLevel;
+    int lvl = d->level > 0 ? d->level : options.fightRobotLevel;
 
     LIMIT(lvl, 1, 100);
     return lvl;
@@ -1169,7 +1169,7 @@ static bool Fb_map_build(void)
 
 	Fb_field_compute(&StationF[i], Fb_px(f->pos.cx), Fb_px(f->pos.cy));
     }
-    FB_LOG("[fighter] map analysed: fine %dx%d (%.1f px), nav %dx%d\n",
+    FB_LOG("[fightbot] map analysed: fine %dx%d (%.1f px), nav %dx%d\n",
 	   FineW, FineH, FineCX, NavW, NavH);
     return true;
 }
@@ -1186,7 +1186,7 @@ static bool Fb_map_update(void)
 
 /*
  * Field to a moving goal (absolute px).  Fields are shared by all
- * fighters; one whose goal lies within two nav cells and that is at most
+ * fightbots; one whose goal lies within two nav cells and that is at most
  * max_age ticks old serves.  Only a few are computed per tick, otherwise
  * an older one near the goal is used.
  */
@@ -1327,7 +1327,7 @@ static void Fb_learn_save(void)
     snprintf(tmp, sizeof(tmp), "%s.tmp", path);
     if ((fp = fopen(tmp, "w")) == NULL)
 	return;
-    if (fprintf(fp, "fighterbot %d %ld %.4f\n", FB_LEARN_VERSION,
+    if (fprintf(fp, "fightbot %d %ld %.4f\n", FB_LEARN_VERSION,
 		Learn.episodes, Learn.baseline) < 0)
 	ok = false;
     for (g = 0; g < FB_NGENES && ok; g++) {
@@ -1367,7 +1367,7 @@ static void Fb_learn_load(void)
 	long eps;
 	double base;
 
-	if (sscanf(line, "fighterbot %d %ld %lf", &ver, &eps, &base) == 3
+	if (sscanf(line, "fightbot %d %ld %lf", &ver, &eps, &base) == 3
 	    && ver == FB_LEARN_VERSION) {
 	    Learn.episodes = eps;
 	    Learn.baseline = base;
@@ -1387,7 +1387,7 @@ static void Fb_learn_load(void)
 		    Learn.sigma[g] = s;
 		}
 	    }
-	    FB_LOG("[fighter] genes loaded from %s\n", path);
+	    FB_LOG("[fightbot] genes loaded from %s\n", path);
 	}
     }
     fclose(fp);
@@ -1442,7 +1442,7 @@ static void Fb_episode_end(fb_data_t *d, bool died)
 }
 
 /* ------------------------------------------------------------------------
- * History and opponent models (shared by all fighters)
+ * History and opponent models (shared by all fightbots)
  * ------------------------------------------------------------------------ */
 
 static void Fb_record_history(void)
@@ -1512,7 +1512,7 @@ static double Fb_opp_accel_k(player_t *e)
     return fb_model_k[best];
 }
 
-/* How dangerous he has been for fighters: about 0.5 .. 2. */
+/* How dangerous he has been for fightbots: about 0.5 .. 2. */
 static double Fb_opp_respect(player_t *e)
 {
     fb_opp_t *o = Fb_opp(e);
@@ -1558,14 +1558,14 @@ static void Fb_tactic_done(fb_data_t *d, double outcome)
 	return;
     o->tac_n[d->tac] += 1.0;
     o->tac_r[d->tac] += outcome;
-    FB_LOG("[fighter] tactic %s against %s: %+.0f (%.0f fights)\n",
+    FB_LOG("[fightbot] tactic %s against %s: %+.0f (%.0f fights)\n",
 	   d->tac == FB_TAC_RUN ? "run" : "dogfight", e->name, outcome, o->tac_n[d->tac]);
 }
 
 /*
  * Learn how each opponent flies: predictions made FB_PRED_T ticks ago
  * with each motion model are compared with where he went.  Only while a
- * fighter has him in view, as a human would watch him.
+ * fightbot has him in view, as a human would watch him.
  */
 static void Fb_update_opponents(void)
 {
@@ -2777,7 +2777,7 @@ static void Fb_pick_target(player_t *pl, fb_data_t *d, int level)
 	}
     }
     if (best_id != d->target_id && best_id != NO_ID)
-	FB_LOG("[fighter] %s targets %s\n", pl->name, Player_by_id(best_id)->name);
+	FB_LOG("[fightbot] %s targets %s\n", pl->name, Player_by_id(best_id)->name);
     d->target_id = best_id;
 }
 
@@ -3030,7 +3030,7 @@ static void Fb_think(player_t *pl, fb_data_t *d, int level)
 	d->unstick_until = FbTick + 5 * 12;
 	Fb_pick_search(pl, d);
 	d->still_ticks = 0;
-	FB_LOG("[fighter] %s was standing in %s: off to search\n", pl->name,
+	FB_LOG("[fightbot] %s was standing in %s: off to search\n", pl->name,
 	       fb_mode_name[d->mode]);
 	Fb_set_mode(d, FB_SEARCH);
     }
@@ -3099,7 +3099,7 @@ static void Fb_think(player_t *pl, fb_data_t *d, int level)
     if ((c->seen || (c->radar && dist < 900.0))
 	&& (dist < 500.0 || Fb_line_free(ox, oy, c->x, c->y))) {
 	if (d->mode != FB_ENGAGE && d->mode != FB_RUN)
-	    FB_LOG("[fighter] %s engages %s at %.0f px\n", pl->name, tgt->name, dist);
+	    FB_LOG("[fightbot] %s engages %s at %.0f px\n", pl->name, tgt->name, dist);
 	/* a new fight: pick the tactic against him */
 	if (d->tac_active && (d->tac_opp != tgt->id || FbTick - d->tac_seen > 10 * 12))
 	    Fb_tactic_done(d, 0.0);
@@ -3122,7 +3122,7 @@ static void Fb_think(player_t *pl, fb_data_t *d, int level)
 	    d->fallback_until = FbTick
 		+ (unsigned long)(d->gene[G_BACK] * (1.0 + 0.8 * u) * (war ? 0.6 : 1.0));
 	    Fb_set_mode(d, FB_FALLBACK);
-	    FB_LOG("[fighter] %s falls back from %s\n", pl->name, tgt->name);
+	    FB_LOG("[fightbot] %s falls back from %s\n", pl->name, tgt->name);
 	}
 	return;
     }
@@ -3654,16 +3654,16 @@ static void Fb_use_items(player_t *pl, fb_data_t *d, int level, const fb_flags_t
  * Robot type interface
  * ------------------------------------------------------------------------ */
 
-static void Robot_fighter_round_tick(void)
+static void Robot_fight_round_tick(void)
 {
     int i;
 
-    NumFighters = 0;
+    NumFightbots = 0;
     for (i = 0; i < NumPlayers; i++) {
-	if (Fb_is_fighter(Player_by_index(i)))
-	    NumFighters++;
+	if (Fb_is_fightbot(Player_by_index(i)))
+	    NumFightbots++;
     }
-    if (NumFighters == 0)
+    if (NumFightbots == 0)
 	return;
     FbTick++;
     FieldBudget = 1;
@@ -3676,13 +3676,13 @@ static void Robot_fighter_round_tick(void)
 	Fb_learn_save();
 }
 
-static void Robot_fighter_create(player_t *pl, char *str)
+static void Robot_fight_create(player_t *pl, char *str)
 {
     fb_data_t *d;
     int g;
 
     if (!(d = XMALLOC(fb_data_t, 1))) {
-	error("no mem for fighter robot");
+	error("no mem for fightbot robot");
 	End_game();
     }
     memset(d, 0, sizeof(*d));
@@ -3707,7 +3707,7 @@ static void Robot_fighter_create(player_t *pl, char *str)
     pl->robot_data_ptr->private_data = (void *)d;
 }
 
-static void Robot_fighter_go_home(player_t *pl)
+static void Robot_fight_go_home(player_t *pl)
 {
     fb_data_t *d = Fb_data(pl);
     int i;
@@ -3739,7 +3739,7 @@ static void Robot_fighter_go_home(player_t *pl)
 	d->c[i].known = d->c[i].seen = false;
 }
 
-static void Robot_fighter_play(player_t *pl)
+static void Robot_fight_play(player_t *pl)
 {
     fb_data_t *d = Fb_data(pl);
     int level = Fb_level(d);
@@ -3816,7 +3816,7 @@ static void Robot_fighter_play(player_t *pl)
 	}
 	d->escape_until = FbTick + 10;
 	d->push_ticks = 0;
-	FB_LOG("[fighter] %s stuck: escaping towards %d\n", pl->name, d->escape_dir);
+	FB_LOG("[fightbot] %s stuck: escaping towards %d\n", pl->name, d->escape_dir);
     }
     if (FbTick < d->escape_until) {
 	int dir = Fb_turn_toward(pl->dir, d->escape_dir, Fb_turn_rate(level));
@@ -3868,7 +3868,7 @@ static void Robot_fighter_play(player_t *pl)
  * Reprogrammed by an ECM, or at war with a killer: go for him and only
  * him, and search him when he is not in sight.
  */
-static void Robot_fighter_set_war(player_t *pl, int victim_id)
+static void Robot_fight_set_war(player_t *pl, int victim_id)
 {
     fb_data_t *d = Fb_data(pl);
 
@@ -3882,17 +3882,17 @@ static void Robot_fighter_set_war(player_t *pl, int victim_id)
     d->fallback_until = 0;
     if (d->mode == FB_FALLBACK || d->mode == FB_ITEM)
 	d->mode = FB_HUNT;
-    FB_LOG("[fighter] %s goes for %s\n", pl->name, Player_by_id(victim_id)
+    FB_LOG("[fightbot] %s goes for %s\n", pl->name, Player_by_id(victim_id)
 	   ? Player_by_id(victim_id)->name : "?");
 }
 
-static int Robot_fighter_war_on_player(player_t *pl)
+static int Robot_fight_war_on_player(player_t *pl)
 {
     return Fb_data(pl)->war_id;
 }
 
 /* /msg <bot> status | level N | learn on|off | forget */
-static void Robot_fighter_message(player_t *pl, const char *message)
+static void Robot_fight_message(player_t *pl, const char *message)
 {
     fb_data_t *d = Fb_data(pl);
     int lvl;
@@ -3902,7 +3902,7 @@ static void Robot_fighter_message(player_t *pl, const char *message)
     if (strstr(message, "status") != NULL) {
 	player_t *t = Fb_target(d);
 
-	Set_message_f("Fighterbot level %d, %s%s%s%s, fuel %.0f, %d kills %d deaths, "
+	Set_message_f("Fightbot level %d, %s%s%s%s, fuel %.0f, %d kills %d deaths, "
 		      "distance %.0f aggression %.2f, %ld lives learned (%s). [%s]",
 		      Fb_level(d), fb_mode_name[d->mode], t ? " " : "",
 		      t ? t->name : "", d->war_id != NO_ID ? " (war)" : "",
@@ -3928,14 +3928,14 @@ static void Robot_fighter_message(player_t *pl, const char *message)
     }
 }
 
-static void Robot_fighter_destroy(player_t *pl)
+static void Robot_fight_destroy(player_t *pl)
 {
     if (Learn.dirty)
 	Fb_learn_save();
     XFREE(pl->robot_data_ptr->private_data);
 }
 
-static void Robot_fighter_invite(player_t *pl, player_t *inviter)
+static void Robot_fight_invite(player_t *pl, player_t *inviter)
 {
     fb_data_t *d = Fb_data(pl);
 
@@ -3946,7 +3946,7 @@ static void Robot_fighter_invite(player_t *pl, player_t *inviter)
     Accept_alliance(pl, inviter);
 }
 
-static void Robot_fighter_game_event(player_t *pl, int event, player_t *other)
+static void Robot_fight_game_event(player_t *pl, int event, player_t *other)
 {
     fb_data_t *d = Fb_data(pl);
     fb_opp_t *o;
@@ -3967,30 +3967,30 @@ static void Robot_fighter_game_event(player_t *pl, int event, player_t *other)
     }
 }
 
-static robot_type_t robot_fighter_type = {
+static robot_type_t robot_fight_type = {
     FB_TYPE_NAME,
-    Robot_fighter_round_tick,
-    Robot_fighter_create,
-    Robot_fighter_go_home,
-    Robot_fighter_play,
-    Robot_fighter_set_war,
-    Robot_fighter_war_on_player,
-    Robot_fighter_message,
-    Robot_fighter_destroy,
-    Robot_fighter_invite,
-    Robot_fighter_game_event
+    Robot_fight_round_tick,
+    Robot_fight_create,
+    Robot_fight_go_home,
+    Robot_fight_play,
+    Robot_fight_set_war,
+    Robot_fight_war_on_player,
+    Robot_fight_message,
+    Robot_fight_destroy,
+    Robot_fight_invite,
+    Robot_fight_game_event
 };
 
-int Robot_fighter_setup(robot_type_t *type_ptr)
+int Robot_fight_setup(robot_type_t *type_ptr)
 {
-    *type_ptr = robot_fighter_type;
+    *type_ptr = robot_fight_type;
     return 0;
 }
 
 /*
- * The maps fighters are for: no team ball game and no race.
+ * The maps fightbots are for: no team ball game and no race.
  */
-bool Robot_fighter_map(void)
+bool Robot_fight_map(void)
 {
     return !Robot_ball_game() && !Robot_race_map();
 }

@@ -666,11 +666,11 @@ void LauncherApp::ModifiedMenu(const char* key) {
 
 // AIs for smart robots, see smart_bot_types[] in the server (robot.c). Add new ones in both places.
 static const NamedChoice kSmartBotTypes[] = {
-    {"auto", "Automatic", "The best AI for the map: ball game bot on team maps with treasures, race bot on race maps, fighter bot elsewhere"},
+    {"auto", "Automatic", "The best AI for the map: ball game bot on team maps with treasures, race bot on race maps, fightbot elsewhere"},
     {"smart", "Smartbot", "The learning smartbot"},
     {"ball", "Ball bot", "Planning bot for team ball games. On other maps it only dogfights"},
     {"race", "Race bot", "Planning bot for race maps (timing mode). Elsewhere the smartbot plays"},
-    {"fighter", "Fighter bot", "Dogfight bot for deathmatch maps, sees only what a human sees"},
+    {"fight", "Fightbot", "Dogfight bot for deathmatch maps, sees only what a human sees"},
 };
 
 static std::string OptLabel(const char* label, const char* key, bool modified) {
@@ -875,7 +875,7 @@ void LauncherApp::RenderAdvanced(bool server_mode) {
                 ImGui::SetNextItemWidth(150);
                 OptNamed("Type", "smartBotType", kSmartBotTypes, IM_ARRAYSIZE(kSmartBotTypes));
                 OptInt("Smartbot level", "smartRobotLevel", 1, 100, "Skill of the learning bots (1-100)");
-                OptInt("Fighter level", "fighterRobotLevel", 1, 100, "Skill of the fighter bots (1-100)");
+                OptInt("Fightbot level", "fightRobotLevel", 1, 100, "Skill of the fightbots (1-100)");
                 OptInt("Bot team", "robotTeam", 0, 9);
                 ImGui::PopItemWidth();
                 OptBool("All bots in one team", "restrictRobots");

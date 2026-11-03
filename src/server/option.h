@@ -34,7 +34,7 @@ extern struct options {
     int		smartRobotLevel;
     bool	smartRobotsLaser;
     char	*smartBotType;		/* see smart_bot_types[] in robot.c */
-    int		fighterRobotLevel;	/* skill of the fighter AI */
+    int		fightRobotLevel;	/* skill of the fightbot AI */
     bool	smartRobotsUseLaser;	/* alias of smartRobotsLaser */
     char	*robotFile;
     int		robotsTalk;
