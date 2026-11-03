@@ -45,6 +45,13 @@ public:
     void StopClient();
     bool IsClientRunning() const { return client_running_; }
 
+    // --- Tool (ship editor) -------------------------------------------------
+    // A helper program running next to the launcher. It is not stopped when the launcher quits
+    // (on Windows it is: it belongs to the launcher's job object).
+    bool StartTool(const std::string& binary_path, const std::vector<std::string>& args);
+    bool IsToolRunning() const { return tool_running_; }
+    bool ConsumeToolExited();   // true exactly once after it ended
+
     // Starts the server, waits until it is ready, then starts the client.
     void LaunchLocalGame(const std::string& server_bin, const std::vector<std::string>& server_args,
                          const std::string& client_bin, const std::vector<std::string>& client_args);
@@ -80,6 +87,12 @@ private:
     int client_read_fd_ = -1;
     bool client_running_ = false;
     std::string client_line_buf_;
+
+    pid_t tool_pid_ = -1;
+    int tool_read_fd_ = -1;
+    bool tool_running_ = false;
+    bool tool_exited_ = false;
+    std::string tool_line_buf_;
 
     std::vector<ProcessLogEntry> logs_;
 

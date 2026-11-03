@@ -4,6 +4,9 @@
 #include <string>
 #include <vector>
 
+#include "ship_files.h"
+#include "ship_widgets.h"
+
 class ClientProfile;
 
 // Editor for the player profile in the xpilotrc: nickname, ship, key bindings,
@@ -11,9 +14,16 @@ class ClientProfile;
 // network settings (jitter buffer, turn prediction).
 class ProfileEditor {
 public:
-    // Reads the xpilotrc. ship_names are the choices of lib/shipshapes.txt.
-    // keep_unsaved: keep all edits that were not saved yet (they stay "unsaved").
-    void Load(const std::vector<std::string>& ship_names, bool keep_unsaved = false);
+    // Reads the xpilotrc and the ships (stock_ships_path = lib/shipshapes.txt, plus the
+    // personal collection). keep_unsaved: keep all edits that were not saved yet
+    // (they stay "unsaved").
+    void Load(const std::string& stock_ships_path, bool keep_unsaved = false);
+
+    // The "Edit shipshape" button is enabled while the editor is installed and not running.
+    void SetShipEditor(bool available, bool running) { editor_available_ = available; editor_running_ = running; }
+    // True once after the button was pressed. *shape: the ship definition to edit when the
+    // choice is not saved yet, else empty (the ship editor then opens the xpilotrc ship).
+    bool TakeShipEditorRequest(std::string* shape);
 
     // Client arguments for every value that was changed but not saved to the
     // xpilotrc (keys, mouse buttons, modifier banks, audio, network), so they
@@ -55,9 +65,14 @@ private:
     static constexpr int kButtons = 5, kBanks = 4;
 
     char name_[64] = "";
-    std::vector<std::string> ship_names_;
-    int ship_ = -1;                              // -1 = leave the xpilotrc ship alone
-    std::string rc_ship_;                        // ship (name) currently in the xpilotrc
+    std::string stock_path_;
+    std::vector<ss::Entry> stock_, mine_;        // lib/shipshapes.txt and the personal collection
+    std::string ship_;                           // chosen ship: full definition, or what the xpilotrc has
+    std::string rc_ship_;                        // xpilot.shipShape as loaded (a definition or a ship name)
+    ss::ShipPicker ship_picker_;
+    bool editor_available_ = false, editor_running_ = false;
+    bool edit_request_ = false;
+    std::string edit_shape_;
 
     std::vector<std::string> key_values_;        // per key action: space separated key names
     std::vector<std::string> button_actions_[kButtons];

@@ -42,29 +42,6 @@ std::string ReadXpilotrcValue(const char* wanted) {
     return result;
 }
 
-// Name ("NM:" / "name:" field) of a ship shape definition, empty if there is none
-std::string ShipShapeName(const std::string& shape) {
-    size_t p = shape.find("(NM:");
-    if (p == std::string::npos) p = shape.find("(name:");
-    if (p == std::string::npos) return "";
-    size_t b = shape.find(':', p) + 1, e = shape.find(')', b);
-    if (e == std::string::npos) return "";
-    b = shape.find_first_not_of(' ', b);
-    return (b == std::string::npos || b >= e) ? "" : shape.substr(b, e - b);
-}
-
-// Ship names from a shipshapes file, in file order
-std::vector<std::string> ReadShipShapeNames(const char* path) {
-    std::vector<std::string> names;
-    std::ifstream in(path);
-    std::string line;
-    while (std::getline(in, line)) {
-        std::string name = ShipShapeName(line);
-        if (!name.empty()) names.push_back(name);
-    }
-    return names;
-}
-
 // Login name of the current account (empty if unavailable)
 std::string CurrentUserName() {
 #ifdef _WIN32
@@ -80,18 +57,12 @@ std::string CurrentUserName() {
 
 std::string XpilotrcValue(const char* key) { return ReadXpilotrcValue(key); }
 
-void ClientProfile::Load(const char* shipshapes_path) {
+void ClientProfile::Load() {
     rc_name_ = ReadXpilotrcValue("name");
     std::snprintf(name, sizeof name, "%s", (rc_name_.empty() ? CurrentUserName() : rc_name_).c_str());
 
-    // preselect the ship configured in ~/.xpilotrc (full definitions are matched by their name)
-    ship_names = ReadShipShapeNames(shipshapes_path);
-    // ~/.xpilotrc holds either a full definition "(NM:...)(SH:...)" or just a ship name
-    std::string rc_shape = ReadXpilotrcValue("shipShape");
-    if (std::string nm = ShipShapeName(rc_shape); !nm.empty()) rc_shape = nm;
-    rc_has_ship = !rc_shape.empty();
-    auto it = std::find(ship_names.begin(), ship_names.end(), rc_shape);
-    if (it != ship_names.end()) ship_choice = int(it - ship_names.begin());
+    // the ship is chosen in the profile editor; without an unsaved edit the client reads it from the xpilotrc
+    ship_shape.clear();
 
     // newbie help: ~/.xpilotrc wins, otherwise the client default (true) stays
     std::string rc_newbie = ReadXpilotrcValue("newbie");
@@ -104,9 +75,9 @@ std::vector<std::string> ClientProfile::BuildArgs(int port, const std::string& h
     std::vector<std::string> args;
     const std::string player_name = name[0] ? std::string(name) : rc_name_;
     if (!player_name.empty()) { args.push_back("-name"); args.push_back(player_name); }
-    if (ship_choice >= 0 && ship_choice < int(ship_names.size())) {
+    if (!ship_shape.empty()) {
         args.push_back("-shipShape");
-        args.push_back(ship_names[ship_choice]);
+        args.push_back(ship_shape);
     }
     args.push_back("-newbie");
     args.push_back(newbie ? "true" : "false");

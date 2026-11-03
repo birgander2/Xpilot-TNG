@@ -30,6 +30,10 @@ add_executable(xpilot-tng-launcher
     options_model.cpp
     process_manager.cpp
     server_browser.cpp
+    # ship thumbnails / picker of the profile editor (shared with xpilot-tng-shipeditor)
+    ${PROJECT_SOURCE_DIR}/src/shipeditor/ship_shape.cpp
+    ${PROJECT_SOURCE_DIR}/src/shipeditor/ship_files.cpp
+    ${PROJECT_SOURCE_DIR}/src/shipeditor/ship_widgets.cpp
     ${IMGUI_SOURCES}
 )
 
@@ -38,6 +42,7 @@ target_include_directories(xpilot-tng-launcher PRIVATE
     ${imgui_SOURCE_DIR}
     ${imgui_SOURCE_DIR}/backends
     ${PROJECT_SOURCE_DIR}/src/common
+    ${PROJECT_SOURCE_DIR}/src/shipeditor
 )
 
 target_link_libraries(xpilot-tng-launcher PRIVATE

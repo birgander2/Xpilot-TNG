@@ -426,6 +426,29 @@ bool ProcessManager::StartClient(const std::string& binary_path, const std::vect
     return true;
 }
 
+bool ProcessManager::StartTool(const std::string& binary_path, const std::vector<std::string>& args) {
+    if (tool_running_) return false;
+    int fd = -1;
+    pid_t pid = Spawn(binary_path, args, &fd);
+    if (pid < 0) {
+        AddLog("LAUNCHER", "Failed to start " + binary_path);
+        return false;
+    }
+    tool_read_fd_ = fd;
+    tool_pid_ = pid;
+    tool_running_ = true;
+    tool_exited_ = false;
+    tool_line_buf_.clear();
+    AddLog("LAUNCHER", "Started (PID " + std::to_string(pid) + "): " + Describe(binary_path, args));
+    return true;
+}
+
+bool ProcessManager::ConsumeToolExited() {
+    bool v = tool_exited_;
+    tool_exited_ = false;
+    return v;
+}
+
 void ProcessManager::StopClient() {
     if (!client_running_ || client_pid_ <= 0) return;
     AddLog("LAUNCHER", "Stopping client (PID " + std::to_string(client_pid_) + ")...");
@@ -574,6 +597,21 @@ void ProcessManager::Update() {
             pending_client_launch_ = false;
             launch_failed_ = true;
             AddLog("LAUNCHER", "Timeout: the server did not become ready within 15 s.");
+        }
+    }
+
+    // Tool
+    if (tool_running_ && tool_pid_ > 0) {
+        ReadFromFd(tool_read_fd_, tool_line_buf_, "EDITOR");
+        int code = 0;
+        if (Reap(tool_pid_, &code)) {
+            ReadFromFd(tool_read_fd_, tool_line_buf_, "EDITOR");   // drain
+            close(tool_read_fd_);
+            tool_read_fd_ = -1;
+            tool_running_ = false;
+            tool_pid_ = -1;
+            tool_exited_ = true;
+            AddLog("LAUNCHER", "Ship editor exited with code " + std::to_string(code));
         }
     }
 

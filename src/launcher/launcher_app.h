@@ -115,6 +115,8 @@ private:
 
     std::string server_bin_path_;
     std::string client_bin_path_;
+    std::string ship_editor_bin_path_;
+    bool ship_editor_available_ = false;   // xpilot-tng-shipeditor found next to the launcher
     std::string server_problem_;   // non-empty: binary missing or shared library not found
     std::string client_problem_;
     bool BinariesOk(bool server, bool client);   // sets banner_ and returns false on problems

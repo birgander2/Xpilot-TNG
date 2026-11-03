@@ -123,6 +123,10 @@ void LauncherApp::Init() {
 
     server_bin_path_ = ResolveBinaryPath("xpilot-tng-server");
     client_bin_path_ = ResolveBinaryPath("xpilot-tng-client");
+    ship_editor_bin_path_ = ResolveBinaryPath("xpilot-tng-shipeditor");
+    // optional: only a found file counts, not a bare name left to the PATH search
+    ship_editor_available_ = ship_editor_bin_path_.find_first_of("/\\") != std::string::npos &&
+                             CheckBinary("ship editor", ship_editor_bin_path_).empty();
 
     server_problem_ = CheckBinary("server", server_bin_path_);
     client_problem_ = CheckBinary("client", client_bin_path_);
@@ -134,7 +138,7 @@ void LauncherApp::Init() {
 
     baseline_ok_ = options_mgr_.LoadBaseline(server_bin_path_, data_dir_ + "/defaults.txt");
 
-    profile_.Load((data_dir_ + "/shipshapes.txt").c_str());
+    profile_.Load();
     if (baseline_ok_) {   // network settings: compiled default < lib/defaults.txt < xpilotrc
         CopyTo(server_host_, sizeof(server_host_), options_mgr_.Get("serverHost"));
         server_cport_start_ = options_mgr_.GetInt("clientPortStart");
@@ -205,7 +209,7 @@ void LauncherApp::GoTo(Screen s) {
     if (s == Screen::Menu) {
         banner_.clear();
     }
-    if (s == Screen::Profile) profile_editor_.Load(profile_.ship_names, true);   // keeps unsaved edits
+    if (s == Screen::Profile) profile_editor_.Load(data_dir_ + "/shipshapes.txt", true);   // keeps unsaved edits
     if (s == Screen::NetworkBrowser) {
         lan_search_.Start();        // full refresh on every visit (no-op while a scan is still running)
         internet_search_.Start();
@@ -397,6 +401,9 @@ void LauncherApp::Update() {
 
     int code = 0;
     if (process_mgr_.ConsumeClientExited(&code)) FinishPlaying(code);
+    // the ship editor may have changed the xpilotrc or the collection
+    if (process_mgr_.ConsumeToolExited() && screen_ == Screen::Profile)
+        profile_editor_.Load(data_dir_ + "/shipshapes.txt", true);
 
     int scode = 0;
     if (process_mgr_.ConsumeServerExited(&scode)) {
@@ -744,24 +751,7 @@ bool LauncherApp::OptFloat(const char* label, const char* key, float lo, float h
 
 void LauncherApp::RenderIdentityRow() {
     ImGui::SetNextItemWidth(150);
-    ImGui::InputTextWithHint("Name", "(account name)", profile_.name, sizeof(profile_.name));
-    ImGui::SameLine(0, 24);
-    ImGui::SetNextItemWidth(150);
-    auto& ships = profile_.ship_names;
-    int& choice = profile_.ship_choice;
-    // -1 passes no ship: the client then uses ~/.xpilotrc or, without it, its built-in default ship
-    const char* none_label = profile_.rc_has_ship ? "(from .xpilotrc)" : "(client default)";
-    const char* ship_label = choice >= 0 && choice < int(ships.size()) ? ships[choice].c_str() : none_label;
-    if (ImGui::BeginCombo("Ship shape", ship_label)) {
-        if (ImGui::Selectable(none_label, choice < 0)) choice = -1;
-        for (int i = 0; i < int(ships.size()); ++i) {
-            ImGui::PushID(i);
-            if (ImGui::Selectable(ships[i].c_str(), choice == i)) choice = i;
-            if (choice == i && ImGui::IsWindowAppearing()) ImGui::SetItemDefaultFocus();
-            ImGui::PopID();
-        }
-        ImGui::EndCombo();
-    }
+    ImGui::InputTextWithHint("Player name", "(account name)", profile_.name, sizeof(profile_.name));
     ImGui::SameLine(0, 24);
     ImGui::Checkbox("Newbie mode", &profile_.newbie);
     if (ImGui::IsItemHovered()) ImGui::SetTooltip("Show help messages for new players");
@@ -773,7 +763,7 @@ void LauncherApp::RenderIdentityRow() {
         profile_return_ = screen_;
         GoTo(Screen::Profile);
     }
-    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Edit keys, mouse buttons, modifier banks, audio, network and ship in the xpilotrc");
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Edit ship, keys, mouse buttons, modifier banks, audio and network in the xpilotrc");
 }
 
 void LauncherApp::RenderQuickSettings(bool server_mode) {
@@ -1101,8 +1091,15 @@ void LauncherApp::RenderProfile() {
     if (ImGui::Button("< Back", ImVec2(80, 0))) LeaveProfile();
     ImGui::SameLine();
     RenderHeader("EDIT PLAYER PROFILE", false);
+    profile_editor_.SetShipEditor(ship_editor_available_, process_mgr_.IsToolRunning());
     if (profile_editor_.Render(40))
-        profile_.Load((data_dir_ + "/shipshapes.txt").c_str());   // pick up the saved name and ship
+        profile_.Load();   // pick up the saved name and ship
+    if (std::string shape; profile_editor_.TakeShipEditorRequest(&shape)) {
+        std::vector<std::string> args;
+        if (!shape.empty()) args.push_back(shape);
+        if (!process_mgr_.StartTool(ship_editor_bin_path_, args))
+            banner_ = "The ship editor could not be started (" + ship_editor_bin_path_ + ").";
+    }
 }
 
 void LauncherApp::LeaveProfile() {
@@ -1467,7 +1464,7 @@ void LauncherApp::RenderProfileLeavePopup() {
     ImGui::Spacing();
     if (ImGui::Button("Save profile", ImVec2(110, 0))) {
         if (profile_editor_.Save()) {
-            profile_.Load((data_dir_ + "/shipshapes.txt").c_str());
+            profile_.Load();
             ImGui::CloseCurrentPopup();
             GoTo(profile_return_);
         } else {
@@ -1484,7 +1481,7 @@ void LauncherApp::RenderProfileLeavePopup() {
         ImGui::SetTooltip("Use the changes for the next games, but do not write them to the xpilotrc.");
     ImGui::SameLine();
     if (ImGui::Button("Discard changes", ImVec2(150, 0))) {
-        profile_editor_.Load(profile_.ship_names);   // back to what the xpilotrc has
+        profile_editor_.Load(data_dir_ + "/shipshapes.txt");   // back to what the xpilotrc has
         ImGui::CloseCurrentPopup();
         GoTo(profile_return_);
     }
