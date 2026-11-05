@@ -1416,8 +1416,13 @@ void Delete_player(player_t *pl)
     object_t *obj;
     team_t *teamp = Team_by_index(pl->team);
 
-    if (Player_is_human(pl))
+    if (Player_is_human(pl)) {
 	Add_playtime(pl);
+	/* machine readable session record: name|seconds played|join time|leave time */
+	xpprintf("[played] %s|%ld|%ld|%ld\n", pl->name,
+		 (long)(time(NULL) - pl->join_time), (long)pl->join_time,
+		 (long)time(NULL));
+    }
 
     xpprintf("[leave] %s|%d\n", pl->name, id);
     fflush(stdout);
