@@ -873,7 +873,12 @@ static void Robot_talks(enum robot_talk_t says_what,
 	next_msg = 0;
 
     i = next_msg % n;
-    if (two == 2)
+    if (says_what == ROBOT_TALK_WAR) {
+	char fmt[MSG_LEN];
+
+	snprintf(fmt, sizeof(fmt), "%c%s", MSG_ALERT_MARK, msgsp[i]);
+	Set_message_f(fmt, other_name, robot_name);
+    } else if (two == 2)
 	Set_message_f(msgsp[i], other_name, robot_name);
     else
 	Set_message_f(msgsp[i], robot_name);
@@ -1223,9 +1228,15 @@ void Robot_reset_war(player_t *pl)
 /*
  * Someone has programmed a robot (using ECM) to seek some player.
  */
-void Robot_program(player_t *pl, int victim_id)
+void Robot_program(player_t *pl, int victim_id, const player_t *programmer)
 {
+    player_t *victim = Player_by_id(victim_id);
+
     Robot_set_war(pl, victim_id);
+    if (victim != NULL && programmer != NULL)
+	Set_message_f("%c%s has been reprogrammed by %s to hunt %s. [ECM]",
+		      MSG_ALERT_MARK, pl->name, programmer->name,
+		      victim->name);
 }
 
 

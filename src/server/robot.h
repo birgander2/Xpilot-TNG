@@ -200,7 +200,7 @@ void Robot_war(player_t *robot, player_t *killer);
 void Robot_reset_war(player_t *robot);
 int Robot_war_on_player(player_t *robot);
 void Robot_go_home(player_t *robot);
-void Robot_program(player_t *robot, int victim_id);
+void Robot_program(player_t *robot, int victim_id, const player_t *programmer);
 void Robot_message(player_t *robot, const char *message);
 
 #endif

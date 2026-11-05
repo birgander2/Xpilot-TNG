@@ -486,6 +486,7 @@ typedef struct {
     /*short		pixelLen;*/
     double		lifeTime;
     msg_bms_t		bmsinfo;
+    bool		alert;	/* highlighted (red) server message */
 } message_t;
 /* typedefs end */
 

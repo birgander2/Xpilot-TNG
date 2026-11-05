@@ -17,6 +17,7 @@ static int dirPtrColor = 0;             /* Color index for dirptr drawing */
 int messagesColor = 12;                 /* Color index for messages */
 int oldMessagesColor = 13;              /* Color index for old messages */
 static char talkMessagesRGB[16] = "#E6F4FF";   /* talk messages (top), "" = messagesColor */
+static char alertMessagesRGB[16] = "#FF3030";   /* war / reprogram alerts */
 static char gameMessagesRGB[16] = "#4CFF7A";   /* server messages (bottom), "" = messagesColor */
 static bool messageShadow = true;       /* dark shadow behind message text */
 static int msgScanBallColor = 3;        /* Color index for ball msg */
@@ -699,7 +700,11 @@ void Paint_messages(void)
             /* talk messages (top) and server messages (bottom) have their own colors */
             SDL_Color rgb;
 
-            if (SDL3_Parse_Hex_Color(i < maxMessages ? talkMessagesRGB : gameMessagesRGB, &rgb))
+            const char *rgbstr = i < maxMessages ? talkMessagesRGB : gameMessagesRGB;
+
+            if (msg->alert)
+                rgbstr = alertMessagesRGB;
+            if (SDL3_Parse_Hex_Color(rgbstr, &rgb))
                 col = rgb;
             if (old)
                 col.a = (Uint8)(col.a * 0.6);   /* fade instead of turning dark gray */

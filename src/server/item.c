@@ -1143,7 +1143,7 @@ void Fire_general_ecm(int id, int team, clpos_t pos)
 		    /*
 		     * Player programs robot to seek target.
 		     */
-		    Robot_program(p, pl->lock.pl_id);
+		    Robot_program(p, pl->lock.pl_id, pl);
 		}
 	    }
 	}

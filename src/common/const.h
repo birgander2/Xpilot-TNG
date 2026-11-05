@@ -133,6 +133,10 @@ do { \
 #define MAX_CHARS		80
 #define MSG_LEN			256
 
+/* First character of a server message the client shows highlighted in red
+ * (robot declares war / gets reprogrammed). The client strips it. */
+#define MSG_ALERT_MARK		'\001'
+
 #define NUM_MODBANKS		4
 
 #define SPEED_LIMIT		65.0

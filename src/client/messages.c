@@ -805,6 +805,12 @@ void Add_message(const char *message)
     bool is_game_msg = false;
     bool is_drawn_talk_message	= false; /* not pending */
     bool scrolling = false; /* really moving */
+    bool alert = false;
+
+    if (message[0] == MSG_ALERT_MARK) {
+	alert = true;
+	message++;
+    }
 
     is_game_msg = Msg_is_game_msg(message);
     if (!is_game_msg) {
@@ -862,6 +868,7 @@ void Add_message(const char *message)
     strlcpy(msg->txt, message, MSG_LEN);
     msg->len = strlen(message);
     msg->bmsinfo = bmsinfo;
+    msg->alert = alert;
 
     /* Clear bms flags for out of date messages. */
     if (bmsinfo != BmsNone)
