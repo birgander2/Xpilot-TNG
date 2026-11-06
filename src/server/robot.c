@@ -391,7 +391,8 @@ static const struct {
     { SMART_ROBOT_TYPE,	SMART_ROBOT_TYPE,	NULL, NULL },
     { BALL_ROBOT_TYPE,	BALL_ROBOT_TYPE,	NULL, Robot_ball_game },
     { RACE_ROBOT_TYPE,	RACE_ROBOT_TYPE,	Robot_race_map, Robot_race_map },
-    { FIGHT_ROBOT_TYPE, FIGHT_ROBOT_TYPE,	NULL, Robot_fight_map },
+    /* TEMPORARY: not picked by "auto" (smart is the deathmatch default for now); still selectable with smartBotType fight */
+    { FIGHT_ROBOT_TYPE, FIGHT_ROBOT_TYPE,	NULL, NULL },
 };
 
 /* Driver for a new smart robot on the current map. */

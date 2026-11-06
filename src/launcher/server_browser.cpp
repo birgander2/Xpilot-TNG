@@ -93,6 +93,7 @@ int PollOne(int fd, short events, int timeout_ms) {
 using Clock = std::chrono::steady_clock;
 
 constexpr int kServerPort = 15345;          // SERVER_PORT in pack.h
+constexpr int kLanPortCount = 100;          // LAN search also probes kServerPort+1 ... (multiserver, several servers per host)
 constexpr int kMetaProgPort = 4401;         // META_PROG_PORT in client/meta.h
 constexpr uint32_t kMagic = (0x4F15u << 16) | 0xF4EDu;   // POLYGON_VERSION, MAGIC_WORD
 constexpr uint8_t kReportStatus = 0x21;     // REPORT_STATUS_pack
@@ -399,7 +400,11 @@ void ServerSearch::RunLan() {
     if (fd < 0) { SetMessage("Could not open a network socket."); return; }
 
     const std::set<std::string> local = LocalAddresses();
-    const auto targets = BroadcastTargets(kServerPort);
+    std::vector<sockaddr_in> targets;
+    for (int i = 0; i < kLanPortCount; i++) {
+        auto t = BroadcastTargets(kServerPort + i);
+        targets.insert(targets.end(), t.begin(), t.end());
+    }
     const std::string pkt = BuildPacket(kReportStatus);
     std::vector<ServerEntry> found;
 
