@@ -1257,6 +1257,11 @@ static int Handle_login(connection_t *connp, char *errmsg, size_t errsize)
     if (options.greeting)
 	Set_player_message_f(pl, "%s [*Server greeting*]", options.greeting);
 
+    if (connp->version < TNG_FIRST_VERSION) {
+	Set_player_message(pl, LEGACY_CLIENT_NOTICE);
+	connp->legacy_note_loop = frame_loops + LEGACY_NOTICE_INTERVAL;
+    }
+
     if (connp->version < MY_VERSION) {
 	Set_player_message_f(pl, "Server runs %s version %s. %s",
 			     PACKAGE_NAME, VERSION, sender);

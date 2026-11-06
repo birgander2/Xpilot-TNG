@@ -68,6 +68,9 @@
 /*
  * Maximum roundtrip time taken as serious for rountrip time calculations.
  */
+#define LEGACY_CLIENT_NOTICE	"You are using an old legacy client. Update it for full functionality: https://xpilot.nought.de"
+#define LEGACY_NOTICE_INTERVAL	(5 * 60 * FPS)
+
 #define MAX_RTT			(FPS + 1)
 
 /*
@@ -111,6 +114,7 @@ typedef struct {
     int			id;			/* index into GetInd[] or NO_ID */
     int			team;			/* team of player */
     unsigned		version;		/* XPilot version of client */
+    long		legacy_note_loop;	/* frame_loops for next legacy client notice */
     long		last_key_change;	/* last keyboard change */
     long		talk_sequence_num;	/* talk acknowledgement */
     long		motd_offset;		/* offset into motd or -1 */

@@ -850,6 +850,13 @@ static void Update_players(void)
 	    Player_print_state(pl, "Update_players");
 #endif
 
+	if (pl->conn != NULL
+	    && pl->conn->version < TNG_FIRST_VERSION
+	    && frame_loops >= pl->conn->legacy_note_loop) {
+	    Set_player_message(pl, LEGACY_CLIENT_NOTICE);
+	    pl->conn->legacy_note_loop = frame_loops + LEGACY_NOTICE_INTERVAL;
+	}
+
 	if (Player_is_paused(pl)) {
 	    if (options.pauseTax > 0.0 && (frame_loops % FPS) == 0) {
 		Player_add_score(pl,-options.pauseTax);
