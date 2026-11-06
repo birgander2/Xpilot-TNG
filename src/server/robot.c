@@ -376,11 +376,6 @@ static robot_t DefaultRobots[] = {
     },
 };
 
-#define SMART_ROBOT_TYPE	"smart"
-#define BALL_ROBOT_TYPE		"ball"
-#define RACE_ROBOT_TYPE		"race"
-#define FIGHT_ROBOT_TYPE	"fight"
-
 /*
  * The AIs smart robots can use, selected with the smartBotType option.
  * A new AI needs an entry here, its driver in robot_type_setups[] and an
@@ -400,7 +395,7 @@ static const struct {
 };
 
 /* Driver for a new smart robot on the current map. */
-static const char *Smart_bot_driver(void)
+const char *Robot_smart_driver(void)
 {
     const char *want = options.smartBotType ? options.smartBotType : "auto";
     static char warned[32];
@@ -958,7 +953,7 @@ static void Robot_create(bool want_smart)
      */
     num = -1;
     if (want_smart) {
-	smart_driver = Smart_bot_driver();
+	smart_driver = Robot_smart_driver();
 	if (strcasecmp(smart_driver, SMART_ROBOT_TYPE)) {
 	    num = Robot_pick_free(TypedRobots, MAX_TYPED_ROBOTS, smart_driver);
 	    if (num >= 0)

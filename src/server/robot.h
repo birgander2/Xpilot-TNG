@@ -193,6 +193,13 @@ void Robot_prefill(void);
 void Robot_invite(player_t *robot, player_t *inviter);
 void Robot_game_event(player_t *pl, int event, player_t *other);
 const char *Robot_type_name(player_t *robot);
+const char *Robot_smart_driver(void);
+
+/* Names of the smart robot AIs, see smartBotType. */
+#define SMART_ROBOT_TYPE	"smart"
+#define BALL_ROBOT_TYPE		"ball"
+#define RACE_ROBOT_TYPE		"race"
+#define FIGHT_ROBOT_TYPE	"fight"
 bool Robot_ball_game(void);
 bool Robot_race_map(void);
 bool Robot_fight_map(void);

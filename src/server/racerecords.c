@@ -22,12 +22,12 @@
  * At the end of a race every TNG client gets the standings of the race
  * and two top ten lists, of whole races and of single laps.  The lists
  * hold human players only, the best time of each nick, and are kept per
- * course (map, checkpoints), number of laps and game speed in
+ * course (map, checkpoints), number of laps, game speed and bot setup in
  * $XDG_DATA_HOME/xpilot-tng/racetimes/ (default ~/.local/share/...).
  *
  * Ball games keep a top ten list of ballruns (the time from lifting the
  * ball out of its treasure until it is cashed), again humans only and one
- * entry per nick, per map (treasures) and game speed in .../balltimes/.
+ * entry per nick, per map (treasures), game speed and bot setup in .../balltimes/.
  * The list pops up at the end of a round, only when it changed, and the
  * next round waits for the popups like the next race.
  */
@@ -170,6 +170,42 @@ static uint32_t Rr_course_sig(bool ball)
 }
 
 /*
+ * Bot setup of the lists, from the options: number of ordinary and smart
+ * bots (or bots per human, or filling up to that number), the AI and
+ * skill of the smart ones.  Empty without bots, so the files of games
+ * without bots keep their names.
+ */
+static const char *Rr_bot_sig(void)
+{
+    static char sig[MAX_CHARS];
+    int plain = MAX(options.maxRobots, 0), smart = MAX(options.maxSmartRobots, 0);
+    char *p;
+
+    sig[0] = '\0';
+    if (options.botsMatchHumans ? options.botsPerHuman <= 0.0
+				: plain + smart == 0)
+	return sig;
+    snprintf(sig, sizeof(sig), "_bots%d", plain);
+    if (smart > 0) {
+	const char *type = Robot_smart_driver();
+	int level = !strcmp(type, FIGHT_ROBOT_TYPE)
+		    ? options.fightRobotLevel : options.smartRobotLevel;
+
+	snprintf(sig + strlen(sig), sizeof(sig) - strlen(sig),
+		 "_smart%d_%s_lvl%d", smart, type, level);
+    }
+    if (options.botsMatchHumans)
+	snprintf(sig + strlen(sig), sizeof(sig) - strlen(sig),
+		 "_perhuman%g", options.botsPerHuman);
+    else if (options.robotsFillTo)
+	strlcat(sig, "_fill", sizeof(sig));
+    for (p = sig; *p != '\0'; p++)
+	if (!isalnum((unsigned char)*p) && *p != '_' && *p != '-')
+	    *p = '_';
+    return sig;
+}
+
+/*
  * File of the current course, laps and game speed (or of the ball map and
  * game speed); NULL without a home.
  */
@@ -202,12 +238,13 @@ static const char *Rr_path(bool mkdirs, bool ball)
 	return NULL;
     if (ball)
 	snprintf(path + strlen(path), sizeof(path) - strlen(path),
-		 "%s_speed%g_%08x.txt", name, options.gameSpeed,
-		 (unsigned)Rr_course_sig(true));
+		 "%s_speed%g%s_%08x.txt", name, options.gameSpeed,
+		 Rr_bot_sig(), (unsigned)Rr_course_sig(true));
     else
 	snprintf(path + strlen(path), sizeof(path) - strlen(path),
-		 "%s_%dlaps_speed%g_%08x.txt", name, options.raceLaps,
-		 options.gameSpeed, (unsigned)Rr_course_sig(false));
+		 "%s_%dlaps_speed%g%s_%08x.txt", name, options.raceLaps,
+		 options.gameSpeed, Rr_bot_sig(),
+		 (unsigned)Rr_course_sig(false));
     if (mkdirs) {
 	for (p = path + 1; (p = strchr(p, '/')) != NULL; p++) {
 	    *p = '\0';
