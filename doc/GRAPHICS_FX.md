@@ -140,7 +140,10 @@ Vorschlag für ein erstes Paket: gefüllter Rumpf mit Facetten (1+2) und Triebwe
   Lohnt sich eher mit echten Shadern oder dickeren Linien.
 - ✅ **Minen Explosionen** Minen explodieren mit speziellem Feuerball, Clusterminen mit einem anderen Effekt, Nuklearminen auch mit speziellem Effekt, alle je nach Explosionsstärke kleiner oder größer
   → umgesetzt (`fxMineExplosions`, `fxNukeFlash`, `fxScreenShake`):
-  - Erkennung: Mine verschwindet im Sichtbereich (Abgleich über Position). Im selben Frame:
+  - Erkennung: Mine verschwindet im Sichtbereich des Servers (`active_view`, nicht der evtl.
+    größere gezeichnete `ext_view`) und an der Stelle tauchen Trümmer/Schüsse auf – Minen
+    fehlen sonst auch ohne Explosion (Rand der Serversicht, `maxVisibleObjects` nach Nukes).
+    Abgleich über Position. Im selben Frame:
     Trümmer im Umkreis, hochgerechnet mit `sparkProb` (normal ~110–140, nuklear > 400),
     Schüsse im Umkreis (Cluster ~27, nuklearer Cluster > 100). Stärke = Anteil an einer vollen
     Mine ^0,7 (aufgeteilte Minen: 1/2 → 0,62, 1/3 → 0,46, 1/4 → 0,38) skaliert Größe, Menge,
@@ -171,6 +174,7 @@ Vorschlag für ein erstes Paket: gefüllter Rumpf mit Facetten (1+2) und Triebwe
   Heck gleicher Länge im Vorframe fortgesetzt, Rauch gleichmäßig über die Strecke verteilt.
   Verglichen mit Rauchwölkchen einheitlich und glattem Rauchband.
 - **Mündungsfeuer** an Kanonen, **Laser-Glow**.
+- **Lichtgeschwindigkeit**: Langsam deutlich werdender Überschallkegel, später auch stärker werdende Leuchtspur
 - **Parallax-Sternenfeld** im Hintergrund (mehrere Ebenen).
 - **Wurmloch-Strudel**, **Hyperjump-Streckeffekt**, **Ball-Tether-Glühen**.
 - **Positionslichter** (aus „Schiffe aufhübschen“ verschoben): rot/grün an den Flügelspitzen

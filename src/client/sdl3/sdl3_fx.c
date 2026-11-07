@@ -749,6 +749,20 @@ static void fx_view_offset(float wx, float wy, float *dx, float *dy)
     *dy = fx_wrap_dy(wy - ((float)world.y + (float)ext_view_height * 0.5f));
 }
 
+/*
+ * Inside the area the server sends objects for, at least margin pixels
+ * from its edge. The client may draw a wider area (ext_view) than the
+ * server covers (active_view); objects leaving the server's area just
+ * vanish, which must not look like an explosion.
+ */
+static bool fx_in_server_view(float x, float y, float margin)
+{
+    float dx, dy;
+    fx_view_offset(x, y, &dx, &dy);
+    return fabsf(dx) < (float)active_view_width * 0.5f - margin
+        && fabsf(dy) < (float)active_view_height * 0.5f - margin;
+}
+
 /* ------------------------------------------------------------------ */
 /* Event detection                                                    */
 /* ------------------------------------------------------------------ */
@@ -1200,10 +1214,7 @@ static void fx_mines_begin(void)
         }
         if (found)
             continue;
-        float vx, vy;
-        fx_view_offset(mx, my, &vx, &vy);
-        if (fabsf(vx) < (float)ext_view_width * 0.5f - 20.0f
-            && fabsf(vy) < (float)ext_view_height * 0.5f - 20.0f
+        if (fx_in_server_view(mx, my, 20.0f)
             && fx_num_pending < (int)SDL_arraysize(fx_pending))
             fx_pending[fx_num_pending++] = (fx_pending_t){ mx, my };
     }
@@ -1238,6 +1249,16 @@ static void fx_mines_resolve(void)
             if (dx * dx + dy * dy < FX_MINE_BURST_R * FX_MINE_BURST_R)
                 shots++;
         }
+        /*
+         * No burst, no explosion: the server sends at most maxVisibleObjects
+         * objects per frame, so after a nuke's debris flood mines just drop
+         * out for a while. Require some of the debris even a quarter mine
+         * leaves (unless the player turned sparks off, then there is none).
+         */
+        float need = fmaxf(2.0f, 0.3f * FX_MINE_NORMAL_DEBRIS * send / 4.0f);
+        if (send >= 0.05f && (float)debris < need && shots < 4)
+            continue;
+
         float full = send > 0.05f ? (float)debris / send : 0.0f;   /* estimated total */
         bool nuke = full > FX_MINE_NUKE_DEBRIS || shots > FX_MINE_NUKE_SHOTS;
 
@@ -1321,14 +1342,12 @@ static void fx_check_vanished(void)
         }
 
         if (age > 0 && age <= 3) {
-            float px = t->x, py = t->y, dx, dy;
+            float px = t->x, py = t->y;
             if (t->has_vel) {
                 px += t->vx * (float)age;
                 py += t->vy * (float)age;
             }
-            fx_view_offset(px, py, &dx, &dy);
-            bool in_view = fabsf(dx) < (float)ext_view_width * 0.5f - 30.0f
-                        && fabsf(dy) < (float)ext_view_height * 0.5f - 30.0f;
+            bool in_view = fx_in_server_view(px, py, 30.0f);
 
             if (in_view && (fx_wreck_near(px, py, 90.0f)
                             || fx_wreck_near(t->x, t->y, 90.0f))) {
