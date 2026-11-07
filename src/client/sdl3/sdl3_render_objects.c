@@ -839,9 +839,14 @@ void Gui_paint_ship(int x, int y, int dir, int id, int cloak, int phased,
     }
 
     if (phased || cloak) {
-        float dash_len = (float)MAX(1, WINSCALE(3));
-        float gap_len  = (float)MAX(1, WINSCALE(8));
-        SDL3_Draw_Dashed_Lines(points, cnt, ship_color, dash_len, gap_len);
+        /* modern: phased half transparent, cloaked as running glow dashes */
+        float gcx = (float)(PLAYFIELD_X + rint((x - world.x) / clData.scaleFactor));
+        float gcy = (float)rint((world.y + ext_view_height - y) / clData.scaleFactor);
+        if (!Fx_paint_ship_ghost(points, cnt - 1, gcx, gcy, ship_color, cloak != 0)) {
+            float dash_len = (float)MAX(1, WINSCALE(3));
+            float gap_len  = (float)MAX(1, WINSCALE(8));
+            SDL3_Draw_Dashed_Lines(points, cnt, ship_color, dash_len, gap_len);
+        }
     }
 
     if (markingLights)

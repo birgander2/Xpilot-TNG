@@ -152,6 +152,8 @@ void  Store_ship_fx_options(void);
 bool  Fx_paint_ship_hull(const SDL_FPoint *pts, int n, float cx, float cy,
                          int color, int halo_color, bool fill);
 void  Fx_ship_cleanup(void);
+bool  Fx_paint_ship_ghost(const SDL_FPoint *pts, int n, float cx, float cy,
+                          int color, bool cloak);
 void  Fx_render(void);
 float Screen_X(int world_x);
 float Screen_Y(int world_y);

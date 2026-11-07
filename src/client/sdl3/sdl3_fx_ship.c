@@ -19,7 +19,8 @@ static bool fxShield = true;
 static xp_option_t ship_fx_options[] = {
     XP_BOOL_OPTION("fxShipHull", true, &fxShipHull, NULL,
                    XP_OPTFLAG_CONFIG_FX,
-                   "Draw ships with a glossy hull and a rim-lit outline.\n"),
+                   "Draw ships with a glossy hull and a rim-lit outline; phased ships\n"
+                   "half transparent, cloaked ones as running glowing dashes.\n"),
     XP_BOOL_OPTION("fxShipHalo", true, &fxShipHalo, NULL,
                    XP_OPTFLAG_CONFIG_FX,
                    "Soft glow around ships in team play: blue for your own team.\n"),
@@ -137,8 +138,8 @@ static bool sh_make_textures(void)
  * Returns true if the outline was drawn here (rim-lit), so the caller
  * must not draw its plain outline.
  */
-bool Fx_paint_ship_hull(const SDL_FPoint *pts, int n, float cx, float cy,
-                        int color, int halo_color, bool fill)
+static bool sh_paint_hull(const SDL_FPoint *pts, int n, float cx, float cy,
+                          int color, int halo_color, bool fill, float alpha)
 {
     SDL_Vertex v[SH_MAX_PTS * 3];
     int idx[SH_MAX_PTS * 3];
@@ -148,7 +149,7 @@ bool Fx_paint_ship_hull(const SDL_FPoint *pts, int n, float cx, float cy,
 
     if (fxShipHalo && halo_color > 0) {
         SDL_FColor hc = SDL3_Get_FColor(halo_color);
-        hc.a = 0.32f;
+        hc.a = 0.32f * alpha;
         Fx_draw_outline_glow(pts, n, hc, 6.0f * clData.fscale);
     }
 
@@ -166,7 +167,7 @@ bool Fx_paint_ship_hull(const SDL_FPoint *pts, int n, float cx, float cy,
     /* hull: dome light mapped in screen orientation over the ship */
     int ni = SDL3_Triangulate_Polygon(pts, n, idx, SH_MAX_PTS * 3);
     if (ni >= 3) {
-        const SDL_FColor tint = { base.r * 0.62f, base.g * 0.62f, base.b * 0.62f, 1.0f };
+        const SDL_FColor tint = { base.r * 0.62f, base.g * 0.62f, base.b * 0.62f, alpha };
         const float inv = 0.5f / rmax;
         for (int k = 0; k < ni; k++) {
             SDL_FPoint q = pts[idx[k]];
@@ -176,7 +177,7 @@ bool Fx_paint_ship_hull(const SDL_FPoint *pts, int n, float cx, float cy,
         }
         SDL_RenderGeometry(tng_renderer, sh_dome, v, ni, NULL, 0);
         for (int k = 0; k < ni; k++)
-            v[k].color = (SDL_FColor){ 1.0f, 1.0f, 1.0f, 0.85f };
+            v[k].color = (SDL_FColor){ 1.0f, 1.0f, 1.0f, 0.85f * alpha };
         SDL_RenderGeometry(tng_renderer, sh_spec, v, ni, NULL, 0);
     }
 
@@ -199,8 +200,67 @@ bool Fx_paint_ship_hull(const SDL_FPoint *pts, int n, float cx, float cy,
         float k = 0.35f + 0.65f * (0.5f + 0.5f * (nx * lx + ny * ly));
         SDL_SetRenderDrawColor(tng_renderer, (Uint8)(sh_clamp01(base.r * k) * 255.0f),
                                (Uint8)(sh_clamp01(base.g * k) * 255.0f),
-                               (Uint8)(sh_clamp01(base.b * k) * 255.0f), 255);
+                               (Uint8)(sh_clamp01(base.b * k) * 255.0f),
+                               (Uint8)(sh_clamp01(alpha) * 255.0f));
         SDL_RenderLine(tng_renderer, a.x, a.y, b.x, b.y);
+    }
+    return true;
+}
+
+bool Fx_paint_ship_hull(const SDL_FPoint *pts, int n, float cx, float cy,
+                        int color, int halo_color, bool fill)
+{
+    return sh_paint_hull(pts, n, cx, cy, color, halo_color, fill, 1.0f);
+}
+
+/*
+ * Phased or cloaked ship (screen outline pts, n unique points, center cx, cy).
+ * Phased: the normal ship, mostly transparent (30 %). Cloaked: a faint
+ * hull (25 %) and soft glowing dashes slowly running along the outline.
+ * Returns false if the classic look should be drawn instead.
+ */
+bool Fx_paint_ship_ghost(const SDL_FPoint *pts, int n, float cx, float cy,
+                         int color, bool cloak)
+{
+    if (!fxShipHull || Fx_classic() || !tng_renderer || n < 3 || n > SH_MAX_PTS)
+        return false;
+
+    if (!cloak)
+        return sh_paint_hull(pts, n, cx, cy, color, 0, true, 0.3f);
+
+    sh_paint_hull(pts, n, cx, cy, color, 0, true, 0.25f);
+
+    /* running dashes: walk the outline, dash 5 px, gap 4 px, moving along */
+    SDL_FColor fc = SDL3_Get_FColor(color);
+    const float sc = clData.fscale;
+    const float dash = 5.0f * sc, gap = 4.0f * sc, period = dash + gap;
+    float t = (float)(SDL_GetTicksNS() % (100ull * SDL_NS_PER_SECOND)) / 1e9f;
+    float pos = -fmodf(t * 18.0f * sc, period);        /* phase along the outline */
+    SDL_FPoint seg[16];
+
+    for (int i = 0; i < n; i++) {
+        SDL_FPoint a = pts[i], b = pts[(i + 1) % n];
+        float ex = b.x - a.x, ey = b.y - a.y, el = sqrtf(ex * ex + ey * ey);
+        if (el < 0.01f) {
+            continue;
+        }
+        /* dashes overlapping this edge, edge-local start s0 = pos */
+        for (float s0 = pos; s0 < el; s0 += period) {
+            float d0 = fmaxf(s0, 0.0f), d1 = fminf(s0 + dash, el);
+            if (d1 <= d0)
+                continue;
+            seg[0] = (SDL_FPoint){ a.x + ex * d0 / el, a.y + ey * d0 / el };
+            seg[1] = (SDL_FPoint){ a.x + ex * d1 / el, a.y + ey * d1 / el };
+            Fx_draw_polyline_glow(seg, 2, false, (SDL_FColor){ fc.r, fc.g, fc.b, 0.22f }, 4.0f * sc);
+            SDL_SetRenderDrawBlendMode(tng_renderer, SDL_BLENDMODE_BLEND);
+            SDL_SetRenderDrawColor(tng_renderer, (Uint8)(fc.r * 255.0f), (Uint8)(fc.g * 255.0f),
+                                   (Uint8)(fc.b * 255.0f), 100);
+            SDL_RenderLine(tng_renderer, seg[0].x, seg[0].y, seg[1].x, seg[1].y);
+        }
+        /* carry the dash phase over the corner */
+        pos = fmodf(pos - el, period);
+        if (pos > 0.0f)
+            pos -= period;
     }
     return true;
 }

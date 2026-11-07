@@ -173,14 +173,29 @@ Vorschlag für ein erstes Paket: gefüllter Rumpf mit Facetten (1+2) und Triebwe
   Glühen, fast rauchlos. Raketen haben keine Kennung: pro Frame wird die Fahne vom nächsten
   Heck gleicher Länge im Vorframe fortgesetzt, Rauch gleichmäßig über die Strecke verteilt.
   Verglichen mit Rauchwölkchen einheitlich und glattem Rauchband.
-- **Mündungsfeuer** an Kanonen, **Laser-Glow**.
+- **Mündungsfeuer** an Kanonen, 
+- **Laser-Glow**.
+- ✅ **Phasing** Schiff stark durchsichtig
+  → das normale Glanzschiff zu 30 % deckend (Teil von `fxShipHull`).
+- ✅ **Cloak** Hübschere Linie, ähnlich gut gezeichnet wie Schild und Deflektor
+  → weich leuchtende Striche (5/4 px), die langsam entlang der exakten Shipshape wandern,
+    mit breitem Lichthof, darunter der Rumpf zu 25 %. Classic: weiter der alte gestrichelte Umriss.
 - **Lichtgeschwindigkeit**: Langsam deutlich werdender Überschallkegel, später auch stärker werdende Leuchtspur
+  → Prototyp gebaut und wieder zurückgenommen, nicht im Code (`fxLightspeed`, Schwelle
+  `fxLightspeedStart`, Standard 300 px/s, im Spiel einstellbar):
+  Bugwelle vor dem Schiff (Variante „B“), weiche S-Kurve von 1× bis 2× Schwelle: erst kurz,
+  schmal und dunkelblau, dann heller, breiter, länger; mit steigendem Tempo spitzer (Machkegel).
+  Kometenschweif mit hellem Kern von 1,67× bis 3,33× Schwelle. Beides folgt der Flugrichtung
+  (geglättete Geschwindigkeit), nicht der Nase. Keine harten Schwellen.
+  Messung Bots: killing 95 % < 361 px/s (max 474), tourmination max 320 px/s.
 - **Parallax-Sternenfeld** im Hintergrund (mehrere Ebenen).
-- **Wurmloch-Strudel**, **Hyperjump-Streckeffekt**, **Ball-Tether-Glühen**.
+- **Wurmloch-Strudel**, **Hyperjump-Streckeffekt**, 
+- **Ball-Tether-Glühen**.
 - **Positionslichter** (aus „Schiffe aufhübschen“ verschoben): rot/grün an den Flügelspitzen
   (`markingLights`) mit Glow-Sprite statt Quadrat + Kreuz. Verglichene Varianten: Glow-Punkt
   (sanftes Auf-/Abblenden), Glow + Kreuzstrahl (Linsenreflex, behält das Kreuz-Motiv),
   Dauerlicht + weißer Strobe-Blitz (realistisch, bei vielen Schiffen unruhig).
+- **Highscores** Leicht durchsichtig im FX Modus
 
 ## Architektur
 

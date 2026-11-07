@@ -837,7 +837,8 @@ void ProfileEditor::RenderFx() {
     ImGui::Checkbox("Glossy hull", &fx_.ship_hull);
     if (ImGui::IsItemHovered())
         ImGui::SetTooltip("Ships get a glossy, lit hull, and the outline is brighter on the side facing\n"
-                          "the light (xpilot.fxShipHull). The outline stays exactly the ship shape.");
+                          "the light (xpilot.fxShipHull). The outline stays exactly the ship shape.\n"
+                          "Phased ships are half transparent, cloaked ones running glowing dashes.");
     ImGui::Checkbox("Engine flame", &fx_.engine_flame);
     if (ImGui::IsItemHovered())
         ImGui::SetTooltip("Flickering flame at the engine while a ship thrusts (xpilot.fxEngineFlame)");
