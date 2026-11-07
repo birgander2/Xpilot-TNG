@@ -129,7 +129,8 @@ void Gui_paint_ball_connector(int x_1, int y_1, int x_2, int y_2)
     x_1 = X(x_1);
     y_1 = Y(y_1);
     if (Fx_paint_tether((float)(PLAYFIELD_X + WINSCALE(x_1)), (float)WINSCALE(y_1),
-                        (float)(PLAYFIELD_X + WINSCALE(x_2)), (float)WINSCALE(y_2), true))
+                        (float)(PLAYFIELD_X + WINSCALE(x_2)), (float)WINSCALE(y_2), true,
+                        false))
         return;
     Segment_add(connColor, x_1, y_1, x_2, y_2);
 }
@@ -494,10 +495,9 @@ void Gui_paint_refuel(int x_0, int y_0, int x_1, int y_1)
 
 void Gui_paint_connector(int x_0, int y_0, int x_1, int y_1, int tractor)
 {
-    if (!tractor
-        && Fx_paint_tether((float)(PLAYFIELD_X + WINSCALE(X(x_0))), (float)WINSCALE(Y(y_0)),
-                           (float)(PLAYFIELD_X + WINSCALE(X(x_1))), (float)WINSCALE(Y(y_1)),
-                           false))
+    if (Fx_paint_tether((float)(PLAYFIELD_X + WINSCALE(X(x_0))), (float)WINSCALE(Y(y_0)),
+                        (float)(PLAYFIELD_X + WINSCALE(X(x_1))), (float)WINSCALE(Y(y_1)),
+                        false, tractor != 0))
         return;
     float d1 = (float)MAX(1, WINSCALE(tractor ? 5 : 8));
     float d2 = (float)MAX(1, WINSCALE(tractor ? 7 : 4));

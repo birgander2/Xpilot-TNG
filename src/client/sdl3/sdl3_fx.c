@@ -83,8 +83,8 @@ static xp_option_t fx_options[] = {
                    "goes through.\n"),
     XP_BOOL_OPTION("fxTether", true, &fxTether, NULL,
                    XP_OPTFLAG_CONFIG_FX,
-                   "Ball connector as a softly shimmering glowing rope that turns red\n"
-                   "the harder it is stretched.\n"),
+                   "Ball connector and tractor beams as a softly shimmering glowing rope;\n"
+                   "the ball connector turns red the harder it is stretched.\n"),
     XP_BOOL_OPTION("fxNukeFlash", true, &fxNukeFlash, NULL,
                    XP_OPTFLAG_CONFIG_FX,
                    "Brief bright flash of the whole view when a nuke goes off in sight.\n"),
@@ -2488,10 +2488,11 @@ static void fx_hj_follow(fx_hj_t *h)
  * shimmers. Stretched beyond its rest length (ballConnectorLength,
  * 120 by default; the client is not told) it turns red, fully at the
  * maximum stretch (maxBallConnectorRatio 0.3). ball: (x1, y1) is the
- * ball, which gets a soft halo. Screen coordinates; returns false when
- * the classic line should be drawn instead.
+ * ball, which gets a soft halo. tractor: a tractor/pressor beam, same
+ * rope but always blue (no rest length). Screen coordinates; returns
+ * false when the classic line should be drawn instead.
  */
-bool Fx_paint_tether(float x1, float y1, float x2, float y2, bool ball)
+bool Fx_paint_tether(float x1, float y1, float x2, float y2, bool ball, bool tractor)
 {
     const float rest = 120.0f, maxr = 0.3f;
     float sc = clData.fscale;
@@ -2501,7 +2502,7 @@ bool Fx_paint_tether(float x1, float y1, float x2, float y2, bool ball)
     if (!fxTether || !fx_active() || !fx_atlas || !tng_renderer || len < 1.0f)
         return false;
 
-    float st = fx_clamp01((len / sc - rest) / (rest * maxr));
+    float st = tractor ? 0.0f : fx_clamp01((len / sc - rest) / (rest * maxr));
     SDL_FColor blue = { 0x4E / 255.0f, 0x7C / 255.0f, 1.0f, 1.0f };
     SDL_FColor red = { 1.0f, 0.23f, 0.15f, 1.0f };
     SDL_FColor c = {

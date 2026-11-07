@@ -837,8 +837,8 @@ void ProfileEditor::RenderFx() {
                           "through (xpilot.fxWormholes; needs a current TNG server)");
     ImGui::Checkbox("Ball tether glow", &fx_.tether);
     if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("Ball connector as a shimmering glowing rope that turns red the harder\n"
-                          "it is stretched (xpilot.fxTether)");
+        ImGui::SetTooltip("Ball connector and tractor beams as a shimmering glowing rope; the ball\n"
+                          "connector turns red the harder it is stretched (xpilot.fxTether)");
     ImGui::Checkbox("Nuke flash", &fx_.nuke_flash);
     if (ImGui::IsItemHovered())
         ImGui::SetTooltip("Brief bright flash of the whole view when a nuke goes off in sight (xpilot.fxNukeFlash)");

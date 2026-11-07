@@ -224,7 +224,8 @@ Vorschlag für ein erstes Paket: gefüllter Rumpf mit Facetten (1+2) und Triebwe
   schwachen Lichthof. Über die Ruhelänge gedehnt (`ballConnectorLength`, Standard 120 – der
   Server schickt sie nicht) verfärbt es sich nach Rot, voll bei der maximalen Dehnung
   (`maxBallConnectorRatio` 0,3). Verglichen: Leuchtseil, Spannung (dünner/heller/zitternd),
-  Energiefluss (Lichtperlen). Traktorstrahlen bleiben gestrichelt.
+  Energiefluss (Lichtperlen). Traktor-/Pressorstrahlen als dasselbe Leuchtseil, aber immer blau
+  (keine Ruhelänge, also keine Spannung).
 - **Positionslichter** (aus „Schiffe aufhübschen“ verschoben): rot/grün an den Flügelspitzen
   (`markingLights`) mit Glow-Sprite statt Quadrat + Kreuz. Verglichene Varianten: Glow-Punkt
   (sanftes Auf-/Abblenden), Glow + Kreuzstrahl (Linsenreflex, behält das Kreuz-Motiv),
