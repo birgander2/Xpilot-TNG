@@ -96,19 +96,23 @@ Variante „A: Weicher Glanz“ (gewählt nach Vergleich mit Tönung und Silhoue
 
 Antrieb:
 
-4. **Triebwerksflamme**: an der Triebwerksposition der Shipshape (`engine[dir]`) ein flackernder
+4. ✅ **Triebwerksflamme** (`fxEngineFlame`): Glow-Sprites an `engine[dir]` – drei aufgefächerte,
+   einzeln flackernde Strahlen (orange Mitte, rötere Seiten, ±19°), bläulich-weißer Kern, heißer
+   Punkt an der Düse; unter dem Rumpf gezeichnet.
+   Schub: eigenes Schiff = Schubtaste; andere = Server-Schubfunken direkt am Triebwerk (auch beim
+   Schweben gegen Gravitation) oder Beschleunigung in Blickrichtung > 0,12 px/Tick²
+   (Ausgleichsparabel über 9 Frames, Rauschen ~±0,05), 3 Frames Haltezeit.
+   Ursprüngliche Idee: an der Triebwerksposition der Shipshape (`engine[dir]`) ein flackernder
    Flammenkegel mit Hitzeverlauf (weiß → blau → orange). Eigenes Schiff: Schub direkt bekannt;
    andere Schiffe: aus der Beschleunigung in Flugrichtung (vorhandenes FX-Tracking).
    (Ersetzt den Punkt „Bessere Schubflamme“ unter „Weitere Ideen“.)
-5. **Positionslichter**: rot/grün blinkend an den Flügelspitzen mit Glow-Sprite
-   (`markingLights` existiert bereits, nur hübscher).
 
 Schild und Zustände:
 
-6. **Schild als Energieblase**: weicher Rand mit leichtem Schimmern, blitzt bei Treffern oder
+5. **Schild als Energieblase**: weicher Rand mit leichtem Schimmern, blitzt bei Treffern oder
    Wandkontakt kurz auf. (Erweitert „Schild-Schimmern“ unter „Weitere Ideen“.)
-7. **Erscheinen / Hyperjump**: Lichtwirbel oder Implosion beim Auftauchen und Springen.
-8. **Wenig Treibstoff**: dünner Rauchfaden oder vereinzelte Funken als visuelle Warnung.
+6. **Erscheinen / Hyperjump**: Lichtwirbel oder Implosion beim Auftauchen und Springen.
+7. **Wenig Treibstoff**: dünner Rauchfaden oder vereinzelte Funken als visuelle Warnung.
 
 Bewusst nicht: Rollneigung in Kurven oder perspektivisches Verzerren der Form – das würde die
 Kontur verändern und bei Kollisionen in die Irre führen.
@@ -133,6 +137,10 @@ Vorschlag für ein erstes Paket: gefüllter Rumpf mit Facetten (1+2) und Triebwe
 - **Raketen-Rauchfahnen**, **Mündungsfeuer** an Kanonen, **Laser-Glow**.
 - **Parallax-Sternenfeld** im Hintergrund (mehrere Ebenen).
 - **Wurmloch-Strudel**, **Hyperjump-Streckeffekt**, **Ball-Tether-Glühen**.
+- **Positionslichter** (aus „Schiffe aufhübschen“ verschoben): rot/grün an den Flügelspitzen
+  (`markingLights`) mit Glow-Sprite statt Quadrat + Kreuz. Verglichene Varianten: Glow-Punkt
+  (sanftes Auf-/Abblenden), Glow + Kreuzstrahl (Linsenreflex, behält das Kreuz-Motiv),
+  Dauerlicht + weißer Strobe-Blitz (realistisch, bei vielen Schiffen unruhig).
 
 ## Architektur
 

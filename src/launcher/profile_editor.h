@@ -112,6 +112,7 @@ private:
         bool terrain_mesh = true;        // fxTerrainMesh
         bool ship_hull = true;           // fxShipHull: glossy hull, rim-lit outline
         bool ship_halo = true;           // fxShipHalo: team glow in team play
+        bool engine_flame = true;        // fxEngineFlame
         float amount = 1.0f;             // fxAmount, particle multiplier 0..2
     } fx_;
     std::vector<std::pair<std::string, std::string>> FxValues() const;

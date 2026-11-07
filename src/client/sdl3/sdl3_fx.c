@@ -26,6 +26,7 @@ static bool   classicGraphics = false;
 static bool   fxExplosions = true;
 static bool   fxSparks = true;
 static bool   fxContrails = true;
+static bool   fxEngineFlame = true;
 static double fxAmount = 1.0;
 
 static void fx_clear(void);
@@ -49,6 +50,9 @@ static xp_option_t fx_options[] = {
     XP_BOOL_OPTION("fxSparks", true, &fxSparks, NULL,
                    XP_OPTFLAG_CONFIG_FX,
                    "Draw sparks when ships hit walls or each other.\n"),
+    XP_BOOL_OPTION("fxEngineFlame", true, &fxEngineFlame, NULL,
+                   XP_OPTFLAG_CONFIG_FX,
+                   "Draw a flickering engine flame while ships thrust.\n"),
     XP_BOOL_OPTION("fxContrails", true, &fxContrails, NULL,
                    XP_OPTFLAG_CONFIG_FX,
                    "Draw short glowing contrails when ships turn hard at speed.\n"),
@@ -552,6 +556,8 @@ typedef struct {
     int     count;
 } fx_trail_t;
 
+#define FX_HIST         9       /* positions for the acceleration fit */
+
 typedef struct {
     int     id;
     float   x, y;           /* last seen world position */
@@ -562,6 +568,15 @@ typedef struct {
     Uint64  spark_ns;       /* time of last spark burst (cooldown) */
     float   trail_k;        /* smoothed contrail intensity */
     fx_trail_t trail;
+    /* unwrapped position history for a low-noise acceleration estimate */
+    float   ux, uy;         /* unwrapped position */
+    float   hx[FX_HIST], hy[FX_HIST];   /* [0] newest */
+    int     hn;             /* valid history entries */
+    long    hdl;            /* frame spacing of the history */
+    float   thrust_a;       /* acceleration along the heading, px/tick^2 */
+    bool    thrust_valid;
+    long    thrust_loop;    /* last frame with a thrust sign */
+    float   flame_k;        /* smoothed flame intensity 0..1 */
 } fx_track_t;
 
 #define FX_MAX_TRACKS   128
@@ -572,6 +587,21 @@ static int        fx_num_tracks;
 
 static float fx_wreck_x[FX_MAX_WRECKS], fx_wreck_y[FX_MAX_WRECKS];
 static int   fx_num_wrecks;
+
+/* sparks (debris) of this frame, world coordinates */
+#define FX_MAX_SPARKS   1024
+static float fx_spark_x[FX_MAX_SPARKS], fx_spark_y[FX_MAX_SPARKS];
+static int   fx_num_sparks;
+
+/* x, y: view coordinates as passed to Gui_paint_spark() */
+void Fx_observe_spark(int x, int y)
+{
+    if (fx_num_sparks < FX_MAX_SPARKS) {
+        fx_spark_x[fx_num_sparks] = (float)(world.x + x);
+        fx_spark_y[fx_num_sparks] = (float)(world.y + ext_view_height - y);
+        fx_num_sparks++;
+    }
+}
 
 /* Impact thresholds, velocity change in world pixels per second. */
 #define FX_IMPACT_MIN_DV    150.0f
@@ -622,18 +652,25 @@ static void fx_check_impact(fx_track_t *t, float vx, float vy)
 }
 
 /* Wingtip offsets of a ship at heading dir, as drawn by Gui_paint_ship(). */
-static void fx_ship_tips(int id, int dir, float tip[2][2])
+/* The shipshape Gui_paint_ship() draws for this player. */
+static shipshape_t *fx_ship_shape(int id)
 {
     shipshape_t *ship;
-    int il = 0, ir = 0;
-    float best_l = -1e9f, best_r = 1e9f;
 
     if (!instruments.showShipShapes && self && self->id != id)
+        return Default_ship();
+    if (!instruments.showMyShipShape && self && self->id == id)
+        return Default_ship();
+    if ((ship = Ship_by_id(id)) == NULL)
         ship = Default_ship();
-    else if (!instruments.showMyShipShape && self && self->id == id)
-        ship = Default_ship();
-    else if ((ship = Ship_by_id(id)) == NULL)
-        ship = Default_ship();
+    return ship;
+}
+
+static void fx_ship_tips(int id, int dir, float tip[2][2])
+{
+    shipshape_t *ship = fx_ship_shape(id);
+    int il = 0, ir = 0;
+    float best_l = -1e9f, best_r = 1e9f;
 
     /* at heading 0 the ship points along +x: tips are the outermost
      * points sideways, preferring the rear ones */
@@ -703,6 +740,45 @@ static void fx_trail_update(fx_track_t *t, int dir, long dl, bool moving)
     }
 }
 
+/*
+ * Acceleration along the heading from a least squares parabola through
+ * the last 9 positions: positions are whole pixels, simple differences
+ * are far too noisy to see thrust.
+ */
+static void fx_accel_update(fx_track_t *t, float dx, float dy, long dl, int dir)
+{
+    t->ux += dx;
+    t->uy += dy;
+    if (dl != t->hdl) {
+        t->hn = 0;
+        t->hdl = dl;
+    }
+    memmove(&t->hx[1], &t->hx[0], sizeof(float) * (FX_HIST - 1));
+    memmove(&t->hy[1], &t->hy[0], sizeof(float) * (FX_HIST - 1));
+    t->hx[0] = t->ux;
+    t->hy[0] = t->uy;
+    if (t->hn < FX_HIST)
+        t->hn++;
+    if (t->hn < FX_HIST) {
+        t->thrust_valid = false;
+        return;
+    }
+    /* second derivative of the fit: 2 * sum((k^2 - 20/3) p_k) / 308, k = -4..4 */
+    float ax = 0.0f, ay = 0.0f;
+    for (int k = 0; k < FX_HIST; k++) {
+        float tk = (float)(k - 4);
+        float w = tk * tk - 20.0f / 3.0f;
+        ax += w * t->hx[k];
+        ay += w * t->hy[k];
+    }
+    float norm = 2.0f / (308.0f * (float)(dl * dl));
+    ax *= norm;
+    ay *= norm;
+    float ang = (float)dir * 2.0f * (float)M_PI / RES;
+    t->thrust_a = ax * cosf(ang) + ay * sinf(ang);
+    t->thrust_valid = true;
+}
+
 static void fx_observe_ship(int id, int x, int y, int dir)
 {
     fx_track_t *t = NULL;
@@ -741,7 +817,10 @@ static void fx_observe_ship(int id, int x, int y, int dir)
         t->has_vel = false;
         t->trail.count = 0;
         t->trail_k = 0.0f;
+        t->hn = 0;
+        t->thrust_valid = false;
     } else {
+        fx_accel_update(t, dx, dy, dl, dir);
         float vx = dx / (float)dl, vy = dy / (float)dl;
         if (t->has_vel && fxSparks && fx_active())
             fx_check_impact(t, vx, vy);
@@ -820,6 +899,7 @@ void Fx_frame_begin(void)
 {
     int i;
 
+    fx_num_sparks = 0;
     fx_num_wrecks = 0;
     for (i = 0; i < num_wreckage && fx_num_wrecks < FX_MAX_WRECKS; i++) {
         fx_wreck_x[fx_num_wrecks] = (float)wreckage_ptr[i].x;
@@ -1121,6 +1201,101 @@ static void fx_emit_trail(const fx_trail_t *tr, int side, float scale, double no
     }
 }
 
+/*
+ * Engine flames
+ *
+ * Own ship: the thrust key. Other ships: the server's thrust sparks right
+ * at the engine (also while hovering against gravity), or a clear
+ * acceleration along the heading (also with sparks turned off). A short
+ * hold bridges frames without sparks.
+ */
+#define FX_THRUST_ACCEL     0.12f   /* px/tick^2, well above the fit noise */
+#define FX_THRUST_HOLD      3       /* frames */
+
+static fx_track_t *fx_track_by_id(int id)
+{
+    for (int i = 0; i < fx_num_tracks; i++)
+        if (fx_tracks[i].id == id)
+            return &fx_tracks[i];
+    return NULL;
+}
+
+static void fx_flame_update(void)
+{
+    for (int i = 0; i < fx_num_tracks; i++) {
+        fx_track_t *t = &fx_tracks[i];
+        bool thrust;
+
+        if (t->loop != loops)
+            continue;
+        if (self && t->id == self->id && eyesId == self->id) {
+            thrust = Key_thrust_held();
+        } else {
+            position_t e = Ship_get_engine_position(fx_ship_shape(t->id), t->dir);
+            float ex = t->x + (float)e.x, ey = t->y + (float)e.y;
+            bool sign = t->thrust_valid && t->thrust_a > FX_THRUST_ACCEL;
+            for (int k = 0; !sign && k < fx_num_sparks; k++) {
+                float dx = fx_wrap_dx(fx_spark_x[k] - ex), dy = fx_wrap_dy(fx_spark_y[k] - ey);
+                if (dx * dx + dy * dy < 24.0f * 24.0f)
+                    sign = true;
+            }
+            if (sign)
+                t->thrust_loop = loops;
+            thrust = loops - t->thrust_loop <= FX_THRUST_HOLD;
+        }
+        float target = thrust ? 1.0f : 0.0f;
+        t->flame_k += (target - t->flame_k) * (thrust ? 0.6f : 0.35f);
+    }
+}
+
+/*
+ * Draw the flame of ship id, called right before its hull. (x, y): ship
+ * world position as passed to Gui_paint_ship(), dir: heading.
+ */
+void Fx_paint_engine_flame(int id, int x, int y, int dir)
+{
+    fx_track_t *t;
+
+    if (!fxEngineFlame || Fx_classic() || !fx_atlas || !tng_renderer)
+        return;
+    if ((t = fx_track_by_id(id)) == NULL || t->flame_k < 0.03f)
+        return;
+
+    position_t e = Ship_get_engine_position(fx_ship_shape(id), dir);
+    float sc = clData.fscale;
+    float sx = (float)PLAYFIELD_X + ((float)(x - world.x) + (float)e.x) * sc;
+    float sy = ((float)(world.y + ext_view_height - y) - (float)e.y) * sc;
+    float ang = (float)dir * 2.0f * (float)M_PI / RES;
+    float bx = -cosf(ang), by = sinf(ang);      /* backwards, screen y down */
+    float k = t->flame_k;
+    float len = (15.0f + 13.0f * k) * sc;
+    float wid = 4.8f * sc;
+    static const float spread[3] = { -0.33f, 0.0f, 0.33f };   /* ~ +-19 degrees */
+
+    fx_nv = 0;
+    fx_ni = 0;
+    /* fanned out plumes: a long orange center, shorter redder sides, each flickering */
+    for (int p = 0; p < 3; p++) {
+        float a = spread[p] * (0.8f + 0.4f * fx_rand());
+        float dx = bx * cosf(a) - by * sinf(a), dy = bx * sinf(a) + by * cosf(a);
+        float l = len * (p == 1 ? 1.0f : 0.72f) * (0.8f + 0.4f * fx_rand());
+        float w = wid * (p == 1 ? 1.0f : 0.8f);
+        SDL_FColor c = p == 1 ? (SDL_FColor){ 1.0f, 0.50f, 0.12f, 0.85f * k }
+                              : (SDL_FColor){ 1.0f, 0.32f, 0.07f, 0.70f * k };
+        fx_quad(sx + dx * l * 0.42f, sy + dy * l * 0.42f,
+                dx * l * 0.62f, dy * l * 0.62f, -dy * w, dx * w, CELL_GLOW, c);
+    }
+    /* core: blue-white, short */
+    float cl = len * 0.42f * (0.85f + 0.3f * fx_rand());
+    fx_quad(sx + bx * cl * 0.4f, sy + by * cl * 0.4f,
+            bx * cl * 0.6f, by * cl * 0.6f, -by * wid * 0.6f, bx * wid * 0.6f,
+            CELL_GLOW, (SDL_FColor){ 0.70f, 0.82f, 1.0f, 0.95f * k });
+    /* hot spot at the nozzle */
+    fx_quad(sx, sy, wid * 1.1f, 0.0f, 0.0f, wid * 1.1f,
+            CELL_GLOW, (SDL_FColor){ 1.0f, 0.95f, 0.8f, 0.75f * k });
+    fx_flush(SDL_BLENDMODE_ADD);
+}
+
 void Fx_render(void)
 {
     static Uint64 last_ns;
@@ -1137,6 +1312,7 @@ void Fx_render(void)
     if (dt > 0.1f)
         dt = 0.1f;
     fx_update(dt);
+    fx_flame_update();
 
     if (!fx_atlas || !tng_renderer)
         return;

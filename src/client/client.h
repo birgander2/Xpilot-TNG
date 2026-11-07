@@ -741,6 +741,7 @@ void Keyboard_button_released(xp_keysym_t ks);
 int Key_init(void);
 int Key_update(void);
 void Key_turn_tick(void);
+bool Key_thrust_held(void);
 void Key_turn_frame(long loops);
 void Key_clear_counts(void);
 bool Key_press(keys_t key);

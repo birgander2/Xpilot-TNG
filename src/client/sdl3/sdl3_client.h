@@ -128,6 +128,8 @@ void  Store_fx_options(void);
 int   Fx_init(void);
 void  Fx_cleanup(void);
 void  Fx_frame_begin(void);
+void  Fx_observe_spark(int x, int y);
+void  Fx_paint_engine_flame(int id, int x, int y, int dir);
 bool  Fx_classic(void);
 void  Store_terrain_options(void);
 bool  Fx_terrain_paint(int i, int xoff, int yoff, SDL_FColor base);

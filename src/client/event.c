@@ -177,6 +177,12 @@ int Key_update(void)
 }
 
 /* Called from the main loop: reacts to pressing and releasing turn keys. */
+/* True while the thrust key (or a button bound to it) is held. */
+bool Key_thrust_held(void)
+{
+    return BITV_ISSET(keyv, KEY_THRUST) != 0;
+}
+
 void Key_turn_tick(void)
 {
     int dir, move;

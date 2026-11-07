@@ -214,6 +214,7 @@ void Gui_paint_mine(int x, int y, int teammine, char *name)
 
 void Gui_paint_spark(int color, int x, int y)
 {
+    Fx_observe_spark(x, y);
     if (color >= 0 && color < MAX_COLORS)
         color = spark_color[color];
     else
@@ -798,6 +799,7 @@ void Gui_paint_ship(int x, int y, int dir, int id, int cloak, int phased,
             int halo = 0;
             if (BIT(Setup->mode, TEAM_PLAY) && other != NULL)
                 halo = (other->team == eyeTeam) ? BLUE : ship_color;
+            Fx_paint_engine_flame(id, x, y, dir);
             bool outlined = Fx_paint_ship_hull(points, cnt - 1, scx, scy,
                                                ship_color, halo, !locked);
             if (locked)

@@ -356,6 +356,7 @@ void ProfileEditor::Load(const std::string& stock_ships_path, bool keep_unsaved)
     fx_.terrain_mesh = get_bool("fxTerrainMesh", true);
     fx_.ship_hull = get_bool("fxShipHull", true);
     fx_.ship_halo = get_bool("fxShipHalo", true);
+    fx_.engine_flame = get_bool("fxEngineFlame", true);
     {
         std::string v = get("fxAmount", "1.0");
         char* end = nullptr;
@@ -428,6 +429,7 @@ std::vector<std::pair<std::string, std::string>> ProfileEditor::FxValues() const
         {"fxTerrainMesh", b(fx_.terrain_mesh)},
         {"fxShipHull", b(fx_.ship_hull)},
         {"fxShipHalo", b(fx_.ship_halo)},
+        {"fxEngineFlame", b(fx_.engine_flame)},
         {"fxAmount", amount},
     };
 }
@@ -810,6 +812,9 @@ void ProfileEditor::RenderFx() {
     if (ImGui::IsItemHovered())
         ImGui::SetTooltip("Ships get a glossy, lit hull, and the outline is brighter on the side facing\n"
                           "the light (xpilot.fxShipHull). The outline stays exactly the ship shape.");
+    ImGui::Checkbox("Engine flame", &fx_.engine_flame);
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Flickering flame at the engine while a ship thrusts (xpilot.fxEngineFlame)");
     ImGui::Checkbox("Team halo", &fx_.ship_halo);
     if (ImGui::IsItemHovered())
         ImGui::SetTooltip("Soft glow around ships, only in team play: blue for your own team\n"
