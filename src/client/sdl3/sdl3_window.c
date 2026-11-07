@@ -116,6 +116,9 @@ void Paint_frame(void)
     SDL_SetRenderClipRect(tng_renderer, &playfield_clip);
 
     if (damaged <= 0) {
+        /* 3b. With glow on, the world goes to an offscreen texture first */
+        Fx_glow_begin(&playfield_clip);
+
         /* 4. Render World Map (Walls, Basen, Tanken, Wurmlöcher) */
         Arc_start();
         Rectangle_start();
@@ -152,6 +155,16 @@ void Paint_frame(void)
         Segment_start();
 
         Paint_ships();
+
+        /* 6b. Flush the world and add the glow; the HUD stays sharp */
+        Rectangle_end();
+        Segment_end();
+        Arc_end();
+        Fx_glow_end(&playfield_clip);
+        Arc_start();
+        Rectangle_start();
+        Segment_start();
+
         Paint_meters();
         Paint_HUD();
         Paint_recording();
