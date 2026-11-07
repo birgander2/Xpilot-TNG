@@ -197,7 +197,7 @@ Vorschlag für ein erstes Paket: gefüllter Rumpf mit Facetten (1+2) und Triebwe
 - ✅ **Raketen-Rauchfahnen** (`fxMissileTrails`): Typ an der gezeichneten Länge erkennbar
   (Serveroption `distinguishMissiles`, Standard an): Smart Missile (12) gelber Antrieb + dicker
   weißer Qualm, Heat-Seeker (15) rot-orange Flamme + dunkler, schmaler Rauch, Torpedo (18) blaues
-  Glühen, fast rauchlos. Raketen haben keine Kennung: pro Frame wird die Fahne vom nächsten
+  Glühen + dünne hellblau-graue Spur. Raketen haben keine Kennung: pro Frame wird die Fahne vom nächsten
   Heck gleicher Länge im Vorframe fortgesetzt, Rauch gleichmäßig über die Strecke verteilt.
   Verglichen mit Rauchwölkchen einheitlich und glattem Rauchband.
 - **Mündungsfeuer** an Kanonen, 

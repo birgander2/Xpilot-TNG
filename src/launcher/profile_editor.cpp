@@ -823,7 +823,7 @@ void ProfileEditor::RenderFx() {
     if (ImGui::IsItemHovered())
         ImGui::SetTooltip("Smoke trails and exhaust glow behind missiles (xpilot.fxMissileTrails):\n"
                           "smart missiles yellow with thick white smoke, heat seekers red with dark\n"
-                          "smoke, torpedoes blue and almost smokeless.");
+                          "smoke, torpedoes blue with a thin light blue-grey trail.");
     ImGui::Checkbox("Laser glow", &fx_.laser_glow);
     if (ImGui::IsItemHovered())
         ImGui::SetTooltip("Laser pulses as glowing beams with a bright core (xpilot.fxLaserGlow)");

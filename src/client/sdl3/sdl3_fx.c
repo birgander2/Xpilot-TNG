@@ -69,7 +69,7 @@ static xp_option_t fx_options[] = {
                    XP_OPTFLAG_CONFIG_FX,
                    "Smoke trails and exhaust glow behind missiles: smart missiles\n"
                    "yellow with thick white smoke, heat seekers red with dark smoke,\n"
-                   "torpedoes blue and almost smokeless.\n"),
+                   "torpedoes blue with a thin light blue-grey trail.\n"),
     XP_BOOL_OPTION("fxLaserGlow", true, &fxLaserGlow, NULL,
                    XP_OPTFLAG_CONFIG_FX,
                    "Draw laser pulses as glowing beams with a bright core.\n"),
@@ -1775,11 +1775,15 @@ static void fx_emit(const fx_particle_t *p, float scale)
             g = 0.34f;
             a = 0.55f;
         } else if (p->variant == FX_SMOKE_FAINT) {
-            g = 0.5f;
-            a = 0.15f;
+            g = 0.8f;
+            a = 0.5f;
         }
         size = p->size0 + (p->size1 - p->size0) * (1.0f - e * e);
         col = (SDL_FColor){ g, g, g, a * fx_smooth(t / 0.1f) * powf(e, 1.3f) };
+        if (p->variant == FX_SMOKE_FAINT) {     /* torpedo: light blue-grey */
+            col.r *= 0.85f;
+            col.g *= 0.93f;
+        }
         break;
     }
     case FXK_FLASH:
@@ -2256,9 +2260,9 @@ void Fx_paint_missile(int x, int y, int len, int dir, float sx, float sy)
         n = 3;
         fc = (SDL_FColor){ 1.0f, 0.90f, 0.30f, 0.9f };
         flen = 1.1f;
-    } else if (len == 18) {             /* torpedo: blue, almost no smoke */
+    } else if (len == 18) {             /* torpedo: blue, thin light trail */
         variant = FX_SMOKE_FAINT;
-        n = 1;
+        n = 4;
         fc = (SDL_FColor){ 0.40f, 0.65f, 1.0f, 0.9f };
         flen = 1.1f;
     } else {                            /* heat seeker (or undistinguished) */
@@ -2298,7 +2302,8 @@ void Fx_paint_missile(int x, int y, int len, int dir, float sx, float sy)
         p->age = (1.0f - f) * (float)timePerFrame;     /* older the further back */
         p->life = fx_range(0.7f, 1.1f);
         p->size0 = 2.5f;
-        p->size1 = variant == FX_SMOKE_LIGHT ? fx_range(11.0f, 15.0f) : fx_range(7.0f, 10.0f);
+        p->size1 = variant == FX_SMOKE_LIGHT ? fx_range(11.0f, 15.0f)
+                 : variant == FX_SMOKE_FAINT ? fx_range(8.0f, 11.0f) : fx_range(7.0f, 10.0f);
         p->rot = fx_range(0.0f, 6.283f);
         p->vrot = fx_range(-1.0f, 1.0f);
         p->drag = 1.5f;
