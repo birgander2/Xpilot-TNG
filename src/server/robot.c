@@ -900,7 +900,7 @@ static bool Robot_name_in_use(const char *name)
  */
 static int Robot_pick_free(robot_t *pool, int pool_size, const char *driver)
 {
-    int i, num, min_used = -1;
+    int i, num, cnt, min_used = -1;
 
     for (i = 0; i < pool_size; i++) {
 	if (driver && strcasecmp(pool[i].driver, driver))
@@ -912,15 +912,26 @@ static int Robot_pick_free(robot_t *pool, int pool_size, const char *driver)
     }
     if (min_used < 0)
 	return -1;
-    num = (int)(rfrac() * pool_size);
-    for (i = 0; i < pool_size; i++, num++) {
-	if (num >= pool_size)
-	    num = 0;
-	if (driver && strcasecmp(pool[num].driver, driver))
+    /* Uniform choice among the candidates (a random start index plus
+     * forward scan would favour entries that follow a gap). */
+    cnt = 0;
+    for (i = 0; i < pool_size; i++) {
+	if (driver && strcasecmp(pool[i].driver, driver))
 	    continue;
-	if ((int)pool[num].used == min_used
-	    && !Robot_name_in_use(pool[num].name))
-	    return num;
+	if ((int)pool[i].used == min_used && !Robot_name_in_use(pool[i].name))
+	    cnt++;
+    }
+    if (cnt == 0)
+	return -1;
+    num = (int)(rfrac() * cnt);
+    if (num >= cnt)
+	num = cnt - 1;
+    for (i = 0; i < pool_size; i++) {
+	if (driver && strcasecmp(pool[i].driver, driver))
+	    continue;
+	if ((int)pool[i].used == min_used && !Robot_name_in_use(pool[i].name)
+	    && num-- == 0)
+	    return i;
     }
     return -1;
 }
