@@ -1124,6 +1124,14 @@ void EditorApp::DrawStylesTab() {
             replace_with = -1;
             ImGui::OpenPopup("Delete style");
         }
+        ImGui::SameLine();
+        if (ImGui::Button("Apply to selection##es") && valid) {
+            for (int i : sel_)
+                for (auto& p : map_.items[i].polys)
+                    for (int& e : p.edges)
+                        if (e != kEdgeInternal) e = sel_edge_style_;
+            Changed();
+        }
         ImGui::EndDisabled();
         if (valid) {
             EdgeStyle& es = map_.edge_styles[sel_edge_style_];

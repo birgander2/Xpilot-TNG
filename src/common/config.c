@@ -58,8 +58,18 @@ void Conf_enter_bundle_dir(void)
         return;
     *slash = '\0';
     snprintf(probe, sizeof(probe), "%s/lib/maps", exe);
-    if (access(probe, R_OK) == 0 && chdir(exe) != 0)
-        perror("chdir");
+    if (access(probe, R_OK) == 0) {
+        if (chdir(exe) != 0)
+            perror("chdir");
+        return;
+    }
+    /* bundle layout with executables in bin/ and lib/ one level up */
+    snprintf(probe, sizeof(probe), "%s/../lib/maps", exe);
+    if (access(probe, R_OK) == 0) {
+        snprintf(probe, sizeof(probe), "%s/..", exe);
+        if (chdir(probe) != 0)
+            perror("chdir");
+    }
 }
 
 /*

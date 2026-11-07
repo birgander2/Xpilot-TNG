@@ -97,7 +97,8 @@ std::string LauncherApp::ResolveBinaryPath(const std::string& name) const {
 #endif
     std::vector<std::string> candidates = {
         root_dir_ + "/" + bin_name, root_dir_ + "/build/" + bin_name,
-        app_dir_ + "/" + bin_name,  app_dir_ + "/../" + bin_name,
+        app_dir_ + "/" + bin_name,  app_dir_ + "/bin/" + bin_name,
+        app_dir_ + "/../" + bin_name,
         "/usr/local/bin/" + bin_name, "/usr/bin/" + bin_name};
     for (const auto& path : candidates) {
         std::error_code ec;

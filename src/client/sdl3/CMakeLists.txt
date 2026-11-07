@@ -102,13 +102,6 @@ if(ENABLE_VOICE)
     endif()
 endif()
 
-if(NOT WIN32)
-add_custom_target(xpilot-tng-sdl3 ALL
-    COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE_NAME:xpilot-tng-client> ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/xpilot-tng-sdl3
-    DEPENDS xpilot-tng-client
-)
-endif()
-
 install(TARGETS xpilot-tng-client DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 install(TARGETS xpilot-tng-client DESTINATION ${CMAKE_INSTALL_BINDIR})
