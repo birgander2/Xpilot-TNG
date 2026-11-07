@@ -354,6 +354,8 @@ void ProfileEditor::Load(const std::string& stock_ships_path, bool keep_unsaved)
     fx_.contrails = get_bool("fxContrails", true);
     fx_.terrain = get_bool("fxTerrain", true);
     fx_.terrain_mesh = get_bool("fxTerrainMesh", true);
+    fx_.ship_hull = get_bool("fxShipHull", true);
+    fx_.ship_halo = get_bool("fxShipHalo", true);
     {
         std::string v = get("fxAmount", "1.0");
         char* end = nullptr;
@@ -424,6 +426,8 @@ std::vector<std::pair<std::string, std::string>> ProfileEditor::FxValues() const
         {"fxContrails", b(fx_.contrails)},
         {"fxTerrain", b(fx_.terrain)},
         {"fxTerrainMesh", b(fx_.terrain_mesh)},
+        {"fxShipHull", b(fx_.ship_hull)},
+        {"fxShipHalo", b(fx_.ship_halo)},
         {"fxAmount", amount},
     };
 }
@@ -799,6 +803,17 @@ void ProfileEditor::RenderFx() {
     if (ImGui::IsItemHovered())
         ImGui::SetTooltip("Number of particles (xpilot.fxAmount).\n"
                           "Lower it on slow machines, 0 turns the effects off.");
+
+    ImGui::Spacing();
+    ImGui::SeparatorText("Ships");
+    ImGui::Checkbox("Glossy hull", &fx_.ship_hull);
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Ships get a glossy, lit hull, and the outline is brighter on the side facing\n"
+                          "the light (xpilot.fxShipHull). The outline stays exactly the ship shape.");
+    ImGui::Checkbox("Team halo", &fx_.ship_halo);
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Soft glow around ships, only in team play: blue for your own team\n"
+                          "including yourself (xpilot.fxShipHalo)");
 
     ImGui::Spacing();
     ImGui::SeparatorText("Walls");

@@ -133,6 +133,11 @@ void  Store_terrain_options(void);
 bool  Fx_terrain_paint(int i, int xoff, int yoff, SDL_FColor base);
 bool  Fx_terrain_paint_textured(int i, int xoff, int yoff);
 void  Fx_terrain_cleanup(void);
+void  Fx_draw_outline_glow(const SDL_FPoint *pts, int n, SDL_FColor col, float width);
+void  Store_ship_fx_options(void);
+bool  Fx_paint_ship_hull(const SDL_FPoint *pts, int n, float cx, float cy,
+                         int color, int halo_color, bool fill);
+void  Fx_ship_cleanup(void);
 void  Fx_render(void);
 float Screen_X(int world_x);
 float Screen_Y(int world_y);

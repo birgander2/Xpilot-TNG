@@ -23,6 +23,7 @@ add_executable(xpilot-tng-client
     sdl3_bitmaps.c
     sdl3_fx.c
     sdl3_terrain.c
+    sdl3_fx_ship.c
 )
 
 target_include_directories(xpilot-tng-client PRIVATE

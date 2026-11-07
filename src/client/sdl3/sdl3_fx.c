@@ -67,6 +67,7 @@ void Store_fx_options(void)
 {
     STORE_OPTIONS(fx_options);
     Store_terrain_options();
+    Store_ship_fx_options();
 }
 
 /* True in classic mode: no modern visual effects at all. */
@@ -249,6 +250,7 @@ void Fx_cleanup(void)
         fx_atlas = NULL;
     }
     Fx_terrain_cleanup();
+    Fx_ship_cleanup();
 }
 
 /* ------------------------------------------------------------------ */
@@ -986,6 +988,55 @@ static void fx_flush(SDL_BlendMode mode)
     }
     fx_nv = 0;
     fx_ni = 0;
+}
+
+/*
+ * Soft glow along a closed outline (screen points, n unique points):
+ * one quad with a soft cross-section per edge plus a glow dot per corner,
+ * drawn additively right away. width: half-width in screen pixels.
+ */
+void Fx_draw_outline_glow(const SDL_FPoint *pts, int n, SDL_FColor col, float width)
+{
+    const float iw = 1.0f / (float)(FX_CELL * FX_ATLAS_COLS);
+    const float ih = 1.0f / (float)(FX_CELL * FX_ATLAS_ROWS);
+    const float u0 = (float)((CELL_GLOW % FX_ATLAS_COLS) * FX_CELL + 1) * iw;
+    const float u1 = (float)((CELL_GLOW % FX_ATLAS_COLS + 1) * FX_CELL - 1) * iw;
+    const float vm = ((float)(CELL_GLOW / FX_ATLAS_COLS) + 0.5f) * (float)FX_CELL * ih;
+
+    if (!fx_atlas || !tng_renderer || n < 2 || n > FX_MAX_PARTICLES / 2)
+        return;
+
+    fx_nv = 0;
+    fx_ni = 0;
+    for (int i = 0; i < n; i++) {
+        SDL_FPoint a = pts[i], b = pts[(i + 1) % n];
+        float dx = b.x - a.x, dy = b.y - a.y;
+        float len = sqrtf(dx * dx + dy * dy);
+        if (len < 0.01f)
+            continue;
+        float nx = -dy / len * width, ny = dx / len * width;
+        SDL_Vertex *v = &fx_verts[fx_nv];
+        int *ix = &fx_idx[fx_ni];
+        v[0].position = (SDL_FPoint){ a.x + nx, a.y + ny };
+        v[1].position = (SDL_FPoint){ b.x + nx, b.y + ny };
+        v[2].position = (SDL_FPoint){ b.x - nx, b.y - ny };
+        v[3].position = (SDL_FPoint){ a.x - nx, a.y - ny };
+        v[0].tex_coord = v[1].tex_coord = (SDL_FPoint){ u0, vm };
+        v[2].tex_coord = v[3].tex_coord = (SDL_FPoint){ u1, vm };
+        v[0].color = v[1].color = v[2].color = v[3].color = col;
+        ix[0] = fx_nv;
+        ix[1] = fx_nv + 1;
+        ix[2] = fx_nv + 2;
+        ix[3] = fx_nv;
+        ix[4] = fx_nv + 2;
+        ix[5] = fx_nv + 3;
+        fx_nv += 4;
+        fx_ni += 6;
+    }
+    /* round off the corners */
+    for (int i = 0; i < n; i++)
+        fx_quad(pts[i].x, pts[i].y, width, 0.0f, 0.0f, width, CELL_GLOW, col);
+    fx_flush(SDL_BLENDMODE_ADD);
 }
 
 /* Append one wingtip contrail as a triangle strip with a soft cross-section. */

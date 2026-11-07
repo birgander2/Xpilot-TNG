@@ -71,6 +71,50 @@ Erledigte Punkte:
 Offen:
 - Später kombinierbar mit dynamischem Licht (Explosionen hellen Hänge auf).
 
+### Schiffe aufhübschen (Vorschläge)
+Grundsatz: Die Shipshape bleibt unverändert, die gezeichnete Außenlinie ist weiterhin genau die
+Kollisionskontur. Alles Neue liegt darunter, darauf oder daneben. Jeder Effekt einzeln schaltbar,
+`classicGraphics` schaltet alles ab.
+
+Rumpf (✅ umgesetzt in `src/client/sdl3/sdl3_fx_ship.c`, Optionen `fxShipHull`, `fxShipHalo`),
+Variante „A: Weicher Glanz“ (gewählt nach Vergleich mit Tönung und Silhouette):
+- Füllung: vorberechnete Kuppel-Lichttextur (diffus + Glanzpunkt), in Bildschirm-Orientierung
+  über das Schiff gelegt → Glanz bleibt beim Drehen oben links. Funktioniert für jede Form/Größe.
+- Kontur bleibt exakt die Shipshape, ihre Helligkeit folgt dem Licht (Schattenseite ~35 %).
+- Ein erster Versuch mit Facetten war bei kleinen Formen zu unruhig, die volle Kontur zu dominant.
+- Bei Lock (bisher schon voll gefüllt) bleibt die alte Darstellung; getarnt/phasend: unverändert.
+- Halo nur bei Teamplay: eigenes Team (auch man selbst) blau, alle anderen in ihrer Schiffsfarbe.
+
+1. **Gefüllter Rumpf**: Shipshape mit einer dunklen, halbtransparenten Variante der Schiffs-/
+   Teamfarbe füllen → wirkt massiv statt Drahtgitter. Triangulierung für konkave Formen existiert
+   (`SDL3_Triangulate_Polygon`).
+2. **Pseudo-3D-Facetten**: passend zur Hügellandschaft den Rumpf vom Mittelpunkt aus in Facetten
+   zerlegen und gegen das feste Licht schattieren. Da sich das Schiff dreht, das Licht aber nicht,
+   wandern Glanz und Schatten beim Drehen über den Rumpf. Sehr plastisch, kostet fast nichts.
+3. **Weicher Halo in Teamfarbe**: dezenter Schein entlang der Kontur, gezielt mit breiten weichen
+   Quads (Glow-Sprite) statt Fullscreen-Bloom. Hilft auch bei der Team-Erkennung.
+
+Antrieb:
+
+4. **Triebwerksflamme**: an der Triebwerksposition der Shipshape (`engine[dir]`) ein flackernder
+   Flammenkegel mit Hitzeverlauf (weiß → blau → orange). Eigenes Schiff: Schub direkt bekannt;
+   andere Schiffe: aus der Beschleunigung in Flugrichtung (vorhandenes FX-Tracking).
+   (Ersetzt den Punkt „Bessere Schubflamme“ unter „Weitere Ideen“.)
+5. **Positionslichter**: rot/grün blinkend an den Flügelspitzen mit Glow-Sprite
+   (`markingLights` existiert bereits, nur hübscher).
+
+Schild und Zustände:
+
+6. **Schild als Energieblase**: weicher Rand mit leichtem Schimmern, blitzt bei Treffern oder
+   Wandkontakt kurz auf. (Erweitert „Schild-Schimmern“ unter „Weitere Ideen“.)
+7. **Erscheinen / Hyperjump**: Lichtwirbel oder Implosion beim Auftauchen und Springen.
+8. **Wenig Treibstoff**: dünner Rauchfaden oder vereinzelte Funken als visuelle Warnung.
+
+Bewusst nicht: Rollneigung in Kurven oder perspektivisches Verzerren der Form – das würde die
+Kontur verändern und bei Kollisionen in die Irre führen.
+
+Vorschlag für ein erstes Paket: gefüllter Rumpf mit Facetten (1+2) und Triebwerksflamme (4).
+
 ### Weitere Ideen
 - **Bloom/Glow für Vektorlinien**: Linien mehrfach breit, additiv, mit wenig Alpha zeichnen.
   Ein erster Versuch als Fullscreen-Bloom (Welt in Render-Target, Helligkeitsschwelle per

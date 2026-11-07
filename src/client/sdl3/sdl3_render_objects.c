@@ -788,9 +788,22 @@ void Gui_paint_ship(int x, int y, int dir, int id, int cloak, int phased,
 
     if (cloak == 0 && phased == 0) {
         if (!texturedObjects || !texturedShips) {
-            if (lock_id == id && id != -1 && lock_dist != 0)
+            bool locked = (lock_id == id && id != -1 && lock_dist != 0);
+            /*
+             * Modern look: glossy hull and rim-lit outline, plus a halo in team
+             * play (own team incl. yourself blue, others in their ship color).
+             */
+            float scx = (float)(PLAYFIELD_X + rint((x - world.x) / clData.scaleFactor));
+            float scy = (float)rint((world.y + ext_view_height - y) / clData.scaleFactor);
+            int halo = 0;
+            if (BIT(Setup->mode, TEAM_PLAY) && other != NULL)
+                halo = (other->team == eyeTeam) ? BLUE : ship_color;
+            bool outlined = Fx_paint_ship_hull(points, cnt - 1, scx, scy,
+                                               ship_color, halo, !locked);
+            if (locked)
                 SDL3_Fill_Polygon(points, cnt - 1, ship_color);
-            SDL3_Draw_Lines(points, cnt, ship_color, false);
+            if (!outlined)
+                SDL3_Draw_Lines(points, cnt, ship_color, false);
 
             /* shipshapeshack by Mara */
             if (instruments.showShipShapesHack) {
