@@ -29,6 +29,7 @@ static bool   fxContrails = true;
 static bool   fxEngineFlame = true;
 static bool   fxMineExplosions = true;
 static bool   fxMissileTrails = true;
+static bool   fxLaserGlow = true;
 static bool   fxNukeFlash = true;
 static bool   fxScreenShake = true;
 static double fxAmount = 1.0;
@@ -66,6 +67,9 @@ static xp_option_t fx_options[] = {
                    "Smoke trails and exhaust glow behind missiles: smart missiles\n"
                    "yellow with thick white smoke, heat seekers red with dark smoke,\n"
                    "torpedoes blue and almost smokeless.\n"),
+    XP_BOOL_OPTION("fxLaserGlow", true, &fxLaserGlow, NULL,
+                   XP_OPTFLAG_CONFIG_FX,
+                   "Draw laser pulses as glowing beams with a bright core.\n"),
     XP_BOOL_OPTION("fxNukeFlash", true, &fxNukeFlash, NULL,
                    XP_OPTFLAG_CONFIG_FX,
                    "Brief bright flash of the whole view when a nuke goes off in sight.\n"),
@@ -2083,6 +2087,95 @@ void Fx_paint_missile(int x, int y, int len, int dir, float sx, float sy)
     fx_quad(sx, sy, w * 1.2f, 0.0f, 0.0f, w * 1.2f, CELL_GLOW,
             (SDL_FColor){ 1.0f, 1.0f, 0.9f, 0.8f });
     fx_flush(SDL_BLENDMODE_ADD);
+}
+
+/*
+ * Soft capsule from a to b (screen pixels) with the glow cell's
+ * cross-section: a stretched middle plus two half-dot caps, so the
+ * ends round off without the overlap brightening them.
+ * w: half-width in screen pixels.
+ */
+static void fx_capsule(float ax, float ay, float bx, float by, float w, SDL_FColor col)
+{
+    const float iw = 1.0f / (float)(FX_CELL * FX_ATLAS_COLS);
+    const float ih = 1.0f / (float)(FX_CELL * FX_ATLAS_ROWS);
+    const float ul = (float)((CELL_GLOW % FX_ATLAS_COLS) * FX_CELL + 1) * iw;
+    const float ur = (float)((CELL_GLOW % FX_ATLAS_COLS + 1) * FX_CELL - 1) * iw;
+    const float um = (ul + ur) * 0.5f;
+    const float vt = (float)((CELL_GLOW / FX_ATLAS_COLS) * FX_CELL + 1) * ih;
+    const float vb = (float)((CELL_GLOW / FX_ATLAS_COLS + 1) * FX_CELL - 1) * ih;
+    float dx = bx - ax, dy = by - ay, len = sqrtf(dx * dx + dy * dy);
+
+    if (len < 0.01f) {
+        dx = 1.0f;
+        dy = 0.0f;
+    } else {
+        dx /= len;
+        dy /= len;
+    }
+    float tx = dx * w, ty = dy * w;             /* along */
+    float nx = -dy * w, ny = dx * w;            /* across */
+    /* columns: tail cap edge, tail, head, head cap edge */
+    float px[4] = { ax - tx, ax, bx, bx + tx };
+    float py[4] = { ay - ty, ay, by, by + ty };
+    float uu[4] = { ul, um, um, ur };
+    SDL_Vertex *v = &fx_verts[fx_nv];
+    int *ix = &fx_idx[fx_ni];
+
+    for (int i = 0; i < 4; i++) {
+        v[2 * i].position = (SDL_FPoint){ px[i] + nx, py[i] + ny };
+        v[2 * i].tex_coord = (SDL_FPoint){ uu[i], vt };
+        v[2 * i + 1].position = (SDL_FPoint){ px[i] - nx, py[i] - ny };
+        v[2 * i + 1].tex_coord = (SDL_FPoint){ uu[i], vb };
+        v[2 * i].color = v[2 * i + 1].color = col;
+    }
+    for (int i = 0; i < 3; i++) {
+        int b = fx_nv + 2 * i;
+        ix[6 * i + 0] = b;
+        ix[6 * i + 1] = b + 2;
+        ix[6 * i + 2] = b + 3;
+        ix[6 * i + 3] = b;
+        ix[6 * i + 4] = b + 3;
+        ix[6 * i + 5] = b + 1;
+    }
+    fx_nv += 8;
+    fx_ni += 18;
+}
+
+/*
+ * Laser pulse as a glowing beam: wide soft halo in the beam color, a
+ * mostly colored core and a thin white-hot center. Team/own pulses get
+ * a more saturated blue than the palette so the color stays readable.
+ * Returns false when the classic line should be drawn instead.
+ */
+bool Fx_paint_laser(int color, float x1, float y1, float x2, float y2)
+{
+    SDL_FColor c;
+    float sc = clData.fscale, mix = 0.8f;
+
+    if (!fxLaserGlow || !fx_active() || !fx_atlas || !tng_renderer)
+        return false;
+
+    if (color == BLUE)
+        c = (SDL_FColor){ 0.25f, 0.45f, 1.0f, 1.0f };
+    else if (color == RED) {
+        c = (SDL_FColor){ 1.0f, 0.08f, 0.04f, 1.0f };
+        mix = 0.9f;                     /* white washes red out to pink */
+    }
+    else
+        c = SDL3_Get_FColor(color);
+
+    SDL_FColor core = { c.r * mix + 1.0f - mix, c.g * mix + 1.0f - mix,
+                        c.b * mix + 1.0f - mix, 1.0f };
+    SDL_FColor halo = { c.r, c.g, c.b, 0.9f };
+
+    fx_nv = 0;
+    fx_ni = 0;
+    fx_capsule(x1, y1, x2, y2, 8.0f * sc, halo);
+    fx_capsule(x1, y1, x2, y2, 2.2f * sc, core);
+    fx_capsule(x1, y1, x2, y2, 1.1f * sc, (SDL_FColor){ 1.0f, 1.0f, 1.0f, 0.55f });
+    fx_flush(SDL_BLENDMODE_ADD);
+    return true;
 }
 
 void Fx_render(void)

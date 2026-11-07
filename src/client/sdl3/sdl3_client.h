@@ -134,6 +134,7 @@ void  Fx_render_overlay(void);
 void  Fx_observe_shot(int x, int y);
 void  Fx_observe_missile(int x, int y);
 void  Fx_paint_missile(int x, int y, int len, int dir, float sx, float sy);
+bool  Fx_paint_laser(int color, float x1, float y1, float x2, float y2);
 float Fx_ship_hit_flash(int id);
 void  Fx_paint_shield(float cx, float cy, float radius, int color,
                       bool shield, float flash);

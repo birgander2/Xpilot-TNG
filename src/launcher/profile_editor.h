@@ -109,6 +109,7 @@ private:
         bool sparks = true;              // fxSparks
         bool mine_explosions = true;     // fxMineExplosions
         bool missile_trails = true;      // fxMissileTrails
+        bool laser_glow = true;          // fxLaserGlow
         bool nuke_flash = true;          // fxNukeFlash
         bool screen_shake = true;        // fxScreenShake
         bool contrails = true;           // fxContrails

@@ -353,6 +353,7 @@ void ProfileEditor::Load(const std::string& stock_ships_path, bool keep_unsaved)
     fx_.sparks = get_bool("fxSparks", true);
     fx_.mine_explosions = get_bool("fxMineExplosions", true);
     fx_.missile_trails = get_bool("fxMissileTrails", true);
+    fx_.laser_glow = get_bool("fxLaserGlow", true);
     fx_.nuke_flash = get_bool("fxNukeFlash", true);
     fx_.screen_shake = get_bool("fxScreenShake", true);
     fx_.contrails = get_bool("fxContrails", true);
@@ -431,6 +432,7 @@ std::vector<std::pair<std::string, std::string>> ProfileEditor::FxValues() const
         {"fxSparks", b(fx_.sparks)},
         {"fxMineExplosions", b(fx_.mine_explosions)},
         {"fxMissileTrails", b(fx_.missile_trails)},
+        {"fxLaserGlow", b(fx_.laser_glow)},
         {"fxNukeFlash", b(fx_.nuke_flash)},
         {"fxScreenShake", b(fx_.screen_shake)},
         {"fxContrails", b(fx_.contrails)},
@@ -816,6 +818,9 @@ void ProfileEditor::RenderFx() {
         ImGui::SetTooltip("Smoke trails and exhaust glow behind missiles (xpilot.fxMissileTrails):\n"
                           "smart missiles yellow with thick white smoke, heat seekers red with dark\n"
                           "smoke, torpedoes blue and almost smokeless.");
+    ImGui::Checkbox("Laser glow", &fx_.laser_glow);
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Laser pulses as glowing beams with a bright core (xpilot.fxLaserGlow)");
     ImGui::Checkbox("Nuke flash", &fx_.nuke_flash);
     if (ImGui::IsItemHovered())
         ImGui::SetTooltip("Brief bright flash of the whole view when a nuke goes off in sight (xpilot.fxNukeFlash)");

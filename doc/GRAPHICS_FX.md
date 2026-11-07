@@ -174,7 +174,9 @@ Vorschlag für ein erstes Paket: gefüllter Rumpf mit Facetten (1+2) und Triebwe
   Heck gleicher Länge im Vorframe fortgesetzt, Rauch gleichmäßig über die Strecke verteilt.
   Verglichen mit Rauchwölkchen einheitlich und glattem Rauchband.
 - **Mündungsfeuer** an Kanonen, 
-- **Laser-Glow**.
+- ✅ **Laser-Glow** → Option `fxLaserGlow`: Laserpulse als weiche Leuchtkapsel aus drei
+  Schichten (farbiger Saum ~8 px, überwiegend farbiger Kern ~2 px, dünne weiße Mitte),
+  additiv. Team/eigene Pulse in kräftigerem Blau (`#4073FF`) als die Palette, Gegner in sattem Rot (`#FF140A`, Kern weniger weiß).
 - ✅ **Phasing** Schiff stark durchsichtig
   → das normale Glanzschiff zu 30 % deckend (Teil von `fxShipHull`).
 - ✅ **Cloak** Hübschere Linie, ähnlich gut gezeichnet wie Schild und Deflektor

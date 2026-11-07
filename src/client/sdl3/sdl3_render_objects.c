@@ -388,11 +388,10 @@ void Gui_paint_laser(int color, int x_1, int y_1, int len, int dir)
     y_2 = (int)(y_1 + len * tsin(dir));
     if ((unsigned)(color) >= NUM_COLORS)
         color = WHITE;
-    SDL3_Draw_Thick_Line((float)(PLAYFIELD_X + WINSCALE(X(x_1))),
-                         (float)WINSCALE(Y(y_1)),
-                         (float)(PLAYFIELD_X + WINSCALE(X(x_2))),
-                         (float)WINSCALE(Y(y_2)),
-                         3.0f, color);
+    float sx1 = (float)(PLAYFIELD_X + WINSCALE(X(x_1))), sy1 = (float)WINSCALE(Y(y_1));
+    float sx2 = (float)(PLAYFIELD_X + WINSCALE(X(x_2))), sy2 = (float)WINSCALE(Y(y_2));
+    if (!Fx_paint_laser(color, sx1, sy1, sx2, sy2))
+        SDL3_Draw_Thick_Line(sx1, sy1, sx2, sy2, 3.0f, color);
 }
 
 void Gui_paint_paused(int x, int y, int count)
