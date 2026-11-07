@@ -93,7 +93,7 @@ Offene Punkte:
 
 ## Reihenfolge (Vorschlag)
 
-1. ✅ FX-System + Funken + Feuerbälle — Optionen `fxExplosions`, `fxSparks`, `fxAmount`
+1. ✅ FX-System + Funken + Feuerbälle — eigener Reiter „FX“ im Menü: `classicGraphics` (alles aus), `fxExplosions`, `fxSparks`, `fxAmount`
 2. Glow + Kondensstreifen
 3. Hügellandschaft in Wänden (aufwendigster Teil: Polygon- und Block-Maps getrennt)
 4. Restliche Ideen nach Lust und Laune

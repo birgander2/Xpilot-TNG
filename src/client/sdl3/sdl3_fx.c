@@ -22,21 +22,42 @@
 /* Options                                                            */
 /* ------------------------------------------------------------------ */
 
+static bool   classicGraphics = false;
 static bool   fxExplosions = true;
 static bool   fxSparks = true;
 static double fxAmount = 1.0;
 
+static void fx_clear(void);
+
+static bool Set_classicGraphics(xp_option_t *opt, bool val)
+{
+    UNUSED_PARAM(opt);
+    classicGraphics = val;
+    if (val)
+        fx_clear();
+    return true;
+}
+
 static xp_option_t fx_options[] = {
+    XP_BOOL_OPTION("classicGraphics", false, &classicGraphics, Set_classicGraphics,
+                   XP_OPTFLAG_CONFIG_FX,
+                   "Classic look: disable all modern visual effects.\n"),
     XP_BOOL_OPTION("fxExplosions", true, &fxExplosions, NULL,
-                   XP_OPTFLAG_CONFIG_DEFAULT,
+                   XP_OPTFLAG_CONFIG_FX,
                    "Draw fireball explosions when ships are destroyed.\n"),
     XP_BOOL_OPTION("fxSparks", true, &fxSparks, NULL,
-                   XP_OPTFLAG_CONFIG_DEFAULT,
+                   XP_OPTFLAG_CONFIG_FX,
                    "Draw sparks when ships hit walls or each other.\n"),
     XP_DOUBLE_OPTION("fxAmount", 1.0, 0.0, 2.0, &fxAmount, NULL,
-                     XP_OPTFLAG_CONFIG_DEFAULT,
+                     XP_OPTFLAG_CONFIG_FX,
                      "Particle amount multiplier for visual effects.\n"),
 };
+
+/* True if modern effects are enabled at all. */
+static inline bool fx_active(void)
+{
+    return !classicGraphics && fxAmount > 0.0;
+}
 
 void Store_fx_options(void)
 {
@@ -433,6 +454,11 @@ static void fx_spawn_sparks(float x, float y, float nx, float ny,
     }
 }
 
+static void fx_clear(void)
+{
+    fx_num_parts = 0;
+}
+
 static void fx_update(float dt)
 {
     int i = 0;
@@ -598,7 +624,7 @@ void Fx_observe_ship(int id, int x, int y)
         t->has_vel = false;
     } else {
         float vx = dx / (float)dl, vy = dy / (float)dl;
-        if (t->has_vel && fxSparks && fxAmount > 0.0)
+        if (t->has_vel && fxSparks && fx_active())
             fx_check_impact(t, vx, vy);
         t->vx = vx;
         t->vy = vy;
@@ -655,7 +681,7 @@ void Fx_end_frame(void)
 
             if (in_view && (fx_wreck_near(px, py, 90.0f)
                             || fx_wreck_near(t->x, t->y, 90.0f))) {
-                if (fxExplosions && fxAmount > 0.0) {
+                if (fxExplosions && fx_active()) {
                     float tps = fx_ticks_per_sec();
                     float vx = t->has_vel ? t->vx * tps : 0.0f;
                     float vy = t->has_vel ? t->vy * tps : 0.0f;
@@ -843,6 +869,10 @@ void Fx_render(void)
     int i;
 
     last_ns = now;
+    if (!fx_active()) {
+        fx_clear();
+        return;
+    }
     if (dt > 0.1f)
         dt = 0.1f;
     fx_update(dt);

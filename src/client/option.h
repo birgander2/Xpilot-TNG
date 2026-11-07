@@ -58,6 +58,8 @@ typedef int xp_option_flags_t;
 #define XP_OPTFLAG_KEEP				(1 << 3)
 /* option value from xpilotrc won't be accepted */
 #define XP_OPTFLAG_NEVER_SAVE			(1 << 4)
+/* option shows up in FX (visual effects) menu in SDL3 client */
+#define XP_OPTFLAG_CONFIG_FX			(1 << 5)
 /* default flags, nothing here yet */
 #define XP_OPTFLAG_DEFAULT         		(0)
 

@@ -29,6 +29,7 @@
 #define CONFIG_NONE    0
 #define CONFIG_DEFAULT 1
 #define CONFIG_COLORS  2
+#define CONFIG_FX      3
 
 void Config_init(void);
 int Config(bool, int);

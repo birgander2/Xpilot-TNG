@@ -115,11 +115,12 @@ static const char *Item_get_text(int i)
 /* =========================================================================
  * Top Button Bar & Pulldown Menu State
  * ========================================================================= */
-#define NUM_MENU_ENTRIES 6
+#define NUM_MENU_ENTRIES 7
 static const char *const menu_labels[NUM_MENU_ENTRIES] = {
     "KEYS",
     "CONFIG",
     "COLORS",
+    "FX",
     "SCORE",
     "PLAYER",
     "MOTD"
@@ -812,6 +813,10 @@ static int  *color_option_indices   = NULL;
 static int   num_color_options      = 0;
 static int   max_color_options      = 0;
 
+static int  *fx_option_indices      = NULL;
+static int   num_fx_options         = 0;
+static int   max_fx_options         = 0;
+
 static bool         config_mapped      = false;
 static int          config_what        = CONFIG_NONE;
 static int          config_page        = 0;
@@ -830,6 +835,8 @@ static int Nelem_config_creator(void)
         return num_default_options + 1;
     if (config_what == CONFIG_COLORS)
         return num_color_options + 1;
+    if (config_what == CONFIG_FX)
+        return num_fx_options + 1;
     return 0;
 }
 
@@ -840,6 +847,8 @@ static xp_option_t *Config_creator_option(int i)
         ind = default_option_indices[i];
     if (config_what == CONFIG_COLORS && i >= 0 && i < num_color_options)
         ind = color_option_indices[i];
+    if (config_what == CONFIG_FX && i >= 0 && i < num_fx_options)
+        ind = fx_option_indices[i];
     return Option_by_index(ind);
 }
 
@@ -847,10 +856,13 @@ void Config_init(void)
 {
     num_default_options = 0;
     num_color_options = 0;
+    num_fx_options = 0;
     for (int i = 0; i < num_options; i++) {
         xp_option_t *opt = Option_by_index(i);
         if (Option_get_flags(opt) & XP_OPTFLAG_CONFIG_COLORS) {
             STORE(int, color_option_indices, num_color_options, max_color_options, i);
+        } else if (Option_get_flags(opt) & XP_OPTFLAG_CONFIG_FX) {
+            STORE(int, fx_option_indices, num_fx_options, max_fx_options, i);
         } else if (Option_get_flags(opt) & XP_OPTFLAG_CONFIG_DEFAULT) {
             STORE(int, default_option_indices, num_default_options, max_default_options, i);
         }
@@ -975,7 +987,7 @@ int Config(bool doit, int what)
         return 0;
     }
 
-    if (num_default_options == 0 && num_color_options == 0) {
+    if (num_default_options == 0 && num_color_options == 0 && num_fx_options == 0) {
         Config_init();
     }
 
@@ -1522,21 +1534,24 @@ static void Trigger_Menu_Entry(int item)
     case 2: /* COLORS */
         Config(true, CONFIG_COLORS);
         break;
-    case 3: /* SCORE */
+    case 3: /* FX */
+        Config(true, CONFIG_FX);
+        break;
+    case 4: /* SCORE */
         Config(false, CONFIG_NONE);
         if (showUserName) {
             showUserName = false;
             scoresChanged = true;
         }
         break;
-    case 4: /* PLAYER */
+    case 5: /* PLAYER */
         Config(false, CONFIG_NONE);
         if (!showUserName) {
             showUserName = true;
             scoresChanged = true;
         }
         break;
-    case 5: /* MOTD */
+    case 6: /* MOTD */
         Open_Motd_Viewer();
         break;
     default:
