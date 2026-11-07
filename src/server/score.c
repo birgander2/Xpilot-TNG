@@ -104,11 +104,13 @@ double Get_Score(player_t * pl)
 void Set_Score(player_t * pl, double score)
 {
     pl->score = score;
+    Dm_note_score(pl);
 }
 
 void Add_Score(player_t * pl, double score)
 {
     pl->score += score;
+    Dm_note_score(pl);
 }
 
 void Handle_Scoring(scoretype_t st, player_t * killer, player_t * victim,

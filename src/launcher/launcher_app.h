@@ -149,6 +149,7 @@ private:
     bool show_unreachable_ = false;   // Internet list: also show servers that did not answer the ping
     bool custom_selected_ = false;    // the custom address box is the active choice
     int local_port_ = 0;              // 0 = pick a free port automatically
+    bool local_highscores_ = false;   // keep and show highscores in the local game
     bool local_meta_ = false;         // list the local game at the meta server
 
     // server mode settings (kept across map changes, persisted)
@@ -156,6 +157,7 @@ private:
     int server_max_players_ = 0;
     char server_greeting_[128] = "";
     bool server_meta_ = true;
+    bool server_highscores_ = true;
     char server_host_[128] = "";      // serverHost: public name reported to the meta server
     int server_cport_start_ = 0;      // clientPortStart/End: UDP port range per player (0 = random)
     int server_cport_end_ = 0;

@@ -125,6 +125,12 @@
 #define HIGHSCORE_BALL_HEAD	5	/* name: map, other: game speed * 10 */
 #define HIGHSCORE_BALL_TOP	6	/* top list: ballruns */
 #define HIGHSCORE_BALL_END	7	/* complete, show it */
+#define HIGHSCORE_DM_HEAD	8	/* name: map, other: game speed * 10, lap: reason */
+#define HIGHSCORE_DM_TOP	9	/* top list: deathmatch scores (time_ms: points) */
+#define HIGHSCORE_DM_END	10	/* complete, show it */
+#define HIGHSCORE_DM_JOIN	0	/* reasons: entered the map */
+#define HIGHSCORE_DM_PAUSE	1	/* started pausing */
+#define HIGHSCORE_DM_RECORD	2	/* entered the list now */
 #define HIGHSCORE_F_ROBOT	(1 << 0)
 #define HIGHSCORE_F_FINISHED	(1 << 1)
 #define HIGHSCORE_F_YOU		(1 << 2)	/* the receiving player */

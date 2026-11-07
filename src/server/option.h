@@ -203,6 +203,7 @@ extern struct options {
     bool	targetSync;
     double	targetDeadTicks;
     bool	reportToMetaServer;
+    bool	highscores;		/* keep and show race, ball and deathmatch records */
     int		metaUpdateMaxSize;
     bool	searchDomainForXPilot;
     bool	contactAdmin;

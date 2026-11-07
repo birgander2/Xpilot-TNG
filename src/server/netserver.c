@@ -1172,6 +1172,9 @@ static int Handle_login(connection_t *connp, char *errmsg, size_t errsize)
 	xpprintf("%s spectator %s (%d) starts.\n", showtime(), pl->name,
 		 NumSpectators);
 
+    if (pl->rectype < 2)
+	Dm_records_join(pl);
+
     xpprintf("[join] %s|%s|%s|%d|%d\n",
 	     pl->name,
 	     pl->hostname[0] ? pl->hostname : "localhost",

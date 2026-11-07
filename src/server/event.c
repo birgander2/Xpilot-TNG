@@ -498,6 +498,7 @@ void Pause_player(player_t *pl, bool on)
 	updateScores = true;
 
 	Detach_ball(pl, NULL);
+	Dm_records_pause(pl);
 	if (Player_uses_autopilot(pl)
 	    || Player_is_hoverpaused(pl)) {
 	    CLR_BIT(pl->pl_status, HOVERPAUSE);

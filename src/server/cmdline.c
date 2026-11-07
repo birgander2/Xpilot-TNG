@@ -1074,6 +1074,16 @@ static option_desc opts[] = {
 	OPT_COMMAND | OPT_DEFAULTS | OPT_VISIBLE
     },
     {
+	"highscores",
+	"highscores",
+	"true",
+	&options.highscores,
+	valBool,
+	tuner_none,
+	"Keep and show the highscores (race and ball times, deathmatch scores)?\n",
+	OPT_COMMAND | OPT_DEFAULTS | OPT_VISIBLE
+    },
+    {
 	"metaUpdateMaxSize",
 	"metaUpdateMaxSize",
 	"4096",

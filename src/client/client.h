@@ -280,13 +280,15 @@ typedef struct {
     char		map[MAX_CHARS];
     int			speed10;
     int			ntop;
+    int			reason;	/* deathmatch: HIGHSCORE_DM_JOIN, _PAUSE, _RECORD */
     race_result_line_t	top[RACE_RESULT_MAX_TOP];
     unsigned		serial;	/* counts complete lists */
 } ball_result_t;
 
 extern ball_result_t	ball_result;	/* the last complete one */
+extern ball_result_t	dm_result;	/* deathmatch scores (HIGHSCORE_DM_*), time_ms: points */
 void Ball_result_line(int kind, int rank, int flags, int time_ms, int other,
-		      const char *name);
+		      int lap, const char *name);
 
 /* Map object without a polygon (grav, concentrator) on a TNG polygon map. */
 typedef struct {

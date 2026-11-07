@@ -179,6 +179,8 @@ int                 num_mapobjects = 0;
 race_result_t       race_result;
 static race_result_t race_result_new;	/* while it arrives */
 ball_result_t       ball_result;
+ball_result_t       dm_result;
+static ball_result_t dm_result_new;
 static ball_result_t ball_result_new;	/* while it arrives */
 xp_polygon_t        *polygons = NULL;
 int                 num_polygons = 0;
@@ -1287,17 +1289,20 @@ void Race_result_end(void)
     race_result = race_result_new;
 }
 
-/* The ballrun top list: a header line, list lines and an end line. */
+/* The ballrun and deathmatch top lists: a header line, list lines and an end line. */
 void Ball_result_line(int kind, int rank, int flags, int time_ms, int other,
-		      const char *name)
+		      int lap, const char *name)
 {
-    ball_result_t *r = &ball_result_new;
+    bool dm = kind >= HIGHSCORE_DM_HEAD;
+    ball_result_t *r = dm ? &dm_result_new : &ball_result_new;
 
-    if (kind == HIGHSCORE_BALL_HEAD) {
+    if (kind == HIGHSCORE_BALL_HEAD || kind == HIGHSCORE_DM_HEAD) {
 	memset(r, 0, sizeof(*r));
 	strlcpy(r->map, name, sizeof(r->map));
 	r->speed10 = other;
-    } else if (kind == HIGHSCORE_BALL_TOP && r->ntop < RACE_RESULT_MAX_TOP) {
+	r->reason = lap;
+    } else if ((kind == HIGHSCORE_BALL_TOP || kind == HIGHSCORE_DM_TOP)
+	       && r->ntop < RACE_RESULT_MAX_TOP) {
 	race_result_line_t *l = &r->top[r->ntop++];
 
 	l->rank = rank;
@@ -1308,6 +1313,9 @@ void Ball_result_line(int kind, int rank, int flags, int time_ms, int other,
     } else if (kind == HIGHSCORE_BALL_END) {
 	r->serial = ball_result.serial + 1;
 	ball_result = *r;
+    } else if (kind == HIGHSCORE_DM_END) {
+	r->serial = dm_result.serial + 1;
+	dm_result = *r;
     }
 }
 

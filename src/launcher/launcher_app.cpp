@@ -270,6 +270,7 @@ void LauncherApp::StartLocalGame(bool force) {
 
     OptionsManager opts = options_mgr_;   // local-only settings stay out of the shared option set
     opts.SetBool("reportToMetaServer", local_meta_);
+    opts.SetBool("highscores", local_highscores_);
     auto server_args = opts.BuildServerArgs(LaunchMode::Local, map.full_path, port);
 
     auto client_args = ClientArgs(port);
@@ -292,6 +293,7 @@ void LauncherApp::ApplyServerModeSettings(OptionsManager& opts) const {
     if (server_max_players_ > 0) opts.SetInt("playerLimit", server_max_players_);
     if (server_greeting_[0]) opts.Set("greeting", server_greeting_);
     opts.SetBool("reportToMetaServer", server_meta_);
+    opts.SetBool("highscores", server_highscores_);
     // always set: an empty/zero value must also be able to override defaults.txt
     opts.Set("serverHost", server_host_);
     opts.SetInt("clientPortStart", server_cport_start_);
@@ -836,6 +838,9 @@ void LauncherApp::RenderAdvanced(bool server_mode) {
                 OptBool("Player vs. player damage", "allowPlayerKilling");
                 OptBool("Team play", "teamPlay");
                 OptBool("Team immunity", "teamImmunity");
+                ImGui::Checkbox("Highscores", server_mode ? &server_highscores_ : &local_highscores_);
+                if (ImGui::IsItemHovered())
+                    ImGui::SetTooltip("Keep and show race, ball and deathmatch records.\nOff by default in a local game.");
                 ImGui::EndTabItem();
             }
             if (ImGui::BeginTabItem("Physics")) {

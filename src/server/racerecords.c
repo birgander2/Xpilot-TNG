@@ -30,6 +30,11 @@
  * entry per nick, per map (treasures), game speed and bot setup in .../balltimes/.
  * The list pops up at the end of a round, only when it changed, and the
  * next round waits for the popups like the next race.
+ *
+ * Deathmatch (no race, no treasures) keeps a top ten list of the highest
+ * score a human reached before dying, one entry per nick, per map, game
+ * speed and bot setup in .../dmscores/.  A player gets it when joining, when
+ * pausing and when entering it; everybody is told about a new entry.
  */
 
 #include "xpserver.h"
@@ -39,6 +44,12 @@
 #define RR_SUBDIR		"xpilot-tng/racetimes"
 #define BR_SUBDIR		"xpilot-tng/balltimes"
 #define RR_VERSION		1
+#define DM_SUBDIR		"xpilot-tng/dmscores"
+
+/* kinds of lists (files) */
+#define RR_RACE			0
+#define RR_BALL			1
+#define RR_DM			2
 
 typedef struct {
     double	secs;
@@ -209,12 +220,14 @@ static const char *Rr_bot_sig(void)
  * File of the current course, laps and game speed (or of the ball map and
  * game speed); NULL without a home.
  */
-static const char *Rr_path(bool mkdirs, bool ball)
+static const char *Rr_path(bool mkdirs, int kind)
 {
     static char path[PATH_MAX];
     const char *xdg = getenv("XDG_DATA_HOME");
     const char *home = getenv("HOME");
     char name[MAX_CHARS], *p;
+    const char *subdir = kind == RR_DM ? DM_SUBDIR
+			 : kind == RR_BALL ? BR_SUBDIR : RR_SUBDIR;
     int i, n = 0;
 
     for (i = 0; world->name[i] != '\0' && n < (int)sizeof(name) - 1; i++) {
@@ -230,13 +243,15 @@ static const char *Rr_path(bool mkdirs, bool ball)
 	strlcpy(name, "unnamed", sizeof(name));
 
     if (xdg && xdg[0] == '/')
-	snprintf(path, sizeof(path), "%s/%s/", xdg, ball ? BR_SUBDIR : RR_SUBDIR);
+	snprintf(path, sizeof(path), "%s/%s/", xdg, subdir);
     else if (home && home[0])
-	snprintf(path, sizeof(path), "%s/.local/share/%s/", home,
-		 ball ? BR_SUBDIR : RR_SUBDIR);
+	snprintf(path, sizeof(path), "%s/.local/share/%s/", home, subdir);
     else
 	return NULL;
-    if (ball)
+    if (kind == RR_DM)
+	snprintf(path + strlen(path), sizeof(path) - strlen(path),
+		 "%s_speed%g%s.txt", name, options.gameSpeed, Rr_bot_sig());
+    else if (kind == RR_BALL)
 	snprintf(path + strlen(path), sizeof(path) - strlen(path),
 		 "%s_speed%g%s_%08x.txt", name, options.gameSpeed,
 		 Rr_bot_sig(), (unsigned)Rr_course_sig(true));
@@ -255,10 +270,10 @@ static const char *Rr_path(bool mkdirs, bool ball)
     return path;
 }
 
-/* Ball files hold 'T' lines only, the ballruns. */
-static void Rr_load(bool ball, rr_entry_t *total, int *nt, rr_entry_t *lap, int *nl)
+/* Ball and deathmatch files hold 'T' lines only. */
+static void Rr_load(int kind, rr_entry_t *total, int *nt, rr_entry_t *lap, int *nl)
 {
-    const char *path = Rr_path(false, ball);
+    const char *path = Rr_path(false, kind);
     char line[256];
     FILE *fp;
 
@@ -290,10 +305,10 @@ static void Rr_load(bool ball, rr_entry_t *total, int *nt, rr_entry_t *lap, int 
     fclose(fp);
 }
 
-static void Rr_save(bool ball, const rr_entry_t *total, int nt,
+static void Rr_save(int kind, const rr_entry_t *total, int nt,
 		    const rr_entry_t *lap, int nl)
 {
-    const char *path = Rr_path(true, ball);
+    const char *path = Rr_path(true, kind);
     char tmp[PATH_MAX + 8];
     FILE *fp;
     bool ok = true;
@@ -305,7 +320,11 @@ static void Rr_save(bool ball, const rr_entry_t *total, int nt,
     snprintf(tmp, sizeof(tmp), "%s.tmp", path);
     if ((fp = fopen(tmp, "w")) == NULL)
 	return;
-    if (ball) {
+    if (kind == RR_DM) {
+	if (fprintf(fp, "# dmscores %d: %s, game speed %g\n", RR_VERSION,
+		    world->name, options.gameSpeed) < 0)
+	    ok = false;
+    } else if (kind == RR_BALL) {
 	if (fprintf(fp, "# balltimes %d: %s, game speed %g\n", RR_VERSION,
 		    world->name, options.gameSpeed) < 0)
 	    ok = false;
@@ -324,23 +343,25 @@ static void Rr_save(bool ball, const rr_entry_t *total, int nt,
 }
 
 /*
- * Enter a time into a top list (sorted, best first), one entry per nick.
- * Returns true when the list changed.
+ * Enter a time (or, with 'higher', a score) into a top list (sorted, best
+ * first), one entry per nick.  Returns true when the list changed.
  */
-static bool Rr_enter(rr_entry_t *list, int *n, const char *name, double secs, long when)
+static bool Rr_enter(rr_entry_t *list, int *n, const char *name, double secs,
+		     long when, bool higher)
 {
     int i, at;
 
     for (i = 0; i < *n; i++) {
 	if (strcmp(list[i].name, name) == 0) {
-	    if (list[i].secs <= secs)
+	    if (higher ? list[i].secs >= secs : list[i].secs <= secs)
 		return false;	/* has a better one */
 	    memmove(&list[i], &list[i + 1], sizeof(rr_entry_t) * (*n - i - 1));
 	    (*n)--;
 	    break;
 	}
     }
-    for (at = 0; at < *n && list[at].secs <= secs; at++)
+    for (at = 0; at < *n && (higher ? list[at].secs >= secs
+				    : list[at].secs <= secs); at++)
 	;
     if (at >= RR_TOP)
 	return false;
@@ -383,7 +404,7 @@ void Race_records_finish(void)
     bool changed = false;
     long now = (long)time(NULL);
 
-    if (world->NumChecks <= 0 || FPS <= 0) {
+    if (!options.highscores || world->NumChecks <= 0 || FPS <= 0) {
 	memset(FinishPos, 0, sizeof(FinishPos));
 	return;
     }
@@ -409,17 +430,17 @@ void Race_records_finish(void)
     qsort(st, ns, sizeof(st[0]), Rr_standing_cmp);
 
     /* the top lists: humans only */
-    Rr_load(false, total, &nt, lap, &nl);
+    Rr_load(RR_RACE, total, &nt, lap, &nl);
     for (i = 0; i < ns; i++) {
 	if (!Player_is_human(st[i].pl))
 	    continue;
 	if (st[i].total > 0.0)
-	    changed |= Rr_enter(total, &nt, st[i].pl->name, st[i].total, now);
+	    changed |= Rr_enter(total, &nt, st[i].pl->name, st[i].total, now, false);
 	if (st[i].best > 0.0)
-	    changed |= Rr_enter(lap, &nl, st[i].pl->name, st[i].best, now);
+	    changed |= Rr_enter(lap, &nl, st[i].pl->name, st[i].best, now, false);
     }
     if (changed)
-	Rr_save(false, total, nt, lap, nl);
+	Rr_save(RR_RACE, total, nt, lap, nl);
 
     /* the popup for every TNG client, players and spectators */
     for (j = 0; j < spectatorStart + NumSpectators; j++) {
@@ -489,15 +510,17 @@ void Ball_records_finish(void)
     bool changed = false;
     long now = (long)time(NULL);
 
+    if (!options.highscores)
+	NumBallRuns = 0;
     if (NumBallRuns == 0)
 	return;
-    Rr_load(true, top, &nt, unused, &nu);
+    Rr_load(RR_BALL, top, &nt, unused, &nu);
     for (i = 0; i < NumBallRuns; i++)
-	changed |= Rr_enter(top, &nt, BallRuns[i].name, BallRuns[i].secs, now);
+	changed |= Rr_enter(top, &nt, BallRuns[i].name, BallRuns[i].secs, now, false);
     NumBallRuns = 0;
     if (!changed)
 	return;
-    Rr_save(true, top, nt, unused, 0);
+    Rr_save(RR_BALL, top, nt, unused, 0);
 
     for (j = 0; j < spectatorStart + NumSpectators; j++) {
 	player_t *to;
@@ -534,4 +557,133 @@ void Ball_records_finish(void)
 	    break;
 	}
     }
+}
+
+/*
+ * Deathmatch highscores: the highest score a human had before dying.
+ */
+static bool	DmTrack[NUM_IDS];	/* by player id: peak is followed */
+static double	DmPeak[NUM_IDS];	/* highest score of this life */
+static rr_entry_t DmTop[RR_TOP];	/* the list of the current map, cached */
+static int	DmN;
+static char	DmLoadedPath[PATH_MAX];
+
+static bool Dm_active(void)
+{
+    return options.highscores && !BIT(world->rules->mode, TIMING)
+	   && Num_treasures() == 0;
+}
+
+static bool Dm_player(player_t *pl)
+{
+    return Dm_active() && Player_is_human(pl) && pl->id >= 0
+	   && pl->id < NUM_IDS && DmTrack[pl->id];
+}
+
+/* The score of a player changed (score.c). */
+void Dm_note_score(player_t *pl)
+{
+    if (pl->id >= 0 && pl->id < NUM_IDS && DmTrack[pl->id]
+	&& pl->score > DmPeak[pl->id])
+	DmPeak[pl->id] = pl->score;
+}
+
+static void Dm_load(void)
+{
+    static rr_entry_t unused[RR_TOP];
+    const char *path = Rr_path(false, RR_DM);
+    int nu;
+
+    if (path == NULL || strcmp(path, DmLoadedPath) == 0)
+	return;
+    strlcpy(DmLoadedPath, path, sizeof(DmLoadedPath));
+    Rr_load(RR_DM, DmTop, &DmN, unused, &nu);
+}
+
+/* The top list for one player (also a paused one). */
+static void Dm_send(player_t *to, int reason)
+{
+    connection_t *conn = to->conn;
+    int i;
+
+    if (conn == NULL || !FEATURE(conn, F_HIGHSCORE))
+	return;
+    Dm_load();
+    Send_highscore_line(conn, HIGHSCORE_DM_HEAD, 0, 0, 0,
+			(int)(options.gameSpeed * 10.0 + 0.5), reason,
+			world->name);
+    for (i = 0; i < DmN; i++)
+	Send_highscore_line(conn, HIGHSCORE_DM_TOP, i + 1,
+			    (reason == HIGHSCORE_DM_RECORD && DmTop[i].fresh
+			     ? HIGHSCORE_F_NEW : 0)
+			    | (strcmp(DmTop[i].name, to->name) == 0
+			       ? HIGHSCORE_F_YOU : 0),
+			    (int)(DmTop[i].secs * 10.0 + 0.5), (int)DmTop[i].when, 0,
+			    DmTop[i].name);
+    Send_highscore_line(conn, HIGHSCORE_DM_END, 0, 0, 0, 0, 0, "");
+}
+
+/* A player pauses (event.c). */
+void Dm_records_pause(player_t *pl)
+{
+    if (Dm_player(pl))
+	Dm_send(pl, HIGHSCORE_DM_PAUSE);
+}
+
+/* A player entered the map (netserver.c). */
+void Dm_records_join(player_t *pl)
+{
+    if (!Dm_active() || !Player_is_human(pl) || pl->id < 0 || pl->id >= NUM_IDS)
+	return;
+    DmTrack[pl->id] = true;
+    DmPeak[pl->id] = pl->score;
+    Dm_send(pl, HIGHSCORE_DM_JOIN);
+}
+
+/* Scores go with one decimal, sent as tenths (time_ms).
+ * Enter the peak of a player; with 'announce' tell him and everybody else. */
+static void Dm_enter(player_t *pl, double peak, bool announce)
+{
+    int i, rank = 0;
+
+    peak = floor(peak * 10.0 + 0.5) / 10.0;
+    if (peak < 0.1)
+	return;
+    Dm_load();
+    for (i = 0; i < DmN; i++)
+	DmTop[i].fresh = false;
+    if (!Rr_enter(DmTop, &DmN, pl->name, peak, (long)time(NULL), true))
+	return;
+    Rr_save(RR_DM, DmTop, DmN, NULL, 0);
+    if (!announce)
+	return;
+    for (i = 0; i < DmN; i++) {
+	if (strcmp(DmTop[i].name, pl->name) == 0)
+	    rank = i + 1;
+    }
+    Set_message_f("%c%s reached %.1f points, rank %d in the deathmatch "
+		  "highscores! [*Highscore*]", MSG_ALERT_MARK, pl->name,
+		  peak, rank);
+    Dm_send(pl, HIGHSCORE_DM_RECORD);
+}
+
+/* A player is killed: his score drops now, so the peak counts (player.c). */
+void Dm_records_death(player_t *pl)
+{
+    double peak;
+
+    if (!Dm_player(pl))
+	return;
+    peak = DmPeak[pl->id];
+    DmPeak[pl->id] = pl->score;
+    Dm_enter(pl, peak, true);
+}
+
+/* A player leaves: the peak of the current life counts (player.c). */
+void Dm_records_leave(player_t *pl)
+{
+    if (!Dm_player(pl))
+	return;
+    Dm_enter(pl, DmPeak[pl->id], false);
+    DmTrack[pl->id] = false;
 }

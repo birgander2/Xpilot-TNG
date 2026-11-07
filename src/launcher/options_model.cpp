@@ -305,6 +305,11 @@ std::vector<std::string> OptionsManager::BuildServerArgs(LaunchMode mode, const 
         if (!is_default("reporttometaserver", v)) emit("reporttometaserver", v);
     }
 
+    if (base_.count("highscores")) {
+        std::string v = Get("highscores");   // set by the caller, the launcher decides per mode
+        if (!is_default("highscores", v)) emit("highscores", v);
+    }
+
     // The public name and client ports must reach the server even when they equal the launcher's baseline
     // (the server may not see the same defaults.txt); never emit an empty name.
     if (mode == LaunchMode::Server) {

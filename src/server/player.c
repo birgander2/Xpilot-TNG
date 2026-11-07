@@ -1417,6 +1417,7 @@ void Delete_player(player_t *pl)
     team_t *teamp = Team_by_index(pl->team);
 
     if (Player_is_human(pl)) {
+	Dm_records_leave(pl);
 	Add_playtime(pl);
 	/* machine readable session record: name|seconds played|join time|leave time */
 	xpprintf("[played] %s|%ld|%ld|%ld\n", pl->name,
@@ -1651,8 +1652,10 @@ void Detach_ball(player_t *pl, ballobject_t *ball)
 
 void Kill_player(player_t *pl, bool add_rank_death)
 {
-    if (Player_is_killed(pl))
+    if (Player_is_killed(pl)) {
+	Dm_records_death(pl);
 	Explode_fighter(pl);
+    }
     Player_death_reset(pl, add_rank_death);
 }
 

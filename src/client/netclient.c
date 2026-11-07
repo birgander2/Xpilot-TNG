@@ -2779,7 +2779,7 @@ static int Receive_highscore(void)
 			      &flags, &time_ms, &other, &lap, name)) <= 0)
 	    return n;
 	if (kind >= HIGHSCORE_BALL_HEAD)
-	    Ball_result_line(kind, rank, flags, time_ms, other, name);
+	    Ball_result_line(kind, rank, flags, time_ms, other, lap, name);
 	else
 	    Race_result_line(kind, rank, flags, time_ms, other, lap, name);
     }
