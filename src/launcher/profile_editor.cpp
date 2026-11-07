@@ -352,6 +352,8 @@ void ProfileEditor::Load(const std::string& stock_ships_path, bool keep_unsaved)
     fx_.explosions = get_bool("fxExplosions", true);
     fx_.sparks = get_bool("fxSparks", true);
     fx_.contrails = get_bool("fxContrails", true);
+    fx_.terrain = get_bool("fxTerrain", true);
+    fx_.terrain_mesh = get_bool("fxTerrainMesh", true);
     {
         std::string v = get("fxAmount", "1.0");
         char* end = nullptr;
@@ -420,6 +422,8 @@ std::vector<std::pair<std::string, std::string>> ProfileEditor::FxValues() const
         {"fxExplosions", b(fx_.explosions)},
         {"fxSparks", b(fx_.sparks)},
         {"fxContrails", b(fx_.contrails)},
+        {"fxTerrain", b(fx_.terrain)},
+        {"fxTerrainMesh", b(fx_.terrain_mesh)},
         {"fxAmount", amount},
     };
 }
@@ -795,6 +799,17 @@ void ProfileEditor::RenderFx() {
     if (ImGui::IsItemHovered())
         ImGui::SetTooltip("Number of particles (xpilot.fxAmount).\n"
                           "Lower it on slow machines, 0 turns the effects off.");
+
+    ImGui::Spacing();
+    ImGui::SeparatorText("Walls");
+    ImGui::Checkbox("Hill landscape", &fx_.terrain);
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Filled walls are drawn as shaded low-poly hills (xpilot.fxTerrain).\n"
+                          "The wall edges stay exactly where they are. Needs filled walls.");
+    ImGui::BeginDisabled(!fx_.terrain);
+    ImGui::Checkbox("Lattice lines", &fx_.terrain_mesh);
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Thin lines along the hill facets (xpilot.fxTerrainMesh)");
+    ImGui::EndDisabled();
     ImGui::EndDisabled();
     ImGui::Spacing();
     ImGui::TextDisabled("Purely cosmetic: the effects never change the game, and work on every server.");

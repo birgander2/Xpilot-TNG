@@ -66,6 +66,13 @@ static inline bool fx_active(void)
 void Store_fx_options(void)
 {
     STORE_OPTIONS(fx_options);
+    Store_terrain_options();
+}
+
+/* True in classic mode: no modern visual effects at all. */
+bool Fx_classic(void)
+{
+    return classicGraphics;
 }
 
 /* ------------------------------------------------------------------ */
@@ -241,6 +248,7 @@ void Fx_cleanup(void)
         SDL_DestroyTexture(fx_atlas);
         fx_atlas = NULL;
     }
+    Fx_terrain_cleanup();
 }
 
 /* ------------------------------------------------------------------ */

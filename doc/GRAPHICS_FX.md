@@ -44,24 +44,31 @@ Die Wandbegrenzungen bleiben unverändert (Kollisionskante = klar sichtbar).
 Nur das **Innere** gefüllter Wandflächen bekommt eine Polygon-Hügellandschaft aus zusätzlichen
 Linien und Schattierung.
 
-Konzept:
-1. **Stützpunkte**: Gejittertes Punktraster innerhalb des Polygons + die Randvertices.
-2. **Triangulierung**: Delaunay (oder einfacher: Raster am Polygon geclippt).
-3. **Höhe**: `h = f(Abstand zum Rand) + Noise` → Rand liegt auf Höhe 0, zur Mitte hin
-   Hügel/Bergrücken. Seed aus Map-Hash → sieht bei jedem Start gleich aus.
-4. **Schattierung**: Lambert pro Dreieck (Normale · feste Lichtrichtung, z. B. von oben links),
-   Füllfarbe abgedunkelt/aufgehellt.
-5. **Linien**, als Stil wählbar:
-   - Dreieckskanten dezent (Wireframe-/„Tron“-Hügel)
-   - Höhenlinien / Isolinien (topographischer Karten-Look)
-   - Nur Grat-Linien (Kanten mit starkem Normalenwechsel)
-6. **Performance**: Einmal beim Map-Laden vorberechnen, in Chunks ablegen, nur sichtbare Chunks per
-   `SDL_RenderGeometry` in einem Batch zeichnen.
+Umsetzung (`src/client/sdl3/sdl3_terrain.c`, Optionen `fxTerrain`, `fxTerrainMesh`):
+1. **Raster**: globales, leicht gejittertes Dreiecksraster (~40 px), an die Map-Größe angepasst.
+   Jedes Rasterdreieck wird mit den Dreiecken der Polygon-Triangulierung (dieselbe wie bei der
+   Füllung) geschnitten: konvex ∩ konvex → robust, keine Ausreißer über die Wandkante.
+2. **Höhe**: `h = H · (1 − e^(−d/R)) · Noise`, `d` = Abstand zur nächsten *sichtbaren* Wandkante.
+   Interne Kanten (Edge-Style 0) zwischen zusammengesetzten Polygonen zählen nicht → nahtlos.
+   Sichtbare Kanten liegen auf Höhe 0.
+3. **Schattierung**: flach pro Rasterdreieck aus der Steigung, Licht von oben links;
+   1.0 = ebener Boden, Wandfarbe wird abgedunkelt/aufgehellt.
+4. **Linien**: Rasterkanten, auf das Polygon zugeschnitten, als hellere, halbtransparente Linien.
+   Höhenlinien oder Gratlinien wären mögliche weitere Stile.
+5. **Performance**: alle Wand-Polygone werden im ersten Frame einer Map vorberechnet
+   (z. B. tourmination: 1459 Polygone in ~120 ms), in Chunks abgelegt, nur sichtbare Chunks
+   werden gezeichnet. Die normale Füllung liegt darunter und deckt Subpixel-Fugen ab.
+6. **Gefüllte** Polygone: Facetten ersetzen die Füllfarbe (abgedunkelt/aufgehellt).
+   **Texturierte** Polygone: Textur bleibt, darüber Schatten per MOD-Blending und etwas
+   additives Licht auf hellen Hängen; Rasterlinien weiß/halbtransparent.
+   `classicGraphics` schaltet alles ab.
 
-Offene Punkte:
-- **Block-Maps**: zusammenhängende Wandblöcke als Region behandeln, Distanz-Transformation auf dem
-  Blockraster statt Polygon-Abstand. **AR** Nur für Polygonkarten
-- **Map-Wrapping** an den Rändern berücksichtigen.  **AR** Gewrappte Polygone sollten nicht anders aussehen als normale
+Erledigte Punkte:
+- **Block-Maps**: nur Polygonkarten (wie gewünscht).
+- **Map-Wrapping**: Raster, Rauschen und Abstandsberechnung sind periodisch zur Map-Größe;
+  gewrappte Kopien und an der Map-Kante geteilte Wände sehen aus wie alle anderen.
+
+Offen:
 - Später kombinierbar mit dynamischem Licht (Explosionen hellen Hänge auf).
 
 ### Weitere Ideen
@@ -70,6 +77,7 @@ Offene Punkte:
   MOD-Potenzkurve c⁶, Downsample + Kawase-Blur, additiv zurück) war technisch sauber, aber der
   Effekt auf 1-px-Vektorlinien blieb minimal – wieder entfernt (siehe Git-Historie, Commit 8d01fc9).
   Lohnt sich eher mit echten Shadern oder dickeren Linien.
+  **Minen Explosionen** Minen explodieren mit speziellem Feuerball, Clusterminen mit "Praxis-Effekt" (scheibenförmig), Nuklearminen auch mit speziellem Effekt, alle je nach Explosionsstärke kleiner oder größer
 - **Phosphor-Nachleuchten (Vektormonitor-Modus)**: in Textur rendern, vorigen Frame nur abdunkeln
   statt löschen → Asteroids-/Vectrex-Look. Als Option.
 - **Dynamisches Licht**: Explosionen, Schubdüse und Laser hellen nahe Wände kurz auf
@@ -99,5 +107,5 @@ Offene Punkte:
 
 1. ✅ FX-System + Funken + Feuerbälle — eigener Reiter „FX“ im Menü: `classicGraphics` (alles aus), `fxExplosions`, `fxSparks`, `fxAmount`
 2. ✅ Kondensstreifen (`fxContrails`) — Glow verschoben zu „Weitere Ideen“
-3. Hügellandschaft in Wänden (aufwendigster Teil: Polygon- und Block-Maps getrennt)
+3. ✅ Hügellandschaft in Wänden (`fxTerrain`, `fxTerrainMesh`), nur Polygonkarten
 4. Restliche Ideen nach Lust und Laune

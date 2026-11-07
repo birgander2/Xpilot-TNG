@@ -803,17 +803,24 @@ void Gui_paint_polygon(int i, int xoff, int yoff)
                 float ox = Screen_X(poly->bounds.x + xoff * Setup->width);
                 float oy = Screen_Y(poly->bounds.y + poly->bounds.h + yoff * Setup->height);
                 SDL3_Render_Textured_Polygon(pts, poly->num_points, tex, ox, oy, w, h);
+                /* light and shadow of the hills on top of the texture */
+                Fx_terrain_paint_textured(i, xoff, yoff);
                 did_fill = true;
             }
         }
         if (!did_fill) {
+            SDL_FColor base;
             if (fullColor) {
                 Uint32 rgb = style.color ? (Uint32)style.color : (Uint32)style.rgb;
                 if (!rgb) rgb = 0x4E7CFF;
                 SDL3_Fill_Polygon_RGB(pts, poly->num_points, rgb);
+                base = SDL3_Get_FColor_RGB(rgb);
             } else {
                 SDL3_Fill_Polygon(pts, poly->num_points, wallColor);
+                base = SDL3_Get_FColor(wallColor);
             }
+            /* hills over the plain fill; the fill still covers any sub-pixel seams */
+            Fx_terrain_paint(i, xoff, yoff, base);
             did_fill = true;
         }
     }

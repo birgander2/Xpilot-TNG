@@ -108,6 +108,8 @@ private:
         bool explosions = true;          // fxExplosions
         bool sparks = true;              // fxSparks
         bool contrails = true;           // fxContrails
+        bool terrain = true;             // fxTerrain: hill landscape in filled walls
+        bool terrain_mesh = true;        // fxTerrainMesh
         float amount = 1.0f;             // fxAmount, particle multiplier 0..2
     } fx_;
     std::vector<std::pair<std::string, std::string>> FxValues() const;
