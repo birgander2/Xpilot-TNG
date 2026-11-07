@@ -354,6 +354,7 @@ void ProfileEditor::Load(const std::string& stock_ships_path, bool keep_unsaved)
     fx_.mine_explosions = get_bool("fxMineExplosions", true);
     fx_.missile_trails = get_bool("fxMissileTrails", true);
     fx_.laser_glow = get_bool("fxLaserGlow", true);
+    fx_.hyperjump = get_bool("fxHyperjump", true);
     fx_.nuke_flash = get_bool("fxNukeFlash", true);
     fx_.screen_shake = get_bool("fxScreenShake", true);
     fx_.contrails = get_bool("fxContrails", true);
@@ -433,6 +434,7 @@ std::vector<std::pair<std::string, std::string>> ProfileEditor::FxValues() const
         {"fxMineExplosions", b(fx_.mine_explosions)},
         {"fxMissileTrails", b(fx_.missile_trails)},
         {"fxLaserGlow", b(fx_.laser_glow)},
+        {"fxHyperjump", b(fx_.hyperjump)},
         {"fxNukeFlash", b(fx_.nuke_flash)},
         {"fxScreenShake", b(fx_.screen_shake)},
         {"fxContrails", b(fx_.contrails)},
@@ -821,6 +823,10 @@ void ProfileEditor::RenderFx() {
     ImGui::Checkbox("Laser glow", &fx_.laser_glow);
     if (ImGui::IsItemHovered())
         ImGui::SetTooltip("Laser pulses as glowing beams with a bright core (xpilot.fxLaserGlow)");
+    ImGui::Checkbox("Hyperjump streaks", &fx_.hyperjump);
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Hyperjumping ships stretch into a light streak and shoot in on one\n"
+                          "where they come out (xpilot.fxHyperjump)");
     ImGui::Checkbox("Nuke flash", &fx_.nuke_flash);
     if (ImGui::IsItemHovered())
         ImGui::SetTooltip("Brief bright flash of the whole view when a nuke goes off in sight (xpilot.fxNukeFlash)");

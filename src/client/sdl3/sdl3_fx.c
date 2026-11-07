@@ -30,6 +30,7 @@ static bool   fxEngineFlame = true;
 static bool   fxMineExplosions = true;
 static bool   fxMissileTrails = true;
 static bool   fxLaserGlow = true;
+static bool   fxHyperjump = true;
 static bool   fxNukeFlash = true;
 static bool   fxScreenShake = true;
 static double fxAmount = 1.0;
@@ -70,6 +71,10 @@ static xp_option_t fx_options[] = {
     XP_BOOL_OPTION("fxLaserGlow", true, &fxLaserGlow, NULL,
                    XP_OPTFLAG_CONFIG_FX,
                    "Draw laser pulses as glowing beams with a bright core.\n"),
+    XP_BOOL_OPTION("fxHyperjump", true, &fxHyperjump, NULL,
+                   XP_OPTFLAG_CONFIG_FX,
+                   "Hyperjumps as light streaks: the ship stretches into a streak and\n"
+                   "is gone, and shoots in on a streak where it comes out.\n"),
     XP_BOOL_OPTION("fxNukeFlash", true, &fxNukeFlash, NULL,
                    XP_OPTFLAG_CONFIG_FX,
                    "Brief bright flash of the whole view when a nuke goes off in sight.\n"),
@@ -689,9 +694,12 @@ static void fx_spawn_sparks(float x, float y, float nx, float ny,
     }
 }
 
+static int fx_num_hj;
+
 static void fx_clear(void)
 {
     fx_num_parts = 0;
+    fx_num_hj = 0;
 }
 
 static void fx_update(float dt)
@@ -1070,6 +1078,78 @@ static void fx_accel_update(fx_track_t *t, float dx, float dy, long dl, int dir)
     t->thrust_valid = true;
 }
 
+/*
+ * Hyperjump: a ship is somewhere else from one frame to the next without
+ * blowing up. Own jumps are known from the hyperjump key; for others a
+ * jump away from a visible wormhole counts as a hyperjump.
+ */
+#define FX_MAX_HJ       16
+#define FX_HJ_PTS       24
+#define FX_HJ_OUT       0.22f   /* departure, seconds */
+#define FX_HJ_IN        1.3f    /* arrival incl. afterglow, seconds */
+
+typedef struct {
+    int     id;                         /* ship, the afterglow follows it */
+    float   x, y;                       /* world position */
+    float   hx, hy;                     /* heading, world (y up) */
+    float   px[FX_HJ_PTS], py[FX_HJ_PTS]; /* ship outline relative to x, y */
+    int     n;
+    bool    arrive;
+    double  t0;                         /* start, seconds */
+} fx_hj_t;
+
+static fx_hj_t fx_hj[FX_MAX_HJ];
+static double  fx_hj_key_t = -100.0;    /* own hyperjump key press, seconds */
+
+/* The hyperjump key was pressed (only counts with a hyperjump item left). */
+void Fx_hyperjump_key(void)
+{
+    if (numItems[ITEM_HYPERJUMP] > 0)
+        fx_hj_key_t = (double)SDL_GetTicksNS() / 1e9;
+}
+
+static bool fx_is_hyperjump(int id, float ox, float oy)
+{
+    if (self && self->id == id) {
+        double now = (double)SDL_GetTicksNS() / 1e9;
+        bool own = now - fx_hj_key_t < 1.5;
+        fx_hj_key_t = -100.0;
+        return own;
+    }
+    for (int i = 0; i < num_wormholes; i++) {
+        float dx = fx_wrap_dx((float)wormhole_ptr[i].x - ox);
+        float dy = fx_wrap_dy((float)wormhole_ptr[i].y - oy);
+        if (dx * dx + dy * dy < 90.0f * 90.0f)
+            return false;
+    }
+    return true;
+}
+
+static void fx_hj_add(int id, float x, float y, int dir, bool arrive)
+{
+    shipshape_t *ship = fx_ship_shape(id);
+    float ang = (float)dir * 2.0f * (float)M_PI / RES;
+    fx_hj_t *h;
+
+    if (!fxHyperjump || !fx_active() || fx_num_hj >= FX_MAX_HJ)
+        return;
+    h = &fx_hj[fx_num_hj++];
+    h->id = id;
+    h->x = x;
+    h->y = y;
+    h->hx = cosf(ang);
+    h->hy = sinf(ang);
+    h->n = 0;
+    for (int i = 0; ship && i < ship->num_points && i < FX_HJ_PTS; i++) {
+        position_t pt = Ship_get_point_position(ship, i, dir);
+        h->px[i] = (float)pt.x;
+        h->py[i] = (float)pt.y;
+        h->n++;
+    }
+    h->arrive = arrive;
+    h->t0 = (double)SDL_GetTicksNS() / 1e9;
+}
+
 static void fx_observe_ship(int id, int x, int y, int dir)
 {
     fx_track_t *t = NULL;
@@ -1105,6 +1185,10 @@ static void fx_observe_ship(int id, int x, int y, int dir)
 
     /* frame gap, server restart or teleport/wormhole: restart tracking */
     if (dl < 0 || dl > 4 || dx * dx + dy * dy > 120.0f * 120.0f * (float)(dl * dl)) {
+        if (dl >= 1 && dl <= 4 && fx_is_hyperjump(id, t->x, t->y)) {
+            fx_hj_add(id, t->x, t->y, t->dir, false);
+            fx_hj_add(id, (float)x, (float)y, dir, true);
+        }
         t->has_vel = false;
         t->trail.count = 0;
         t->trail_k = 0.0f;
@@ -2093,9 +2177,10 @@ void Fx_paint_missile(int x, int y, int len, int dir, float sx, float sy)
  * Soft capsule from a to b (screen pixels) with the glow cell's
  * cross-section: a stretched middle plus two half-dot caps, so the
  * ends round off without the overlap brightening them.
- * w: half-width in screen pixels.
+ * w: half-width in screen pixels; color fades from ca (a) to cb (b).
  */
-static void fx_capsule(float ax, float ay, float bx, float by, float w, SDL_FColor col)
+static void fx_capsule(float ax, float ay, float bx, float by, float w,
+                       SDL_FColor ca, SDL_FColor cb)
 {
     const float iw = 1.0f / (float)(FX_CELL * FX_ATLAS_COLS);
     const float ih = 1.0f / (float)(FX_CELL * FX_ATLAS_ROWS);
@@ -2127,7 +2212,7 @@ static void fx_capsule(float ax, float ay, float bx, float by, float w, SDL_FCol
         v[2 * i].tex_coord = (SDL_FPoint){ uu[i], vt };
         v[2 * i + 1].position = (SDL_FPoint){ px[i] - nx, py[i] - ny };
         v[2 * i + 1].tex_coord = (SDL_FPoint){ uu[i], vb };
-        v[2 * i].color = v[2 * i + 1].color = col;
+        v[2 * i].color = v[2 * i + 1].color = i < 2 ? ca : cb;
     }
     for (int i = 0; i < 3; i++) {
         int b = fx_nv + 2 * i;
@@ -2171,11 +2256,148 @@ bool Fx_paint_laser(int color, float x1, float y1, float x2, float y2)
 
     fx_nv = 0;
     fx_ni = 0;
-    fx_capsule(x1, y1, x2, y2, 8.0f * sc, halo);
-    fx_capsule(x1, y1, x2, y2, 2.2f * sc, core);
-    fx_capsule(x1, y1, x2, y2, 1.1f * sc, (SDL_FColor){ 1.0f, 1.0f, 1.0f, 0.55f });
+    SDL_FColor white = { 1.0f, 1.0f, 1.0f, 0.55f };
+    fx_capsule(x1, y1, x2, y2, 8.0f * sc, halo, halo);
+    fx_capsule(x1, y1, x2, y2, 2.2f * sc, core, core);
+    fx_capsule(x1, y1, x2, y2, 1.1f * sc, white, white);
     fx_flush(SDL_BLENDMODE_ADD);
     return true;
+}
+
+static float fx_smooth01(float x)
+{
+    x = fx_clamp01(x);
+    return x * x * (3.0f - 2.0f * x);
+}
+
+/*
+ * Ship outline as a glowing line, stretched by st: forward (nose pulled
+ * out) or, with back, the whole ship pulled out behind its fixed nose.
+ */
+static void fx_hj_outline(const fx_hj_t *h, float sx, float sy, float scale,
+                          float st, float a, float wide, bool back)
+{
+    SDL_FPoint pts[FX_HJ_PTS];
+
+    float nose = -1e9f;
+
+    if (h->n < 2 || a <= 0.0f)
+        return;
+    for (int i = 0; i < h->n; i++)
+        nose = fmaxf(nose, h->px[i] * h->hx + h->py[i] * h->hy);
+    for (int i = 0; i < h->n; i++) {
+        float along = h->px[i] * h->hx + h->py[i] * h->hy;
+        float qx = h->px[i] - along * h->hx, qy = h->py[i] - along * h->hy;
+        if (back)
+            along = nose + (along - nose) * st;     /* pulled out behind the nose */
+        else if (along > 0.0f)
+            along *= st;
+        pts[i].x = sx + (qx + along * h->hx) * scale;
+        pts[i].y = sy - (qy + along * h->hy) * scale;
+    }
+    Fx_draw_polyline_glow(pts, h->n, true, (SDL_FColor){ 0.45f, 0.75f, 1.0f, 0.8f * a },
+                          3.0f * wide * scale);
+    Fx_draw_polyline_glow(pts, h->n, true, (SDL_FColor){ 1.0f, 1.0f, 1.0f, a },
+                          1.2f * scale);
+}
+
+/* Light streak along the heading from back (dim) to front (bright), screen offsets. */
+static void fx_hj_streak(float sx, float sy, float hx, float hy, float back, float front,
+                         float scale, float a)
+{
+    float ax = sx - hx * back * scale, ay = sy + hy * back * scale;
+    float bx = sx + hx * front * scale, by = sy - hy * front * scale;
+    SDL_FColor c0 = { 0.45f, 0.75f, 1.0f, 0.1f * a }, c1 = { 0.45f, 0.75f, 1.0f, 0.9f * a };
+    SDL_FColor w0 = { 1.0f, 1.0f, 1.0f, 0.1f * a }, w1 = { 1.0f, 1.0f, 1.0f, 0.9f * a };
+
+    fx_capsule(ax, ay, bx, by, 6.0f * scale, c0, c1);
+    fx_capsule(ax, ay, bx, by, 2.0f * scale, w0, w1);
+}
+
+/* Arrival: follow the ship so the afterglow stays on it. */
+static void fx_hj_follow(fx_hj_t *h)
+{
+    fx_track_t *t = fx_track_by_id(h->id);
+    shipshape_t *ship;
+
+    if (!t || loops - t->loop > 4 || (ship = fx_ship_shape(h->id)) == NULL)
+        return;
+    h->x = t->x;
+    h->y = t->y;
+    h->n = 0;
+    for (int i = 0; i < ship->num_points && i < FX_HJ_PTS; i++) {
+        position_t pt = Ship_get_point_position(ship, i, t->dir);
+        h->px[i] = (float)pt.x;
+        h->py[i] = (float)pt.y;
+        h->n++;
+    }
+}
+
+static void fx_hj_render(float scale, double now)
+{
+    int i = 0;
+
+    while (i < fx_num_hj) {
+        fx_hj_t *h = &fx_hj[i];
+        float t = (float)(now - h->t0), dx, dy;
+
+        if (t > (h->arrive ? FX_HJ_IN : FX_HJ_OUT)) {
+            fx_hj[i] = fx_hj[--fx_num_hj];
+            continue;
+        }
+        i++;
+        if (t < 0.0f)
+            t = 0.0f;
+        if (h->arrive)
+            fx_hj_follow(h);
+        fx_view_offset(h->x, h->y, &dx, &dy);
+        float sx = (float)PLAYFIELD_X + (dx + (float)ext_view_width * 0.5f) * scale;
+        float sy = ((float)ext_view_height * 0.5f - dy) * scale;
+        if (fabsf(dx) > (float)ext_view_width * 0.5f + 200.0f
+            || fabsf(dy) > (float)ext_view_height * 0.5f + 200.0f)
+            continue;
+
+        if (!h->arrive) {
+            /* stretches into a streak along the heading and is gone */
+            float st = 1.0f + 9.0f * fx_smooth01(t / 0.12f);
+            float a = 1.0f - fx_smooth01((t - 0.08f) / 0.12f);
+            fx_hj_outline(h, sx, sy, scale, st > 3.0f ? 3.0f : st, a, 1.0f, false);
+            fx_nv = 0;
+            fx_ni = 0;
+            if (a > 0.0f)
+                fx_hj_streak(sx, sy, h->hx, h->hy, 9.0f, 14.0f * st, scale, a);
+            if (t > 0.1f) {
+                float f = expf(-(t - 0.14f) * (t - 0.14f) / 0.003f);
+                float fx = sx + h->hx * 140.0f * scale, fy = sy - h->hy * 140.0f * scale;
+                fx_quad(fx, fy, 14.0f * scale, 0.0f, 0.0f, 14.0f * scale, CELL_GLOW,
+                        (SDL_FColor){ 0.45f, 0.75f, 1.0f, f });
+                fx_quad(fx, fy, 5.0f * scale, 0.0f, 0.0f, 5.0f * scale, CELL_GLOW,
+                        (SDL_FColor){ 1.0f, 1.0f, 1.0f, f });
+            }
+            fx_flush(SDL_BLENDMODE_ADD);
+        } else {
+            /*
+             * shoots in on a long streak from behind that shrinks into the
+             * stretched ship, a flash on arrival, then the outline glows
+             * on for a second
+             */
+            float k = fx_smooth01(t / 0.25f);
+            float a = 1.0f - fx_smooth01((t - 0.25f) / 1.0f);
+            fx_nv = 0;
+            fx_ni = 0;
+            if (k < 1.0f)
+                fx_hj_streak(sx, sy, h->hx, h->hy, 360.0f * (1.0f - k), 14.0f, scale, 1.0f);
+            float f = expf(-(t - 0.22f) * (t - 0.22f) / 0.004f);
+            float g = 0.5f * a * fx_smooth01(t / 0.15f) + 0.6f * f;
+            fx_quad(sx, sy, 30.0f * scale, 0.0f, 0.0f, 30.0f * scale, CELL_GLOW,
+                    (SDL_FColor){ 0.45f, 0.75f, 1.0f, fx_clamp01(g) });
+            fx_quad(sx, sy, 7.0f * scale, 0.0f, 0.0f, 7.0f * scale, CELL_GLOW,
+                    (SDL_FColor){ 1.0f, 1.0f, 1.0f, 0.8f * f });
+            fx_flush(SDL_BLENDMODE_ADD);
+            fx_hj_outline(h, sx, sy, scale, 1.0f + 5.0f * (1.0f - k), a, 2.2f, true);
+            fx_hj_outline(h, sx, sy, scale, 1.0f + 5.0f * (1.0f - k), a, 1.0f, true);
+        }
+    }
 }
 
 void Fx_render(void)
@@ -2209,6 +2431,10 @@ void Fx_render(void)
                     fx_emit_trail(&fx_tracks[i].trail, side, scale, (double)now / 1e9);
         fx_flush(SDL_BLENDMODE_ADD);
     }
+
+    /* hyperjump streaks, additive */
+    if (fx_num_hj > 0)
+        fx_hj_render(scale, (double)now / 1e9);
 
     if (fx_num_parts == 0)
         return;

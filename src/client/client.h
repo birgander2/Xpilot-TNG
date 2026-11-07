@@ -742,7 +742,8 @@ int Key_init(void);
 int Key_update(void);
 void Key_turn_tick(void);
 bool Key_thrust_held(void);
-void Fx_audio_event(int type, int volume);   /* GUI: visual effects for sounds */
+void Fx_audio_event(int type, int volume);
+void Fx_hyperjump_key(void);                 /* GUI: own hyperjump key pressed */   /* GUI: visual effects for sounds */
 void Key_turn_frame(long loops);
 void Key_clear_counts(void);
 bool Key_press(keys_t key);

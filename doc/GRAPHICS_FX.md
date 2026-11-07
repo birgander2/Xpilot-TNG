@@ -119,7 +119,16 @@ Schild und Zustände:
    Stoßerkennung; eigenes Schiff ohne Schild exakt über den sinkenden Panzerungszähler.
    Ursprüngliche Idee: Energieblase, weicher Rand mit leichtem Schimmern, blitzt bei Treffern oder
    Wandkontakt kurz auf. (Erweitert „Schild-Schimmern“ unter „Weitere Ideen“.)
-6. **Erscheinen / Hyperjump**: Lichtwirbel oder Implosion beim Auftauchen und Springen.
+6. ✅ **Hyperjump** → Option `fxHyperjump` (Streckeffekt, Variante B von drei verglichenen:
+   Implosion, Streckeffekt, Lichtwirbel). Absprung: das Schiff zieht sich in Flugrichtung zu
+   einem Lichtstreifen lang (Umriss bis 3×, Streifen ~140 px) und ist weg, vorne ein kurzer
+   Blitz (0,22 s). Ankunft: ein langer Streifen (~360 px) schießt von hinten heran und zieht
+   sich in 0,25 s ins bis zu 6× gestreckte Schiff zusammen, Lichtblitz beim Ankommen, danach
+   glüht der Umriss 1 s nach (folgt dem Schiff). Erkennung ohne Protokoll: ein Schiff ist von
+   einem Frame zum nächsten weit woanders, ohne zu explodieren. Eigenes Schiff nur nach
+   gedrückter Hyperjump-Taste (mit Item), fremde Schiffe nur, wenn kein sichtbares Wurmloch
+   an der alten Position ist. Den eigenen Absprung sieht man kaum, weil die Ansicht mitspringt.
+   Offen: Erscheinen nach Respawn, Wurmloch-Strudel (Lichtwirbel, Variante C).
 7. ✅ **Wenig Treibstoff**: die Triebwerksflamme stottert (nur eigenes Schiff – fremden Treibstoff
    sendet der Server nicht). Ab `fuelWarning` zufällige Aussetzer über 1–4 Frames, häufiger und
    länger je leerer der Tank, ungleichmäßige Länge; bei vielen Aussetzern Fehlzündungen an der
@@ -191,7 +200,7 @@ Vorschlag für ein erstes Paket: gefüllter Rumpf mit Facetten (1+2) und Triebwe
   (geglättete Geschwindigkeit), nicht der Nase. Keine harten Schwellen.
   Messung Bots: killing 95 % < 361 px/s (max 474), tourmination max 320 px/s.
 - **Parallax-Sternenfeld** im Hintergrund (mehrere Ebenen).
-- **Wurmloch-Strudel**, **Hyperjump-Streckeffekt**, 
+- **Wurmloch-Strudel** (Lichtwirbel-Variante aus dem Hyperjump-Vergleich), ✅ **Hyperjump-Streckeffekt**, 
 - **Ball-Tether-Glühen**.
 - **Positionslichter** (aus „Schiffe aufhübschen“ verschoben): rot/grün an den Flügelspitzen
   (`markingLights`) mit Glow-Sprite statt Quadrat + Kreuz. Verglichene Varianten: Glow-Punkt

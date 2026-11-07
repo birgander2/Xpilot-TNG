@@ -667,6 +667,10 @@ bool Key_press(keys_t key)
     case KEY_VOICE_ALL:
 	Voice_ptt(VOICE_CHANNEL_ALL, true);
 	return false;	/* server doesn't need to know */
+    case KEY_HYPERJUMP:
+	Fx_hyperjump_key();
+	break;
+
     case KEY_YES:
 	return Key_press_yes();
     case KEY_NO:
