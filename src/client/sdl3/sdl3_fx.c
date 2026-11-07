@@ -32,6 +32,7 @@ static bool   fxMissileTrails = true;
 static bool   fxLaserGlow = true;
 static bool   fxHyperjump = true;
 static bool   fxWormholes = true;
+static bool   fxTether = true;
 static bool   fxNukeFlash = true;
 static bool   fxScreenShake = true;
 static double fxAmount = 1.0;
@@ -80,6 +81,10 @@ static xp_option_t fx_options[] = {
                    XP_OPTFLAG_CONFIG_FX,
                    "Wormholes as glowing tunnels, and a swirling vortex when a ship\n"
                    "goes through.\n"),
+    XP_BOOL_OPTION("fxTether", true, &fxTether, NULL,
+                   XP_OPTFLAG_CONFIG_FX,
+                   "Ball connector as a softly shimmering glowing rope that turns red\n"
+                   "the harder it is stretched.\n"),
     XP_BOOL_OPTION("fxNukeFlash", true, &fxNukeFlash, NULL,
                    XP_OPTFLAG_CONFIG_FX,
                    "Brief bright flash of the whole view when a nuke goes off in sight.\n"),
@@ -2475,6 +2480,64 @@ static void fx_hj_follow(fx_hj_t *h)
         h->py[i] = (float)pt.y;
         h->n++;
     }
+}
+
+/*
+ * Ball connector as a glowing rope: a matt blue glow with a thin light
+ * core, drawn in short pieces that tremble a tiny bit, so the rope
+ * shimmers. Stretched beyond its rest length (ballConnectorLength,
+ * 120 by default; the client is not told) it turns red, fully at the
+ * maximum stretch (maxBallConnectorRatio 0.3). ball: (x1, y1) is the
+ * ball, which gets a soft halo. Screen coordinates; returns false when
+ * the classic line should be drawn instead.
+ */
+bool Fx_paint_tether(float x1, float y1, float x2, float y2, bool ball)
+{
+    const float rest = 120.0f, maxr = 0.3f;
+    float sc = clData.fscale;
+    float dx = x2 - x1, dy = y2 - y1, len = sqrtf(dx * dx + dy * dy);
+    double now = (double)SDL_GetTicksNS() / 1e9;
+
+    if (!fxTether || !fx_active() || !fx_atlas || !tng_renderer || len < 1.0f)
+        return false;
+
+    float st = fx_clamp01((len / sc - rest) / (rest * maxr));
+    SDL_FColor blue = { 0x4E / 255.0f, 0x7C / 255.0f, 1.0f, 1.0f };
+    SDL_FColor red = { 1.0f, 0.23f, 0.15f, 1.0f };
+    SDL_FColor c = {
+        blue.r + (red.r - blue.r) * st, blue.g + (red.g - blue.g) * st,
+        blue.b + (red.b - blue.b) * st, 1.0f
+    };
+    SDL_FColor halo = { c.r, c.g, c.b, 0.24f };
+    SDL_FColor core = { 0.5f + 0.5f * c.r, 0.5f + 0.5f * c.g, 0.5f + 0.5f * c.b, 0.45f };
+    float ux = dx / len, uy = dy / len;
+    /* leave the ball's rim free */
+    float ax = x1 + ux * (ball ? 10.0f * sc : 0.0f), ay = y1 + uy * (ball ? 10.0f * sc : 0.0f);
+    float bx = x2, by = y2;
+    int n = (int)(len / (6.0f * sc));
+    float ph = (float)fmod(now * 90.0, 2.0 * M_PI);
+    float px = ax, py = ay;
+
+    if (n < 2)
+        n = 2;
+    if (n > 64)
+        n = 64;
+    fx_nv = 0;
+    fx_ni = 0;
+    if (ball)
+        fx_quad(x1, y1, 31.0f * sc, 0.0f, 0.0f, 31.0f * sc, CELL_GLOW,
+                (SDL_FColor){ c.r, c.g, c.b, 0.3f });
+    for (int i = 1; i <= n; i++) {
+        float u = (float)i / (float)n;
+        float amp = 0.25f * sc * sinf(u * (float)M_PI) * sinf(ph + u * 40.0f);
+        float x = ax + (bx - ax) * u - uy * amp, y = ay + (by - ay) * u + ux * amp;
+        fx_capsule(px, py, x, y, 9.0f * sc, halo, halo);
+        fx_capsule(px, py, x, y, 2.0f * sc, core, core);
+        px = x;
+        py = y;
+    }
+    fx_flush(SDL_BLENDMODE_ADD);
+    return true;
 }
 
 /* ------------------------------------------------------------------ */

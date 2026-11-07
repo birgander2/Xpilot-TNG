@@ -219,7 +219,12 @@ Vorschlag für ein erstes Paket: gefüllter Rumpf mit Facetten (1+2) und Triebwe
   Messung Bots: killing 95 % < 361 px/s (max 474), tourmination max 320 px/s.
 - **Parallax-Sternenfeld** im Hintergrund (mehrere Ebenen).
 - ✅ **Wurmloch-Strudel** (siehe 6a), ✅ **Hyperjump-Streckeffekt**, 
-- **Ball-Tether-Glühen**.
+- ✅ **Ball-Tether-Glühen** → Option `fxTether`: das Ballseil als mattes blaues Leuchtseil mit
+  hellem Kern, in ~6-px-Stücken, die minimal zittern (leichtes Flimmern); der Ball hat einen
+  schwachen Lichthof. Über die Ruhelänge gedehnt (`ballConnectorLength`, Standard 120 – der
+  Server schickt sie nicht) verfärbt es sich nach Rot, voll bei der maximalen Dehnung
+  (`maxBallConnectorRatio` 0,3). Verglichen: Leuchtseil, Spannung (dünner/heller/zitternd),
+  Energiefluss (Lichtperlen). Traktorstrahlen bleiben gestrichelt.
 - **Positionslichter** (aus „Schiffe aufhübschen“ verschoben): rot/grün an den Flügelspitzen
   (`markingLights`) mit Glow-Sprite statt Quadrat + Kreuz. Verglichene Varianten: Glow-Punkt
   (sanftes Auf-/Abblenden), Glow + Kreuzstrahl (Linsenreflex, behält das Kreuz-Motiv),
