@@ -138,15 +138,33 @@ Vorschlag für ein erstes Paket: gefüllter Rumpf mit Facetten (1+2) und Triebwe
   MOD-Potenzkurve c⁶, Downsample + Kawase-Blur, additiv zurück) war technisch sauber, aber der
   Effekt auf 1-px-Vektorlinien blieb minimal – wieder entfernt (siehe Git-Historie, Commit 8d01fc9).
   Lohnt sich eher mit echten Shadern oder dickeren Linien.
-  **Minen Explosionen** Minen explodieren mit speziellem Feuerball, Clusterminen mit "Praxis-Effekt" (scheibenförmig), Nuklearminen auch mit speziellem Effekt, alle je nach Explosionsstärke kleiner oder größer
+- ✅ **Minen Explosionen** Minen explodieren mit speziellem Feuerball, Clusterminen mit einem anderen Effekt, Nuklearminen auch mit speziellem Effekt, alle je nach Explosionsstärke kleiner oder größer
+  → umgesetzt (`fxMineExplosions`, `fxNukeFlash`, `fxScreenShake`):
+  - Erkennung: Mine verschwindet im Sichtbereich (Abgleich über Position). Im selben Frame:
+    Trümmer im Umkreis, hochgerechnet mit `sparkProb` (normal ~110–140, nuklear > 400),
+    Schüsse im Umkreis (Cluster ~27, nuklearer Cluster > 100). Stärke = Anteil an einer vollen
+    Mine ^0,7 (aufgeteilte Minen: 1/2 → 0,62, 1/3 → 0,46, 1/4 → 0,38) skaliert Größe, Menge,
+    Reichweite; kleine Explosionen sind zusätzlich kürzer.
+  - Normal: kompakter, heller Feuerball, Druckwelle, Funkenkranz, kurz.
+  - Cluster: wie normal, aber hell bläulich (Feuer weiß → hellblau → tiefblau, blaue Glut und
+    Funken). Ein erster Versuch mit flachem „Praxis“-Ring gefiel nicht.
+  - Nuklear: greller Blitz über die ganze Sicht (abschaltbar), große Druckwelle, aufsteigender
+    Feuerball, Atompilz aus angeleuchtetem Rauch (Stiel + Kappe). Nuklearer Cluster: Pilz plus
+    große blaue Explosion.
+  - Bildschirmwackeln bei jeder Nuke auf der ganzen Map, für alle gleich stark: ausgelöst über
+    den Nuke-Sound, den der Server allen schickt (Serveroption `sound`), sonst über die
+    Erkennung im Bild; pro Nuke einmal. Nur die Kamera wackelt, die Seitenleiste nicht.
+  - Raketen/Torpedos: später (gleiche Erkennung).
 - **Phosphor-Nachleuchten (Vektormonitor-Modus)**: in Textur rendern, vorigen Frame nur abdunkeln
   statt löschen → Asteroids-/Vectrex-Look. Als Option.
 - **Dynamisches Licht**: Explosionen, Schubdüse und Laser hellen nahe Wände kurz auf
   (radialer Gradient auf der Wandfüllung).
 - **Brandspuren (Decals)**: dunkle Flecken am Boden, die langsam verblassen.
 - **Bildschirmwackeln**: bei eigenem Treffer oder naher Explosion, dezent, abschaltbar.
-- **Bessere Schubflamme**: flackernder Kegel mit Hitzefarbverlauf statt nur Debris-Punkten.
-- **Schild-Schimmern**: Hexagonmuster, das beim Treffer aufblitzt.
+- ✅ **Bessere Schubflamme**: flackernder Kegel mit Hitzefarbverlauf statt nur Debris-Punkten.
+  → umgesetzt als Triebwerksflamme (`fxEngineFlame`), siehe „Schiffe aufhübschen“.
+- ✅ **Schild-Schimmern**: Hexagonmuster, das beim Treffer aufblitzt.
+  → umgesetzt als Hexagon-Schild (`fxShield`), siehe „Schiffe aufhübschen“.
 - **Raketen-Rauchfahnen**, **Mündungsfeuer** an Kanonen, **Laser-Glow**.
 - **Parallax-Sternenfeld** im Hintergrund (mehrere Ebenen).
 - **Wurmloch-Strudel**, **Hyperjump-Streckeffekt**, **Ball-Tether-Glühen**.

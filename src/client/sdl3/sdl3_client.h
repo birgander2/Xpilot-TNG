@@ -129,6 +129,8 @@ int   Fx_init(void);
 void  Fx_cleanup(void);
 void  Fx_frame_begin(void);
 void  Fx_observe_spark(int x, int y);
+void  Fx_shake_offset(int *dx, int *dy);
+void  Fx_render_overlay(void);
 void  Fx_observe_shot(int x, int y);
 void  Fx_observe_missile(int x, int y);
 float Fx_ship_hit_flash(int id);

@@ -105,6 +105,15 @@ void Paint_frame(void)
     /* 1. Setup camera world.x and world.y tracking */
     Paint_frame_start();
     Fx_frame_begin();
+    {
+        /* view shake (nukes): move the camera, the sidebar stays put */
+        int sdx, sdy;
+        Fx_shake_offset(&sdx, &sdy);
+        world.x += sdx;
+        world.y += sdy;
+        realWorld.x += sdx;
+        realWorld.y += sdy;
+    }
 
     /* 2. Clear entire screen to black */
     SDL_SetRenderClipRect(tng_renderer, NULL);
@@ -152,6 +161,7 @@ void Paint_frame(void)
         Segment_start();
 
         Paint_ships();
+        Fx_render_overlay();    /* nuke flash over the world, below the HUD */
         Paint_meters();
         Paint_HUD();
         Paint_recording();

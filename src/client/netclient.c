@@ -2510,6 +2510,7 @@ int Receive_audio(void)
 
     if ((n = Packet_scanf(&rbuf, "%c%c%c", &pkt, &type, &vol)) <= 0)
 	return n;
+    Fx_audio_event(type, vol);      /* e.g. a nuke anywhere shakes the view */
 #ifdef SOUND
     if ((n = Handle_audio(type, vol)) == -1)
 	return -1;

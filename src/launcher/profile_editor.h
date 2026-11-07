@@ -107,6 +107,9 @@ private:
         bool classic = false;            // classicGraphics: all modern effects off
         bool explosions = true;          // fxExplosions
         bool sparks = true;              // fxSparks
+        bool mine_explosions = true;     // fxMineExplosions
+        bool nuke_flash = true;          // fxNukeFlash
+        bool screen_shake = true;        // fxScreenShake
         bool contrails = true;           // fxContrails
         bool terrain = true;             // fxTerrain: hill landscape in filled walls
         bool terrain_mesh = true;        // fxTerrainMesh

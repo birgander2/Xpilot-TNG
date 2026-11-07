@@ -27,6 +27,9 @@ static bool   fxExplosions = true;
 static bool   fxSparks = true;
 static bool   fxContrails = true;
 static bool   fxEngineFlame = true;
+static bool   fxMineExplosions = true;
+static bool   fxNukeFlash = true;
+static bool   fxScreenShake = true;
 static double fxAmount = 1.0;
 
 static void fx_clear(void);
@@ -53,6 +56,16 @@ static xp_option_t fx_options[] = {
     XP_BOOL_OPTION("fxEngineFlame", true, &fxEngineFlame, NULL,
                    XP_OPTFLAG_CONFIG_FX,
                    "Draw a flickering engine flame while ships thrust.\n"),
+    XP_BOOL_OPTION("fxMineExplosions", true, &fxMineExplosions, NULL,
+                   XP_OPTFLAG_CONFIG_FX,
+                   "Mine explosions: fireball, bright blue for cluster mines,\n"
+                   "mushroom cloud for nuclear mines, sized by their strength.\n"),
+    XP_BOOL_OPTION("fxNukeFlash", true, &fxNukeFlash, NULL,
+                   XP_OPTFLAG_CONFIG_FX,
+                   "Brief bright flash of the whole view when a nuke goes off in sight.\n"),
+    XP_BOOL_OPTION("fxScreenShake", true, &fxScreenShake, NULL,
+                   XP_OPTFLAG_CONFIG_FX,
+                   "Shake the view when a nuke goes off anywhere on the map.\n"),
     XP_BOOL_OPTION("fxContrails", true, &fxContrails, NULL,
                    XP_OPTFLAG_CONFIG_FX,
                    "Draw short glowing contrails when ships turn hard at speed.\n"),
@@ -163,6 +176,11 @@ static inline float fx_clamp01(float v)
     return v < 0.0f ? 0.0f : (v > 1.0f ? 1.0f : v);
 }
 
+static inline float fx_clamp(float v, float lo, float hi)
+{
+    return v < lo ? lo : (v > hi ? hi : v);
+}
+
 static inline float fx_smooth(float v)
 {
     v = fx_clamp01(v);
@@ -261,6 +279,8 @@ void Fx_cleanup(void)
 /* Particles                                                          */
 /* ------------------------------------------------------------------ */
 
+#define FX_BLUE 1           /* particle color variant */
+
 typedef enum {
     FXK_FIRE,
     FXK_SMOKE,
@@ -268,7 +288,8 @@ typedef enum {
     FXK_RING,
     FXK_SPARK,
     FXK_EMBER,
-    FXK_PUFF        /* light exhaust smoke of a sputtering engine */
+    FXK_PUFF,       /* light exhaust smoke of a sputtering engine */
+    FXK_CLOUD       /* fire-lit smoke of a mushroom cloud */
 } fx_kind_t;
 
 typedef struct {
@@ -281,6 +302,7 @@ typedef struct {
     float   gravity;        /* world pixels per second^2 (negative = down) */
     float   seed;           /* per-particle random 0..1 */
     uint8_t kind, cell;
+    uint8_t variant;        /* FX_BLUE: bright bluish colors (cluster mines) */
 } fx_particle_t;
 
 #define FX_MAX_PARTICLES 3000
@@ -424,6 +446,187 @@ static void fx_spawn_explosion(float x, float y, float vx, float vy)
  * obstacle, (tx, ty): sliding velocity along the surface (px/s),
  * strength: impact speed in px/s.
  */
+/* ---- mine explosions (s: strength, 1 = a normal mine) ---- */
+
+/*
+ * Mine: a short, hard burst - flash, shock wave, fireball, sparks, embers.
+ * variant FX_BLUE makes it bright bluish (cluster mines).
+ */
+static void fx_spawn_mine_burst(float x, float y, float s, uint8_t variant)
+{
+    int first = fx_num_parts;
+    fx_particle_t *p;
+    float dx, dy;
+
+    if ((p = fx_new(FXK_FLASH, x, y)) != NULL) {
+        p->life = 0.12f;
+        p->size0 = 45.0f * s;
+        p->size1 = 70.0f * s;
+        p->cell = CELL_GLOW;
+        p->variant = variant;
+    }
+    if ((p = fx_new(FXK_RING, x, y)) != NULL) {
+        p->life = 0.30f;
+        p->size0 = 10.0f * s;
+        p->size1 = 130.0f * s;
+        p->cell = CELL_RING;
+        p->variant = variant;
+    }
+    for (int i = 0, n = fx_count(14.0f * s); i < n; i++) {
+        float sp = fx_range(30.0f, 130.0f) * s, off = fx_range(0.0f, 8.0f) * s;
+        fx_random_dir(&dx, &dy);
+        if ((p = fx_new(FXK_FIRE, x + dx * off, y + dy * off)) == NULL)
+            break;
+        p->vx = dx * sp;
+        p->vy = dy * sp;
+        p->life = fx_range(0.3f, 0.55f);
+        p->size0 = fx_range(8.0f, 14.0f) * s;
+        p->size1 = fx_range(26.0f, 40.0f) * s;
+        p->rot = fx_range(0.0f, 6.283f);
+        p->vrot = fx_range(-2.0f, 2.0f);
+        p->drag = 3.0f;
+        p->gravity = 15.0f;
+        p->cell = (uint8_t)(CELL_FIRE0 + fx_rand_int(4));
+        p->variant = variant;
+    }
+    for (int i = 0, n = fx_count(36.0f * s); i < n; i++) {
+        float sp = fx_range(200.0f, 520.0f) * s;
+        fx_random_dir(&dx, &dy);
+        if ((p = fx_new(FXK_SPARK, x, y)) == NULL)
+            break;
+        p->vx = dx * sp;
+        p->vy = dy * sp;
+        p->life = fx_range(0.2f, 0.5f);
+        p->size0 = fx_range(1.4f, 2.2f);
+        p->drag = 3.0f;
+        p->gravity = -60.0f;
+        p->cell = CELL_GLOW;
+        p->variant = variant;
+    }
+    for (int i = 0, n = fx_count(16.0f * s); i < n; i++) {
+        float sp = fx_range(60.0f, 220.0f) * s;
+        fx_random_dir(&dx, &dy);
+        if ((p = fx_new(FXK_EMBER, x, y)) == NULL)
+            break;
+        p->vx = dx * sp;
+        p->vy = dy * sp;
+        p->life = fx_range(0.5f, 1.2f);
+        p->size0 = fx_range(2.0f, 3.2f);
+        p->drag = 1.6f;
+        p->gravity = -40.0f;
+        p->cell = CELL_GLOW;
+        p->variant = variant;
+    }
+    for (int i = 0; i < 4; i++) {
+        fx_random_dir(&dx, &dy);
+        if ((p = fx_new(FXK_SMOKE, x + dx * 6.0f, y + dy * 6.0f)) == NULL)
+            break;
+        p->vx = dx * 25.0f;
+        p->vy = dy * 25.0f;
+        p->age = -fx_range(0.1f, 0.2f);
+        p->life = fx_range(0.8f, 1.2f);
+        p->size0 = 14.0f * s;
+        p->size1 = 40.0f * s;
+        p->drag = 1.2f;
+        p->gravity = 8.0f;
+        p->cell = (uint8_t)(CELL_SMOKE0 + (i & 1));
+    }
+
+    /* small (split) mines are over sooner, too */
+    float lf = 0.6f + 0.4f * fx_clamp(s, 0.0f, 1.0f);
+    for (int i = first; i < fx_num_parts; i++) {
+        fx_parts[i].life *= lf;
+        fx_parts[i].age *= lf;          /* delays (negative ages) as well */
+    }
+}
+
+/* Nuclear: blinding flash, rising fireball, mushroom cloud, big shock wave. */
+static Uint64 fx_flash_ns;          /* start of the nuke flash, 0 = none */
+static float  fx_flash_s;
+
+static void fx_spawn_nuke(float x, float y, float s)
+{
+    const float rise = 75.0f * s;   /* fireball rise speed */
+    fx_particle_t *p;
+    float dx, dy;
+
+    if (fxNukeFlash) {
+        fx_flash_ns = SDL_GetTicksNS();
+        fx_flash_s = s;
+    }
+    if ((p = fx_new(FXK_FLASH, x, y)) != NULL) {
+        p->life = 0.35f;
+        p->size0 = 110.0f * s;
+        p->size1 = 170.0f * s;
+        p->cell = CELL_GLOW;
+    }
+    if ((p = fx_new(FXK_RING, x, y)) != NULL) {
+        p->life = 1.1f;
+        p->size0 = 20.0f * s;
+        p->size1 = 420.0f * s;
+        p->cell = CELL_RING;
+    }
+    for (int i = 0, n = fx_count(20.0f * s); i < n; i++) {      /* fireball, rising as one */
+        float off = fx_range(0.0f, 20.0f) * s;
+        fx_random_dir(&dx, &dy);
+        if ((p = fx_new(FXK_FIRE, x + dx * off, y + dy * off)) == NULL)
+            break;
+        p->vx = dx * fx_range(8.0f, 30.0f) * s;
+        p->vy = dy * fx_range(8.0f, 30.0f) * s + rise;
+        p->life = fx_range(1.6f, 2.4f);
+        p->size0 = fx_range(20.0f, 30.0f) * s;
+        p->size1 = fx_range(60.0f, 85.0f) * s;
+        p->rot = fx_range(0.0f, 6.283f);
+        p->vrot = fx_range(-0.8f, 0.8f);
+        p->drag = 0.4f;
+        p->cell = (uint8_t)(CELL_FIRE0 + fx_rand_int(4));
+    }
+    int stem = fx_count(18.0f * s);
+    for (int i = 0; i < stem; i++) {     /* stem: puffs released one after another */
+        if ((p = fx_new(FXK_CLOUD, x + fx_range(-6.0f, 6.0f) * s, y)) == NULL)
+            break;
+        p->vx = fx_range(-6.0f, 6.0f) * s;
+        p->vy = rise * fx_range(0.8f, 1.0f);
+        p->age = -(0.1f + 1.3f * (float)i / (float)stem);
+        p->life = fx_range(2.2f, 2.8f);
+        p->size0 = 14.0f * s;
+        p->size1 = fx_range(26.0f, 34.0f) * s;
+        p->drag = 0.2f;
+        p->rot = fx_range(0.0f, 6.283f);
+        p->vrot = fx_range(-0.5f, 0.5f);
+        p->cell = (uint8_t)(CELL_SMOKE0 + (i & 1));
+    }
+    for (int i = 0, n = fx_count(22.0f * s); i < n; i++) {   /* cap: billows out on top */
+        float a = fx_range(-1.0f, 1.0f), delay = fx_range(0.35f, 0.9f);
+        float cy = y + rise * delay + 10.0f * s;
+        if ((p = fx_new(FXK_CLOUD, x + a * 15.0f * s, cy + fx_range(-6.0f, 6.0f) * s)) == NULL)
+            break;
+        p->vx = a * fx_range(55.0f, 95.0f) * s;
+        p->vy = rise * 0.7f + fx_range(-8.0f, 8.0f) * s;
+        p->age = -delay;
+        p->life = fx_range(2.4f, 3.2f);
+        p->size0 = 22.0f * s;
+        p->size1 = fx_range(55.0f, 75.0f) * s;
+        p->drag = 0.9f;
+        p->rot = fx_range(0.0f, 6.283f);
+        p->vrot = fx_range(-0.4f, 0.4f);
+        p->cell = (uint8_t)(CELL_SMOKE0 + (i & 1));
+    }
+    for (int i = 0, n = fx_count(60.0f * s); i < n; i++) {
+        float sp = fx_range(80.0f, 380.0f) * s;
+        fx_random_dir(&dx, &dy);
+        if ((p = fx_new(FXK_EMBER, x, y)) == NULL)
+            break;
+        p->vx = dx * sp;
+        p->vy = dy * sp;
+        p->life = fx_range(0.8f, 2.0f);
+        p->size0 = fx_range(2.0f, 3.5f);
+        p->drag = 1.0f;
+        p->gravity = -40.0f;
+        p->cell = CELL_GLOW;
+    }
+}
+
 static void fx_spawn_sparks(float x, float y, float nx, float ny,
                             float tx, float ty, float strength)
 {
@@ -886,6 +1089,191 @@ static bool fx_wreck_near(float x, float y, float radius)
 
 static fx_track_t *fx_track_by_id(int id);
 
+/*
+ * Mines
+ *
+ * A mine that vanishes inside the view exploded. What it was shows in the
+ * same frame: a cluster mine sends a ring of shots, a nuclear mine an
+ * order of magnitude more debris (or shots) than a normal one. The debris
+ * count, scaled by the share of debris the server sends (sparkProb), gives
+ * the strength. (The nuke sound is no help here: the server queues sounds,
+ * they may arrive a frame later.)
+ */
+#define FX_MAX_MINES        256
+#define FX_MINE_MATCH       14.0f   /* max mine drift per frame, px */
+#define FX_MINE_BURST_R     70.0f   /* count debris/shots this close */
+#define FX_MINE_NORMAL_DEBRIS 128.0f    /* full debris of a normal mine */
+#define FX_MINE_NUKE_DEBRIS 400.0f  /* normal mines: <~180, nuclear: >~700 */
+#define FX_MINE_CLUSTER_SHOTS 8     /* a cluster mine sends ~27 shots */
+#define FX_MINE_NUKE_SHOTS  100     /* a nuclear cluster mine sends hundreds */
+
+static float fx_mine_x[2][FX_MAX_MINES], fx_mine_y[2][FX_MAX_MINES];
+static int   fx_num_mines[2];
+static int   fx_mine_cur;
+static long  fx_mine_loop[2];
+
+typedef struct {
+    float x, y;
+} fx_pending_t;
+static fx_pending_t fx_pending[16];
+static int          fx_num_pending;
+
+static Uint64 fx_nuke_ns;           /* last nuke event (sound or seen), for dedup */
+static Uint64 fx_shake_ns;          /* start of the current shake, 0 = none */
+
+/* A nuke went off somewhere: one shake per nuke, however it was noticed. */
+static void fx_nuke_event(void)
+{
+    Uint64 now = SDL_GetTicksNS();
+    if (fx_nuke_ns && now - fx_nuke_ns < 500 * SDL_NS_PER_MS)
+        return;
+    fx_nuke_ns = now;
+    if (fxScreenShake && !Fx_classic())
+        fx_shake_ns = now;
+}
+
+/* Server sound events; they carry no position. */
+void Fx_audio_event(int type, int volume)
+{
+    UNUSED_PARAM(volume);
+    if (type == NUKE_EXPLOSION_SOUND)
+        fx_nuke_event();
+}
+
+static void fx_mines_begin(void)
+{
+    int prev = fx_mine_cur, cur = fx_mine_cur ^ 1;
+    long dl = loops - fx_mine_loop[prev];
+
+    fx_num_mines[cur] = 0;
+    for (int i = 0; i < num_mine && fx_num_mines[cur] < FX_MAX_MINES; i++) {
+        fx_mine_x[cur][fx_num_mines[cur]] = (float)mine_ptr[i].x;
+        fx_mine_y[cur][fx_num_mines[cur]] = (float)mine_ptr[i].y;
+        fx_num_mines[cur]++;
+    }
+    fx_mine_cur = cur;
+    fx_mine_loop[cur] = loops;
+    fx_num_pending = 0;
+
+    if (dl < 1 || dl > 3)
+        return;
+    float r2 = (FX_MINE_MATCH * (float)dl) * (FX_MINE_MATCH * (float)dl);
+    for (int k = 0; k < fx_num_mines[prev]; k++) {
+        float mx = fx_mine_x[prev][k], my = fx_mine_y[prev][k];
+        bool found = false;
+        for (int c = 0; !found && c < fx_num_mines[cur]; c++) {
+            float dx = fx_wrap_dx(fx_mine_x[cur][c] - mx), dy = fx_wrap_dy(fx_mine_y[cur][c] - my);
+            if (dx * dx + dy * dy < r2)
+                found = true;
+        }
+        if (found)
+            continue;
+        float vx, vy;
+        fx_view_offset(mx, my, &vx, &vy);
+        if (fabsf(vx) < (float)ext_view_width * 0.5f - 20.0f
+            && fabsf(vy) < (float)ext_view_height * 0.5f - 20.0f
+            && fx_num_pending < (int)SDL_arraysize(fx_pending))
+            fx_pending[fx_num_pending++] = (fx_pending_t){ mx, my };
+    }
+}
+
+/*
+ * Strength of a mine explosion from its share of a full mine. A mine
+ * split into n minis has 1/n of the mass and sends 1/n of the debris;
+ * ^0.7 keeps the steps clearly visible: 1, 0.62, 0.46, 0.38.
+ */
+static float fx_mine_strength(float share)
+{
+    return powf(fx_clamp(share, 0.25f, 1.6f), 0.7f);
+}
+
+/* After this frame's debris and shots were seen: what kind of mine was it? */
+static void fx_mines_resolve(void)
+{
+    float send = (float)spark_rand / 128.0f;    /* share of debris the server sends */
+
+    for (int i = 0; i < fx_num_pending; i++) {
+        float x = fx_pending[i].x, y = fx_pending[i].y;
+        int debris = 0, shots = 0;
+        for (int k = 0; k < fx_num_sparks; k++) {
+            float dx = fx_wrap_dx(fx_spark_x[k] - x), dy = fx_wrap_dy(fx_spark_y[k] - y);
+            if (dx * dx + dy * dy < FX_MINE_BURST_R * FX_MINE_BURST_R)
+                debris++;
+        }
+        for (int k = 0; k < fx_num_shots[fx_shot_cur]; k++) {
+            float dx = fx_wrap_dx(fx_shot_x[fx_shot_cur][k] - x);
+            float dy = fx_wrap_dy(fx_shot_y[fx_shot_cur][k] - y);
+            if (dx * dx + dy * dy < FX_MINE_BURST_R * FX_MINE_BURST_R)
+                shots++;
+        }
+        float full = send > 0.05f ? (float)debris / send : 0.0f;   /* estimated total */
+        bool nuke = full > FX_MINE_NUKE_DEBRIS || shots > FX_MINE_NUKE_SHOTS;
+
+        if (nuke)
+            fx_nuke_event();
+        if (!fxMineExplosions || !fx_active())
+            continue;
+        if (nuke) {
+            float s = full > 0.0f ? sqrtf(full / 3000.0f) : 1.0f;
+            fx_spawn_nuke(x, y, fx_clamp(s, 0.7f, 1.3f));
+            if (shots >= FX_MINE_CLUSTER_SHOTS)     /* nuclear cluster: plus a blue burst */
+                fx_spawn_mine_burst(x, y, 1.4f, FX_BLUE);
+        } else if (shots >= FX_MINE_CLUSTER_SHOTS) {
+            fx_spawn_mine_burst(x, y, fx_mine_strength((float)shots / 27.0f), FX_BLUE);
+        } else {
+            float share = full > 0.0f ? full / FX_MINE_NORMAL_DEBRIS : 1.0f;
+            fx_spawn_mine_burst(x, y, fx_mine_strength(share), 0);
+        }
+    }
+    fx_num_pending = 0;
+}
+
+/*
+ * Shake of the view in world pixels, the same for everybody on the map;
+ * added to the camera before anything is drawn.
+ */
+void Fx_shake_offset(int *dx, int *dy)
+{
+    *dx = *dy = 0;
+    if (!fx_shake_ns || !fxScreenShake || Fx_classic())
+        return;
+    float t = (float)(SDL_GetTicksNS() - fx_shake_ns) / 1e9f;
+    const float dur = 1.5f;
+    if (t >= dur) {
+        fx_shake_ns = 0;
+        return;
+    }
+    float e = 1.0f - t / dur;
+    float amp = 16.0f * e * sqrtf(e);       /* ~9 px still after 0.5 s */
+    /*
+     * Incommensurate sines, rough but without frame-to-frame jitter:
+     * a slow 3-4 Hz rumble (the pressure wave) under a fast tremble.
+     */
+    *dx = (int)lroundf(amp * (0.5f * sinf(t * 22.0f)
+                              + 0.3f * sinf(t * 71.0f + 0.4f) + 0.2f * sinf(t * 43.0f + 1.3f)));
+    *dy = (int)lroundf(amp * (0.5f * sinf(t * 19.0f + 1.1f)
+                              + 0.3f * sinf(t * 59.0f + 0.7f) + 0.2f * sinf(t * 37.0f + 2.1f)));
+}
+
+/* Nuke flash over the whole view, drawn after the world. */
+void Fx_render_overlay(void)
+{
+    if (!fx_flash_ns || !tng_renderer)
+        return;
+    float t = (float)(SDL_GetTicksNS() - fx_flash_ns) / 1e9f;
+    if (t >= 0.25f || !fxNukeFlash || Fx_classic()) {
+        fx_flash_ns = 0;
+        return;
+    }
+    float e = 1.0f - t / 0.25f;
+    float a = 0.35f * fx_clamp(fx_flash_s, 0.0f, 1.0f) * e * e;
+    SDL_FRect r = { (float)PLAYFIELD_X, 0.0f, (float)draw_width, (float)draw_height };
+    SDL_SetRenderDrawBlendMode(tng_renderer, SDL_BLENDMODE_ADD);
+    SDL_SetRenderDrawColor(tng_renderer, 255, 240, 220, (Uint8)(a * 255.0f));
+    SDL_RenderFillRect(tng_renderer, &r);
+    SDL_SetRenderDrawBlendMode(tng_renderer, SDL_BLENDMODE_BLEND);
+}
+
 /* Ships that were tracked but are missing in this frame: did they blow up? */
 static void fx_check_vanished(void)
 {
@@ -956,6 +1344,7 @@ void Fx_frame_begin(void)
             t->shield = ship_ptr[i].shield != 0;
     }
     fx_check_vanished();
+    fx_mines_begin();
 }
 
 /* ------------------------------------------------------------------ */
@@ -1020,12 +1409,35 @@ static SDL_FColor fx_lerp_color(const float (*keys)[4], int n, float t)
     };
 }
 
+/* cluster mines: white-hot to light blue to deep blue */
+static const float fire_blue_keys[][4] = {
+    { 0.00f, 0.95f, 0.98f, 1.00f },
+    { 0.15f, 0.70f, 0.88f, 1.00f },
+    { 0.40f, 0.35f, 0.60f, 1.00f },
+    { 0.70f, 0.15f, 0.25f, 0.75f },
+    { 1.00f, 0.03f, 0.05f, 0.25f },
+};
+
 static const float fire_keys[][4] = {
     { 0.00f, 1.00f, 0.95f, 0.80f },
     { 0.15f, 1.00f, 0.75f, 0.30f },
     { 0.40f, 0.95f, 0.40f, 0.08f },
     { 0.70f, 0.55f, 0.12f, 0.02f },
     { 1.00f, 0.15f, 0.02f, 0.00f },
+};
+
+/* smoke lit by a nuclear fireball, cooling to grey */
+static const float cloud_keys[][4] = {
+    { 0.00f, 1.00f, 0.62f, 0.32f },
+    { 0.30f, 0.85f, 0.52f, 0.36f },
+    { 0.65f, 0.55f, 0.46f, 0.42f },
+    { 1.00f, 0.38f, 0.36f, 0.36f },
+};
+
+static const float spark_blue_keys[][4] = {
+    { 0.00f, 1.00f, 1.00f, 1.00f },
+    { 0.40f, 0.60f, 0.80f, 1.00f },
+    { 1.00f, 0.30f, 0.40f, 1.00f },
 };
 
 static const float spark_keys[][4] = {
@@ -1052,7 +1464,8 @@ static void fx_emit(const fx_particle_t *p, float scale)
     case FXK_FIRE: {
         float e = 1.0f - t;
         size = p->size0 + (p->size1 - p->size0) * (1.0f - e * e);
-        col = fx_lerp_color(fire_keys, 5, t);
+        col = p->variant == FX_BLUE ? fx_lerp_color(fire_blue_keys, 5, t)
+                                    : fx_lerp_color(fire_keys, 5, t);
         col.a = fx_clamp01(p->age / 0.05f) * powf(e, 0.8f);
         break;
     }
@@ -1072,18 +1485,28 @@ static void fx_emit(const fx_particle_t *p, float scale)
     }
     case FXK_FLASH:
         size = p->size0 + (p->size1 - p->size0) * t;
-        col = (SDL_FColor){ 1.0f, 0.92f, 0.75f, (1.0f - t) * (1.0f - t) };
+        col = p->variant == FX_BLUE ? (SDL_FColor){ 0.78f, 0.90f, 1.0f, (1.0f - t) * (1.0f - t) }
+                                    : (SDL_FColor){ 1.0f, 0.92f, 0.75f, (1.0f - t) * (1.0f - t) };
         break;
     case FXK_RING: {
         float e = 1.0f - t;
         size = p->size0 + (p->size1 - p->size0) * (1.0f - e * e * e);
-        col = (SDL_FColor){ 1.0f, 0.70f, 0.40f, 0.55f * e * e };
+        col = p->variant == FX_BLUE ? (SDL_FColor){ 0.60f, 0.80f, 1.0f, 0.55f * e * e }
+                                    : (SDL_FColor){ 1.0f, 0.70f, 0.40f, 0.55f * e * e };
+        break;
+    }
+    case FXK_CLOUD: {
+        float e = 1.0f - t;
+        size = p->size0 + (p->size1 - p->size0) * (1.0f - e * e);
+        col = fx_lerp_color(cloud_keys, 4, t);
+        col.a = 0.9f * fx_smooth(t / 0.06f) * powf(e, 1.1f);
         break;
     }
     case FXK_EMBER:
         size = p->size0 * (1.0f - 0.5f * t) * 2.5f;
-        col = (SDL_FColor){ 1.0f, 0.50f, 0.15f,
-                            (1.0f - t) * (0.55f + 0.45f * sinf(p->age * 35.0f + p->seed * 20.0f)) };
+        col = p->variant == FX_BLUE ? (SDL_FColor){ 0.45f, 0.70f, 1.0f, 1.0f }
+                                    : (SDL_FColor){ 1.0f, 0.50f, 0.15f, 1.0f };
+        col.a = (1.0f - t) * (0.55f + 0.45f * sinf(p->age * 35.0f + p->seed * 20.0f));
         break;
     case FXK_SPARK: {
         /* stretched glow along the velocity: motion-blurred streak */
@@ -1095,7 +1518,8 @@ static void fx_emit(const fx_particle_t *p, float scale)
         }
         float len = fmaxf(p->size0 * 2.0f, sp * 0.045f) * scale;
         float wid = p->size0 * 2.5f * scale;
-        col = fx_lerp_color(spark_keys, 3, t);
+        col = p->variant == FX_BLUE ? fx_lerp_color(spark_blue_keys, 3, t)
+                              : fx_lerp_color(spark_keys, 3, t);
         col.a = 1.0f - t;
         fx_quad(sx - ux * len * 0.5f, sy - uy * len * 0.5f,
                 ux * len * 0.5f, uy * len * 0.5f,
@@ -1523,6 +1947,7 @@ void Fx_render(void)
     fx_update(dt);
     fx_flame_update();
     fx_hit_update();
+    fx_mines_resolve();
 
     if (!fx_atlas || !tng_renderer)
         return;
@@ -1541,7 +1966,8 @@ void Fx_render(void)
 
     /* pass 1: smoke, normal alpha blending */
     for (i = 0; i < fx_num_parts; i++)
-        if ((fx_parts[i].kind == FXK_SMOKE || fx_parts[i].kind == FXK_PUFF)
+        if ((fx_parts[i].kind == FXK_SMOKE || fx_parts[i].kind == FXK_PUFF
+             || fx_parts[i].kind == FXK_CLOUD)
             && fx_parts[i].age > 0.0f)
             fx_emit(&fx_parts[i], scale);
     fx_flush(SDL_BLENDMODE_BLEND);
@@ -1549,6 +1975,7 @@ void Fx_render(void)
     /* pass 2: everything glowing, additive */
     for (i = 0; i < fx_num_parts; i++)
         if (fx_parts[i].kind != FXK_SMOKE && fx_parts[i].kind != FXK_PUFF
+            && fx_parts[i].kind != FXK_CLOUD
             && fx_parts[i].age > 0.0f)
             fx_emit(&fx_parts[i], scale);
     fx_flush(SDL_BLENDMODE_ADD);

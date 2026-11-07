@@ -351,6 +351,9 @@ void ProfileEditor::Load(const std::string& stock_ships_path, bool keep_unsaved)
     fx_.classic = get_bool("classicGraphics", false);
     fx_.explosions = get_bool("fxExplosions", true);
     fx_.sparks = get_bool("fxSparks", true);
+    fx_.mine_explosions = get_bool("fxMineExplosions", true);
+    fx_.nuke_flash = get_bool("fxNukeFlash", true);
+    fx_.screen_shake = get_bool("fxScreenShake", true);
     fx_.contrails = get_bool("fxContrails", true);
     fx_.terrain = get_bool("fxTerrain", true);
     fx_.terrain_mesh = get_bool("fxTerrainMesh", true);
@@ -425,6 +428,9 @@ std::vector<std::pair<std::string, std::string>> ProfileEditor::FxValues() const
         {"classicGraphics", b(fx_.classic)},
         {"fxExplosions", b(fx_.explosions)},
         {"fxSparks", b(fx_.sparks)},
+        {"fxMineExplosions", b(fx_.mine_explosions)},
+        {"fxNukeFlash", b(fx_.nuke_flash)},
+        {"fxScreenShake", b(fx_.screen_shake)},
         {"fxContrails", b(fx_.contrails)},
         {"fxTerrain", b(fx_.terrain)},
         {"fxTerrainMesh", b(fx_.terrain_mesh)},
@@ -799,6 +805,17 @@ void ProfileEditor::RenderFx() {
     ImGui::Checkbox("Sparks", &fx_.sparks);
     if (ImGui::IsItemHovered())
         ImGui::SetTooltip("Sparks when a ship hits a wall or another ship (xpilot.fxSparks)");
+    ImGui::Checkbox("Mine explosions", &fx_.mine_explosions);
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Fireball for mines, bright blue for cluster mines, a mushroom cloud\n"
+                          "for nuclear mines, sized by their strength (xpilot.fxMineExplosions)");
+    ImGui::Checkbox("Nuke flash", &fx_.nuke_flash);
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Brief bright flash of the whole view when a nuke goes off in sight (xpilot.fxNukeFlash)");
+    ImGui::Checkbox("Screen shake", &fx_.screen_shake);
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("The view shakes when a nuke goes off anywhere on the map (xpilot.fxScreenShake).\n"
+                          "Needs the server option sound (on by default).");
     ImGui::Checkbox("Contrails", &fx_.contrails);
     if (ImGui::IsItemHovered())
         ImGui::SetTooltip("Short glowing wingtip trails when a ship turns hard at speed (xpilot.fxContrails)");
