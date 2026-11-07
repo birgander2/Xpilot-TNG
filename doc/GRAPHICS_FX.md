@@ -120,7 +120,12 @@ Schild und Zustände:
    Ursprüngliche Idee: Energieblase, weicher Rand mit leichtem Schimmern, blitzt bei Treffern oder
    Wandkontakt kurz auf. (Erweitert „Schild-Schimmern“ unter „Weitere Ideen“.)
 6. **Erscheinen / Hyperjump**: Lichtwirbel oder Implosion beim Auftauchen und Springen.
-7. **Wenig Treibstoff**: dünner Rauchfaden oder vereinzelte Funken als visuelle Warnung.
+7. ✅ **Wenig Treibstoff**: die Triebwerksflamme stottert (nur eigenes Schiff – fremden Treibstoff
+   sendet der Server nicht). Ab `fuelWarning` zufällige Aussetzer über 1–4 Frames, häufiger und
+   länger je leerer der Tank, ungleichmäßige Länge; bei vielen Aussetzern Fehlzündungen an der
+   Düse (kleiner Blitz, 2–3 Funken, helle Rauchwölkchen – eigener Partikeltyp, der dunkle
+   Explosionsrauch war auf Schwarz unsichtbar); bei leerem Tank (Server fliegt mit
+   Restleistung) kürzere Flamme.
 
 Bewusst nicht: Rollneigung in Kurven oder perspektivisches Verzerren der Form – das würde die
 Kontur verändern und bei Kollisionen in die Irre führen.

@@ -267,7 +267,8 @@ typedef enum {
     FXK_FLASH,
     FXK_RING,
     FXK_SPARK,
-    FXK_EMBER
+    FXK_EMBER,
+    FXK_PUFF        /* light exhaust smoke of a sputtering engine */
 } fx_kind_t;
 
 typedef struct {
@@ -576,6 +577,7 @@ typedef struct {
     float   thrust_a;       /* acceleration along the heading, px/tick^2 */
     bool    thrust_valid;
     long    thrust_loop;    /* last frame with a thrust sign */
+    int     sputter;        /* frames the flame stays cut out (low fuel) */
     bool    shield;         /* shield up in this frame */
     Uint64  hit_ns;         /* last hit on shield or armor (0 = none) */
     float   flame_k;        /* smoothed flame intensity 0..1 */
@@ -1061,6 +1063,13 @@ static void fx_emit(const fx_particle_t *p, float scale)
         col = (SDL_FColor){ g, g, g * 0.95f, 0.5f * fx_smooth(t / 0.2f) * powf(e, 1.5f) };
         break;
     }
+    case FXK_PUFF: {
+        float e = 1.0f - t;
+        float g = 0.55f + 0.12f * p->seed;
+        size = p->size0 + (p->size1 - p->size0) * (1.0f - e * e);
+        col = (SDL_FColor){ g, g, g, 0.7f * fx_smooth(t / 0.1f) * powf(e, 1.2f) };
+        break;
+    }
     case FXK_FLASH:
         size = p->size0 + (p->size1 - p->size0) * t;
         col = (SDL_FColor){ 1.0f, 0.92f, 0.75f, (1.0f - t) * (1.0f - t) };
@@ -1380,6 +1389,48 @@ static void fx_flame_update(void)
     }
 }
 
+/* A sputtering engine misfires: a small pop, a few sparks, a puff of smoke. */
+static void fx_spawn_backfire(float x, float y, int dir)
+{
+    float ang = (float)dir * 2.0f * (float)M_PI / RES;
+    float bx = -cosf(ang), by = -sinf(ang);     /* backwards, world y up */
+    fx_particle_t *p;
+
+    if ((p = fx_new(FXK_FLASH, x, y)) != NULL) {
+        p->life = 0.08f;
+        p->size0 = 5.0f;
+        p->size1 = 9.0f;
+        p->cell = CELL_GLOW;
+    }
+    for (int i = 0, n = 2 + fx_rand_int(2); i < n; i++) {
+        float a = fx_range(-0.7f, 0.7f), sp = fx_range(80.0f, 170.0f);
+        if ((p = fx_new(FXK_SPARK, x, y)) == NULL)
+            break;
+        p->vx = (bx * cosf(a) - by * sinf(a)) * sp;
+        p->vy = (bx * sinf(a) + by * cosf(a)) * sp;
+        p->life = fx_range(0.2f, 0.35f);
+        p->size0 = fx_range(1.1f, 1.6f);
+        p->drag = 2.5f;
+        p->gravity = -60.0f;
+        p->cell = CELL_GLOW;
+    }
+    for (int i = 0, n = 1 + fx_rand_int(2); i < n; i++) {
+        if ((p = fx_new(FXK_PUFF, x + bx * 3.0f, y + by * 3.0f)) == NULL)
+            break;
+        float a = fx_range(-0.4f, 0.4f), sp = fx_range(30.0f, 55.0f);
+        p->vx = (bx * cosf(a) - by * sinf(a)) * sp;
+        p->vy = (bx * sinf(a) + by * cosf(a)) * sp;
+        p->life = fx_range(0.55f, 0.85f);
+        p->size0 = 4.0f;
+        p->size1 = fx_range(13.0f, 18.0f);
+        p->drag = 1.8f;
+        p->gravity = 8.0f;
+        p->rot = fx_range(0.0f, 6.283f);
+        p->vrot = fx_range(-1.0f, 1.0f);
+        p->cell = (uint8_t)(CELL_SMOKE0 + fx_rand_int(2));
+    }
+}
+
 /*
  * Draw the flame of ship id, called right before its hull. (x, y): ship
  * world position as passed to Gui_paint_ship(), dir: heading.
@@ -1401,6 +1452,32 @@ void Fx_paint_engine_flame(int id, int x, int y, int dir)
     float bx = -cosf(ang), by = sinf(ang);      /* backwards, screen y down */
     float k = t->flame_k;
     float len = (15.0f + 13.0f * k) * sc;
+
+    /*
+     * Low fuel (own ship only, the server sends nobody else's fuel): below
+     * the HUD warning level the flame starts to sputter - random cut-outs,
+     * more often and longer the emptier the tank, now and then a puff of
+     * smoke. With an empty tank the server flies on minimal power.
+     */
+    float sput = 0.0f;
+    if (self && id == self->id && eyesId == self->id && fuelWarning > 0.0) {
+        sput = fx_clamp01((float)((fuelWarning - fuelSum) / fuelWarning));
+        if (fuelSum <= 0.0)
+            len *= 0.6f;
+    }
+    if (sput > 0.0f) {
+        if (t->sputter > 0) {
+            t->sputter--;
+        } else if (fx_rand() < 0.06f + 0.30f * sput) {
+            t->sputter = 1 + fx_rand_int(1 + (int)(3.0f * sput));
+            if (sput > 0.3f && fx_rand() < 0.35f + 0.4f * sput)
+                fx_spawn_backfire(t->x + (float)e.x, t->y + (float)e.y, dir);
+        }
+        if (t->sputter > 0)
+            k *= 0.12f;                     /* cut out, only a glimmer left */
+        else
+            len *= 1.0f - 0.35f * sput * fx_rand();   /* uneven */
+    }
     float wid = 4.8f * sc;
     static const float spread[3] = { -0.33f, 0.0f, 0.33f };   /* ~ +-19 degrees */
 
@@ -1464,13 +1541,15 @@ void Fx_render(void)
 
     /* pass 1: smoke, normal alpha blending */
     for (i = 0; i < fx_num_parts; i++)
-        if (fx_parts[i].kind == FXK_SMOKE && fx_parts[i].age > 0.0f)
+        if ((fx_parts[i].kind == FXK_SMOKE || fx_parts[i].kind == FXK_PUFF)
+            && fx_parts[i].age > 0.0f)
             fx_emit(&fx_parts[i], scale);
     fx_flush(SDL_BLENDMODE_BLEND);
 
     /* pass 2: everything glowing, additive */
     for (i = 0; i < fx_num_parts; i++)
-        if (fx_parts[i].kind != FXK_SMOKE && fx_parts[i].age > 0.0f)
+        if (fx_parts[i].kind != FXK_SMOKE && fx_parts[i].kind != FXK_PUFF
+            && fx_parts[i].age > 0.0f)
             fx_emit(&fx_parts[i], scale);
     fx_flush(SDL_BLENDMODE_ADD);
 }
