@@ -109,7 +109,6 @@ private:
         bool sparks = true;              // fxSparks
         bool contrails = true;           // fxContrails
         float amount = 1.0f;             // fxAmount, particle multiplier 0..2
-        float glow = 1.0f;               // fxGlow, bloom strength 0..2
     } fx_;
     std::vector<std::pair<std::string, std::string>> FxValues() const;
     bool loaded_ = false;

@@ -129,8 +129,6 @@ int   Fx_init(void);
 void  Fx_cleanup(void);
 void  Fx_frame_begin(void);
 void  Fx_render(void);
-void  Fx_glow_begin(const SDL_Rect *clip);
-void  Fx_glow_end(const SDL_Rect *clip);
 float Screen_X(int world_x);
 float Screen_Y(int world_y);
 void  SDL3_Draw_Line(float x1, float y1, float x2, float y2, int color_idx);

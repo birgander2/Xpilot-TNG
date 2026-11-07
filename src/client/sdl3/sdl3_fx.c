@@ -27,7 +27,6 @@ static bool   fxExplosions = true;
 static bool   fxSparks = true;
 static bool   fxContrails = true;
 static double fxAmount = 1.0;
-static double fxGlow = 1.0;
 
 static void fx_clear(void);
 
@@ -53,10 +52,6 @@ static xp_option_t fx_options[] = {
     XP_BOOL_OPTION("fxContrails", true, &fxContrails, NULL,
                    XP_OPTFLAG_CONFIG_FX,
                    "Draw short glowing contrails when ships turn hard at speed.\n"),
-    XP_DOUBLE_OPTION("fxGlow", 1.0, 0.0, 2.0, &fxGlow, NULL,
-                     XP_OPTFLAG_CONFIG_FX,
-                     "Glow (bloom) strength around bright lines, shots and fire.\n"
-                     "0 turns it off.\n"),
     XP_DOUBLE_OPTION("fxAmount", 1.0, 0.0, 2.0, &fxAmount, NULL,
                      XP_OPTFLAG_CONFIG_FX,
                      "Particle amount multiplier for visual effects.\n"),
@@ -240,15 +235,12 @@ int Fx_init(void)
     return fx_atlas ? 0 : -1;
 }
 
-static void fx_glow_free(void);
-
 void Fx_cleanup(void)
 {
     if (fx_atlas) {
         SDL_DestroyTexture(fx_atlas);
         fx_atlas = NULL;
     }
-    fx_glow_free();
 }
 
 /* ------------------------------------------------------------------ */
@@ -1113,179 +1105,4 @@ void Fx_render(void)
         if (fx_parts[i].kind != FXK_SMOKE && fx_parts[i].age > 0.0f)
             fx_emit(&fx_parts[i], scale);
     fx_flush(SDL_BLENDMODE_ADD);
-}
-
-/* ------------------------------------------------------------------ */
-/* Glow (bloom)                                                       */
-/* ------------------------------------------------------------------ */
-
-/*
- * The world is drawn into an offscreen texture. A copy is raised to the
- * 6th power with MOD blending (c * c * ... * c), which keeps bright lines,
- * shots and fire but drops dark areas such as the wall fill, so no custom
- * blend modes or shaders are needed. That copy is downsampled, blurred and
- * added on top of the world. The HUD is drawn afterwards and stays sharp.
- */
-
-static SDL_Texture *glow_scene;     /* whole render output */
-static SDL_Texture *glow_bright;    /* playfield, full res, c^6 */
-static SDL_Texture *glow_half;      /* playfield / 2 */
-static SDL_Texture *glow_q1, *glow_q2;  /* playfield / 4, blur ping-pong */
-static int  glow_out_w, glow_out_h, glow_pf_w, glow_pf_h;
-static bool glow_on;                /* the world is drawn into glow_scene */
-static int  glow_supported = -1;    /* -1 unknown, 0 no, 1 yes */
-
-static void fx_glow_free(void)
-{
-    SDL_Texture **t[] = { &glow_scene, &glow_bright, &glow_half, &glow_q1, &glow_q2 };
-    for (size_t i = 0; i < SDL_arraysize(t); i++) {
-        if (*t[i]) {
-            SDL_DestroyTexture(*t[i]);
-            *t[i] = NULL;
-        }
-    }
-    glow_out_w = glow_out_h = glow_pf_w = glow_pf_h = 0;
-}
-
-static SDL_Texture *fx_glow_target(int w, int h)
-{
-    SDL_Texture *t = SDL_CreateTexture(tng_renderer, SDL_PIXELFORMAT_RGBA32,
-                                       SDL_TEXTUREACCESS_TARGET,
-                                       w > 0 ? w : 1, h > 0 ? h : 1);
-    if (t) {
-        SDL_SetTextureScaleMode(t, SDL_SCALEMODE_LINEAR);
-        SDL_SetTextureBlendMode(t, SDL_BLENDMODE_NONE);
-    }
-    return t;
-}
-
-static bool fx_glow_ensure(int out_w, int out_h, int pf_w, int pf_h)
-{
-    if (glow_scene && out_w == glow_out_w && out_h == glow_out_h
-        && pf_w == glow_pf_w && pf_h == glow_pf_h)
-        return true;
-
-    fx_glow_free();
-    glow_scene  = fx_glow_target(out_w, out_h);
-    glow_bright = fx_glow_target(pf_w, pf_h);
-    glow_half   = fx_glow_target(pf_w / 2, pf_h / 2);
-    glow_q1     = fx_glow_target(pf_w / 4, pf_h / 4);
-    glow_q2     = fx_glow_target(pf_w / 4, pf_h / 4);
-    if (!glow_scene || !glow_bright || !glow_half || !glow_q1 || !glow_q2) {
-        warn("FX: glow disabled, no render targets: %s", SDL_GetError());
-        fx_glow_free();
-        glow_supported = 0;
-        return false;
-    }
-    glow_out_w = out_w;
-    glow_out_h = out_h;
-    glow_pf_w = pf_w;
-    glow_pf_h = pf_h;
-    return true;
-}
-
-static bool fx_glow_wanted(void)
-{
-    if (glow_supported < 0) {
-        /* far too slow on the CPU renderer */
-        const char *name = SDL_GetRendererName(tng_renderer);
-        glow_supported = (name && strcmp(name, SDL_SOFTWARE_RENDERER) != 0) ? 1 : 0;
-    }
-    return glow_supported == 1 && fx_active() && fxGlow > 0.0;
-}
-
-void Fx_glow_begin(const SDL_Rect *clip)
-{
-    int out_w = 0, out_h = 0;
-
-    glow_on = false;
-    if (!tng_renderer || !fx_glow_wanted()) {
-        if (glow_scene && !fx_active())
-            fx_glow_free();
-        return;
-    }
-    if (!SDL_GetCurrentRenderOutputSize(tng_renderer, &out_w, &out_h)
-        || !fx_glow_ensure(out_w, out_h, (int)draw_width, (int)draw_height))
-        return;
-    if (!SDL_SetRenderTarget(tng_renderer, glow_scene))
-        return;
-
-    SDL_SetRenderClipRect(tng_renderer, NULL);
-    SDL_SetRenderDrawColor(tng_renderer, 0, 0, 0, 255);
-    SDL_RenderClear(tng_renderer);
-    SDL_SetRenderClipRect(tng_renderer, clip);
-    glow_on = true;
-}
-
-/* Draw tex onto the current target with additive blending, gain may exceed 1. */
-static void fx_glow_add(SDL_Texture *tex, const SDL_FRect *dst, float gain)
-{
-    SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_ADD);
-    while (gain > 0.001f) {
-        float g = gain > 1.0f ? 1.0f : gain;
-        SDL_SetTextureColorModFloat(tex, g, g, g);
-        SDL_RenderTexture(tng_renderer, tex, NULL, dst);
-        gain -= g;
-    }
-    SDL_SetTextureColorModFloat(tex, 1.0f, 1.0f, 1.0f);
-    SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_NONE);
-}
-
-/* Separable-ish blur: average of four diagonal offsets (Kawase). */
-static void fx_glow_blur(SDL_Texture *src, SDL_Texture *dst, float off)
-{
-    float w = (float)(glow_pf_w / 4), h = (float)(glow_pf_h / 4);
-    const float o[4][2] = { { -off, -off }, { off, -off }, { -off, off }, { off, off } };
-
-    SDL_SetRenderTarget(tng_renderer, dst);
-    SDL_SetRenderDrawColor(tng_renderer, 0, 0, 0, 255);
-    SDL_RenderClear(tng_renderer);
-    SDL_SetTextureBlendMode(src, SDL_BLENDMODE_ADD);
-    SDL_SetTextureColorModFloat(src, 0.25f, 0.25f, 0.25f);
-    for (int i = 0; i < 4; i++) {
-        SDL_FRect r = { o[i][0], o[i][1], w, h };
-        SDL_RenderTexture(tng_renderer, src, NULL, &r);
-    }
-    SDL_SetTextureColorModFloat(src, 1.0f, 1.0f, 1.0f);
-    SDL_SetTextureBlendMode(src, SDL_BLENDMODE_NONE);
-}
-
-void Fx_glow_end(const SDL_Rect *clip)
-{
-    SDL_FRect pf;
-    float g = (float)fxGlow;
-
-    if (!glow_on)
-        return;
-    glow_on = false;
-
-    pf = (SDL_FRect){ (float)clip->x, (float)clip->y, (float)clip->w, (float)clip->h };
-
-    /* 1. bright pass: playfield copy raised to the 6th power */
-    SDL_SetRenderTarget(tng_renderer, glow_bright);
-    SDL_SetRenderClipRect(tng_renderer, NULL);
-    SDL_SetTextureBlendMode(glow_scene, SDL_BLENDMODE_NONE);
-    SDL_RenderTexture(tng_renderer, glow_scene, &pf, NULL);
-    SDL_SetTextureBlendMode(glow_scene, SDL_BLENDMODE_MOD);
-    for (int i = 0; i < 5; i++)
-        SDL_RenderTexture(tng_renderer, glow_scene, &pf, NULL);
-    SDL_SetTextureBlendMode(glow_scene, SDL_BLENDMODE_NONE);
-
-    /* 2. downsample and blur */
-    SDL_SetRenderTarget(tng_renderer, glow_half);
-    SDL_RenderTexture(tng_renderer, glow_bright, NULL, NULL);
-    SDL_SetRenderTarget(tng_renderer, glow_q1);
-    SDL_RenderTexture(tng_renderer, glow_half, NULL, NULL);
-    /* growing offsets (Kawase): smooth enough that the 4x upscale shows no blocks */
-    fx_glow_blur(glow_q1, glow_q2, 0.5f);
-    fx_glow_blur(glow_q2, glow_q1, 1.5f);
-    fx_glow_blur(glow_q1, glow_q2, 2.5f);
-    fx_glow_blur(glow_q2, glow_q1, 3.5f);
-
-    /* 3. composite: world, tight glow, wide glow */
-    SDL_SetRenderTarget(tng_renderer, NULL);
-    SDL_SetRenderClipRect(tng_renderer, clip);
-    SDL_RenderTexture(tng_renderer, glow_scene, &pf, &pf);
-    fx_glow_add(glow_half, &pf, 0.5f * g);
-    fx_glow_add(glow_q1, &pf, 1.6f * g);
 }

@@ -66,6 +66,10 @@ Offene Punkte:
 
 ### Weitere Ideen
 - **Bloom/Glow für Vektorlinien**: Linien mehrfach breit, additiv, mit wenig Alpha zeichnen.
+  Ein erster Versuch als Fullscreen-Bloom (Welt in Render-Target, Helligkeitsschwelle per
+  MOD-Potenzkurve c⁶, Downsample + Kawase-Blur, additiv zurück) war technisch sauber, aber der
+  Effekt auf 1-px-Vektorlinien blieb minimal – wieder entfernt (siehe Git-Historie, Commit 8d01fc9).
+  Lohnt sich eher mit echten Shadern oder dickeren Linien.
 - **Phosphor-Nachleuchten (Vektormonitor-Modus)**: in Textur rendern, vorigen Frame nur abdunkeln
   statt löschen → Asteroids-/Vectrex-Look. Als Option.
 - **Dynamisches Licht**: Explosionen, Schubdüse und Laser hellen nahe Wände kurz auf
@@ -94,6 +98,6 @@ Offene Punkte:
 ## Reihenfolge (Vorschlag)
 
 1. ✅ FX-System + Funken + Feuerbälle — eigener Reiter „FX“ im Menü: `classicGraphics` (alles aus), `fxExplosions`, `fxSparks`, `fxAmount`
-2. ✅ Glow (`fxGlow`, Bloom über Render-Target + MOD-Potenzkurve c⁶, kein Shader) + ✅ Kondensstreifen (`fxContrails`)
+2. ✅ Kondensstreifen (`fxContrails`) — Glow verschoben zu „Weitere Ideen“
 3. Hügellandschaft in Wänden (aufwendigster Teil: Polygon- und Block-Maps getrennt)
 4. Restliche Ideen nach Lust und Laune

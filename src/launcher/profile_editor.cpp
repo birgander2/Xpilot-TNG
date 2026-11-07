@@ -357,9 +357,6 @@ void ProfileEditor::Load(const std::string& stock_ships_path, bool keep_unsaved)
         char* end = nullptr;
         double d = std::strtod(v.c_str(), &end);
         fx_.amount = end == v.c_str() ? 1.0f : float(std::clamp(d, 0.0, 2.0));
-        v = get("fxGlow", "1.0");
-        d = std::strtod(v.c_str(), &end);
-        fx_.glow = end == v.c_str() ? 1.0f : float(std::clamp(d, 0.0, 2.0));
     }
 
     shown_.clear();
@@ -418,15 +415,12 @@ std::vector<std::pair<std::string, std::string>> ProfileEditor::FxValues() const
     auto b = [](bool v) { return std::string(v ? "true" : "false"); };
     char amount[16];
     std::snprintf(amount, sizeof amount, "%.2f", fx_.amount);
-    char glow[16];
-    std::snprintf(glow, sizeof glow, "%.2f", fx_.glow);
     return {
         {"classicGraphics", b(fx_.classic)},
         {"fxExplosions", b(fx_.explosions)},
         {"fxSparks", b(fx_.sparks)},
         {"fxContrails", b(fx_.contrails)},
         {"fxAmount", amount},
-        {"fxGlow", glow},
     };
 }
 
@@ -801,11 +795,6 @@ void ProfileEditor::RenderFx() {
     if (ImGui::IsItemHovered())
         ImGui::SetTooltip("Number of particles (xpilot.fxAmount).\n"
                           "Lower it on slow machines, 0 turns the effects off.");
-    ImGui::SetNextItemWidth(280);
-    ImGui::SliderFloat("Glow", &fx_.glow, 0.0f, 2.0f, "%.2f");
-    if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("Soft glow around bright lines, shots and fire (xpilot.fxGlow).\n"
-                          "Costs some graphics power, 0 turns it off.");
     ImGui::EndDisabled();
     ImGui::Spacing();
     ImGui::TextDisabled("Purely cosmetic: the effects never change the game, and work on every server.");
