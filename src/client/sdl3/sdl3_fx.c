@@ -28,6 +28,7 @@ static bool   fxSparks = true;
 static bool   fxContrails = true;
 static bool   fxEngineFlame = true;
 static bool   fxMineExplosions = true;
+static bool   fxMissileTrails = true;
 static bool   fxNukeFlash = true;
 static bool   fxScreenShake = true;
 static double fxAmount = 1.0;
@@ -60,6 +61,11 @@ static xp_option_t fx_options[] = {
                    XP_OPTFLAG_CONFIG_FX,
                    "Mine explosions: fireball, bright blue for cluster mines,\n"
                    "mushroom cloud for nuclear mines, sized by their strength.\n"),
+    XP_BOOL_OPTION("fxMissileTrails", true, &fxMissileTrails, NULL,
+                   XP_OPTFLAG_CONFIG_FX,
+                   "Smoke trails and exhaust glow behind missiles: smart missiles\n"
+                   "yellow with thick white smoke, heat seekers red with dark smoke,\n"
+                   "torpedoes blue and almost smokeless.\n"),
     XP_BOOL_OPTION("fxNukeFlash", true, &fxNukeFlash, NULL,
                    XP_OPTFLAG_CONFIG_FX,
                    "Brief bright flash of the whole view when a nuke goes off in sight.\n"),
@@ -279,7 +285,10 @@ void Fx_cleanup(void)
 /* Particles                                                          */
 /* ------------------------------------------------------------------ */
 
-#define FX_BLUE 1           /* particle color variant */
+#define FX_BLUE 1           /* particle color variants */
+#define FX_SMOKE_LIGHT 2    /* puffs: smart missile */
+#define FX_SMOKE_DARK  3    /* puffs: heat seeker */
+#define FX_SMOKE_FAINT 4    /* puffs: torpedo */
 
 typedef enum {
     FXK_FIRE,
@@ -833,6 +842,29 @@ void Fx_observe_missile(int x, int y)
     fx_add_shot((float)x, (float)y);
 }
 
+/*
+ * Missile trails
+ *
+ * Missiles carry no id, so each frame the trail is continued from the
+ * nearest tail of the previous frame with the same length (the length
+ * tells the type while the server option distinguishMissiles is on, the
+ * default): smart 12, heat 15, torpedo 18.
+ */
+#define FX_MAX_MTAILS   256
+static float fx_mtail_x[2][FX_MAX_MTAILS], fx_mtail_y[2][FX_MAX_MTAILS];
+static int   fx_mtail_len[2][FX_MAX_MTAILS];
+static int   fx_num_mtails[2];
+static long  fx_mtail_loop[2];
+static int   fx_mtail_cur;
+
+static void fx_mtails_begin(void)
+{
+    fx_mtail_cur ^= 1;
+    fx_num_mtails[fx_mtail_cur] = 0;
+    fx_mtail_loop[fx_mtail_cur] = loops;
+}
+
+
 void Fx_observe_spark(int x, int y)
 {
     if (fx_num_sparks < FX_MAX_SPARKS) {
@@ -1331,6 +1363,7 @@ void Fx_frame_begin(void)
     fx_shot_cur ^= 1;
     fx_num_shots[fx_shot_cur] = 0;
     fx_shot_loop[fx_shot_cur] = loops;
+    fx_mtails_begin();
     fx_num_wrecks = 0;
     for (i = 0; i < num_wreckage && fx_num_wrecks < FX_MAX_WRECKS; i++) {
         fx_wreck_x[fx_num_wrecks] = (float)wreckage_ptr[i].x;
@@ -1478,9 +1511,19 @@ static void fx_emit(const fx_particle_t *p, float scale)
     }
     case FXK_PUFF: {
         float e = 1.0f - t;
-        float g = 0.55f + 0.12f * p->seed;
+        float g = 0.55f + 0.12f * p->seed, a = 0.7f;
+        if (p->variant == FX_SMOKE_LIGHT) {
+            g = 0.82f;
+            a = 0.55f;
+        } else if (p->variant == FX_SMOKE_DARK) {
+            g = 0.34f;
+            a = 0.55f;
+        } else if (p->variant == FX_SMOKE_FAINT) {
+            g = 0.5f;
+            a = 0.15f;
+        }
         size = p->size0 + (p->size1 - p->size0) * (1.0f - e * e);
-        col = (SDL_FColor){ g, g, g, 0.7f * fx_smooth(t / 0.1f) * powf(e, 1.2f) };
+        col = (SDL_FColor){ g, g, g, a * fx_smooth(t / 0.1f) * powf(e, 1.3f) };
         break;
     }
     case FXK_FLASH:
@@ -1926,6 +1969,100 @@ void Fx_paint_engine_flame(int id, int x, int y, int dir)
     /* hot spot at the nozzle */
     fx_quad(sx, sy, wid * 1.1f, 0.0f, 0.0f, wid * 1.1f,
             CELL_GLOW, (SDL_FColor){ 1.0f, 0.95f, 0.8f, 0.75f * k });
+    fx_flush(SDL_BLENDMODE_ADD);
+}
+
+/*
+ * Smoke and exhaust glow of one missile, called as it is drawn.
+ * (x, y): world position of its nose, (sx, sy): screen position of its tail.
+ */
+void Fx_paint_missile(int x, int y, int len, int dir, float sx, float sy)
+{
+    int cur = fx_mtail_cur, prev = cur ^ 1;
+    float ang = (float)dir * 2.0f * (float)M_PI / RES;
+    float tx = (float)x - cosf(ang) * (float)len, ty = (float)y - sinf(ang) * (float)len;
+    int variant, n;
+    SDL_FColor fc;
+    float flen;
+
+    if (!fxMissileTrails || !fx_active())
+        return;
+
+    if (fx_num_mtails[cur] < FX_MAX_MTAILS) {
+        fx_mtail_x[cur][fx_num_mtails[cur]] = tx;
+        fx_mtail_y[cur][fx_num_mtails[cur]] = ty;
+        fx_mtail_len[cur][fx_num_mtails[cur]] = len;
+        fx_num_mtails[cur]++;
+    }
+
+    if (len == 12) {                    /* smart missile: yellow, thick white smoke */
+        variant = FX_SMOKE_LIGHT;
+        n = 3;
+        fc = (SDL_FColor){ 1.0f, 0.90f, 0.30f, 0.9f };
+        flen = 1.1f;
+    } else if (len == 18) {             /* torpedo: blue, almost no smoke */
+        variant = FX_SMOKE_FAINT;
+        n = 1;
+        fc = (SDL_FColor){ 0.40f, 0.65f, 1.0f, 0.9f };
+        flen = 1.1f;
+    } else {                            /* heat seeker (or undistinguished) */
+        variant = FX_SMOKE_DARK;
+        n = 3;
+        fc = (SDL_FColor){ 1.0f, 0.32f, 0.06f, 0.95f };
+        flen = 1.4f;
+    }
+
+    /* continue from last frame's tail so the trail has no gaps */
+    float px = tx, py = ty;
+    long dl = loops - fx_mtail_loop[prev];
+    if (dl >= 1 && dl <= 3) {
+        float best = (90.0f * (float)dl) * (90.0f * (float)dl);
+        for (int i = 0; i < fx_num_mtails[prev]; i++) {
+            if (fx_mtail_len[prev][i] != len)
+                continue;
+            float dx = fx_wrap_dx(fx_mtail_x[prev][i] - tx), dy = fx_wrap_dy(fx_mtail_y[prev][i] - ty);
+            float d2 = dx * dx + dy * dy;
+            if (d2 < best) {
+                best = d2;
+                px = tx + dx;
+                py = ty + dy;
+            }
+        }
+    }
+
+    float bvx = -cosf(ang) * 40.0f, bvy = -sinf(ang) * 40.0f;
+    float jit = variant == FX_SMOKE_LIGHT ? 12.0f : 7.0f;
+    for (int i = 0, m = fx_count((float)n); i < m; i++) {
+        float f = (float)(i + 1) / (float)m;
+        fx_particle_t *p = fx_new(FXK_PUFF, px + (tx - px) * f, py + (ty - py) * f);
+        if (!p)
+            break;
+        p->vx = bvx + fx_range(-jit, jit);
+        p->vy = bvy + fx_range(-jit, jit);
+        p->age = (1.0f - f) * (float)timePerFrame;     /* older the further back */
+        p->life = fx_range(0.7f, 1.1f);
+        p->size0 = 2.5f;
+        p->size1 = variant == FX_SMOKE_LIGHT ? fx_range(11.0f, 15.0f) : fx_range(7.0f, 10.0f);
+        p->rot = fx_range(0.0f, 6.283f);
+        p->vrot = fx_range(-1.0f, 1.0f);
+        p->drag = 1.5f;
+        p->gravity = 6.0f;
+        p->cell = (uint8_t)(CELL_SMOKE0 + fx_rand_int(2));
+        p->variant = (uint8_t)variant;
+    }
+
+    /* exhaust glow at the tail */
+    if (!fx_atlas || !tng_renderer)
+        return;
+    float sc = clData.fscale;
+    float bx = -cosf(ang), by = sinf(ang);          /* backwards on screen */
+    float l = 7.0f * flen * sc * (0.85f + 0.3f * fx_rand()), w = 2.4f * sc;
+    fx_nv = 0;
+    fx_ni = 0;
+    fx_quad(sx + bx * l * 0.5f, sy + by * l * 0.5f, bx * l * 0.6f, by * l * 0.6f,
+            -by * w, bx * w, CELL_GLOW, fc);
+    fx_quad(sx, sy, w * 1.2f, 0.0f, 0.0f, w * 1.2f, CELL_GLOW,
+            (SDL_FColor){ 1.0f, 1.0f, 0.9f, 0.8f });
     fx_flush(SDL_BLENDMODE_ADD);
 }
 

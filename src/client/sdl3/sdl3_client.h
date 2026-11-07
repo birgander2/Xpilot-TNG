@@ -133,6 +133,7 @@ void  Fx_shake_offset(int *dx, int *dy);
 void  Fx_render_overlay(void);
 void  Fx_observe_shot(int x, int y);
 void  Fx_observe_missile(int x, int y);
+void  Fx_paint_missile(int x, int y, int len, int dir, float sx, float sy);
 float Fx_ship_hit_flash(int id);
 void  Fx_paint_shield(float cx, float cy, float radius, int color,
                       bool shield, float flash);

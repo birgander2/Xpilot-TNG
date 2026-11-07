@@ -160,12 +160,17 @@ Vorschlag für ein erstes Paket: gefüllter Rumpf mit Facetten (1+2) und Triebwe
 - **Dynamisches Licht**: Explosionen, Schubdüse und Laser hellen nahe Wände kurz auf
   (radialer Gradient auf der Wandfüllung).
 - **Brandspuren (Decals)**: dunkle Flecken am Boden, die langsam verblassen.
-- **Bildschirmwackeln**: bei eigenem Treffer oder naher Explosion, dezent, abschaltbar.
 - ✅ **Bessere Schubflamme**: flackernder Kegel mit Hitzefarbverlauf statt nur Debris-Punkten.
   → umgesetzt als Triebwerksflamme (`fxEngineFlame`), siehe „Schiffe aufhübschen“.
 - ✅ **Schild-Schimmern**: Hexagonmuster, das beim Treffer aufblitzt.
   → umgesetzt als Hexagon-Schild (`fxShield`), siehe „Schiffe aufhübschen“.
-- **Raketen-Rauchfahnen**, **Mündungsfeuer** an Kanonen, **Laser-Glow**.
+- ✅ **Raketen-Rauchfahnen** (`fxMissileTrails`): Typ an der gezeichneten Länge erkennbar
+  (Serveroption `distinguishMissiles`, Standard an): Smart Missile (12) gelber Antrieb + dicker
+  weißer Qualm, Heat-Seeker (15) rot-orange Flamme + dunkler, schmaler Rauch, Torpedo (18) blaues
+  Glühen, fast rauchlos. Raketen haben keine Kennung: pro Frame wird die Fahne vom nächsten
+  Heck gleicher Länge im Vorframe fortgesetzt, Rauch gleichmäßig über die Strecke verteilt.
+  Verglichen mit Rauchwölkchen einheitlich und glattem Rauchband.
+- **Mündungsfeuer** an Kanonen, **Laser-Glow**.
 - **Parallax-Sternenfeld** im Hintergrund (mehrere Ebenen).
 - **Wurmloch-Strudel**, **Hyperjump-Streckeffekt**, **Ball-Tether-Glühen**.
 - **Positionslichter** (aus „Schiffe aufhübschen“ verschoben): rot/grün an den Flügelspitzen

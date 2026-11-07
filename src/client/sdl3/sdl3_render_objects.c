@@ -364,6 +364,7 @@ void Gui_paint_missile(int x, int y, int len, int dir)
     y_1 = Y(y);
     x_2 = (int)(x_1 - tcos(dir) * len);
     y_2 = (int)(y_1 + tsin(dir) * len);
+    Fx_paint_missile(x, y, len, dir, (float)(PLAYFIELD_X + WINSCALE(x_2)), (float)WINSCALE(y_2));
     SDL3_Draw_Thick_Line((float)(PLAYFIELD_X + WINSCALE(x_1)),
                          (float)WINSCALE(y_1),
                          (float)(PLAYFIELD_X + WINSCALE(x_2)),
