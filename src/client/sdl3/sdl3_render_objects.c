@@ -149,6 +149,12 @@ static void Gui_paint_mine_name(int x, int y, char *name)
 
 void Gui_paint_mine(int x, int y, int teammine, char *name)
 {
+    if (Fx_paint_mine(x, y, (float)(PLAYFIELD_X + WINSCALE(X(x))), (float)WINSCALE(Y(y)),
+                      teammine)) {
+        if (name)
+            Gui_paint_mine_name(X(x), Y(y), name);
+        return;
+    }
     if (!texturedObjects) {
         static const int world_mine_points[21][2] = {
             { 0, 0 },
