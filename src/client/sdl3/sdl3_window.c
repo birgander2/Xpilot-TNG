@@ -69,6 +69,7 @@ int SDL3_Init_Window(int w, int h)
     SDL3_Init_Colors();
     SDL3_Init_Font();
     SDL3_Init_Draw();
+    Fx_init();
     SDL3_Init_Audio();
 
     return 0;
@@ -80,6 +81,7 @@ void SDL3_Cleanup(void)
     aboutCleanup();
     Voice_cleanup();
     SDL3_Cleanup_Audio();
+    Fx_cleanup();
     SDL3_Cleanup_Draw();
     SDL3_Cleanup_Font();
 
@@ -141,11 +143,15 @@ void Paint_frame(void)
         Rectangle_end();
         Segment_end();
 
+        /* 5b. Cosmetic effects (explosions, sparks), below ships and HUD */
+        Fx_render();
+
         /* 6. Render Ships and HUD Instruments */
         Rectangle_start();
         Segment_start();
 
         Paint_ships();
+        Fx_end_frame();     /* all ships and wreckage of this frame seen */
         Paint_meters();
         Paint_HUD();
         Paint_recording();

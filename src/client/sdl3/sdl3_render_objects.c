@@ -230,6 +230,8 @@ void Gui_paint_wreck(int x, int y, bool deadly, int wtype, int rot, int size)
     int color, cnt, tx, ty;
     SDL_FPoint points[NUM_WRECKAGE_POINTS + 2];
 
+    Fx_observe_wreck(x, y);
+
     for (cnt = 0; cnt < NUM_WRECKAGE_POINTS; cnt++) {
         tx = (int)(wreckageShapes[wtype][cnt][rot].x * size) >> 8;
         ty = (int)(wreckageShapes[wtype][cnt][rot].y * size) >> 8;
@@ -751,6 +753,8 @@ void Gui_paint_ship(int x, int y, int dir, int id, int cloak, int phased,
     shipshape_t *ship;
     SDL_FPoint points[64];
     int ship_shape;
+
+    Fx_observe_ship(id, x, y);
 
     ship = Ship_by_id(id);
     if (!ship)

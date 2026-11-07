@@ -122,6 +122,15 @@ static inline void Check_name_string(other_t *other)
 /* Drawing primitives & coordinate mapping */
 int   SDL3_Init_Draw(void);
 void  SDL3_Cleanup_Draw(void);
+
+/* Cosmetic client-side effects (sdl3_fx.c) */
+void  Store_fx_options(void);
+int   Fx_init(void);
+void  Fx_cleanup(void);
+void  Fx_observe_ship(int id, int x, int y);
+void  Fx_observe_wreck(int x, int y);
+void  Fx_end_frame(void);
+void  Fx_render(void);
 float Screen_X(int world_x);
 float Screen_Y(int world_y);
 void  SDL3_Draw_Line(float x1, float y1, float x2, float y2, int color_idx);

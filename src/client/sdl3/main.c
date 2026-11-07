@@ -55,6 +55,7 @@ int main(int argc, char *argv[])
     Store_paintradar_options();
     Store_guimap_options();
     Store_guiobject_options();
+    Store_fx_options();
 
     memset(&xpArgs, 0, sizeof(xp_args_t));
     Parse_options(&argc, argv);

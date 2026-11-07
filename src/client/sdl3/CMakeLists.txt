@@ -21,6 +21,7 @@ add_executable(xpilot-tng-client
     sdl3_ballresult.c
     sdl3_welcome.c
     sdl3_bitmaps.c
+    sdl3_fx.c
 )
 
 target_include_directories(xpilot-tng-client PRIVATE
