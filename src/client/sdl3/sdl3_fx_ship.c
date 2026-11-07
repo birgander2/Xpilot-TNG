@@ -14,6 +14,7 @@
 
 static bool fxShipHull = true;
 static bool fxShipHalo = true;
+static bool fxShield = true;
 
 static xp_option_t ship_fx_options[] = {
     XP_BOOL_OPTION("fxShipHull", true, &fxShipHull, NULL,
@@ -22,6 +23,11 @@ static xp_option_t ship_fx_options[] = {
     XP_BOOL_OPTION("fxShipHalo", true, &fxShipHalo, NULL,
                    XP_OPTFLAG_CONFIG_FX,
                    "Soft glow around ships in team play: blue for your own team.\n"),
+    XP_BOOL_OPTION("fxShield", true, &fxShield, NULL,
+                   XP_OPTFLAG_CONFIG_FX,
+                   "Shield as a pale dashed hexagon that flashes on hits and wall\n"
+                   "contact; armor shows it briefly when hit. Deflector as turning,\n"
+                   "softly glowing arcs.\n"),
 };
 
 void Store_ship_fx_options(void)
@@ -197,4 +203,105 @@ bool Fx_paint_ship_hull(const SDL_FPoint *pts, int n, float cx, float cy,
         SDL_RenderLine(tng_renderer, a.x, a.y, b.x, b.y);
     }
     return true;
+}
+
+/* ------------------------------------------------------------------ */
+/* Shield                                                             */
+/* ------------------------------------------------------------------ */
+
+bool Fx_shield_enabled(void)
+{
+    return fxShield && !Fx_classic();
+}
+
+/* Pointy-top hexagon, circumradius r. */
+static void sh_hexagon(float cx, float cy, float r, SDL_FPoint out[6])
+{
+    for (int i = 0; i < 6; i++) {
+        float a = (float)M_PI / 6.0f + (float)i * (float)M_PI / 3.0f;
+        out[i] = (SDL_FPoint){ cx + r * cosf(a), cy + r * sinf(a) };
+    }
+}
+
+/* Three dashes per edge, open at the corners. */
+static void sh_dashed_hexagon(const SDL_FPoint h[6], SDL_Color c)
+{
+    static const float dash[3][2] = { { 0.06f, 0.28f }, { 0.39f, 0.61f }, { 0.72f, 0.94f } };
+
+    SDL_SetRenderDrawBlendMode(tng_renderer, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(tng_renderer, c.r, c.g, c.b, c.a);
+    for (int i = 0; i < 6; i++) {
+        SDL_FPoint a = h[i], b = h[(i + 1) % 6];
+        for (int d = 0; d < 3; d++) {
+            float t0 = dash[d][0], t1 = dash[d][1];
+            SDL_RenderLine(tng_renderer, a.x + (b.x - a.x) * t0, a.y + (b.y - a.y) * t0,
+                           a.x + (b.x - a.x) * t1, a.y + (b.y - a.y) * t1);
+        }
+    }
+}
+
+/*
+ * Shield around a ship at screen (cx, cy). radius: radius of the classic
+ * shield circle in screen pixels. shield: shield or emergency shield up
+ * (both look the same), flash: 0..1 hit flash; without shield a flash
+ * means the armor took a hit and shows the hexagon briefly.
+ */
+void Fx_paint_shield(float cx, float cy, float radius, int color,
+                     bool shield, float flash)
+{
+    SDL_FPoint h[6];
+    SDL_FColor fc;
+    float r = radius * 1.1f;
+    float alpha;
+
+    if (!tng_renderer || radius < 1.0f || (!shield && flash <= 0.0f))
+        return;
+
+    fc = SDL3_Get_FColor(color);
+    alpha = shield ? 0.32f + 0.68f * flash : 0.9f * flash;
+    sh_hexagon(cx, cy, r, h);
+
+    if (flash > 0.0f) {
+        SDL_FColor gc = { fc.r, fc.g, fc.b, 0.5f * flash };
+        Fx_draw_outline_glow(h, 6, gc, 5.0f * clData.fscale);
+    }
+
+    SDL_Color c = { (Uint8)(fc.r * 255.0f), (Uint8)(fc.g * 255.0f), (Uint8)(fc.b * 255.0f),
+                    (Uint8)(sh_clamp01(alpha) * 255.0f) };
+    sh_dashed_hexagon(h, c);
+}
+
+/*
+ * Deflector: eight arc pieces with a soft glow that turn slowly around the
+ * ship, their color drifting smoothly between the classic red and blue.
+ * radius: radius of the classic deflector circle in screen pixels.
+ */
+void Fx_paint_deflector(float cx, float cy, float radius)
+{
+    const int arcs = 8, steps = 4;
+    float t = (float)(SDL_GetTicksNS() % (1000ull * SDL_NS_PER_SECOND)) / 1e9f;
+    float m = 0.5f + 0.5f * sinf(t * 5.0f);
+    float r = radius * 1.15f;      /* clear of the shield hexagon */
+    float rot = t * 2.2f;
+
+    if (!tng_renderer || radius < 1.0f)
+        return;
+
+    SDL_FColor a = SDL3_Get_FColor(RED), b = SDL3_Get_FColor(BLUE);
+    SDL_FColor c = { a.r + (b.r - a.r) * m, a.g + (b.g - a.g) * m, a.b + (b.b - a.b) * m, 0.55f };
+    SDL_Color lc = { (Uint8)(c.r * 255.0f), (Uint8)(c.g * 255.0f), (Uint8)(c.b * 255.0f), 196 };
+
+    for (int i = 0; i < arcs; i++) {
+        SDL_FPoint p[steps + 1];
+        float a0 = rot + (float)i * 2.0f * (float)M_PI / (float)arcs;
+        float span = 2.0f * (float)M_PI / (float)arcs * 0.55f;
+        for (int k = 0; k <= steps; k++) {
+            float ang = a0 + span * (float)k / (float)steps;
+            p[k] = (SDL_FPoint){ cx + r * cosf(ang), cy + r * sinf(ang) };
+        }
+        Fx_draw_polyline_glow(p, steps + 1, false, c, 2.4f * clData.fscale);
+        SDL_SetRenderDrawBlendMode(tng_renderer, SDL_BLENDMODE_BLEND);
+        SDL_SetRenderDrawColor(tng_renderer, lc.r, lc.g, lc.b, lc.a);
+        SDL_RenderLines(tng_renderer, p, steps + 1);
+    }
 }

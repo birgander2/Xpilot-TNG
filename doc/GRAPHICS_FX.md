@@ -109,7 +109,15 @@ Antrieb:
 
 Schild und Zustände:
 
-5. **Schild als Energieblase**: weicher Rand mit leichtem Schimmern, blitzt bei Treffern oder
+5. ✅ **Schild als Hexagon** (`fxShield`): blasses, gestricheltes Hexagon statt gestricheltem Kreis
+   (Notschild sieht genauso aus). Deflektor: acht Bogenstücke mit weichem Glow, die sich langsam
+   ums Schiff drehen, Farbe wandert weich zwischen Rot und Blau (statt hartem Farbwechsel);
+   verglichen mit pulsierenden Wellen und kreisenden Funken. Blitzt bei Treffern und
+   Wandkontakt auf (Glow entlang der Kanten); bei Panzerung erscheint es kurz.
+   Treffer sendet der Server nicht sichtbar – Erkennung: Schuss war im letzten Frame am Schiff
+   (< 30 px) und hat keinen Nachfolger in Flugweite, Schiff lebt noch; Wandkontakt aus der
+   Stoßerkennung; eigenes Schiff ohne Schild exakt über den sinkenden Panzerungszähler.
+   Ursprüngliche Idee: Energieblase, weicher Rand mit leichtem Schimmern, blitzt bei Treffern oder
    Wandkontakt kurz auf. (Erweitert „Schild-Schimmern“ unter „Weitere Ideen“.)
 6. **Erscheinen / Hyperjump**: Lichtwirbel oder Implosion beim Auftauchen und Springen.
 7. **Wenig Treibstoff**: dünner Rauchfaden oder vereinzelte Funken als visuelle Warnung.

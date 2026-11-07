@@ -576,6 +576,8 @@ typedef struct {
     float   thrust_a;       /* acceleration along the heading, px/tick^2 */
     bool    thrust_valid;
     long    thrust_loop;    /* last frame with a thrust sign */
+    bool    shield;         /* shield up in this frame */
+    Uint64  hit_ns;         /* last hit on shield or armor (0 = none) */
     float   flame_k;        /* smoothed flame intensity 0..1 */
 } fx_track_t;
 
@@ -594,6 +596,38 @@ static float fx_spark_x[FX_MAX_SPARKS], fx_spark_y[FX_MAX_SPARKS];
 static int   fx_num_sparks;
 
 /* x, y: view coordinates as passed to Gui_paint_spark() */
+/*
+ * Shots of this and the previous frame, world coordinates. A shot that
+ * was right at a ship and is gone in the next frame hit it.
+ */
+#define FX_MAX_SHOTS    1024
+static float fx_shot_x[2][FX_MAX_SHOTS], fx_shot_y[2][FX_MAX_SHOTS];
+static int   fx_num_shots[2];
+static int   fx_shot_cur;                   /* index of this frame's list */
+static long  fx_shot_loop[2];
+
+static void fx_add_shot(float x, float y)
+{
+    int c = fx_shot_cur;
+    if (fx_num_shots[c] < FX_MAX_SHOTS) {
+        fx_shot_x[c][fx_num_shots[c]] = x;
+        fx_shot_y[c][fx_num_shots[c]] = y;
+        fx_num_shots[c]++;
+    }
+}
+
+/* x, y: view coordinates as passed to Gui_paint_fastshot/teamshot() */
+void Fx_observe_shot(int x, int y)
+{
+    fx_add_shot((float)(world.x + x), (float)(world.y + ext_view_height - y));
+}
+
+/* x, y: world coordinates as passed to Gui_paint_missile() */
+void Fx_observe_missile(int x, int y)
+{
+    fx_add_shot((float)x, (float)y);
+}
+
 void Fx_observe_spark(int x, int y)
 {
     if (fx_num_sparks < FX_MAX_SPARKS) {
@@ -641,6 +675,8 @@ static void fx_check_impact(fx_track_t *t, float vx, float vy)
     if (now - t->spark_ns < FX_SPARK_COOLDOWN)
         return;
     t->spark_ns = now;
+    if (t->shield)
+        t->hit_ns = now;        /* the shield takes the blow */
 
     float nx = dvx / dv, ny = dvy / dv;
     /* sliding component of the old velocity along the surface */
@@ -846,6 +882,8 @@ static bool fx_wreck_near(float x, float y, float radius)
     return false;
 }
 
+static fx_track_t *fx_track_by_id(int id);
+
 /* Ships that were tracked but are missing in this frame: did they blow up? */
 static void fx_check_vanished(void)
 {
@@ -900,14 +938,21 @@ void Fx_frame_begin(void)
     int i;
 
     fx_num_sparks = 0;
+    fx_shot_cur ^= 1;
+    fx_num_shots[fx_shot_cur] = 0;
+    fx_shot_loop[fx_shot_cur] = loops;
     fx_num_wrecks = 0;
     for (i = 0; i < num_wreckage && fx_num_wrecks < FX_MAX_WRECKS; i++) {
         fx_wreck_x[fx_num_wrecks] = (float)wreckage_ptr[i].x;
         fx_wreck_y[fx_num_wrecks] = (float)wreckage_ptr[i].y;
         fx_num_wrecks++;
     }
-    for (i = 0; i < num_ship; i++)
+    for (i = 0; i < num_ship; i++) {
         fx_observe_ship(ship_ptr[i].id, ship_ptr[i].x, ship_ptr[i].y, ship_ptr[i].dir);
+        fx_track_t *t = fx_track_by_id(ship_ptr[i].id);
+        if (t)
+            t->shield = ship_ptr[i].shield != 0;
+    }
     fx_check_vanished();
 }
 
@@ -1071,11 +1116,13 @@ static void fx_flush(SDL_BlendMode mode)
 }
 
 /*
- * Soft glow along a closed outline (screen points, n unique points):
- * one quad with a soft cross-section per edge plus a glow dot per corner,
- * drawn additively right away. width: half-width in screen pixels.
+ * Soft glow along a polyline (screen points): one quad with a soft
+ * cross-section per segment plus a glow dot per point, drawn additively
+ * right away. closed: also join the last point to the first.
+ * width: half-width in screen pixels.
  */
-void Fx_draw_outline_glow(const SDL_FPoint *pts, int n, SDL_FColor col, float width)
+void Fx_draw_polyline_glow(const SDL_FPoint *pts, int n, bool closed,
+                           SDL_FColor col, float width)
 {
     const float iw = 1.0f / (float)(FX_CELL * FX_ATLAS_COLS);
     const float ih = 1.0f / (float)(FX_CELL * FX_ATLAS_ROWS);
@@ -1088,7 +1135,7 @@ void Fx_draw_outline_glow(const SDL_FPoint *pts, int n, SDL_FColor col, float wi
 
     fx_nv = 0;
     fx_ni = 0;
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < (closed ? n : n - 1); i++) {
         SDL_FPoint a = pts[i], b = pts[(i + 1) % n];
         float dx = b.x - a.x, dy = b.y - a.y;
         float len = sqrtf(dx * dx + dy * dy);
@@ -1113,10 +1160,16 @@ void Fx_draw_outline_glow(const SDL_FPoint *pts, int n, SDL_FColor col, float wi
         fx_nv += 4;
         fx_ni += 6;
     }
-    /* round off the corners */
-    for (int i = 0; i < n; i++)
+    /* round off the corners of outlines */
+    for (int i = 0; closed && i < n; i++)
         fx_quad(pts[i].x, pts[i].y, width, 0.0f, 0.0f, width, CELL_GLOW, col);
     fx_flush(SDL_BLENDMODE_ADD);
+}
+
+/* Soft glow along a closed outline (n unique points). */
+void Fx_draw_outline_glow(const SDL_FPoint *pts, int n, SDL_FColor col, float width)
+{
+    Fx_draw_polyline_glow(pts, n, true, col, width);
 }
 
 /* Append one wingtip contrail as a triangle strip with a soft cross-section. */
@@ -1220,6 +1273,85 @@ static fx_track_t *fx_track_by_id(int id)
     return NULL;
 }
 
+/*
+ * Hits on shields and armor. The server shows nothing for them, the shot
+ * just disappears: a shot that was right at a ship in the previous frame
+ * and has no successor within its flight distance hit it (the ship is
+ * still there, so a shield or armor took it). Own ship: the armor count
+ * dropping is exact.
+ */
+#define FX_HIT_NEAR     30.0f   /* shot this close to the ship center */
+#define FX_SHOT_STEP    48.0f   /* max shot travel per frame, plus margin */
+
+static void fx_hit_update(void)
+{
+    static int last_armor = -1;
+    int prev = fx_shot_cur ^ 1;
+    long dl = loops - fx_shot_loop[prev];
+    Uint64 now = SDL_GetTicksNS();
+
+    if (self) {
+        int armor = numItems[ITEM_ARMOR];
+        if (last_armor >= 0 && armor < last_armor) {
+            fx_track_t *t = fx_track_by_id(self->id);
+            if (t)
+                t->hit_ns = now;
+        }
+        last_armor = armor;
+    }
+
+    if (dl < 1 || dl > 2)
+        return;
+    float step2 = (FX_SHOT_STEP * (float)dl) * (FX_SHOT_STEP * (float)dl);
+
+    for (int k = 0; k < fx_num_shots[prev]; k++) {
+        float px = fx_shot_x[prev][k], py = fx_shot_y[prev][k];
+        fx_track_t *hit = NULL;
+        float best = FX_HIT_NEAR * FX_HIT_NEAR;
+
+        for (int i = 0; i < fx_num_tracks; i++) {
+            fx_track_t *t = &fx_tracks[i];
+            if (t->loop != loops)
+                continue;       /* gone: blew up, no flash */
+            float dx = fx_wrap_dx(px - t->x), dy = fx_wrap_dy(py - t->y);
+            float d2 = dx * dx + dy * dy;
+            if (d2 < best) {
+                best = d2;
+                hit = t;
+            }
+        }
+        if (!hit)
+            continue;
+        /* own ship without shield: the armor count above is exact */
+        if (self && hit->id == self->id && !hit->shield)
+            continue;
+
+        bool gone = true;
+        for (int c = 0; gone && c < fx_num_shots[fx_shot_cur]; c++) {
+            float dx = fx_wrap_dx(fx_shot_x[fx_shot_cur][c] - px);
+            float dy = fx_wrap_dy(fx_shot_y[fx_shot_cur][c] - py);
+            if (dx * dx + dy * dy < step2)
+                gone = false;
+        }
+        if (gone)
+            hit->hit_ns = now;
+    }
+}
+
+/* 0..1: how strongly the shield or armor of ship id flashes right now. */
+float Fx_ship_hit_flash(int id)
+{
+    fx_track_t *t;
+
+    if (Fx_classic() || (t = fx_track_by_id(id)) == NULL || t->hit_ns == 0)
+        return 0.0f;
+    float age = (float)(SDL_GetTicksNS() - t->hit_ns) / 1e9f;
+    if (age >= 0.35f)
+        return 0.0f;
+    float e = 1.0f - age / 0.35f;
+    return e * sqrtf(e);
+}
+
 static void fx_flame_update(void)
 {
     for (int i = 0; i < fx_num_tracks; i++) {
@@ -1313,6 +1445,7 @@ void Fx_render(void)
         dt = 0.1f;
     fx_update(dt);
     fx_flame_update();
+    fx_hit_update();
 
     if (!fx_atlas || !tng_renderer)
         return;

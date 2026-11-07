@@ -129,6 +129,12 @@ int   Fx_init(void);
 void  Fx_cleanup(void);
 void  Fx_frame_begin(void);
 void  Fx_observe_spark(int x, int y);
+void  Fx_observe_shot(int x, int y);
+void  Fx_observe_missile(int x, int y);
+float Fx_ship_hit_flash(int id);
+void  Fx_paint_shield(float cx, float cy, float radius, int color,
+                      bool shield, float flash);
+bool  Fx_shield_enabled(void);
 void  Fx_paint_engine_flame(int id, int x, int y, int dir);
 bool  Fx_classic(void);
 void  Store_terrain_options(void);
@@ -136,6 +142,9 @@ bool  Fx_terrain_paint(int i, int xoff, int yoff, SDL_FColor base);
 bool  Fx_terrain_paint_textured(int i, int xoff, int yoff);
 void  Fx_terrain_cleanup(void);
 void  Fx_draw_outline_glow(const SDL_FPoint *pts, int n, SDL_FColor col, float width);
+void  Fx_draw_polyline_glow(const SDL_FPoint *pts, int n, bool closed,
+                            SDL_FColor col, float width);
+void  Fx_paint_deflector(float cx, float cy, float radius);
 void  Store_ship_fx_options(void);
 bool  Fx_paint_ship_hull(const SDL_FPoint *pts, int n, float cx, float cy,
                          int color, int halo_color, bool fill);

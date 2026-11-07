@@ -285,6 +285,7 @@ static void Gui_paint_nastyshot(int color, int x, int y, int size)
 
 void Gui_paint_fastshot(int color, int x, int y)
 {
+    Fx_observe_shot(x, y);
     /* this is for those pesky invisible shots */
     if (color == 0)
         return;
@@ -315,6 +316,7 @@ void Gui_paint_fastshot(int color, int x, int y)
 
 void Gui_paint_teamshot(int x, int y)
 {
+    Fx_observe_shot(x, y);
     int color = teamShotColor;
 
     if (color == 0)
@@ -355,6 +357,8 @@ void Gui_paint_missiles_end(void)
 void Gui_paint_missile(int x, int y, int len, int dir)
 {
     int x_1, x_2, y_1, y_2;
+
+    Fx_observe_missile(x, y);
 
     x_1 = X(x);
     y_1 = Y(y);
@@ -842,7 +846,17 @@ void Gui_paint_ship(int x, int y, int dir, int id, int cloak, int phased,
     if (markingLights)
         Gui_paint_marking_lights(id, x, y, ship, dir);
 
-    if (shield || deflector) {
+    if (Fx_shield_enabled()) {
+        /* modern: hexagon shield, flashing on hits; armor hits show it briefly */
+        float flash = Fx_ship_hit_flash(id);
+        if (shield || flash > 0.0f)
+            Fx_paint_shield((float)(PLAYFIELD_X + WINSCALE(X(x))), (float)WINSCALE(Y(y)),
+                            (float)WINSCALE(ship->shield_radius >> 1), ship_color,
+                            shield != 0, flash);
+        if (deflector)
+            Fx_paint_deflector((float)(PLAYFIELD_X + WINSCALE(X(x))), (float)WINSCALE(Y(y)),
+                               (float)WINSCALE((ship->shield_radius + 4) >> 1));
+    } else if (shield || deflector) {
         Gui_paint_shields_deflectors(x, y, ship->shield_radius,
                                      shield, deflector,
                                      eshield, ship_color);
