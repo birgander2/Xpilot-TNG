@@ -10,8 +10,8 @@
 class ClientProfile;
 
 // Editor for the player profile in the xpilotrc: nickname, ship, key bindings,
-// mouse buttons, weapon modifier banks, audio (game sounds, voice chat) and
-// network settings (jitter buffer, turn prediction).
+// mouse buttons, weapon modifier banks, audio (game sounds, voice chat),
+// network settings (jitter buffer, turn prediction) and visual effects.
 class ProfileEditor {
 public:
     // Reads the xpilotrc and the ships (stock_ships_path = lib/shipshapes.txt, plus the
@@ -26,7 +26,7 @@ public:
     bool TakeShipEditorRequest(std::string* shape);
 
     // Client arguments for every value that was changed but not saved to the
-    // xpilotrc (keys, mouse buttons, modifier banks, audio, network), so they
+    // xpilotrc (keys, mouse buttons, modifier banks, audio, network, fx), so they
     // apply to the next game anyway. Name and ship: see ApplyIdentityTo().
     std::vector<std::string> UnsavedArgs() const;
 
@@ -60,6 +60,7 @@ private:
     void RenderModBanks();
     void RenderAudio();
     void RenderNetwork();
+    void RenderFx();
     std::vector<std::pair<std::string, std::string>> Changes() const;
 
     static constexpr int kButtons = 5, kBanks = 4;
@@ -100,6 +101,15 @@ private:
         int key_turn_rate = 630;         // keyTurnRate, degrees per second
     } net_;
     std::vector<std::pair<std::string, std::string>> NetworkValues() const;
+
+    // visual effects: client options classicGraphics, fx*
+    struct Fx {
+        bool classic = false;            // classicGraphics: all modern effects off
+        bool explosions = true;          // fxExplosions
+        bool sparks = true;              // fxSparks
+        float amount = 1.0f;             // fxAmount, particle multiplier 0..2
+    } fx_;
+    std::vector<std::pair<std::string, std::string>> FxValues() const;
     bool loaded_ = false;
 
     std::map<std::string, std::string> rc_;      // values defined in the xpilotrc when loaded

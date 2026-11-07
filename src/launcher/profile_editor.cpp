@@ -348,11 +348,21 @@ void ProfileEditor::Load(const std::string& stock_ships_path, bool keep_unsaved)
     net_.mouse_prediction = get_bool("dirPrediction", true);
     net_.key_turn_mouse = get_bool("keyTurnMouse", false);
     net_.key_turn_rate = get_int("keyTurnRate", 630, 30, 2000);
+    fx_.classic = get_bool("classicGraphics", false);
+    fx_.explosions = get_bool("fxExplosions", true);
+    fx_.sparks = get_bool("fxSparks", true);
+    {
+        std::string v = get("fxAmount", "1.0");
+        char* end = nullptr;
+        double d = std::strtod(v.c_str(), &end);
+        fx_.amount = end == v.c_str() ? 1.0f : float(std::clamp(d, 0.0, 2.0));
+    }
 
     shown_.clear();
     // snapshot of everything the editor can write, to detect edits
     for (const auto& kv : AudioValues()) shown_[kv.first] = kv.second;
     for (const auto& kv : NetworkValues()) shown_[kv.first] = kv.second;
+    for (const auto& kv : FxValues()) shown_[kv.first] = kv.second;
     loaded_ = true;
     shown_["name"] = name_;
     shown_["shipShape"] = rc_ship_;
@@ -372,6 +382,7 @@ void ProfileEditor::Load(const std::string& stock_ships_path, bool keep_unsaved)
         for (int i = 0; i < kBanks; ++i) banks_[i] = unsaved.banks_[i];
         audio_ = unsaved.audio_;
         net_ = unsaved.net_;
+        fx_ = unsaved.fx_;
     }
 }
 
@@ -399,10 +410,23 @@ std::vector<std::pair<std::string, std::string>> ProfileEditor::NetworkValues() 
     };
 }
 
+std::vector<std::pair<std::string, std::string>> ProfileEditor::FxValues() const {
+    auto b = [](bool v) { return std::string(v ? "true" : "false"); };
+    char amount[16];
+    std::snprintf(amount, sizeof amount, "%.2f", fx_.amount);
+    return {
+        {"classicGraphics", b(fx_.classic)},
+        {"fxExplosions", b(fx_.explosions)},
+        {"fxSparks", b(fx_.sparks)},
+        {"fxAmount", amount},
+    };
+}
+
 std::vector<std::pair<std::string, std::string>> ProfileEditor::Changes() const {
     std::vector<std::pair<std::string, std::string>> cur, changed;
     for (const auto& kv : AudioValues()) cur.push_back(kv);
     for (const auto& kv : NetworkValues()) cur.push_back(kv);
+    for (const auto& kv : FxValues()) cur.push_back(kv);
     cur.emplace_back("name", name_);
     cur.emplace_back("shipShape", ship_);
     int n = 0;
@@ -740,6 +764,37 @@ void ProfileEditor::RenderNetwork() {
     ImGui::TextDisabled("Might help hiding the lag when turning. Thrust, shots and other ships are not affected.");
 }
 
+void ProfileEditor::RenderFx() {
+    ImGui::Spacing();
+    ImGui::SeparatorText("Look");
+    int look = fx_.classic ? 0 : 1;
+    ImGui::RadioButton("Classic", &look, 0);
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("The original XPilot look without any modern effects (xpilot.classicGraphics)");
+    ImGui::SameLine();
+    ImGui::RadioButton("Modern", &look, 1);
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Explosions, sparks and other visual effects");
+    fx_.classic = (look == 0);
+
+    ImGui::Spacing();
+    ImGui::SeparatorText("Effects");
+    ImGui::BeginDisabled(fx_.classic);
+    ImGui::Checkbox("Explosions", &fx_.explosions);
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Fireball, shockwave, embers and smoke when a ship is destroyed (xpilot.fxExplosions)");
+    ImGui::Checkbox("Sparks", &fx_.sparks);
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Sparks when a ship hits a wall or another ship (xpilot.fxSparks)");
+    ImGui::SetNextItemWidth(280);
+    ImGui::SliderFloat("Amount", &fx_.amount, 0.0f, 2.0f, "%.2f");
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Number of particles (xpilot.fxAmount).\n"
+                          "Lower it on slow machines, 0 turns the effects off.");
+    ImGui::EndDisabled();
+    ImGui::Spacing();
+    ImGui::TextDisabled("Purely cosmetic: the effects never change the game, and work on every server.");
+}
+
 bool ProfileEditor::Render(float bottom_reserve) {
     bool saved = false;
     ImGui::BeginChild("ProfileBody", ImVec2(0, -bottom_reserve));
@@ -751,6 +806,7 @@ bool ProfileEditor::Render(float bottom_reserve) {
         if (ImGui::BeginTabItem("Modifier banks")) { RenderModBanks(); ImGui::EndTabItem(); }
         if (ImGui::BeginTabItem("Audio")) { RenderAudio(); ImGui::EndTabItem(); }
         if (ImGui::BeginTabItem("Network")) { RenderNetwork(); ImGui::EndTabItem(); }
+        if (ImGui::BeginTabItem("FX")) { RenderFx(); ImGui::EndTabItem(); }
         ImGui::EndTabBar();
     }
     ImGui::EndChild();

@@ -766,7 +766,7 @@ void LauncherApp::RenderIdentityRow() {
         profile_return_ = screen_;
         GoTo(Screen::Profile);
     }
-    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Edit ship, keys, mouse buttons, modifier banks, audio and network in the xpilotrc");
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Edit ship, keys, mouse buttons, modifier banks, audio, network and effects in the xpilotrc");
 }
 
 void LauncherApp::RenderQuickSettings(bool server_mode) {
