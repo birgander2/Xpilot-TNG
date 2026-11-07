@@ -355,6 +355,7 @@ void ProfileEditor::Load(const std::string& stock_ships_path, bool keep_unsaved)
     fx_.missile_trails = get_bool("fxMissileTrails", true);
     fx_.laser_glow = get_bool("fxLaserGlow", true);
     fx_.hyperjump = get_bool("fxHyperjump", true);
+    fx_.wormholes = get_bool("fxWormholes", true);
     fx_.nuke_flash = get_bool("fxNukeFlash", true);
     fx_.screen_shake = get_bool("fxScreenShake", true);
     fx_.contrails = get_bool("fxContrails", true);
@@ -435,6 +436,7 @@ std::vector<std::pair<std::string, std::string>> ProfileEditor::FxValues() const
         {"fxMissileTrails", b(fx_.missile_trails)},
         {"fxLaserGlow", b(fx_.laser_glow)},
         {"fxHyperjump", b(fx_.hyperjump)},
+        {"fxWormholes", b(fx_.wormholes)},
         {"fxNukeFlash", b(fx_.nuke_flash)},
         {"fxScreenShake", b(fx_.screen_shake)},
         {"fxContrails", b(fx_.contrails)},
@@ -827,6 +829,10 @@ void ProfileEditor::RenderFx() {
     if (ImGui::IsItemHovered())
         ImGui::SetTooltip("Hyperjumping ships stretch into a light streak and shoot in on one\n"
                           "where they come out (xpilot.fxHyperjump)");
+    ImGui::Checkbox("Wormholes", &fx_.wormholes);
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Wormholes as glowing tunnels, and a swirling vortex when a ship goes\n"
+                          "through (xpilot.fxWormholes; needs a current TNG server)");
     ImGui::Checkbox("Nuke flash", &fx_.nuke_flash);
     if (ImGui::IsItemHovered())
         ImGui::SetTooltip("Brief bright flash of the whole view when a nuke goes off in sight (xpilot.fxNukeFlash)");

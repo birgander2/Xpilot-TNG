@@ -126,9 +126,27 @@ Schild und Zustände:
    sich in 0,25 s ins bis zu 6× gestreckte Schiff zusammen, Lichtblitz beim Ankommen, danach
    glüht der Umriss 1 s nach (folgt dem Schiff). Erkennung ohne Protokoll: ein Schiff ist von
    einem Frame zum nächsten weit woanders, ohne zu explodieren. Eigenes Schiff nur nach
-   gedrückter Hyperjump-Taste (mit Item), fremde Schiffe nur, wenn kein sichtbares Wurmloch
+   gedrückter Hyperjump-Taste (mit Item), fremde Schiffe nur, wenn kein Wurmloch (siehe 6a)
    an der alten Position ist. Den eigenen Absprung sieht man kaum, weil die Ansicht mitspringt.
-   Offen: Erscheinen nach Respawn, Wurmloch-Strudel (Lichtwirbel, Variante C).
+   Offen: Erscheinen nach Respawn.
+6a. ✅ **Wurmlöcher** → Option `fxWormholes`.
+   - *Aussehen*: statt des Kartenpolygons (je nach Karte Textur, Kreis oder Quadrat) ein
+     Tunnel aus glühenden rot-orangen Ringen, die laufend in die Tiefe wandern und zu einem
+     langsam kreisenden Fluchtpunkt schrumpfen (verglichen: Spiralwirbel, Akkretionsring,
+     Tunnel). Reine Ausgänge mit Polygon: Ringe kommen heraus; Ausgänge ohne Polygon bleiben
+     unsichtbar. Blockkarten: statt der drei roten Ringe.
+   - *Durchflug*: Eintritt – rot-oranger Lichtwirbel dreht sich nach innen, der Umriss des
+     Schiffs wird drehend und schrumpfend hineingezogen, Blitz (0,5 s). Austritt – Blitz, der
+     Wirbel wickelt sich langsam nach außen ab und strudelt gut 1 s nach, das Schiff glüht
+     orange nach (0,9 s). Wurmlöcher führen immer zu einem anderen Wurmloch (zufällig unter
+     out/normal, `wormholeStableTicks` lang dasselbe); „irgendwo hin“ ist nur der Hyperjump.
+   - *Daten*: Polygon-Maps übertragen Wurmlöcher nur als Polygone. Der TNG-Server hängt sie
+     deshalb an die TNG-Kartenobjekte an (`Map_objects_to_client`: SETUP_WORM_IN/OUT/NORMAL
+     mit Position, nur bei `wormholeVisible`). Ältere TNG-Clients überspringen unbekannte
+     Typen, NG-Clients bekommen den Anhang nicht. Das markierende Polygon findet der Client
+     als kleinstes Polygon (< 300 px), dessen Mitte auf dem Wurmloch liegt.
+   - Ohne die Daten (alter Server) bleibt alles wie bisher; Wurmlochsprünge fremder Schiffe
+     gelten dann als Hyperjump.
 7. ✅ **Wenig Treibstoff**: die Triebwerksflamme stottert (nur eigenes Schiff – fremden Treibstoff
    sendet der Server nicht). Ab `fuelWarning` zufällige Aussetzer über 1–4 Frames, häufiger und
    länger je leerer der Tank, ungleichmäßige Länge; bei vielen Aussetzern Fehlzündungen an der
@@ -200,13 +218,14 @@ Vorschlag für ein erstes Paket: gefüllter Rumpf mit Facetten (1+2) und Triebwe
   (geglättete Geschwindigkeit), nicht der Nase. Keine harten Schwellen.
   Messung Bots: killing 95 % < 361 px/s (max 474), tourmination max 320 px/s.
 - **Parallax-Sternenfeld** im Hintergrund (mehrere Ebenen).
-- **Wurmloch-Strudel** (Lichtwirbel-Variante aus dem Hyperjump-Vergleich), ✅ **Hyperjump-Streckeffekt**, 
+- ✅ **Wurmloch-Strudel** (siehe 6a), ✅ **Hyperjump-Streckeffekt**, 
 - **Ball-Tether-Glühen**.
 - **Positionslichter** (aus „Schiffe aufhübschen“ verschoben): rot/grün an den Flügelspitzen
   (`markingLights`) mit Glow-Sprite statt Quadrat + Kreuz. Verglichene Varianten: Glow-Punkt
   (sanftes Auf-/Abblenden), Glow + Kreuzstrahl (Linsenreflex, behält das Kreuz-Motiv),
   Dauerlicht + weißer Strobe-Blitz (realistisch, bei vielen Schiffen unruhig).
 - **Highscores** Leicht durchsichtig im FX Modus
+- **Hübschere Minen**
 
 ## Architektur
 

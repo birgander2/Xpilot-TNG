@@ -1062,7 +1062,7 @@ static int init_polymap(void)
     }
     /*
      * TNG servers append the map objects that are no polygons (gravs,
-     * concentrators); NG servers end here.
+     * concentrators, wormholes); NG servers end here.
      */
     num_mapobjects = 0;
     mapobjects = NULL;

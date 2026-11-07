@@ -216,6 +216,12 @@ void Paint_objects(void)
 		case SETUP_ASTEROID_CONCENTRATOR:
 		    Gui_paint_setup_asteroid_concentrator(x, y);
 		    break;
+		case SETUP_WORM_IN:
+		case SETUP_WORM_NORMAL:
+		case SETUP_WORM_OUT:
+		    /* the map's own polygon marks it; FX may draw it instead */
+		    Gui_paint_mapobject_worm(i, x, y);
+		    break;
 		default:
 		    break;
 		}

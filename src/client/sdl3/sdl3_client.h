@@ -135,6 +135,9 @@ void  Fx_observe_shot(int x, int y);
 void  Fx_observe_missile(int x, int y);
 void  Fx_paint_missile(int x, int y, int len, int dir, float sx, float sy);
 bool  Fx_paint_laser(int color, float x1, float y1, float x2, float y2);
+bool  Fx_paint_wormhole_at(int x, int y, int r);
+void  Fx_paint_wormhole_obj(int obj, int x, int y);
+bool  Fx_wormhole_polygon(int i);
 float Fx_ship_hit_flash(int id);
 void  Fx_paint_shield(float cx, float cy, float radius, int color,
                       bool shield, float flash);

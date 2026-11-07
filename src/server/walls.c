@@ -1629,8 +1629,9 @@ int Polys_to_client(unsigned char **start)
 
 /*
  * TNG addition to the polygon map data: map objects that are no polygons
- * and that the block map used to carry (gravs, concentrators), as client
- * block types (SETUP_*) with their position.  Only TNG clients get it.
+ * and that the block map used to carry (gravs, concentrators, wormholes),
+ * as client block types (SETUP_*) with their position.  Only TNG clients
+ * get it.
  */
 int Map_objects_to_client(unsigned char **start)
 {
@@ -1652,6 +1653,8 @@ int Map_objects_to_client(unsigned char **start)
 	n += Num_itemConcs();
     if (options.asteroidConcentratorVisible)
 	n += Num_asteroidConcs();
+    if (options.wormholeVisible)
+	n += Num_wormholes();
     STORE2(n);
     for (i = 0; options.gravityVisible && i < Num_gravs(); i++) {
 	grav_t *g = Grav_by_index(i);
@@ -1674,6 +1677,15 @@ int Map_objects_to_client(unsigned char **start)
 	STORE1(SETUP_ASTEROID_CONCENTRATOR);
 	STORE2(AsteroidConc_by_index(i)->pos.cx >> CLICK_SHIFT);
 	STORE2(AsteroidConc_by_index(i)->pos.cy >> CLICK_SHIFT);
+    }
+    /* older TNG clients skip block types they don't know */
+    for (i = 0; options.wormholeVisible && i < Num_wormholes(); i++) {
+	wormhole_t *wh = Wormhole_by_index(i);
+
+	STORE1(wh->type == WORM_IN ? SETUP_WORM_IN
+	       : wh->type == WORM_OUT ? SETUP_WORM_OUT : SETUP_WORM_NORMAL);
+	STORE2(wh->pos.cx >> CLICK_SHIFT);
+	STORE2(wh->pos.cy >> CLICK_SHIFT);
     }
     return offset;
 }

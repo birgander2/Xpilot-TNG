@@ -550,6 +550,9 @@ void Gui_paint_setup_left_grav(int x, int y)
 void Gui_paint_setup_worm(int x, int y)
 {
     int wormDrawCount = loopsSlow & 7;
+
+    if (Fx_paint_wormhole_at(x + BLOCK_SZ / 2, y + BLOCK_SZ / 2, BLOCK_SZ / 2))
+        return;
     if (!texturedObjects) {
         static const int INSIDE_BL = BLOCK_SZ - 2;
         static int wormOffset[8][3] = {
@@ -575,6 +578,11 @@ void Gui_paint_setup_worm(int x, int y)
                      PLAYFIELD_X + WINSCALE(X(x)),
                      WINSCALE(Y(y + BLOCK_SZ)), wormDrawCount);
     }
+}
+
+void Gui_paint_mapobject_worm(int obj, int x, int y)
+{
+    Fx_paint_wormhole_obj(obj, x, y);
 }
 
 void Gui_paint_setup_item_concentrator(int x, int y)
@@ -776,6 +784,7 @@ void Gui_paint_polygon(int i, int xoff, int yoff)
 
     polygon_style_t style = polygon_styles[poly->style];
     if (BIT(style.flags, STYLE_INVISIBLE)) return;
+    if (Fx_wormhole_polygon(i)) return;     /* drawn as a tunnel */
 
     SDL_FPoint *pts = (SDL_FPoint *)malloc(sizeof(SDL_FPoint) * (poly->num_points + 1));
     if (!pts) return;

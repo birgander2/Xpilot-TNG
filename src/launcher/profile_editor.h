@@ -111,6 +111,7 @@ private:
         bool missile_trails = true;      // fxMissileTrails
         bool laser_glow = true;          // fxLaserGlow
         bool hyperjump = true;           // fxHyperjump
+        bool wormholes = true;           // fxWormholes
         bool nuke_flash = true;          // fxNukeFlash
         bool screen_shake = true;        // fxScreenShake
         bool contrails = true;           // fxContrails

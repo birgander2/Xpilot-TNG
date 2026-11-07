@@ -31,6 +31,7 @@ static bool   fxMineExplosions = true;
 static bool   fxMissileTrails = true;
 static bool   fxLaserGlow = true;
 static bool   fxHyperjump = true;
+static bool   fxWormholes = true;
 static bool   fxNukeFlash = true;
 static bool   fxScreenShake = true;
 static double fxAmount = 1.0;
@@ -75,6 +76,10 @@ static xp_option_t fx_options[] = {
                    XP_OPTFLAG_CONFIG_FX,
                    "Hyperjumps as light streaks: the ship stretches into a streak and\n"
                    "is gone, and shoots in on a streak where it comes out.\n"),
+    XP_BOOL_OPTION("fxWormholes", true, &fxWormholes, NULL,
+                   XP_OPTFLAG_CONFIG_FX,
+                   "Wormholes as glowing tunnels, and a swirling vortex when a ship\n"
+                   "goes through.\n"),
     XP_BOOL_OPTION("fxNukeFlash", true, &fxNukeFlash, NULL,
                    XP_OPTFLAG_CONFIG_FX,
                    "Brief bright flash of the whole view when a nuke goes off in sight.\n"),
@@ -1088,7 +1093,14 @@ static void fx_accel_update(fx_track_t *t, float dx, float dy, long dl, int dir)
 #define FX_HJ_OUT       0.22f   /* departure, seconds */
 #define FX_HJ_IN        1.3f    /* arrival incl. afterglow, seconds */
 
+#define FX_JK_HYPER     0
+#define FX_JK_WORM      1
+#define FX_WT_IN        0.5f    /* wormhole entry, seconds */
+#define FX_WT_OUT       1.2f    /* wormhole exit incl. swirling on, seconds */
+
 typedef struct {
+    int     kind;                       /* FX_JK_* */
+    float   wx, wy, wr;                 /* wormhole center and radius (FX_JK_WORM) */
     int     id;                         /* ship, the afterglow follows it */
     float   x, y;                       /* world position */
     float   hx, hy;                     /* heading, world (y up) */
@@ -1108,32 +1120,147 @@ void Fx_hyperjump_key(void)
         fx_hj_key_t = (double)SDL_GetTicksNS() / 1e9;
 }
 
-static bool fx_is_hyperjump(int id, float ox, float oy)
+/*
+ * Wormholes of polygon maps, from the TNG map objects. The polygon that
+ * marks a wormhole on the map (any style: texture, plain circle) is the
+ * smallest one around its center; it is drawn as a tunnel instead.
+ */
+#define FX_MAX_WORMS    64
+
+typedef struct {
+    float   x, y, r;            /* center and radius, world pixels */
+    int     type;               /* SETUP_WORM_* */
+    int     obj;                /* index into mapobjects */
+    int     poly;               /* marking polygon or -1 */
+} fx_worm_t;
+
+static fx_worm_t   fx_worms[FX_MAX_WORMS];
+static int         fx_num_worms = -1;
+static const void *fx_worms_key;
+static int         fx_worms_npoly;
+
+static void fx_worms_build(void)
 {
-    if (self && self->id == id) {
-        double now = (double)SDL_GetTicksNS() / 1e9;
-        bool own = now - fx_hj_key_t < 1.5;
-        fx_hj_key_t = -100.0;
-        return own;
+    if (fx_num_worms >= 0 && fx_worms_key == (const void *)mapobjects
+        && fx_worms_npoly == num_polygons)
+        return;
+    fx_worms_key = mapobjects;
+    fx_worms_npoly = num_polygons;
+    fx_num_worms = 0;
+    for (int i = 0; i < num_mapobjects && fx_num_worms < FX_MAX_WORMS; i++) {
+        int type = mapobjects[i].type;
+        if (type != SETUP_WORM_IN && type != SETUP_WORM_NORMAL && type != SETUP_WORM_OUT)
+            continue;
+        fx_worm_t *w = &fx_worms[fx_num_worms++];
+        w->x = (float)(mapobjects[i].bounds.x + BLOCK_SZ / 2);
+        w->y = (float)(mapobjects[i].bounds.y + BLOCK_SZ / 2);
+        w->r = (float)BLOCK_SZ * 0.5f;
+        w->type = type;
+        w->obj = i;
+        w->poly = -1;
+        int best = 1 << 30;
+        for (int p = 0; p < num_polygons; p++) {
+            const irec_t *b = &polygons[p].bounds;
+            if (b->w > 300 || b->h > 300 || b->w * b->h >= best)
+                continue;
+            /* wormhole polygons are centered on the wormhole */
+            float ex = (float)b->x + (float)b->w * 0.5f - w->x;
+            float ey = (float)b->y + (float)b->h * 0.5f - w->y;
+            float tol = 0.2f * (float)(b->w > b->h ? b->w : b->h) + 4.0f;
+            if (fabsf(ex) > tol || fabsf(ey) > tol)
+                continue;
+            best = b->w * b->h;
+            w->poly = p;
+        }
+        if (w->poly >= 0) {
+            const irec_t *b = &polygons[w->poly].bounds;
+            w->x = (float)b->x + (float)b->w * 0.5f;
+            w->y = (float)b->y + (float)b->h * 0.5f;
+            w->r = (float)(b->w > b->h ? b->w : b->h) * 0.5f;
+        }
     }
+}
+
+static inline bool fx_worms_on(void)
+{
+    return fxWormholes && fx_active();
+}
+
+/* An entry wormhole (in or normal) at world position (x, y), or NULL. */
+static const fx_worm_t *fx_worm_near(float x, float y)
+{
+    fx_worms_build();
+    for (int i = 0; i < fx_num_worms; i++) {
+        const fx_worm_t *w = &fx_worms[i];
+        if (w->type == SETUP_WORM_OUT)
+            continue;
+        float dx = fx_wrap_dx(w->x - x), dy = fx_wrap_dy(w->y - y);
+        if (dx * dx + dy * dy < (w->r + 60.0f) * (w->r + 60.0f))
+            return w;
+    }
+    return NULL;
+}
+
+/* The wormhole nearest to (x, y) of any type (exit side), or NULL. */
+static const fx_worm_t *fx_worm_nearest(float x, float y)
+{
+    const fx_worm_t *best = NULL;
+    float bd = 1e30f;
+
+    fx_worms_build();
+    for (int i = 0; i < fx_num_worms; i++) {
+        float dx = fx_wrap_dx(fx_worms[i].x - x), dy = fx_wrap_dy(fx_worms[i].y - y);
+        float d = dx * dx + dy * dy;
+        if (d < bd && d < (fx_worms[i].r + 80.0f) * (fx_worms[i].r + 80.0f)) {
+            bd = d;
+            best = &fx_worms[i];
+        }
+    }
+    return best;
+}
+
+/*
+ * What made a ship jump: FX_JK_HYPER, FX_JK_WORM or -1 (unknown, no
+ * effect). Own hyperjumps are known from the key.
+ */
+static int fx_jump_kind(int id, float ox, float oy)
+{
+    bool own = self && self->id == id;
+
+    if (own) {
+        double now = (double)SDL_GetTicksNS() / 1e9;
+        bool key = now - fx_hj_key_t < 1.5;
+        fx_hj_key_t = -100.0;
+        if (key)
+            return FX_JK_HYPER;
+    }
+    if (fx_worm_near(ox, oy))
+        return FX_JK_WORM;
+    if (own)
+        return -1;
     for (int i = 0; i < num_wormholes; i++) {
         float dx = fx_wrap_dx((float)wormhole_ptr[i].x - ox);
         float dy = fx_wrap_dy((float)wormhole_ptr[i].y - oy);
         if (dx * dx + dy * dy < 90.0f * 90.0f)
-            return false;
+            return -1;
     }
-    return true;
+    return FX_JK_HYPER;
 }
 
-static void fx_hj_add(int id, float x, float y, int dir, bool arrive)
+static fx_hj_t *fx_hj_add(int kind, int id, float x, float y, int dir, bool arrive)
 {
     shipshape_t *ship = fx_ship_shape(id);
     float ang = (float)dir * 2.0f * (float)M_PI / RES;
     fx_hj_t *h;
 
-    if (!fxHyperjump || !fx_active() || fx_num_hj >= FX_MAX_HJ)
-        return;
+    if (!(kind == FX_JK_WORM ? fxWormholes : fxHyperjump) || !fx_active()
+        || fx_num_hj >= FX_MAX_HJ)
+        return NULL;
     h = &fx_hj[fx_num_hj++];
+    h->kind = kind;
+    h->wx = x;
+    h->wy = y;
+    h->wr = (float)BLOCK_SZ * 0.5f;
     h->id = id;
     h->x = x;
     h->y = y;
@@ -1148,6 +1275,7 @@ static void fx_hj_add(int id, float x, float y, int dir, bool arrive)
     }
     h->arrive = arrive;
     h->t0 = (double)SDL_GetTicksNS() / 1e9;
+    return h;
 }
 
 static void fx_observe_ship(int id, int x, int y, int dir)
@@ -1185,9 +1313,25 @@ static void fx_observe_ship(int id, int x, int y, int dir)
 
     /* frame gap, server restart or teleport/wormhole: restart tracking */
     if (dl < 0 || dl > 4 || dx * dx + dy * dy > 120.0f * 120.0f * (float)(dl * dl)) {
-        if (dl >= 1 && dl <= 4 && fx_is_hyperjump(id, t->x, t->y)) {
-            fx_hj_add(id, t->x, t->y, t->dir, false);
-            fx_hj_add(id, (float)x, (float)y, dir, true);
+        int kind = dl >= 1 && dl <= 4 ? fx_jump_kind(id, t->x, t->y) : -1;
+        if (kind == FX_JK_HYPER) {
+            fx_hj_add(kind, id, t->x, t->y, t->dir, false);
+            fx_hj_add(kind, id, (float)x, (float)y, dir, true);
+        } else if (kind == FX_JK_WORM) {
+            const fx_worm_t *w = fx_worm_near(t->x, t->y);
+            fx_hj_t *h = fx_hj_add(kind, id, t->x, t->y, t->dir, false);
+            if (h && w) {
+                h->wx = w->x;
+                h->wy = w->y;
+                h->wr = w->r;
+            }
+            w = fx_worm_nearest((float)x, (float)y);
+            h = fx_hj_add(kind, id, (float)x, (float)y, dir, true);
+            if (h && w) {
+                h->wx = w->x;
+                h->wy = w->y;
+                h->wr = w->r;
+            }
         }
         t->has_vel = false;
         t->trail.count = 0;
@@ -2333,6 +2477,207 @@ static void fx_hj_follow(fx_hj_t *h)
     }
 }
 
+/* ------------------------------------------------------------------ */
+/* Wormholes                                                          */
+/* ------------------------------------------------------------------ */
+
+static const SDL_FColor FX_WORM_RED = { 1.0f, 0.25f, 0.12f, 1.0f };
+static const SDL_FColor FX_WORM_ORANGE = { 1.0f, 0.55f, 0.18f, 1.0f };
+
+static SDL_FColor fx_alpha(SDL_FColor c, float a)
+{
+    c.a = fx_clamp01(a);
+    return c;
+}
+
+/*
+ * Tunnel: glowing rings that keep moving into the depth and shrink
+ * towards a slowly circling vanishing point; out: rings come out instead
+ * (exit-only wormholes). (sx, sy), r: screen pixels.
+ */
+static void fx_tunnel(float sx, float sy, float r, bool out)
+{
+    double now = (double)SDL_GetTicksNS() / 1e9;
+    float ph = (float)fmod(now * M_PI, 4.0 * M_PI);
+    float fr = (float)fmod(now * 2.0, 1.0);
+
+    if (out)
+        fr = 1.0f - fr;                     /* exits: rings come out */
+    float ang = ph * 0.5f, thick = sqrtf(fmaxf(r / 18.0f, 1.0f));
+    SDL_FPoint pts[49];
+
+    if (!fx_atlas || !tng_renderer || r < 2.0f)
+        return;
+    fx_nv = 0;
+    fx_ni = 0;
+    fx_quad(sx, sy, r * 1.3f, 0.0f, 0.0f, r * 1.3f, CELL_GLOW, fx_alpha(FX_WORM_RED, 0.3f));
+    fx_flush(SDL_BLENDMODE_ADD);
+    for (int k = 0; k < 6; k++) {
+        float z = ((float)k + fr) / 6.0f;          /* 0 outer .. 1 deep */
+        float rr = r * (1.0f - z) * (1.0f - z) + 1.0f;
+        float off = r * 0.25f * z;
+        float cx = sx + off * cosf(ang), cy = sy + off * sinf(ang);
+        int n = (int)(12.0f + rr * 0.5f);
+        if (n > 48)
+            n = 48;
+        for (int j = 0; j <= n; j++) {
+            float a = (float)j * 2.0f * (float)M_PI / (float)n;
+            pts[j].x = cx + rr * cosf(a);
+            pts[j].y = cy + rr * sinf(a);
+        }
+        float al = (0.25f + 0.75f * z) * fx_clamp01(z * 6.0f);
+        Fx_draw_polyline_glow(pts, n + 1, false,
+                              fx_alpha(z < 0.5f ? FX_WORM_RED : FX_WORM_ORANGE, al),
+                              (1.6f + 1.4f * (1.0f - z)) * thick);
+    }
+    float vx = sx + r * 0.25f * cosf(ang), vy = sy + r * 0.25f * sinf(ang);
+    float vr = r * 0.08f + 2.5f;
+    fx_nv = 0;
+    fx_ni = 0;
+    fx_quad(vx, vy, vr * 2.0f, 0.0f, 0.0f, vr * 2.0f, CELL_GLOW,
+            (SDL_FColor){ 1.0f, 0.85f, 0.5f, 1.0f });
+    fx_flush(SDL_BLENDMODE_ADD);
+}
+
+/* Block maps: wormhole at world center (x, y). False in classic mode. */
+bool Fx_paint_wormhole_at(int x, int y, int r)
+{
+    if (!fx_worms_on())
+        return false;
+    fx_tunnel(Screen_X(x), Screen_Y(y), (float)r * clData.fscale, false);
+    return true;
+}
+
+/* Polygon maps: map object obj at world corner (x, y), wrap included. */
+void Fx_paint_wormhole_obj(int obj, int x, int y)
+{
+    if (!fx_worms_on())
+        return;
+    fx_worms_build();
+    for (int i = 0; i < fx_num_worms; i++) {
+        const fx_worm_t *w = &fx_worms[i];
+        if (w->obj != obj)
+            continue;
+        if (w->type == SETUP_WORM_OUT && w->poly < 0)
+            return;                 /* unmarked exits stay invisible */
+        int cx = x + (int)(w->x - (float)mapobjects[obj].bounds.x);
+        int cy = y + (int)(w->y - (float)mapobjects[obj].bounds.y);
+        fx_tunnel(Screen_X(cx), Screen_Y(cy), w->r * clData.fscale,
+                  w->type == SETUP_WORM_OUT);
+        return;
+    }
+}
+
+/* True if polygon i marks a wormhole that is drawn as a tunnel instead. */
+bool Fx_wormhole_polygon(int i)
+{
+    if (!fx_worms_on() || num_mapobjects == 0)
+        return false;
+    fx_worms_build();
+    for (int k = 0; k < fx_num_worms; k++)
+        if (fx_worms[k].poly == i)
+            return true;
+    return false;
+}
+
+/* Swirling streaks, inwards (entry) or unwinding outwards (exit). */
+static void fx_worm_vortex(float sx, float sy, float wr, float t, bool out, float scale)
+{
+    unsigned seed = 99;
+    float rs = fmaxf(wr, 17.5f) / 17.5f;
+
+    fx_nv = 0;
+    fx_ni = 0;
+    for (int i = 0; i < 30; i++) {
+        seed = seed * 1103515245u + 12345u;
+        float a0 = (float)((seed >> 8) & 0xffff) / 65535.0f * 6.283f;
+        seed = seed * 1103515245u + 12345u;
+        float r0 = (14.0f + (float)((seed >> 8) & 0xffff) / 65535.0f * 30.0f) * rs * scale;
+        float ph = out ? t / 1.1f : 1.0f - t / 0.4f;
+        if (ph < 0.0f || ph > 1.05f)
+            continue;
+        float d = out ? -0.14f : 0.14f;
+        float r = r0 * ph, ang = a0 + (1.0f - ph) * 4.5f;
+        float r2 = r0 * (ph + d), ang2 = a0 + (1.0f - ph - d) * 4.5f;
+        float al = out ? (1.0f - ph * 0.6f) * (1.0f - fx_smooth01((ph - 0.6f) / 0.45f))
+                       : 0.4f + 0.6f * (1.0f - ph);
+        SDL_FColor c = i % 3 ? FX_WORM_RED : FX_WORM_ORANGE;
+        fx_capsule(sx + r2 * cosf(ang2), sy + r2 * sinf(ang2),
+                   sx + r * cosf(ang), sy + r * sinf(ang), 3.1f * scale,
+                   fx_alpha(c, 0.0f), fx_alpha(c, 0.9f * al));
+    }
+    fx_flush(SDL_BLENDMODE_ADD);
+}
+
+/* Ship outline glowing red-orange, turned by rot and scaled by size. */
+static void fx_worm_ghost(const fx_hj_t *h, float sx, float sy, float scale,
+                          float rot, float size, float a, float wide)
+{
+    SDL_FPoint pts[FX_HJ_PTS + 1];
+    float c = cosf(rot), s = sinf(rot);
+
+    if (h->n < 2 || a <= 0.0f)
+        return;
+    for (int i = 0; i < h->n; i++) {
+        float px = (h->px[i] * c - h->py[i] * s) * size;
+        float py = (h->px[i] * s + h->py[i] * c) * size;
+        pts[i].x = sx + px * scale;
+        pts[i].y = sy - py * scale;
+    }
+    Fx_draw_polyline_glow(pts, h->n, true, fx_alpha(FX_WORM_ORANGE, 0.8f * a),
+                          3.0f * wide * scale);
+    Fx_draw_polyline_glow(pts, h->n, true, (SDL_FColor){ 1.0f, 0.9f, 0.8f, a },
+                          1.2f * scale);
+}
+
+static void fx_worm_flash(float sx, float sy, float scale, float f)
+{
+    if (f < 0.01f)
+        return;
+    fx_nv = 0;
+    fx_ni = 0;
+    fx_quad(sx, sy, 22.0f * scale, 0.0f, 0.0f, 22.0f * scale, CELL_GLOW,
+            fx_alpha(FX_WORM_ORANGE, 0.8f * f));
+    fx_quad(sx, sy, 7.0f * scale, 0.0f, 0.0f, 7.0f * scale, CELL_GLOW,
+            (SDL_FColor){ 1.0f, 1.0f, 1.0f, f });
+    fx_flush(SDL_BLENDMODE_ADD);
+}
+
+static void fx_world_to_screen(float wx, float wy, float scale, float *sx, float *sy)
+{
+    float dx, dy;
+
+    fx_view_offset(wx, wy, &dx, &dy);
+    *sx = (float)PLAYFIELD_X + (dx + (float)ext_view_width * 0.5f) * scale;
+    *sy = ((float)ext_view_height * 0.5f - dy) * scale;
+}
+
+/* Going through a wormhole: pulled into the vortex, or spun out of it. */
+static void fx_worm_render(fx_hj_t *h, float t, float scale)
+{
+    float wsx, wsy;
+
+    fx_world_to_screen(h->wx, h->wy, scale, &wsx, &wsy);
+    if (!h->arrive) {
+        float k = 1.0f - fx_smooth01(t / 0.35f);
+        float shx, shy;
+        fx_worm_vortex(wsx, wsy, h->wr, t, false, scale);
+        fx_world_to_screen(h->x, h->y, scale, &shx, &shy);
+        if (k > 0.03f)
+            fx_worm_ghost(h, wsx + (shx - wsx) * k * k, wsy + (shy - wsy) * k * k, scale,
+                          6.0f * (1.0f - k) * (1.0f - k), 0.3f + 0.7f * k,
+                          fminf(1.0f, k * 1.5f), 1.0f + (1.0f - k));
+        fx_worm_flash(wsx, wsy, scale, expf(-(t - 0.36f) * (t - 0.36f) / 0.003f));
+    } else {
+        float shx, shy;
+        fx_worm_flash(wsx, wsy, scale, expf(-t / 0.08f));
+        fx_worm_vortex(wsx, wsy, h->wr, t, true, scale);
+        fx_hj_follow(h);
+        fx_world_to_screen(h->x, h->y, scale, &shx, &shy);
+        fx_worm_ghost(h, shx, shy, scale, 0.0f, 1.0f, 1.0f - fx_smooth01(t / 0.9f), 2.0f);
+    }
+}
+
 static void fx_hj_render(float scale, double now)
 {
     int i = 0;
@@ -2341,13 +2686,23 @@ static void fx_hj_render(float scale, double now)
         fx_hj_t *h = &fx_hj[i];
         float t = (float)(now - h->t0), dx, dy;
 
-        if (t > (h->arrive ? FX_HJ_IN : FX_HJ_OUT)) {
+        float life = h->kind == FX_JK_WORM ? (h->arrive ? FX_WT_OUT : FX_WT_IN)
+                                           : (h->arrive ? FX_HJ_IN : FX_HJ_OUT);
+        if (t > life) {
             fx_hj[i] = fx_hj[--fx_num_hj];
             continue;
         }
         i++;
         if (t < 0.0f)
             t = 0.0f;
+        if (h->kind == FX_JK_WORM) {
+            fx_world_to_screen(h->wx, h->wy, scale, &dx, &dy);
+            if (dx > -300.0f && dy > -300.0f
+                && dx < (float)ext_view_width * scale + 300.0f + (float)PLAYFIELD_X
+                && dy < (float)ext_view_height * scale + 300.0f)
+                fx_worm_render(h, t, scale);
+            continue;
+        }
         if (h->arrive)
             fx_hj_follow(h);
         fx_view_offset(h->x, h->y, &dx, &dy);
