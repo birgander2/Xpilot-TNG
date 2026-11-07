@@ -25,6 +25,7 @@
 static bool   classicGraphics = false;
 static bool   fxExplosions = true;
 static bool   fxSparks = true;
+static bool   fxContrails = true;
 static double fxAmount = 1.0;
 
 static void fx_clear(void);
@@ -48,6 +49,9 @@ static xp_option_t fx_options[] = {
     XP_BOOL_OPTION("fxSparks", true, &fxSparks, NULL,
                    XP_OPTFLAG_CONFIG_FX,
                    "Draw sparks when ships hit walls or each other.\n"),
+    XP_BOOL_OPTION("fxContrails", true, &fxContrails, NULL,
+                   XP_OPTFLAG_CONFIG_FX,
+                   "Draw short glowing contrails when ships turn hard at speed.\n"),
     XP_DOUBLE_OPTION("fxAmount", 1.0, 0.0, 2.0, &fxAmount, NULL,
                      XP_OPTFLAG_CONFIG_FX,
                      "Particle amount multiplier for visual effects.\n"),
@@ -522,13 +526,32 @@ static void fx_view_offset(float wx, float wy, float *dx, float *dy)
 /* Event detection                                                    */
 /* ------------------------------------------------------------------ */
 
+/* Contrail: ring buffer of wingtip positions, one point per server frame. */
+#define FX_TRAIL_PTS    48
+#define FX_TRAIL_LIFE   0.7     /* seconds a contrail point stays visible */
+
+typedef struct {
+    float   x, y;           /* world position */
+    float   k;              /* intensity 0..1, 0 = invisible joint */
+    double  t;              /* creation time, seconds */
+} fx_trail_pt_t;
+
+typedef struct {
+    fx_trail_pt_t pt[2][FX_TRAIL_PTS];  /* left and right wingtip */
+    int     head;           /* index of the newest point */
+    int     count;
+} fx_trail_t;
+
 typedef struct {
     int     id;
     float   x, y;           /* last seen world position */
     float   vx, vy;         /* pixels per server tick */
+    int     dir;            /* last heading, 0..RES-1 */
     long    loop;           /* server frame of last sighting */
     bool    has_vel;
     Uint64  spark_ns;       /* time of last spark burst (cooldown) */
+    float   trail_k;        /* smoothed contrail intensity */
+    fx_trail_t trail;
 } fx_track_t;
 
 #define FX_MAX_TRACKS   128
@@ -588,7 +611,89 @@ static void fx_check_impact(fx_track_t *t, float vx, float vy)
     fx_spawn_sparks(cx, cy, nx, ny, -ny * along, nx * along, dv);
 }
 
-void Fx_observe_ship(int id, int x, int y)
+/* Wingtip offsets of a ship at heading dir, as drawn by Gui_paint_ship(). */
+static void fx_ship_tips(int id, int dir, float tip[2][2])
+{
+    shipshape_t *ship;
+    int il = 0, ir = 0;
+    float best_l = -1e9f, best_r = 1e9f;
+
+    if (!instruments.showShipShapes && self && self->id != id)
+        ship = Default_ship();
+    else if (!instruments.showMyShipShape && self && self->id == id)
+        ship = Default_ship();
+    else if ((ship = Ship_by_id(id)) == NULL)
+        ship = Default_ship();
+
+    /* at heading 0 the ship points along +x: tips are the outermost
+     * points sideways, preferring the rear ones */
+    for (int i = 0; i < ship->num_points; i++) {
+        position_t p = Ship_get_point_position(ship, i, 0);
+        float l = (float)p.y - 0.25f * (float)p.x;
+        float r = (float)p.y + 0.25f * (float)p.x;
+        if (l > best_l) { best_l = l; il = i; }
+        if (r < best_r) { best_r = r; ir = i; }
+    }
+    position_t pl = Ship_get_point_position(ship, il, dir);
+    position_t pr = Ship_get_point_position(ship, ir, dir);
+    tip[0][0] = (float)pl.x;
+    tip[0][1] = (float)pl.y;
+    tip[1][0] = (float)pr.x;
+    tip[1][1] = (float)pr.y;
+}
+
+static void fx_trail_push(fx_track_t *t, float k, double now)
+{
+    fx_trail_t *tr = &t->trail;
+    float tip[2][2];
+
+    fx_ship_tips(t->id, t->dir, tip);
+    tr->head = (tr->head + 1) % FX_TRAIL_PTS;
+    if (tr->count < FX_TRAIL_PTS)
+        tr->count++;
+    for (int s = 0; s < 2; s++) {
+        fx_trail_pt_t *p = &tr->pt[s][tr->head];
+        p->x = t->x + tip[s][0];
+        p->y = t->y + tip[s][1];
+        p->k = k;
+        p->t = now;
+    }
+}
+
+/*
+ * Contrails appear while a fast ship turns hard. The heading is exact
+ * (no rounding noise like the position), so the turn rate is used;
+ * the intensity is smoothed to hide single-frame mouse jerks.
+ */
+static void fx_trail_update(fx_track_t *t, int dir, long dl, bool moving)
+{
+    fx_trail_t *tr = &t->trail;
+    double now = (double)SDL_GetTicksNS() / 1e9;
+    float tps = fx_ticks_per_sec();
+    float k = 0.0f;
+
+    if (moving && fxContrails && fx_active() && dl > 0) {
+        int dd = (dir - t->dir) & (RES - 1);
+        if (dd > RES / 2)
+            dd -= RES;
+        float w = fabsf((float)dd) * 2.0f * (float)M_PI / RES * tps / (float)dl;
+        float speed = sqrtf(t->vx * t->vx + t->vy * t->vy) * tps;
+        k = fx_smooth((speed - 150.0f) / 200.0f) * fx_smooth((w - 2.0f) / 4.0f);
+    }
+    t->trail_k += (k - t->trail_k) * (k > t->trail_k ? 0.5f : 0.25f);
+    t->dir = dir;
+
+    bool last_visible = tr->count > 0 && tr->pt[0][tr->head].k > 0.0f;
+    if (t->trail_k > 0.02f) {
+        if (!last_visible)
+            fx_trail_push(t, 0.0f, now);    /* invisible joint starts a run */
+        fx_trail_push(t, t->trail_k, now);
+    } else if (last_visible) {
+        fx_trail_push(t, 0.0f, now);        /* invisible joint ends the run */
+    }
+}
+
+static void fx_observe_ship(int id, int x, int y, int dir)
 {
     fx_track_t *t = NULL;
     long dl;
@@ -608,6 +713,7 @@ void Fx_observe_ship(int id, int x, int y)
         t->id = id;
         t->x = (float)x;
         t->y = (float)y;
+        t->dir = dir;
         t->loop = loops;
         return;
     }
@@ -618,10 +724,13 @@ void Fx_observe_ship(int id, int x, int y)
 
     float dx = fx_wrap_dx((float)x - t->x);
     float dy = fx_wrap_dy((float)y - t->y);
+    bool moving = false;
 
     /* frame gap, server restart or teleport/wormhole: restart tracking */
     if (dl < 0 || dl > 4 || dx * dx + dy * dy > 120.0f * 120.0f * (float)(dl * dl)) {
         t->has_vel = false;
+        t->trail.count = 0;
+        t->trail_k = 0.0f;
     } else {
         float vx = dx / (float)dl, vy = dy / (float)dl;
         if (t->has_vel && fxSparks && fx_active())
@@ -629,19 +738,12 @@ void Fx_observe_ship(int id, int x, int y)
         t->vx = vx;
         t->vy = vy;
         t->has_vel = true;
+        moving = true;
     }
     t->x = (float)x;
     t->y = (float)y;
     t->loop = loops;
-}
-
-void Fx_observe_wreck(int x, int y)
-{
-    if (fx_num_wrecks < FX_MAX_WRECKS) {
-        fx_wreck_x[fx_num_wrecks] = (float)x;
-        fx_wreck_y[fx_num_wrecks] = (float)y;
-        fx_num_wrecks++;
-    }
+    fx_trail_update(t, dir, dl, moving);
 }
 
 static bool fx_wreck_near(float x, float y, float radius)
@@ -655,7 +757,8 @@ static bool fx_wreck_near(float x, float y, float radius)
     return false;
 }
 
-void Fx_end_frame(void)
+/* Ships that were tracked but are missing in this frame: did they blow up? */
+static void fx_check_vanished(void)
 {
     int i = 0;
 
@@ -668,7 +771,6 @@ void Fx_end_frame(void)
             continue;
         }
 
-        /* ship vanished: check whether it blew up */
         if (age > 0 && age <= 3) {
             float px = t->x, py = t->y, dx, dy;
             if (t->has_vel) {
@@ -697,8 +799,26 @@ void Fx_end_frame(void)
         /* gone for too long (or loop counter reset): forget it */
         fx_tracks[i] = fx_tracks[--fx_num_tracks];
     }
+}
+
+/*
+ * Called once per received frame, before anything is drawn: reads the
+ * ships and wreckage of this frame directly, so effects attached to ships
+ * (contrails) are in sync with the ships drawn afterwards.
+ */
+void Fx_frame_begin(void)
+{
+    int i;
 
     fx_num_wrecks = 0;
+    for (i = 0; i < num_wreckage && fx_num_wrecks < FX_MAX_WRECKS; i++) {
+        fx_wreck_x[fx_num_wrecks] = (float)wreckage_ptr[i].x;
+        fx_wreck_y[fx_num_wrecks] = (float)wreckage_ptr[i].y;
+        fx_num_wrecks++;
+    }
+    for (i = 0; i < num_ship; i++)
+        fx_observe_ship(ship_ptr[i].id, ship_ptr[i].x, ship_ptr[i].y, ship_ptr[i].dir);
+    fx_check_vanished();
 }
 
 /* ------------------------------------------------------------------ */
@@ -860,6 +980,88 @@ static void fx_flush(SDL_BlendMode mode)
     fx_ni = 0;
 }
 
+/* Append one wingtip contrail as a triangle strip with a soft cross-section. */
+static void fx_emit_trail(const fx_trail_t *tr, int side, float scale, double now)
+{
+    const float iw = 1.0f / (float)(FX_CELL * FX_ATLAS_COLS);
+    const float ih = 1.0f / (float)(FX_CELL * FX_ATLAS_ROWS);
+    const float u0 = (float)((CELL_GLOW % FX_ATLAS_COLS) * FX_CELL + 1) * iw;
+    const float u1 = (float)((CELL_GLOW % FX_ATLAS_COLS + 1) * FX_CELL - 1) * iw;
+    const float vm = ((float)(CELL_GLOW / FX_ATLAS_COLS) + 0.5f) * (float)FX_CELL * ih;
+    float sx[FX_TRAIL_PTS], sy[FX_TRAIL_PTS], age[FX_TRAIL_PTS], k[FX_TRAIL_PTS];
+    int n = 0;
+
+    /* collect live points, oldest first */
+    for (int j = tr->count - 1; j >= 0; j--) {
+        const fx_trail_pt_t *p = &tr->pt[side][(tr->head - j + FX_TRAIL_PTS) % FX_TRAIL_PTS];
+        float a = (float)((now - p->t) / FX_TRAIL_LIFE);
+        float dx, dy;
+        if (a >= 1.0f)
+            continue;
+        fx_view_offset(p->x, p->y, &dx, &dy);
+        sx[n] = (float)PLAYFIELD_X + (dx + (float)ext_view_width * 0.5f) * scale;
+        sy[n] = ((float)ext_view_height * 0.5f - dy) * scale;
+        age[n] = a < 0.0f ? 0.0f : a;
+        k[n] = p->k;
+        n++;
+    }
+    if (n < 2)
+        return;
+
+    /*
+     * Headings come in RES steps and positions in whole pixels, so the
+     * raw wingtip path is jagged: smooth it with two [1 2 1] passes,
+     * keeping both ends in place.
+     */
+    for (int pass = 0; pass < 2; pass++) {
+        float px = sx[0], py = sy[0];
+        for (int j = 1; j < n - 1; j++) {
+            float cx = sx[j], cy = sy[j];
+            sx[j] = (px + 2.0f * cx + sx[j + 1]) * 0.25f;
+            sy[j] = (py + 2.0f * cy + sy[j + 1]) * 0.25f;
+            px = cx;
+            py = cy;
+        }
+    }
+
+    if (fx_nv + 2 * n > FX_MAX_PARTICLES * 4 || fx_ni + 6 * n > FX_MAX_PARTICLES * 6)
+        fx_flush(SDL_BLENDMODE_ADD);
+
+    int base = fx_nv;
+    for (int j = 0; j < n; j++) {
+        int a = j > 0 ? j - 1 : j, b = j < n - 1 ? j + 1 : j;
+        float tx = sx[b] - sx[a], ty = sy[b] - sy[a];
+        float len = sqrtf(tx * tx + ty * ty);
+        float nx = 0.0f, ny = 0.0f;
+        if (len > 0.001f) {
+            nx = -ty / len;
+            ny = tx / len;
+        }
+        /* vortices spread out and fade while they age */
+        float w = (1.5f + 3.5f * age[j]) * scale;
+        float e = 1.0f - age[j];
+        SDL_FColor col = { 0.75f, 0.88f, 1.0f, 0.85f * k[j] * e * sqrtf(e) };
+        SDL_Vertex *v = &fx_verts[fx_nv];
+        v[0].position = (SDL_FPoint){ sx[j] + nx * w, sy[j] + ny * w };
+        v[1].position = (SDL_FPoint){ sx[j] - nx * w, sy[j] - ny * w };
+        v[0].tex_coord = (SDL_FPoint){ u0, vm };
+        v[1].tex_coord = (SDL_FPoint){ u1, vm };
+        v[0].color = v[1].color = col;
+        fx_nv += 2;
+        if (j > 0) {
+            int q = base + 2 * (j - 1);
+            int *ix = &fx_idx[fx_ni];
+            ix[0] = q;
+            ix[1] = q + 1;
+            ix[2] = q + 3;
+            ix[3] = q;
+            ix[4] = q + 3;
+            ix[5] = q + 2;
+            fx_ni += 6;
+        }
+    }
+}
+
 void Fx_render(void)
 {
     static Uint64 last_ns;
@@ -877,7 +1079,19 @@ void Fx_render(void)
         dt = 0.1f;
     fx_update(dt);
 
-    if (!fx_atlas || !tng_renderer || fx_num_parts == 0)
+    if (!fx_atlas || !tng_renderer)
+        return;
+
+    /* pass 0: contrails, additive */
+    if (fxContrails) {
+        for (i = 0; i < fx_num_tracks; i++)
+            if (fx_tracks[i].trail.count >= 2)
+                for (int side = 0; side < 2; side++)
+                    fx_emit_trail(&fx_tracks[i].trail, side, scale, (double)now / 1e9);
+        fx_flush(SDL_BLENDMODE_ADD);
+    }
+
+    if (fx_num_parts == 0)
         return;
 
     /* pass 1: smoke, normal alpha blending */

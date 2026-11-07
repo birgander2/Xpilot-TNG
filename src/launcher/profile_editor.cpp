@@ -351,6 +351,7 @@ void ProfileEditor::Load(const std::string& stock_ships_path, bool keep_unsaved)
     fx_.classic = get_bool("classicGraphics", false);
     fx_.explosions = get_bool("fxExplosions", true);
     fx_.sparks = get_bool("fxSparks", true);
+    fx_.contrails = get_bool("fxContrails", true);
     {
         std::string v = get("fxAmount", "1.0");
         char* end = nullptr;
@@ -418,6 +419,7 @@ std::vector<std::pair<std::string, std::string>> ProfileEditor::FxValues() const
         {"classicGraphics", b(fx_.classic)},
         {"fxExplosions", b(fx_.explosions)},
         {"fxSparks", b(fx_.sparks)},
+        {"fxContrails", b(fx_.contrails)},
         {"fxAmount", amount},
     };
 }
@@ -773,7 +775,7 @@ void ProfileEditor::RenderFx() {
         ImGui::SetTooltip("The original XPilot look without any modern effects (xpilot.classicGraphics)");
     ImGui::SameLine();
     ImGui::RadioButton("Modern", &look, 1);
-    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Explosions, sparks and other visual effects");
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Explosions, sparks, contrails and other visual effects");
     fx_.classic = (look == 0);
 
     ImGui::Spacing();
@@ -785,6 +787,9 @@ void ProfileEditor::RenderFx() {
     ImGui::Checkbox("Sparks", &fx_.sparks);
     if (ImGui::IsItemHovered())
         ImGui::SetTooltip("Sparks when a ship hits a wall or another ship (xpilot.fxSparks)");
+    ImGui::Checkbox("Contrails", &fx_.contrails);
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Short glowing wingtip trails when a ship turns hard at speed (xpilot.fxContrails)");
     ImGui::SetNextItemWidth(280);
     ImGui::SliderFloat("Amount", &fx_.amount, 0.0f, 2.0f, "%.2f");
     if (ImGui::IsItemHovered())

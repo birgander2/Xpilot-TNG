@@ -104,6 +104,7 @@ void Paint_frame(void)
 
     /* 1. Setup camera world.x and world.y tracking */
     Paint_frame_start();
+    Fx_frame_begin();
 
     /* 2. Clear entire screen to black */
     SDL_SetRenderClipRect(tng_renderer, NULL);
@@ -151,7 +152,6 @@ void Paint_frame(void)
         Segment_start();
 
         Paint_ships();
-        Fx_end_frame();     /* all ships and wreckage of this frame seen */
         Paint_meters();
         Paint_HUD();
         Paint_recording();

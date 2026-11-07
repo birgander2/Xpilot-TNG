@@ -107,6 +107,7 @@ private:
         bool classic = false;            // classicGraphics: all modern effects off
         bool explosions = true;          // fxExplosions
         bool sparks = true;              // fxSparks
+        bool contrails = true;           // fxContrails
         float amount = 1.0f;             // fxAmount, particle multiplier 0..2
     } fx_;
     std::vector<std::pair<std::string, std::string>> FxValues() const;
