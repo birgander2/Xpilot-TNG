@@ -1532,7 +1532,7 @@ static fx_track_t *fx_track_by_id(int id);
 #define FX_MINE_BURST_R     70.0f   /* count debris/shots this close */
 #define FX_MINE_NORMAL_DEBRIS 128.0f    /* full debris of a normal mine */
 #define FX_MINE_NUKE_DEBRIS 400.0f  /* normal mines: <~180, nuclear: >~700 */
-#define FX_MINE_CLUSTER_SHOTS 8     /* a cluster mine sends ~27 shots */
+#define FX_MINE_CLUSTER_SHOTS 5     /* a cluster mine sends ~27 shots, a quarter of it ~7 */
 #define FX_MINE_NUKE_SHOTS  100     /* a nuclear cluster mine sends hundreds */
 
 static float fx_mine_x[2][FX_MAX_MINES], fx_mine_y[2][FX_MAX_MINES];
@@ -1609,7 +1609,9 @@ static void fx_mines_begin(void)
  */
 static float fx_mine_strength(float share)
 {
-    return powf(fx_clamp(share, 0.25f, 1.6f), 0.7f);
+    /* split mines proportional to their share (1/2, 1/3, 1/4); above a full mine flatter */
+    share = fx_clamp(share, 0.25f, 1.6f);
+    return share < 1.0f ? share : powf(share, 0.7f);
 }
 
 /* After this frame's debris and shots were seen: what kind of mine was it? */

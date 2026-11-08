@@ -172,9 +172,11 @@ Vorschlag für ein erstes Paket: gefüllter Rumpf mit Facetten (1+2) und Triebwe
     fehlen sonst auch ohne Explosion (Rand der Serversicht, `maxVisibleObjects` nach Nukes).
     Abgleich über Position. Im selben Frame:
     Trümmer im Umkreis, hochgerechnet mit `sparkProb` (normal ~110–140, nuklear > 400),
-    Schüsse im Umkreis (Cluster ~27, nuklearer Cluster > 100). Stärke = Anteil an einer vollen
-    Mine ^0,7 (aufgeteilte Minen: 1/2 → 0,62, 1/3 → 0,46, 1/4 → 0,38) skaliert Größe, Menge,
-    Reichweite; kleine Explosionen sind zusätzlich kürzer.
+    Schüsse im Umkreis (Cluster ~27, nuklearer Cluster > 100; Clustermine ab 5 Schüssen, damit
+    auch 4 Teile mit je ~7 erkannt werden). Stärke = Anteil an einer vollen Mine (aufgeteilte
+    Minen: 1/2 → 0,5, 1/3 → 0,33, 1/4 → 0,25; zuerst ^0,7 mit 0,62/0,46/0,38, zu groß), über
+    einer vollen Mine ^0,7; skaliert Größe, Menge, Reichweite; kleine Explosionen sind
+    zusätzlich kürzer.
   - Normal: kompakter, heller Feuerball, Druckwelle, Funkenkranz, kurz.
   - Cluster: wie normal, aber hell bläulich (Feuer weiß → hellblau → tiefblau, blaue Glut und
     Funken). Ein erster Versuch mit flachem „Praxis“-Ring gefiel nicht.
@@ -246,7 +248,6 @@ Vorschlag für ein erstes Paket: gefüllter Rumpf mit Facetten (1+2) und Triebwe
   (sanftes Auf-/Abblenden), Glow + Kreuzstrahl (Linsenreflex, behält das Kreuz-Motiv),
   Dauerlicht + weißer Strobe-Blitz (realistisch, bei vielen Schiffen unruhig).
 - **Highscores** Leicht durchsichtig im FX Modus
-- **Hübschere Minen**
 
 ## Architektur
 
