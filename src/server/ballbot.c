@@ -261,7 +261,15 @@ static int		FineW, FineH;
 static double		FineCX, FineCY, FineStep;
 static float		*ShipClear, *BallClear;
 static float		*TargetClear;	/* distance to a ball target: ships crash */
-static uint8_t		*Zone;		/* treasure index + 1 of a BallTarget */
+static uint8_t		*Zone;		/* treasure index + 1 of a BallTarget (BbSpecial: team + 1) */
+/*
+ * Neutral ball game (spaceball): one ball of options.specialBallTeam, goals of
+ * the real teams but no treasures for them.  A ball cashes against the team
+ * whose goal it enters, so a team scores in every goal but its own.
+ */
+static bool		BbSpecial;
+static bool		BbGoalOk[MAX_TEAMS];
+static double		BbGoalX[MAX_TEAMS], BbGoalY[MAX_TEAMS];
 static int		NavW, NavH, NavN, NavF;
 static double		NavCX, NavCY;
 static float		*NavRX, *NavRY, *NavClear;
@@ -273,6 +281,7 @@ static bb_heap_t	*Heap;
 static int		HeapN, HeapCap;
 
 static bb_field_t	*StaticF[BB_MAX_TREASURES][BB_NUM_KINDS];
+static bb_field_t	*GoalF[MAX_TEAMS][BB_NUM_KINDS];
 static bb_field_t	DynF[BB_DYN_FIELDS];
 static int		DynBudget;
 static bb_routes_t	*Routes[BB_MAX_TREASURES][BB_MAX_TREASURES];
@@ -480,6 +489,16 @@ static inline int Bb_zone(double x, double y)
     int i = Bb_fine_index(x, y);
 
     return i < 0 ? 0 : Zone[i];
+}
+
+/* Team whose target a Zone value stands for, -1 if none. */
+static inline int Bb_zone_team(int z)
+{
+    if (z <= 0)
+	return -1;
+    if (BbSpecial)
+	return z - 1;
+    return z - 1 < Num_treasures() ? Treasure_by_index(z - 1)->team : -1;
 }
 
 /* Minimum clearance along a segment (absolute px), stops below 'need'. */
@@ -721,6 +740,16 @@ static void Bb_map_free(void)
 	    }
 	}
     }
+    for (i = 0; i < MAX_TEAMS; i++) {
+	for (k = 0; k < BB_NUM_KINDS; k++) {
+	    if (GoalF[i][k]) {
+		Bb_field_free(GoalF[i][k]);
+		free(GoalF[i][k]);
+		GoalF[i][k] = NULL;
+	    }
+	}
+	BbGoalOk[i] = false;
+    }
     for (i = 0; i < BB_DYN_FIELDS; i++)
 	Bb_field_free(&DynF[i]);
     BbMapOk = false;
@@ -747,13 +776,73 @@ static int Bb_target_treasure(int team, int cx, int cy)
     return best;
 }
 
+/* Classic ball game: at least two teams own a treasure with a ball. */
+static bool Bb_team_ball_game(void)
+{
+    int i, teams = 0;
+    unsigned mask = 0;
+
+    if (!BIT(world->rules->mode, TEAM_PLAY))
+	return false;
+    for (i = 0; i < Num_treasures(); i++) {
+	treasure_t *t = Treasure_by_index(i);
+
+	if (!t->empty && t->team >= 0 && t->team < MAX_TEAMS
+	    && !(mask & (1U << t->team))) {
+	    mask |= 1U << t->team;
+	    teams++;
+	}
+    }
+    return teams >= 2;
+}
+
+/* Index of the neutral ball's treasure, -1 if there is none. */
+static int Bb_special_ball(void)
+{
+    int i;
+
+    if (options.specialBallTeam < 0 || options.specialBallTeam >= MAX_TEAMS)
+	return -1;
+    for (i = 0; i < Num_treasures() && i < BB_MAX_TREASURES; i++) {
+	treasure_t *t = Treasure_by_index(i);
+
+	if (!t->empty && t->team == options.specialBallTeam)
+	    return i;
+    }
+    return -1;
+}
+
+/* Neutral ball game: a special ball and goals of at least two other teams. */
+static bool Bb_neutral_ball_game(void)
+{
+    int i, goals = 0;
+    unsigned mask = 0;
+
+    if (!BIT(world->rules->mode, TEAM_PLAY) || Bb_special_ball() < 0)
+	return false;
+    for (i = 0; i < num_groups; i++) {
+	group_t *gp = groupptr_by_id(i);
+
+	if (gp != NULL && gp->type == TREASURE && gp->team >= 0
+	    && gp->team < MAX_TEAMS && gp->team != options.specialBallTeam
+	    && !(mask & (1U << gp->team))) {
+	    mask |= 1U << gp->team;
+	    goals++;
+	}
+    }
+    return goals >= 2;
+}
+
 static bool Bb_map_build(void)
 {
     long blocks = (long)world->x * world->y;
     int nb = 1, x, y, c, k, i;
     uint8_t *obs_ship, *obs_ball;
+    double goal_sx[MAX_TEAMS] = { 0 }, goal_sy[MAX_TEAMS] = { 0 };
+    int goal_n[MAX_TEAMS] = { 0 };
 
     Bb_map_free();
+    BbSpecial = !Bb_team_ball_game() && Bb_neutral_ball_game();
     BbPdata = pdata;
     BbNumPolys = num_polys;
     BbMapW = world->cwidth;
@@ -820,6 +909,16 @@ static bool Bb_map_build(void)
 		    int ti = gp->mapobj_ind;
 
 		    obs_ship[i] = 2;	/* a ship touching a target crashes */
+		    if (BbSpecial) {
+			/* no treasures here: the zone is the team itself */
+			if (gp->team >= 0 && gp->team < MAX_TEAMS) {
+			    Zone[i] = (uint8_t)(gp->team + 1);
+			    goal_sx[gp->team] += cx / (double)CLICK;
+			    goal_sy[gp->team] += cy / (double)CLICK;
+			    goal_n[gp->team]++;
+			}
+			continue;
+		    }
 		    /* xp2 maps don't link targets to treasures: use the team's */
 		    if (ti < 0 || ti >= Num_treasures())
 			ti = Bb_target_treasure(gp->team, cx, cy);
@@ -827,6 +926,30 @@ static bool Bb_map_build(void)
 			Zone[i] = (uint8_t)(ti + 1);
 		} else
 		    obs_ball[i] = 1;
+	    }
+	}
+    }
+    /* goal point: the target cell nearest to the centre of the target */
+    for (k = 0; k < MAX_TEAMS && BbSpecial; k++) {
+	double mx, my, bd = 1e30;
+
+	if (goal_n[k] == 0)
+	    continue;
+	mx = goal_sx[k] / goal_n[k];
+	my = goal_sy[k] / goal_n[k];
+	for (y = 0; y < FineH; y++) {
+	    for (x = 0; x < FineW; x++) {
+		double px = (x + 0.5) * FineCX, py = (y + 0.5) * FineCY, dd;
+
+		if (Zone[y * FineW + x] != k + 1)
+		    continue;
+		dd = (px - mx) * (px - mx) + (py - my) * (py - my);
+		if (dd < bd) {
+		    bd = dd;
+		    BbGoalX[k] = px;
+		    BbGoalY[k] = py;
+		    BbGoalOk[k] = true;
+		}
 	    }
 	}
     }
@@ -1131,6 +1254,56 @@ static bb_field_t *Bb_static_field(int tr, int kind)
     }
     StaticF[tr][kind]->used = BbTick;
     return StaticF[tr][kind];
+}
+
+/* Field to the goal of a team (neutral ball game). */
+static bb_field_t *Bb_goal_field(int team, int kind)
+{
+    if (team < 0 || team >= MAX_TEAMS || !BbGoalOk[team] || !BbMapOk)
+	return NULL;
+    if (GoalF[team][kind] == NULL) {
+	GoalF[team][kind] = calloc(1, sizeof(bb_field_t));
+	if (GoalF[team][kind] == NULL)
+	    return NULL;
+	if (!Bb_field_compute(GoalF[team][kind], BbGoalX[team], BbGoalY[team],
+			      kind)) {
+	    free(GoalF[team][kind]);
+	    GoalF[team][kind] = NULL;
+	    return NULL;
+	}
+    }
+    GoalF[team][kind]->used = BbTick;
+    return GoalF[team][kind];
+}
+
+/* The goal a team scores in, nearest to (x, y): any but its own. */
+static int Bb_enemy_goal(int team, double x, double y)
+{
+    int k, best = -1;
+    double bd = 1e30;
+
+    for (k = 0; k < MAX_TEAMS; k++) {
+	double d;
+
+	if (k == team || k == options.specialBallTeam || !BbGoalOk[k])
+	    continue;
+	d = Bb_dist(x, y, BbGoalX[k], BbGoalY[k]);
+	if (d < bd) {
+	    bd = d;
+	    best = k;
+	}
+    }
+    return best;
+}
+
+/* Field to the goal a team scores in from (x, y), NULL if none. */
+static bb_field_t *Bb_enemy_goal_field(int team, double x, double y, int *gt)
+{
+    int k = Bb_enemy_goal(team, x, y);
+
+    if (gt != NULL)
+	*gt = k;
+    return k < 0 ? NULL : Bb_goal_field(k, BB_KIND_BALL);
 }
 
 /* Field to a moving goal, recomputed when older than max_age ticks. */
@@ -1534,21 +1707,7 @@ static int Bb_enemy_treasure(int team, double x, double y)
 
 bool Robot_ball_game(void)
 {
-    int i, teams = 0;
-    unsigned mask = 0;
-
-    if (!BIT(world->rules->mode, TEAM_PLAY))
-	return false;
-    for (i = 0; i < Num_treasures(); i++) {
-	treasure_t *t = Treasure_by_index(i);
-
-	if (!t->empty && t->team >= 0 && t->team < MAX_TEAMS
-	    && !(mask & (1U << t->team))) {
-	    mask |= 1U << t->team;
-	    teams++;
-	}
-    }
-    return teams >= 2;
+    return Bb_team_ball_game() || Bb_neutral_ball_game();
 }
 
 /* ------------------------------------------------------------------------
@@ -1619,6 +1778,7 @@ static void Bb_assign_roles(int team)
     bool taken[NUM_IDS];
     bb_task_t tasks[32];
     int nbots = 0, ntasks = 0, nfree, i, j, home, enemy_tr, carrier = NO_ID;
+    int sp = -1, enemy_carrier = NO_ID;
     double hx, hy;
     bool ball_game = Robot_ball_game(), home_threat = false, human_home = false;
     int members = 0;
@@ -1640,16 +1800,30 @@ static void Bb_assign_roles(int team)
     if (nbots == 0)
 	return;
 
-    home = ball_game ? Bb_home_treasure(team, Bb_px(bots[0]->pos.cx),
-					 Bb_px(bots[0]->pos.cy)) : -1;
-    if (home < 0) {
-	for (i = 0; i < nbots; i++)
-	    Bb_set_role(bots[i], BB_ROLE_FIGHT, 0);
-	return;
+    if (BbSpecial) {
+	/* neutral ball: our "home" is our goal, the ball is the only treasure */
+	sp = Bb_special_ball();
+	home = -1;
+	if (sp < 0 || !BbGoalOk[team]) {
+	    for (i = 0; i < nbots; i++)
+		Bb_set_role(bots[i], BB_ROLE_FIGHT, 0);
+	    return;
+	}
+	hx = BbGoalX[team];
+	hy = BbGoalY[team];
+	enemy_tr = -1;
+    } else {
+	home = ball_game ? Bb_home_treasure(team, Bb_px(bots[0]->pos.cx),
+					     Bb_px(bots[0]->pos.cy)) : -1;
+	if (home < 0) {
+	    for (i = 0; i < nbots; i++)
+		Bb_set_role(bots[i], BB_ROLE_FIGHT, 0);
+	    return;
+	}
+	hx = Bb_px(Treasure_by_index(home)->pos.cx);
+	hy = Bb_px(Treasure_by_index(home)->pos.cy);
+	enemy_tr = Bb_enemy_treasure(team, hx, hy);
     }
-    hx = Bb_px(Treasure_by_index(home)->pos.cx);
-    hy = Bb_px(Treasure_by_index(home)->pos.cy);
-    enemy_tr = Bb_enemy_treasure(team, hx, hy);
 
     /* enemies close to our base; a human teammate there defends it */
     for (i = 0; i < NumPlayers; i++) {
@@ -1717,13 +1891,50 @@ static void Bb_assign_roles(int team)
 		ADD_TASK(BB_ROLE_HUNT, tm->thief_id, x, y);
 	}
     }
-    if (carrier != NO_ID) {
+    if (BbSpecial && carrier == NO_ID) {
+	bb_ballinfo_t *bi = &tm->ball[sp];
+	player_t *o = bi->known && bi->owner_id != NO_ID
+		      ? Player_by_id(bi->owner_id) : NULL;
+
+	if (o != NULL && !Bb_in_team(o, team) && Bb_player_active(o))
+	    enemy_carrier = o->id;
+	if (enemy_carrier != NO_ID) {
+	    /* they have the ball: all but one go after the carrier */
+	    int hunters = nfree >= 2 ? nfree - 1 : nfree;
+
+	    for (i = 0; i < hunters; i++)
+		ADD_TASK(BB_ROLE_HUNT, enemy_carrier, bi->x, bi->y);
+	    if (!human_home)
+		ADD_TASK(BB_ROLE_DEFEND, -1, hx, hy);
+	} else {
+	    treasure_t *bt = Treasure_by_index(sp);
+	    double bx = bi->known && !bi->home ? bi->x : Bb_px(bt->pos.cx);
+	    double by = bi->known && !bi->home ? bi->y : Bb_px(bt->pos.cy);
+	    bool have_grab = false;
+
+	    for (j = 0; j < ntasks; j++) {
+		if (tasks[j].role == BB_ROLE_GRAB)
+		    have_grab = true;
+	    }
+	    if (!have_grab && Bb_believes_home(team, sp))
+		ADD_TASK(BB_ROLE_GRAB, sp, bx, by);
+	    else if (!have_grab && bi->known)
+		ADD_TASK(BB_ROLE_GRAB, sp, bx, by);
+	    if (nbots >= 4)
+		ADD_TASK(BB_ROLE_GRAB, sp, bx, by);
+	    if (home_threat && !human_home)
+		ADD_TASK(BB_ROLE_DEFEND, -1, hx, hy);
+	    ADD_TASK(BB_ROLE_SUPPORT, sp, bx, by);
+	    if (!home_threat && !human_home)
+		ADD_TASK(BB_ROLE_DEFEND, -1, hx, hy);
+	}
+    } else if (carrier != NO_ID) {
 	player_t *cp = Player_by_id(carrier);
 	double cx = Bb_px(cp->pos.cx), cy = Bb_px(cp->pos.cy);
 
 	ADD_TASK(BB_ROLE_ESCORT, carrier, cx, cy);
 	if (!human_home)
-	    ADD_TASK(BB_ROLE_DEFEND, home, hx, hy);
+	    ADD_TASK(BB_ROLE_DEFEND, BbSpecial ? -1 : home, hx, hy);
 	ADD_TASK(BB_ROLE_ESCORT, carrier, cx, cy);
     } else if (enemy_tr >= 0) {
 	treasure_t *et = Treasure_by_index(enemy_tr);
@@ -1739,9 +1950,18 @@ static void Bb_assign_roles(int team)
 	    ADD_TASK(BB_ROLE_DEFEND, home, hx, hy);
 	ADD_TASK(BB_ROLE_MID, enemy_tr, (hx + ex) / 2, (hy + ey) / 2);
     }
-    while (ntasks < nbots + 2)
-	ADD_TASK(enemy_tr >= 0 ? BB_ROLE_SUPPORT : BB_ROLE_DEFEND,
-		 enemy_tr >= 0 ? enemy_tr : home, hx, hy);
+    while (ntasks < nbots + 2) {
+	if (BbSpecial) {
+	    if (carrier != NO_ID)
+		ADD_TASK(BB_ROLE_ESCORT, carrier, hx, hy);
+	    else if (enemy_carrier != NO_ID)
+		ADD_TASK(BB_ROLE_HUNT, enemy_carrier, hx, hy);
+	    else
+		ADD_TASK(BB_ROLE_SUPPORT, sp, hx, hy);
+	} else
+	    ADD_TASK(enemy_tr >= 0 ? BB_ROLE_SUPPORT : BB_ROLE_DEFEND,
+		     enemy_tr >= 0 ? enemy_tr : home, hx, hy);
+    }
 #undef ADD_TASK
 
     /* greedy: tasks in priority order, cheapest free bot each */
@@ -2147,8 +2367,7 @@ static int Bb_throw_ticks(double x, double y, double vx, double vy,
 	if (Bb_ball_clear(qx, qy) < options.ballRadius + 1.0)
 	    return 0;
 	z = Bb_zone(qx, qy);
-	if (z > 0 && z - 1 < Num_treasures()
-	    && Treasure_by_index(z - 1)->team == team)
+	if (z > 0 && Bb_zone_team(z) == team)
 	    return t;
     }
     return 0;
@@ -2284,8 +2503,8 @@ static double Bb_rollout(const bb_ctx_t *cx, const bb_cand_t *cand, bb_cand_t *r
 		    cost -= 3e4 * (1.0 - miss / 250.0);
 	    }
 	    z = Bb_zone(cx->ox + s.bx, cx->oy + s.by);
-	    if (z > 0 && g->score_team >= 0 && z - 1 < Num_treasures()
-		&& Treasure_by_index(z - 1)->team == g->score_team
+	    if (z > 0 && g->score_team >= 0
+		&& Bb_zone_team(z) == g->score_team
 		&& Bb_coast_safe(cx->ox + s.sx, cx->oy + s.sy, s.svx, s.svy)) {
 		cost -= 3e6 * (1.0 - 0.02 * t);
 		return cost;
@@ -3060,16 +3279,33 @@ static void Bb_behave_carry(player_t *pl, bb_data_t *d, bb_goal_t *g,
     double x = Bb_px(pl->pos.cx), y = Bb_px(pl->pos.cy);
     double bx = Bb_px(ball->pos.cx), by = Bb_px(ball->pos.cy);
     int src = Bb_treasure_index(ball->ball_treasure);
-    int dst = Bb_home_treasure(pl->team, x, y);
-    bb_field_t *fd = Bb_static_field(dst, BB_KIND_BALL);
+    int dst = BbSpecial ? -1 : Bb_home_treasure(pl->team, x, y);
+    int gteam = pl->team;
+    bb_field_t *fd;
     bb_routes_t *rs;
-    treasure_t *home;
+    double homex, homey;
 
-    if (fd == NULL)
-	return;
-    home = Treasure_by_index(dst);
+    if (BbSpecial) {
+	/* neutral ball: into the nearest goal that is not ours */
+	fd = Bb_enemy_goal_field(pl->team, x, y, &gteam);
+	if (fd == NULL)
+	    return;
+	homex = BbGoalX[gteam];
+	homey = BbGoalY[gteam];
+	d->route_src = d->route_dst = -1;
+	d->route_chosen = true;
+	d->route_var = 0;
+    } else {
+	fd = Bb_static_field(dst, BB_KIND_BALL);
+	if (fd == NULL)
+	    return;
+	homex = Bb_px(Treasure_by_index(dst)->pos.cx);
+	homey = Bb_px(Treasure_by_index(dst)->pos.cy);
+    }
     if (!d->had_ball) {
-	if (ball->ball_treasure->team == pl->team) {
+	if (BbSpecial) {
+	    /* nothing to choose */
+	} else if (ball->ball_treasure->team == pl->team) {
 	    d->route_src = src;
 	    d->route_dst = dst;
 	    d->route_var = 0;
@@ -3090,8 +3326,8 @@ static void Bb_behave_carry(player_t *pl, bb_data_t *d, bb_goal_t *g,
     }
 
     g->field = fd;
-    g->gx = Bb_px(home->pos.cx);
-    g->gy = Bb_px(home->pos.cy);
+    g->gx = homex;
+    g->gy = homey;
     rs = (d->route_src >= 0 && d->route_src < BB_MAX_TREASURES)
 	? Routes[d->route_src][dst] : NULL;
     if (rs && d->route_var > 0 && d->route_var < rs->n && !d->via_passed) {
@@ -3142,7 +3378,7 @@ static void Bb_behave_carry(player_t *pl, bb_data_t *d, bb_goal_t *g,
 	}
     }
     g->enemy_w = 1.0;
-    g->score_team = pl->team;
+    g->score_team = gteam;
     if (g->thx == 0.0 && g->thy == 0.0) {
 	g->thx = g->gx;
 	g->thy = g->gy;
@@ -3154,7 +3390,7 @@ static void Bb_behave_carry(player_t *pl, bb_data_t *d, bb_goal_t *g,
     /* Throw: release when the free ball will fly into our target */
     {
 	int t = Bb_throw_ticks(bx, by, ball->vel.x, ball->vel.y, x, y,
-			       pl->vel.x, pl->vel.y, pl->team,
+			       pl->vel.x, pl->vel.y, gteam,
 			       BB_THROW_TICKS);
 
 	if (t > 0) {
@@ -3208,7 +3444,7 @@ static void Bb_behave_fetch(player_t *pl, bb_data_t *d, bb_goal_t *g, int tr)
     ballobject_t *ball = Bb_ball_of(tr);
     double x = Bb_px(pl->pos.cx), y = Bb_px(pl->pos.cy), bx, by, dist;
     double L = options.ballConnectorLength;
-    int dst = Bb_home_treasure(pl->team, x, y);
+    int dst = BbSpecial ? -1 : Bb_home_treasure(pl->team, x, y);
     bool armed = pl->ball != NULL;
 
     if (tm->ball[tr].known && !tm->ball[tr].home) {
@@ -3229,7 +3465,9 @@ static void Bb_behave_fetch(player_t *pl, bb_data_t *d, bb_goal_t *g, int tr)
 	const bb_field_t *via = NULL;
 
 	d->grab_tr = tr;
-	if (t->team != pl->team) {
+	if (BbSpecial)
+	    via = Bb_enemy_goal_field(pl->team, bx, by, NULL);
+	else if (t->team != pl->team) {
 	    /* plan the run before the pickup, start in its direction */
 	    if (!d->route_chosen || d->route_src != tr || d->route_dst != dst)
 		Bb_choose_route(pl, d, tr, dst, bx, by, false);
@@ -3374,18 +3612,34 @@ static player_t *Bb_team_carrier(int team)
     return NULL;
 }
 
+static void Bb_behave_fight(player_t *pl, bb_data_t *d, bb_goal_t *g);
+
 /* Guard position between a treasure and the main threat. */
 static void Bb_behave_guard(player_t *pl, bb_data_t *d, bb_goal_t *g, int tr,
 			    double radius, double engage)
 {
     bb_team_t *tm = &BbTeams[Bb_slot(pl)];
-    treasure_t *t = Treasure_by_index(tr);
-    double tx = Bb_px(t->pos.cx), ty = Bb_px(t->pos.cy), ux = 0.0, uy = 0.0;
+    double tx, ty, ux = 0.0, uy = 0.0;
     double gx, gy;
-    player_t *threat = Bb_pick_enemy(pl, tx, ty, engage, false);
+    player_t *threat;
     int other;
 
     (void)d;
+    if (BbSpecial) {
+	/* the treasure is our own goal */
+	if (!BbGoalOk[pl->team]) {
+	    Bb_behave_fight(pl, d, g);
+	    return;
+	}
+	tx = BbGoalX[pl->team];
+	ty = BbGoalY[pl->team];
+    } else {
+	treasure_t *t = Treasure_by_index(tr);
+
+	tx = Bb_px(t->pos.cx);
+	ty = Bb_px(t->pos.cy);
+    }
+    threat = Bb_pick_enemy(pl, tx, ty, engage, false);
     if (threat != NULL) {
 	bb_contact_t *c = &tm->c[threat->id];
 	double dx = Bb_wdx(c->x - tx), dy = Bb_wdy(c->y - ty), l = LENGTH(dx, dy);
@@ -3403,8 +3657,16 @@ static void Bb_behave_guard(player_t *pl, bb_data_t *d, bb_goal_t *g, int tr,
     }
     if (ux == 0.0 && uy == 0.0) {
 	/* towards the enemy base along the ball run path */
-	other = Bb_enemy_treasure(pl->team, tx, ty);
-	if (other >= 0)
+	other = BbSpecial ? -1 : Bb_enemy_treasure(pl->team, tx, ty);
+	if (BbSpecial) {
+	    /* out on the pitch: the way the ball comes from */
+	    bb_field_t *fe = Bb_enemy_goal_field(pl->team, tx, ty, NULL);
+
+	    if (fe != NULL)
+		Bb_exit_dir(-1, fe, tx, ty, &ux, &uy);
+	    else
+		ux = 1.0;
+	} else if (other >= 0)
 	    Bb_exit_dir(other, NULL, tx, ty, &ux, &uy);
 	else
 	    ux = 1.0;
@@ -3445,14 +3707,19 @@ static void Bb_behave_hunt(player_t *pl, bb_data_t *d, bb_goal_t *g)
     double x = Bb_px(pl->pos.cx), y = Bb_px(pl->pos.cy);
     player_t *thief = tm->thief_id != NO_ID ? Player_by_id(tm->thief_id) : NULL;
 
+    /* neutral ball: the hunted one is the enemy carrier, he runs to our goal */
+    if (BbSpecial)
+	thief = d->role_arg >= 0 ? Player_by_id(d->role_arg) : NULL;
+    if (thief != NULL && !Bb_player_active(thief))
+	thief = NULL;
     if (thief != NULL && tm->c[thief->id].known) {
 	bb_contact_t *c = &tm->c[thief->id];
 	double dist = Bb_dist(x, y, c->x, c->y);
-	int their = Bb_home_treasure(thief->team, c->x, c->y);
+	int their = BbSpecial ? 0 : Bb_home_treasure(thief->team, c->x, c->y);
 
 	if (dist < 900.0 || their < 0) {
 	    /* ram the towed ball when we see it, shoot the thief anyway */
-	    if (tm->thief_tr >= 0 && tm->ball[tm->thief_tr].seen
+	    if (!BbSpecial && tm->thief_tr >= 0 && tm->ball[tm->thief_tr].seen
 		&& Bb_behave_ram(pl, d, g, tm->thief_tr)) {
 		g->target = thief;
 		g->aim_w = 0.3;
@@ -3465,7 +3732,8 @@ static void Bb_behave_hunt(player_t *pl, bb_data_t *d, bb_goal_t *g)
 	/* intercept on his way home */
 	{
 	    static float px[BB_ROUTE_PTS], py[BB_ROUTE_PTS];
-	    bb_field_t *fd = Bb_static_field(their, BB_KIND_BALL);
+	    bb_field_t *fd = BbSpecial ? Bb_goal_field(pl->team, BB_KIND_BALL)
+				       : Bb_static_field(their, BB_KIND_BALL);
 	    double tlen = 0.0, tv = MAX(LENGTH(c->vx, c->vy), 8.0);
 	    int n, i;
 
@@ -3498,7 +3766,9 @@ static void Bb_behave_hunt(player_t *pl, bb_data_t *d, bb_goal_t *g)
 		break;
 	    }
 	}
-	if (thief != NULL)
+	if (BbSpecial)
+	    their = 0;	/* guard() takes our own goal */
+	else if (thief != NULL)
 	    their = Bb_home_treasure(thief->team, x, y);
 	if (their >= 0)
 	    Bb_behave_guard(pl, d, g, their, 260.0, 1200.0);
@@ -3536,6 +3806,12 @@ static void Bb_behave_escort(player_t *pl, bb_data_t *d, bb_goal_t *g)
 
 	ux = Bb_wdx(ct->x - cx);
 	uy = Bb_wdy(ct->y - cy);
+    } else if (BbSpecial) {
+	/* no enemy base: pursuers come from where our goal is not */
+	if (BbGoalOk[pl->team]) {
+	    ux = Bb_wdx(BbGoalX[pl->team] - cx);
+	    uy = Bb_wdy(BbGoalY[pl->team] - cy);
+	}
     } else if ((src = Bb_enemy_treasure(pl->team, cx, cy)) >= 0) {
 	treasure_t *t = Treasure_by_index(src);
 
@@ -3603,12 +3879,24 @@ static void Bb_behave_support(player_t *pl, bb_data_t *d, bb_goal_t *g)
     t = Treasure_by_index(tr);
     tx = Bb_px(t->pos.cx);
     ty = Bb_px(t->pos.cy);
+    if (BbSpecial) {
+	/* the neutral ball wanders: cover it where we think it is */
+	bb_ballinfo_t *bi = &BbTeams[Bb_slot(pl)].ball[tr];
+
+	if (bi->known && !bi->home) {
+	    tx = bi->x;
+	    ty = bi->y;
+	}
+    }
     e = Bb_pick_enemy(pl, tx, ty, 800.0, true);
     if (e != NULL) {
 	Bb_goal_engage(pl, g, e, 230.0);
 	return;
     }
-    Bb_exit_dir(Bb_home_treasure(pl->team, x, y), NULL, tx, ty, &ux, &uy);
+    if (BbSpecial)
+	Bb_exit_dir(-1, Bb_enemy_goal_field(pl->team, tx, ty, NULL), tx, ty, &ux, &uy);
+    else
+	Bb_exit_dir(Bb_home_treasure(pl->team, x, y), NULL, tx, ty, &ux, &uy);
     /* off to the side of the exit, covering the grabber */
     gx = tx + (ux * 0.7 - uy * 0.7) * 280.0;
     gy = ty + (uy * 0.7 + ux * 0.7) * 280.0;
@@ -3768,11 +4056,22 @@ static void Robot_ball_play(player_t *pl)
 	    {
 		/* nobody near our base but our carrier is under way: help him */
 		player_t *c = Bb_team_carrier(pl->team);
-		treasure_t *t = Treasure_by_index(d->role_arg);
+		double hx, hy;
 
+		if (BbSpecial) {
+		    hx = BbGoalOk[pl->team] ? BbGoalX[pl->team] : Bb_px(pl->pos.cx);
+		    hy = BbGoalOk[pl->team] ? BbGoalY[pl->team] : Bb_px(pl->pos.cy);
+		} else if (d->role_arg >= 0 && d->role_arg < Num_treasures()) {
+		    treasure_t *t = Treasure_by_index(d->role_arg);
+
+		    hx = Bb_px(t->pos.cx);
+		    hy = Bb_px(t->pos.cy);
+		} else {
+		    hx = Bb_px(pl->pos.cx);
+		    hy = Bb_px(pl->pos.cy);
+		}
 		if (c != NULL && c != pl
-		    && Bb_pick_enemy(pl, Bb_px(t->pos.cx), Bb_px(t->pos.cy),
-				     1100.0, false) == NULL) {
+		    && Bb_pick_enemy(pl, hx, hy, 1100.0, false) == NULL) {
 		    int arg = d->role_arg;
 
 		    d->role_arg = c->id;

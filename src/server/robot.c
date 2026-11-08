@@ -950,6 +950,9 @@ static void Robot_create(bool want_smart)
 
     if (peek_ID() == 0 || pool_size <= 0)
 	return;
+    /* all bases taken (or the robots' team is full): no more robots */
+    if (BIT(world->rules->mode, TEAM_PLAY) && Pick_team(PL_TYPE_ROBOT) == TEAM_NOT_SET)
+	return;
 
     if ((new_data = XMALLOC(robot_data_t, 1)) == NULL) {
 	error("malloc robot_data");
