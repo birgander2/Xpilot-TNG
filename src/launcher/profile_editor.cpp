@@ -359,6 +359,7 @@ void ProfileEditor::Load(const std::string& stock_ships_path, bool keep_unsaved)
     fx_.tether = get_bool("fxTether", true);
     fx_.mines = get_bool("fxMines", true);
     fx_.ball = get_bool("fxBall", true);
+    fx_.stars = get_bool("fxStars", true);
     fx_.nuke_flash = get_bool("fxNukeFlash", true);
     fx_.screen_shake = get_bool("fxScreenShake", true);
     fx_.contrails = get_bool("fxContrails", true);
@@ -443,6 +444,7 @@ std::vector<std::pair<std::string, std::string>> ProfileEditor::FxValues() const
         {"fxTether", b(fx_.tether)},
         {"fxMines", b(fx_.mines)},
         {"fxBall", b(fx_.ball)},
+        {"fxStars", b(fx_.stars)},
         {"fxNukeFlash", b(fx_.nuke_flash)},
         {"fxScreenShake", b(fx_.screen_shake)},
         {"fxContrails", b(fx_.contrails)},
@@ -850,6 +852,10 @@ void ProfileEditor::RenderFx() {
     ImGui::Checkbox("Ball", &fx_.ball);
     if (ImGui::IsItemHovered())
         ImGui::SetTooltip("Ball as a glossy sphere with a soft anti-aliased edge (xpilot.fxBall)");
+    ImGui::Checkbox("Starfield", &fx_.stars);
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Subtle static starfield behind the map instead of the blue\n"
+                          "navigation dots (xpilot.fxStars)");
     ImGui::Checkbox("Nuke flash", &fx_.nuke_flash);
     if (ImGui::IsItemHovered())
         ImGui::SetTooltip("Brief bright flash of the whole view when a nuke goes off in sight (xpilot.fxNukeFlash)");

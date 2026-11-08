@@ -125,6 +125,9 @@ void Paint_frame(void)
     SDL_SetRenderClipRect(tng_renderer, &playfield_clip);
 
     if (damaged <= 0) {
+        /* 3b. Parallax starfield behind the map */
+        Fx_render_stars();
+
         /* 4. Render World Map (Walls, Basen, Tanken, Wurmlöcher) */
         Arc_start();
         Rectangle_start();

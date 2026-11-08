@@ -46,6 +46,7 @@ void Gui_paint_setup_down_grav(int x, int y);
 void Gui_paint_setup_right_grav(int x, int y);
 void Gui_paint_setup_left_grav(int x, int y);
 void Gui_paint_setup_worm(int x, int y);
+bool Fx_stars_active(void);
 void Gui_paint_mapobject_worm(int obj, int x, int y);
 void Gui_paint_setup_item_concentrator(int x, int y);
 void Gui_paint_setup_asteroid_concentrator(int x, int y);

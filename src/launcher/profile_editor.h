@@ -115,6 +115,7 @@ private:
         bool tether = true;              // fxTether
         bool mines = true;               // fxMines
         bool ball = true;                // fxBall
+        bool stars = true;               // fxStars
         bool nuke_flash = true;          // fxNukeFlash
         bool screen_shake = true;        // fxScreenShake
         bool contrails = true;           // fxContrails

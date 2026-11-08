@@ -35,6 +35,7 @@ static bool   fxWormholes = true;
 static bool   fxTether = true;
 static bool   fxMines = true;
 static bool   fxBall = true;
+static bool   fxStars = true;
 static bool   fxNukeFlash = true;
 static bool   fxScreenShake = true;
 static double fxAmount = 1.0;
@@ -93,6 +94,10 @@ static xp_option_t fx_options[] = {
     XP_BOOL_OPTION("fxBall", true, &fxBall, NULL,
                    XP_OPTFLAG_CONFIG_FX,
                    "Ball as a glossy sphere with a soft anti-aliased edge.\n"),
+    XP_BOOL_OPTION("fxStars", true, &fxStars, NULL,
+                   XP_OPTFLAG_CONFIG_FX,
+                   "Subtle static starfield behind the map instead of the blue\n"
+                   "navigation dots.\n"),
     XP_BOOL_OPTION("fxNukeFlash", true, &fxNukeFlash, NULL,
                    XP_OPTFLAG_CONFIG_FX,
                    "Brief bright flash of the whole view when a nuke goes off in sight.\n"),
@@ -2691,6 +2696,83 @@ bool Fx_paint_tether(float x1, float y1, float x2, float y2, bool ball, bool tra
     }
     fx_flush(SDL_BLENDMODE_ADD);
     return true;
+}
+
+/* ------------------------------------------------------------------ */
+/* Starfield                                                          */
+/* ------------------------------------------------------------------ */
+
+#define FX_STAR_CELL    64.0f           /* about one star candidate per cell, world px */
+#define FX_STAR_PROB    0.36f           /* share of cells that hold a star */
+
+/* True while the starfield replaces the blue navigation dots. */
+bool Fx_stars_active(void)
+{
+    return fxStars && fx_active();
+}
+
+static unsigned fx_star_hash(unsigned x, unsigned y)
+{
+    unsigned h = x * 374761393u + y * 668265263u + 0x9e3779b9u;
+    h = (h ^ (h >> 13)) * 1274126177u;
+    return h ^ (h >> 16);
+}
+
+/*
+ * Static starfield fixed to the map (it scrolls with the walls, like the
+ * navigation dots it replaces). Stars come from a hash of their grid
+ * cell, so nothing is stored and the pattern repeats exactly across the
+ * map's wrap-around. Drawn right after the screen is cleared, below the map.
+ */
+void Fx_render_stars(void)
+{
+    float scale = clData.fscale;
+
+    if (!Fx_stars_active() || !fx_atlas || !tng_renderer || !Setup)
+        return;
+
+    int nx = (int)((float)Setup->width / FX_STAR_CELL + 0.5f);
+    int ny = (int)((float)Setup->height / FX_STAR_CELL + 0.5f);
+    if (nx < 1 || ny < 1)
+        return;
+    float cw = (float)Setup->width / (float)nx, ch = (float)Setup->height / (float)ny;
+    float vw = (float)ext_view_width, vh = (float)ext_view_height;
+    int x0 = (int)floorf((float)world.x / cw) - 1, x1 = (int)floorf(((float)world.x + vw) / cw) + 1;
+    int y0 = (int)floorf((float)world.y / ch) - 1, y1 = (int)floorf(((float)world.y + vh) / ch) + 1;
+    /* white most of the time, a third tinted: blue, orange, reddish, violet */
+    static const float tint[8][3] = {
+        { 1.00f, 1.00f, 1.00f }, { 1.00f, 1.00f, 1.00f }, { 1.00f, 1.00f, 1.00f },
+        { 0.62f, 0.78f, 1.00f }, { 0.62f, 0.78f, 1.00f },
+        { 1.00f, 0.80f, 0.52f }, { 1.00f, 0.58f, 0.50f }, { 0.82f, 0.68f, 1.00f }
+    };
+
+    fx_nv = 0;
+    fx_ni = 0;
+    for (int iy = y0; iy <= y1; iy++) {
+        for (int ix = x0; ix <= x1; ix++) {
+            unsigned h = fx_star_hash((unsigned)(((ix % nx) + nx) % nx),
+                                      (unsigned)(((iy % ny) + ny) % ny));
+            if ((float)(h & 0xffff) / 65535.0f >= FX_STAR_PROB)
+                continue;
+            float ox = (float)((h >> 16) & 0xff) / 255.0f, oy = (float)((h >> 24) & 0xff) / 255.0f;
+            float k = (float)((h >> 8) & 0xff) / 255.0f;
+            const float *t = tint[(h >> 4) & 7];
+            k *= k;                                 /* mostly dim, a few brighter */
+            float wx = ((float)ix + ox) * cw, wy = ((float)iy + oy) * ch;
+            float sx = (float)PLAYFIELD_X + (wx - (float)world.x) * scale;
+            float sy = ((float)world.y + vh - wy) * scale;
+            unsigned h2 = fx_star_hash(h, 0x51a7u);             /* size independent of brightness */
+            float q = (float)(h2 & 0xff) / 255.0f;
+            q = q * q * q;                                      /* mostly small, a few big ones */
+            float r = 1.8f + 3.4f * q;
+            float a = fminf(1.0f, 0.38f + 0.52f * k + 0.25f * q);
+            fx_quad(sx, sy, r, 0.0f, 0.0f, r, CELL_GLOW, (SDL_FColor){ t[0], t[1], t[2], a });
+            if (fx_ni + 6 > FX_MAX_PARTICLES * 6 - 6)
+                goto done;
+        }
+    }
+done:
+    fx_flush(SDL_BLENDMODE_ADD);
 }
 
 /* ------------------------------------------------------------------ */

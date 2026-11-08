@@ -219,8 +219,15 @@ Vorschlag für ein erstes Paket: gefüllter Rumpf mit Facetten (1+2) und Triebwe
   Kometenschweif mit hellem Kern von 1,67× bis 3,33× Schwelle. Beides folgt der Flugrichtung
   (geglättete Geschwindigkeit), nicht der Nase. Keine harten Schwellen.
   Messung Bots: killing 95 % < 361 px/s (max 474), tourmination max 320 px/s.
-- **Parallax-Sternenfeld** im Hintergrund (mehrere Ebenen).
-- ✅ **Wurmloch-Strudel** (siehe 6a), ✅ **Hyperjump-Streckeffekt**, 
+- ✅ **Sternenfeld** → Option `fxStars`: ersetzt die blauen Navigationspunkte
+  (`backgroundPointDist`) durch ein dezentes statisches Sternenfeld. Die Sterne sitzen fest an
+  der Karte und scrollen mit den Wänden, ohne Parallaxe. Ein Stern pro Rasterzelle (64 px) mit
+  36 % Wahrscheinlichkeit, Lage/Helligkeit/Tönung (3/8 weiß, 2/8 blau, je 1/8 orange, rötlich, violett; erste Fassung mit kaum sichtbaren Farben) aus einem
+  Hash der Zelle – nichts wird gespeichert, und das Muster passt exakt über den Kartenrand.
+  Größe (1,8–5,2 px Halbmesser, meist klein, wenige große) und Helligkeit sind unabhängig
+  voneinander. Meist matt, einzelne heller (erste Fassung mit 30 % und schwächeren Sternen war zu dezent). Gezeichnet direkt nach dem Löschen des Bildes, unter Karte und
+  Hügeln. Erster Versuch war ein Parallax-Feld mit drei Ebenen; gefiel nicht und wurde
+  verworfen.
 - ✅ **Minen** → Option `fxMines`: neue Texturen `mine_team_fx.ppm` / `mine_other_fx.ppm` (21×15,
   wie die Originale) mit 3D-Schattierung – dieselbe Textur und Silhouette, aber wie eine Kuppel
   mit Licht von oben links gerechnet (dunklerer Rand, Glanzlicht, schwaches Reflexlicht unten).

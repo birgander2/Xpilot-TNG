@@ -88,6 +88,8 @@ static void Paint_background_dots(void)
 
     if (backgroundPointDist == 0)
 	return;
+    if (Fx_stars_active())	/* the starfield takes their place */
+	return;
 
     count.x = Setup->width / (BLOCK_SZ * backgroundPointDist);
     count.y = Setup->height / (BLOCK_SZ * backgroundPointDist);
