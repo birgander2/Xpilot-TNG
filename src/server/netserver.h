@@ -38,6 +38,7 @@ int Check_connection(char *real, char *nick, char *dpy, char *addr);
 int Setup_connection(char *real, char *nick, char *dpy, int team,
 		     char *addr, char *host, unsigned version);
 int Input(void);
+bool Net_dispatch(char *buf, int len);
 int Send_reply(connection_t *connp, int replyto, int result);
 int Send_self(connection_t *connp, player_t *pl,
 	      int lock_id,

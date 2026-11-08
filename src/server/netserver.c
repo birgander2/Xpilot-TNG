@@ -100,6 +100,13 @@ static int Handle_setup(connection_t *connp);
 static int Handle_login(connection_t *connp, char *errmsg, size_t errsize);
 static void Handle_input(int fd, void *arg);
 
+/*
+ * All players share the contact socket.  Net_dispatch() points these
+ * at the datagram it is delivering to a connection.
+ */
+static char *pending_buf;
+static int pending_len;
+
 static int Receive_keyboard(connection_t *connp);
 static int Receive_quit(connection_t *connp);
 static int Receive_play(connection_t *connp);
@@ -419,7 +426,8 @@ void Destroy_connection(connection_t *connp, const char *reason)
     }
 
     sock = &connp->w.sock;
-    remove_input(sock->fd);
+    if (playback && sock->fd != contactSocket.fd)
+	remove_input(sock->fd);
 
     pkt[0] = PKT_QUIT;
     strlcpy(&pkt[1], reason, sizeof(pkt) - 1);
@@ -467,7 +475,9 @@ void Destroy_connection(connection_t *connp, const char *reason)
 	sock_get_errorRec(sock);
 	sock_writeRec(sock, pkt, len);
     }
-    sock_closeRec(sock);
+    /* The socket is shared, only release the client address. */
+    XFREE(sock->lastaddr);
+    XFREE(sock->hostname);
 
     memset(connp, 0, sizeof(*connp));
 }
@@ -491,59 +501,6 @@ int Check_connection(char *user, char *nick, char *dpy, char *addr)
     }
     return -1;
 }
-
-static void Create_client_socket(sock_t *sock, int *port)
-{
-    int i;
-
-    if (options.clientPortStart
-	&& (!options.clientPortEnd || options.clientPortEnd > 65535))
-	options.clientPortEnd = 65535;
-
-    if (options.clientPortEnd
-	&& (!options.clientPortStart || options.clientPortStart < 1024))
-	options.clientPortStart = 1024;
-
-    if (!options.clientPortStart || !options.clientPortEnd ||
-	(options.clientPortStart > options.clientPortEnd)) {
-
-        if (sock_open_udp(sock, serverAddr, 0) == SOCK_IS_ERROR) {
-            error("Cannot create datagram socket (%d)", sock->error.error);
-	    sock->fd = -1;
-	    return;
-        }
-    }
-    else {
-        for (i = options.clientPortStart; i <= options.clientPortEnd; i++) {
-            if (sock_open_udp(sock, serverAddr, i) != SOCK_IS_ERROR)
-		goto found;
-	}
-	error("Could not find a usable port in given port range");
-	sock->fd = -1;
-	return;
-    }
- found:
-    if ((*port = sock_get_port(sock)) == -1) {
-	error("Cannot get port from socket");
-	goto error;
-    }
-    if (sock_set_non_blocking(sock, 1) == -1) {
-	error("Cannot make client socket non-blocking");
-	goto error;
-    }
-    if (sock_set_receive_buffer_size(sock, SERVER_RECV_SIZE + 256) == -1)
-	error("Cannot set receive buffer size to %d", SERVER_RECV_SIZE + 256);
-
-    if (sock_set_send_buffer_size(sock, SERVER_SEND_SIZE + 256) == -1)
-	error("Cannot set send buffer size to %d", SERVER_SEND_SIZE + 256);
-
-    return;
- error:
-    sock_close(sock);
-    sock->fd = -1;
-    return;
-}
-
 
 #if 0
 /*
@@ -660,8 +617,6 @@ int CheckAllowed(char *user, char *nick, char *addr, char *host)
  * client connection is still in the CONN_LISTENING state.
  */
 
-extern int min_fd;
-
 int Setup_connection(char *user, char *nick, char *dpy, int team,
 		     char *addr, char *host, unsigned version)
 {
@@ -723,20 +678,24 @@ int Setup_connection(char *user, char *nick, char *dpy, int team,
     }
     connp = &Conn[free_conn_index];
 
+    /*
+     * Players use the contact socket, so no new socket is needed.  The
+     * connection's own sock_t gets the client address once it is known.
+     * For recording, a pseudo fd identifies the connection.
+     */
+    sock_init(&sock);
+    sock.flags |= SOCK_FLAG_UDP;
     if (!playback) {
-	Create_client_socket(&sock, &my_port);
+	sock.fd = contactSocket.fd;
+	my_port = options.contactPort;
 	if (rrecord) {
-	    *playback_ei++ = sock.fd - min_fd;
+	    *playback_ei++ = free_conn_index + 1;
 	    *playback_ei++ = my_port;
 	}
     } else {
-	sock_init(&sock);
-	sock.flags |= SOCK_FLAG_UDP;
 	sock.fd = *playback_ei++;
 	my_port = *playback_ei++;
     }
-    if (sock.fd == -1)
- 	return -1;
 
     Sockbuf_init(&connp->w, &sock, SERVER_SEND_SIZE,
 		 SOCKBUF_WRITE | SOCKBUF_DGRAM);
@@ -807,9 +766,97 @@ int Setup_connection(char *user, char *nick, char *dpy, int team,
 	return -1;
     }
 
-    install_input(Handle_input, sock.fd, connp);
+    if (playback)
+	install_input(Handle_input, sock.fd, connp);
 
     return my_port;
+}
+
+/*
+ * Copy the next '\0' terminated string of a datagram into dst.
+ */
+static char *Scan_string(char *p, char *end, char *dst, size_t size)
+{
+    char *z;
+
+    if (p >= end || (z = memchr(p, '\0', (size_t)(end - p))) == NULL)
+	return NULL;
+    strlcpy(dst, p, size);
+    return z + 1;
+}
+
+/*
+ * Find the listening connection a PKT_VERIFY from the contact
+ * socket's last address belongs to.
+ */
+static connection_t *Find_listening(char *buf, int len)
+{
+    int i;
+    char *p, user[MAX_CHARS], nick[MAX_CHARS], addr[INET6_ADDRSTRLEN];
+    connection_t *connp;
+
+    if (len < 1 || buf[0] != PKT_VERIFY)
+	return NULL;
+    if ((p = Scan_string(buf + 1, buf + len, user, sizeof(user))) == NULL
+	|| Scan_string(p, buf + len, nick, sizeof(nick)) == NULL)
+	return NULL;
+    Fix_user_name(user);
+    Fix_nick_name(nick);
+    strlcpy(addr, sock_get_last_addr(&contactSocket), sizeof(addr));
+
+    for (i = 0; i < max_connections; i++) {
+	connp = &Conn[i];
+	if (connp->state == CONN_LISTENING
+	    && !strcmp(addr, connp->addr)
+	    && !strcmp(user, connp->user)
+	    && !strcmp(nick, connp->nick))
+	    return connp;
+    }
+    return NULL;
+}
+
+/*
+ * Deliver a datagram received on the contact socket to the connection
+ * it came from.  Players are identified by their address and port, a
+ * new player by the PKT_VERIFY it sends first.  Returns false if the
+ * datagram does not belong to a connection (it is a contact packet).
+ */
+bool Net_dispatch(char *buf, int len)
+{
+    int i, old_record = record;
+    connection_t *connp = NULL;
+
+    for (i = 0; i < max_connections; i++) {
+	if (Conn[i].state != CONN_FREE
+	    && Conn[i].w.sock.lastaddr
+	    && sock_last_addr_equal(&Conn[i].w.sock, &contactSocket)) {
+	    connp = &Conn[i];
+	    break;
+	}
+    }
+    if (connp == NULL && (connp = Find_listening(buf, len)) == NULL)
+	return false;
+
+    /* RECORDING STUFF */
+    if (rrecord) {
+	if (connp->ind + 2 > 126) { /* 127 reserved */
+	    warn("recording: this shouldn't happen");
+	    exit(1);
+	}
+	*playback_sched++ = connp->ind + 2;
+	record = 1;
+    }
+    /* RECORDING STUFF END */
+
+    pending_buf = buf;
+    pending_len = len;
+    Handle_input(-1, connp);
+    pending_buf = NULL;
+    pending_len = 0;
+
+    record = old_record;
+
+    return true;
 }
 
 /*
@@ -826,49 +873,33 @@ static int Handle_listening(connection_t *connp)
 	return -1;
     }
     Sockbuf_clear(&connp->r);
-    errno = 0;
-    n = sock_receive_anyRec(&connp->r.sock, connp->r.buf, connp->r.size);
-    if (n <= 0) {
-	if (n == 0 || errno == EWOULDBLOCK || errno == EAGAIN)
-	    n = 0;
-	else if (n != 0)
-	    Destroy_connection(connp, "read first packet error");
-	return n;
-    }
-    if (!playback && strcmp(sock_get_last_addr(&connp->r.sock), connp->addr)) {
+    if (playback) {
+	n = *playback_shorts++;
+	if (n <= 0)
+	    return 0;
+	memcpy(connp->r.buf, playback_data, (size_t)n);
+	playback_data += n;
+	connp->his_port = *playback_ints++;
+    } else {
 	/*
-	 * The first packet must come from the address that queued up for
-	 * this connection, otherwise anyone who knows the (public) user and
-	 * nick names and guesses the port could hijack the login.
+	 * Net_dispatch() only hands us a PKT_VERIFY from the address that
+	 * queued up for this connection with matching user and nick names.
 	 */
-	Sockbuf_clear(&connp->r);
-	return 0;
+	n = MIN(pending_len, connp->r.size);
+	memcpy(connp->r.buf, pending_buf, (size_t)n);
+	connp->his_port = sock_get_last_port(&contactSocket);
+	if (sock_copy_last_addr(&connp->w.sock, &contactSocket) == -1) {
+	    Destroy_connection(connp, "no memory");
+	    return -1;
+	}
+	if (record) {
+	    *playback_shorts++ = n;
+	    memcpy(playback_data, connp->r.buf, (size_t)n);
+	    playback_data += n;
+	    *playback_ints++ = connp->his_port;
+	}
     }
     connp->r.len = n;
-    connp->his_port = sock_get_last_portRec(&connp->r.sock);
-    if (sock_connectRec(&connp->w.sock, connp->addr, connp->his_port) == -1) {
-	error("Cannot connect datagram socket (%s,%d,%d,%d,%d)",
-	      connp->addr, connp->his_port,
-	      connp->w.sock.error.error,
-	      connp->w.sock.error.call,
-	      connp->w.sock.error.line);
-	if (sock_get_error(&connp->w.sock)) {
-	    error("sock_get_error fails too, giving up");
-	    Destroy_connection(connp, "connect error");
-	    return -1;
-	}
-	errno = 0;
-	if (sock_connectRec(&connp->w.sock, connp->addr, connp->his_port)
-	    == -1) {
-	    error("Still cannot connect datagram socket (%s,%d,%d,%d,%d)",
-		  connp->addr, connp->his_port,
-		  connp->w.sock.error.error,
-		  connp->w.sock.error.call,
-		  connp->w.sock.error.line);
-	    Destroy_connection(connp, "connect error");
-	    return -1;
-	}
-    }
     xpprintf("%s Welcome %s=%s@%s|%s (%s/%d)", showtime(),
 	     connp->nick, connp->user, connp->host, connp->dpy,
 	     connp->addr, connp->his_port);
@@ -950,14 +981,6 @@ static int Handle_setup(connection_t *connp)
 	    return -1;
 	}
 	connp->setup = (char *) &S->map_data[0] - (char *) S;
-    }
-    else if (connp->setup < S->setup_size) {
-	if (connp->c.len > 0) {
-	    /* If there is still unacked reliable data test for acks. */
-	    Handle_input(-1, connp);
-	    if (connp->state == CONN_FREE)
-		return -1;
-	}
     }
     if (connp->setup < S->setup_size) {
 	len = MIN(connp->c.size, 4096) - connp->c.len;
@@ -1401,31 +1424,26 @@ static void Handle_input(int fd, void *arg)
 
     Sockbuf_clear(&connp->r);
 
-    if (!recOpt || (!record && !playback)) {
-	if (Sockbuf_readRec(&connp->r) == -1) {
-	    Destroy_connection(connp, "input error");
-	    return;
-	}
-    }
-    else if (record) {
-	if (Sockbuf_read(&connp->r) == -1) {
-	    Destroy_connection(connp, "input error");
-	    *playback_shorts++ = (short)0xffff;
-	    return;
-	}
-	*playback_shorts++ = connp->r.len;
-	memcpy(playback_data, connp->r.buf, (size_t)connp->r.len);
-	playback_data += connp->r.len;
-	pbdcheck = playback_data;
-	pbscheck = playback_shorts;
-    }
-    else if (playback) {
+    if (playback) {
 	if ( (connp->r.len = *playback_shorts++) == 0xffff) {
 	    Destroy_connection(connp, "input error");
 	    return;
 	}
 	memcpy(connp->r.buf, playback_data, (size_t)connp->r.len);
 	playback_data += connp->r.len;
+    }
+    else {
+	connp->r.len = MIN(pending_len, connp->r.size);
+	memcpy(connp->r.buf, pending_buf, (size_t)connp->r.len);
+	if (record) {
+	    *playback_shorts++ = connp->r.len;
+	    memcpy(playback_data, connp->r.buf, (size_t)connp->r.len);
+	    playback_data += connp->r.len;
+	    if (recOpt) {
+		pbdcheck = playback_data;
+		pbscheck = playback_shorts;
+	    }
+	}
     }
 
     if (connp->r.len <= 0)

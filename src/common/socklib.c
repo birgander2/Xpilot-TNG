@@ -605,6 +605,65 @@ int sock_write(sock_t *sock, char *buf, int len)
     return count;
 }
 
+static socklen_t sock_addr_len(const struct sockaddr_storage *ss)
+{
+    return (ss->ss_family == AF_INET6) ? sizeof(struct sockaddr_in6)
+				      : sizeof(struct sockaddr_in);
+}
+
+/*
+ * Send to the address stored in sock->lastaddr on an unconnected socket.
+ */
+int sock_send_last(sock_t *sock, char *buf, int len)
+{
+    int			count;
+
+    if (!sock->lastaddr)
+	return sock_set_error(sock, EINVAL, SOCK_CALL_ANY, __LINE__);
+
+    count = sendto(sock->fd, buf, len, 0, (struct sockaddr *)sock->lastaddr,
+		   sock_addr_len((struct sockaddr_storage *)sock->lastaddr));
+    if (count < 0)
+	sock_set_error(sock, sock_last_error(), SOCK_CALL_IO, __LINE__);
+
+    return count;
+}
+
+/*
+ * Copy the last received-from address of src into dst->lastaddr.
+ */
+int sock_copy_last_addr(sock_t *dst, sock_t *src)
+{
+    if (!src->lastaddr || sock_alloc_lastaddr(dst) == SOCK_IS_ERROR)
+	return SOCK_IS_ERROR;
+    memcpy(dst->lastaddr, src->lastaddr, sizeof(struct sockaddr_storage));
+    return SOCK_IS_OK;
+}
+
+/*
+ * Return true if both sockets have the same last address (host and port).
+ */
+int sock_last_addr_equal(sock_t *a, sock_t *b)
+{
+    struct sockaddr_storage *sa = a->lastaddr, *sb = b->lastaddr;
+
+    if (!sa || !sb || sa->ss_family != sb->ss_family)
+	return 0;
+    if (sa->ss_family == AF_INET6) {
+	struct sockaddr_in6 *a6 = (struct sockaddr_in6 *)sa;
+	struct sockaddr_in6 *b6 = (struct sockaddr_in6 *)sb;
+
+	return a6->sin6_port == b6->sin6_port
+	    && !memcmp(&a6->sin6_addr, &b6->sin6_addr, sizeof(a6->sin6_addr));
+    } else {
+	struct sockaddr_in *a4 = (struct sockaddr_in *)sa;
+	struct sockaddr_in *b4 = (struct sockaddr_in *)sb;
+
+	return a4->sin_port == b4->sin_port
+	    && a4->sin_addr.s_addr == b4->sin_addr.s_addr;
+    }
+}
+
 char *sock_get_addr_by_name(const char *name)
 {
     static char		ip_buf[INET6_ADDRSTRLEN];

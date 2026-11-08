@@ -42,6 +42,12 @@ static int Queue_player(char *real, char *nick, char *disp, int team,
 			char *addr, char *host, unsigned version, int port,
 			int *qpos);
 static int Check_address(char *addr);
+static void Contact_packet(void);
+
+/* Max. datagrams read from the contact socket per input event. */
+#define CONTACT_BURST	64
+/* Socket buffer size of the contact socket (the kernel may cap it). */
+#define CONTACT_SOCK_BUF	(1024 * 1024)
 
 void Contact_cleanup(void)
 {
@@ -66,6 +72,11 @@ int Contact_init(void)
 	error("Can't make contact socket non-blocking");
 	return false;
     }
+    /* All players share this socket, give it room for their traffic. */
+    if (sock_set_receive_buffer_size(&contactSocket, CONTACT_SOCK_BUF) == -1)
+	warn("Cannot set contact socket receive buffer size");
+    if (sock_set_send_buffer_size(&contactSocket, CONTACT_SOCK_BUF) == -1)
+	warn("Cannot set contact socket send buffer size");
     if (Sockbuf_init(&ibuf, &contactSocket, SERVER_SEND_SIZE,
 		     SOCKBUF_READ | SOCKBUF_WRITE | SOCKBUF_DGRAM) == -1) {
 	error("No memory for contact buffer");
@@ -374,32 +385,50 @@ static unsigned Version_to_magic(unsigned version)
     return MAGIC;
 }
 
+/*
+ * Input handler of the contact socket, which is also the socket all
+ * players talk to.  Datagrams from players go to their connection,
+ * the rest are contact requests.
+ */
 void Contact(int fd, void *arg)
 {
-    int i, team, bytes, delay, qpos, status;
+    int i, bytes;
+
+    UNUSED_PARAM(fd); UNUSED_PARAM(arg);
+    /* One datagram per call while recording, like every input handler. */
+    for (i = 0; i < (rrecord ? 1 : CONTACT_BURST); i++) {
+	Sockbuf_clear(&ibuf);
+	if ((bytes = sock_receive_any(&contactSocket, ibuf.buf, ibuf.size))
+	    <= 0) {
+	    if (bytes < 0
+		&& errno != EWOULDBLOCK
+		&& errno != EAGAIN
+		&& errno != EINTR)
+		/*
+		 * Clear the error condition for the contact socket.
+		 */
+		sock_get_error(&contactSocket);
+	    return;
+	}
+	if (Net_dispatch(ibuf.buf, bytes) || bytes <= 8)
+	    continue;
+	ibuf.len = bytes;
+	Contact_packet();
+    }
+}
+
+static void Contact_packet(void)
+{
+    int i, team, delay, qpos, status;
     char reply_to, ch;
     unsigned magic, version, my_magic;
     uint16_t port;
     char user_name[MAX_CHARS], disp_name[MAX_CHARS], nick_name[MAX_CHARS];
     char host_name[MAX_CHARS], host_addr[INET6_ADDRSTRLEN], str[MSG_LEN];
 
-    UNUSED_PARAM(fd); UNUSED_PARAM(arg);
     /*
      * Someone connected to us, now try and decipher the message :)
      */
-    Sockbuf_clear(&ibuf);
-    if ((bytes = sock_receive_any(&contactSocket, ibuf.buf, ibuf.size)) <= 8) {
-	if (bytes < 0
-	    && errno != EWOULDBLOCK
-	    && errno != EAGAIN
-	    && errno != EINTR)
-	    /*
-	     * Clear the error condition for the contact socket.
-	     */
-	    sock_get_error(&contactSocket);
-	return;
-    }
-    ibuf.len = bytes;
 
     strlcpy(host_addr, sock_get_last_addr(&contactSocket), sizeof(host_addr));
     if (Check_address(host_addr)) {

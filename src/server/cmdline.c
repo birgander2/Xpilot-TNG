@@ -3699,7 +3699,7 @@ static option_desc opts[] = {
 	&options.clientPortStart,
 	valInt,
 	tuner_dummy,
-	"Use UDP ports clientPortStart - clientPortEnd (for firewalls)\n",
+	"Obsolete, ignored.  All players use the contactPort.\n",
 	OPT_COMMAND | OPT_DEFAULTS | OPT_VISIBLE
     },
     {
@@ -3709,7 +3709,7 @@ static option_desc opts[] = {
 	&options.clientPortEnd,
 	valInt,
 	tuner_dummy,
-	"Use UDP ports clientPortStart - clientPortEnd (for firewalls)\n",
+	"Obsolete, ignored.  All players use the contactPort.\n",
 	OPT_COMMAND | OPT_DEFAULTS | OPT_VISIBLE
     },
     {
