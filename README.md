@@ -84,7 +84,7 @@ Needs MinGW-w64 with the POSIX thread model (Debian/Ubuntu: `sudo apt install g+
 ```bash
 ./build_win.sh
 ```
-The first run downloads and statically builds SDL3, SDL3_ttf, Opus, zlib and expat. The result is `Xpilot-TNG_windows.zip`: self-contained `.exe` files (no DLLs) in `bin/` next to `lib/`. Unpack it anywhere and start `xpilot-tng.exe` (the launcher). Settings are stored in `%APPDATA%\xpilot-tng\`, learned bot data in `%LOCALAPPDATA%\xpilot-tng\`.
+The first run downloads and statically builds SDL3, SDL3_ttf, Opus, zlib and expat. The result is `XPilot-TNG_windows.zip`: self-contained `.exe` files (no DLLs) in `bin/` next to `lib/`. Unpack it anywhere and start `xpilot-tng.exe` (the launcher). Settings are stored in `%APPDATA%\xpilot-tng\`, learned bot data in `%LOCALAPPDATA%\xpilot-tng\`.
 
 ---
 

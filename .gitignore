@@ -37,12 +37,12 @@ __pycache__/
 .claude/settings.local.json
 build_linux.sh
 build_src.sh
-Xpilot-TNG_Sources.tgz
-Xpilot-TNG_Linux.tgz
+XPilot-TNG_Sources.tgz
+XPilot-TNG_Linux.tgz
 
 # Windows cross build (build_win.sh)
 build-win/
-Xpilot-TNG_windows.zip
+XPilot-TNG_windows.zip
 build_win.sh
 build_docker.sh
 Dockerfile
