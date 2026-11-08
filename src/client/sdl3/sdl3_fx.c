@@ -33,7 +33,6 @@ static bool   fxLaserGlow = true;
 static bool   fxHyperjump = true;
 static bool   fxWormholes = true;
 static bool   fxTether = true;
-static bool   fxMines = true;
 static bool   fxNukeFlash = true;
 static bool   fxScreenShake = true;
 static double fxAmount = 1.0;
@@ -86,11 +85,6 @@ static xp_option_t fx_options[] = {
                    XP_OPTFLAG_CONFIG_FX,
                    "Ball connector and tractor beams as a softly shimmering glowing rope;\n"
                    "the ball connector turns red the harder it is stretched.\n"),
-    XP_BOOL_OPTION("fxMines", true, &fxMines, NULL,
-                   XP_OPTFLAG_CONFIG_FX,
-                   "Mines as shiny metal capsules with a rim and a light in the middle,\n"
-                   "blue for your team, red for enemies; thrown mines turn slowly and\n"
-                   "leave a faint trail.\n"),
     XP_BOOL_OPTION("fxNukeFlash", true, &fxNukeFlash, NULL,
                    XP_OPTFLAG_CONFIG_FX,
                    "Brief bright flash of the whole view when a nuke goes off in sight.\n"),
@@ -2552,136 +2546,6 @@ bool Fx_paint_tether(float x1, float y1, float x2, float y2, bool ball, bool tra
     return true;
 }
 
-static SDL_FColor fx_alpha(SDL_FColor c, float a)
-{
-    c.a = fx_clamp01(a);
-    return c;
-}
-
-/*
- * Mines: the classic capsule shape as a shiny metal body (vertical light
- * gradient with a highlight band), a glowing rim and a steady light in
- * the middle, blue for mines safe for us, red for hostile ones. Mines
- * that moved since the last frame (thrown) turn slowly, tumble a little
- * and leave a faint trail. (wx, wy): world position as painted, (sx, sy): screen.
- */
-bool Fx_paint_mine(int wx, int wy, float sx, float sy, int teammine)
-{
-    const float iw = 1.0f / (float)(FX_CELL * FX_ATLAS_COLS);
-    const float ih = 1.0f / (float)(FX_CELL * FX_ATLAS_ROWS);
-    const SDL_FPoint white = {
-        ((float)((CELL_GLOW % FX_ATLAS_COLS) * FX_CELL) + (float)FX_CELL * 0.5f) * iw,
-        ((float)((CELL_GLOW / FX_ATLAS_COLS) * FX_CELL) + (float)FX_CELL * 0.5f) * ih
-    };
-    const int R = 9, C = 8;
-    float sc = clData.fscale;
-    float hl = 8.0f * sc, hh = 3.2f * sc, rot = 0.0f;
-    float vx = 0.0f, vy = 0.0f;
-    bool moving = false;
-    SDL_FColor cc = teammine ? (SDL_FColor){ 0x4E / 255.0f, 0x7C / 255.0f, 1.0f, 1.0f }
-                             : (SDL_FColor){ 1.0f, 0.23f, 0.15f, 1.0f };
-    double now = (double)SDL_GetTicksNS() / 1e9;
-
-    if (!fxMines || !fx_active() || !fx_atlas || !tng_renderer)
-        return false;
-
-    /* moved since the last frame? (thrown mine) */
-    {
-        int prev = fx_mine_cur ^ 1;
-        long dl = loops - fx_mine_loop[prev];
-        float best = FX_MINE_MATCH * FX_MINE_MATCH;
-        if (dl >= 1 && dl <= 3) {
-            for (int k = 0; k < fx_num_mines[prev]; k++) {
-                float dx = fx_wrap_dx((float)wx - fx_mine_x[prev][k]);
-                float dy = fx_wrap_dy((float)wy - fx_mine_y[prev][k]);
-                float d2 = dx * dx + dy * dy;
-                if (d2 < best) {
-                    best = d2;
-                    vx = dx / (float)dl;
-                    vy = dy / (float)dl;
-                }
-            }
-            moving = vx * vx + vy * vy > 0.3f * 0.3f;
-        }
-    }
-
-    fx_nv = 0;
-    fx_ni = 0;
-    if (moving) {
-        float l = sqrtf(vx * vx + vy * vy), ux = vx / l, uy = -vy / l;   /* screen */
-        fx_capsule(sx - ux * 22.0f * sc, sy - uy * 22.0f * sc, sx - ux * 6.0f * sc,
-                   sy - uy * 6.0f * sc, 5.0f * sc, fx_alpha(cc, 0.0f), fx_alpha(cc, 0.3f));
-        fx_flush(SDL_BLENDMODE_ADD);
-        /*
-         * slow full turn, sense and phase from the flight direction so a
-         * mine keeps both while it flies
-         */
-        float sense = vx * 0.7f + vy >= 0.0f ? 1.0f : -1.0f;
-        float ph = atan2f(vy, vx) * 3.0f;
-        rot = (float)fmod(now * 1.6, 2.0 * M_PI) * sense + ph;
-        /* plus a little tumbling: wobble and a roll that flattens it */
-        rot += 0.3f * sinf((float)fmod(now * 3.1, 2.0 * M_PI) + ph);
-        hh *= 0.75f + 0.25f * cosf((float)fmod(now * 2.3, 2.0 * M_PI) + ph * 0.7f);
-    }
-
-    /* metal body: grid over the capsule, colored by height */
-    float c = cosf(rot), s = sinf(rot);
-    fx_nv = 0;
-    fx_ni = 0;
-    for (int r = 0; r < R; r++) {
-        float v = -1.0f + 2.0f * (float)r / (float)(R - 1);
-        float half = hl - hh + hh * sqrtf(fmaxf(0.0f, 1.0f - v * v));
-        float l = 0.5f - 0.3f * v + 0.35f * expf(-(v + 0.45f) * (v + 0.45f) * 10.0f);
-        SDL_FColor col = { fx_clamp01(l * 0.9f), fx_clamp01(l * 0.93f), fx_clamp01(l), 1.0f };
-        for (int k = 0; k < C; k++) {
-            float u = -half + 2.0f * half * (float)k / (float)(C - 1), w = v * hh;
-            SDL_Vertex *vt = &fx_verts[fx_nv + r * C + k];
-            vt->position = (SDL_FPoint){ sx + u * c - w * s, sy + u * s + w * c };
-            vt->tex_coord = white;
-            vt->color = col;
-        }
-    }
-    for (int r = 0; r < R - 1; r++)
-        for (int k = 0; k < C - 1; k++) {
-            int a = r * C + k, *ix = &fx_idx[fx_ni];
-            ix[0] = a;
-            ix[1] = a + 1;
-            ix[2] = a + C + 1;
-            ix[3] = a;
-            ix[4] = a + C + 1;
-            ix[5] = a + C;
-            fx_ni += 6;
-        }
-    fx_nv += R * C;
-    fx_flush(SDL_BLENDMODE_BLEND);
-
-    /* glowing rim */
-    SDL_FPoint rim[26];
-    int n = 0;
-    for (int k = 0; k <= 12; k++) {             /* right end, then left end */
-        float a = -(float)M_PI * 0.5f + (float)M_PI * (float)k / 12.0f;
-        float u = hl - hh + hh * cosf(a), w = hh * sinf(a);
-        rim[n++] = (SDL_FPoint){ sx + u * c - w * s, sy + u * s + w * c };
-    }
-    for (int k = 0; k <= 11; k++) {
-        float a = (float)M_PI * 0.5f + (float)M_PI * (float)k / 12.0f;
-        float u = -(hl - hh) + hh * cosf(a), w = hh * sinf(a);
-        rim[n++] = (SDL_FPoint){ sx + u * c - w * s, sy + u * s + w * c };
-    }
-    rim[n++] = rim[0];
-    Fx_draw_polyline_glow(rim, n, false, fx_alpha(cc, 0.55f), 2.4f * sc);
-    Fx_draw_polyline_glow(rim, n, false, fx_alpha(cc, 0.9f), 1.0f * sc);
-
-    /* steady light in the middle */
-    fx_nv = 0;
-    fx_ni = 0;
-    fx_quad(sx, sy, 3.6f * sc, 0.0f, 0.0f, 3.6f * sc, CELL_GLOW, fx_alpha(cc, 0.9f));
-    fx_quad(sx, sy, 1.4f * sc, 0.0f, 0.0f, 1.4f * sc, CELL_GLOW,
-            (SDL_FColor){ 1.0f, 1.0f, 1.0f, 0.9f });
-    fx_flush(SDL_BLENDMODE_ADD);
-    return true;
-}
-
 /* ------------------------------------------------------------------ */
 /* Wormholes                                                          */
 /* ------------------------------------------------------------------ */
@@ -2689,6 +2553,11 @@ bool Fx_paint_mine(int wx, int wy, float sx, float sy, int teammine)
 static const SDL_FColor FX_WORM_RED = { 1.0f, 0.25f, 0.12f, 1.0f };
 static const SDL_FColor FX_WORM_ORANGE = { 1.0f, 0.55f, 0.18f, 1.0f };
 
+static SDL_FColor fx_alpha(SDL_FColor c, float a)
+{
+    c.a = fx_clamp01(a);
+    return c;
+}
 
 /*
  * Tunnel: glowing rings that keep moving into the depth and shrink

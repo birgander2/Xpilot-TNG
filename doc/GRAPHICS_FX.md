@@ -219,14 +219,6 @@ Vorschlag für ein erstes Paket: gefüllter Rumpf mit Facetten (1+2) und Triebwe
   Messung Bots: killing 95 % < 361 px/s (max 474), tourmination max 320 px/s.
 - **Parallax-Sternenfeld** im Hintergrund (mehrere Ebenen).
 - ✅ **Wurmloch-Strudel** (siehe 6a), ✅ **Hyperjump-Streckeffekt**, 
-- ✅ **Minen** → Option `fxMines`: die klassische Kapselform als glänzender Metallkörper
-  (Lichtverlauf mit Glanzband), leuchtender Rand und ruhiges Licht in der Mitte – blau für
-  Minen, die uns nicht treffen (eigene/Team), rot für feindliche. Geworfene (bewegte) Minen
-  drehen sich langsam um sich selbst (~4 s pro Umdrehung), taumeln dabei leicht (Pendeln +
-  Rollen um die Längsachse) und ziehen einen schwachen Schweif. Verglichen: Seemine mit Stacheln,
-  Metallkapsel, Glühkern mit Gefahrenring; Blinken verworfen. Einen Zeitzünder gibt es nicht
-  (`mineFuseTicks` = Ende der Besitzer-Immunität, die Restlebenszeit sendet der Server nicht);
-  per ECM verwirrte Minen wechseln weiter zufällig zwischen Blau und Rot.
 - ✅ **Ball-Tether-Glühen** → Option `fxTether`: das Ballseil als mattes blaues Leuchtseil mit
   hellem Kern, in ~6-px-Stücken, die minimal zittern (leichtes Flimmern); der Ball hat einen
   schwachen Lichthof. Über die Ruhelänge gedehnt (`ballConnectorLength`, Standard 120 – der
