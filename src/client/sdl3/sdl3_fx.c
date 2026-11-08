@@ -36,6 +36,7 @@ static bool   fxTether = true;
 static bool   fxMines = true;
 static bool   fxBall = true;
 static bool   fxStars = true;
+static bool   fxCannons = true;
 static bool   fxNukeFlash = true;
 static bool   fxScreenShake = true;
 static double fxAmount = 1.0;
@@ -98,6 +99,10 @@ static xp_option_t fx_options[] = {
                    XP_OPTFLAG_CONFIG_FX,
                    "Subtle static starfield behind the map instead of the blue\n"
                    "navigation dots.\n"),
+    XP_BOOL_OPTION("fxCannons", true, &fxCannons, NULL,
+                   XP_OPTFLAG_CONFIG_FX,
+                   "Map cannons: muzzle flash and a smoke puff when they fire, a charred\n"
+                   "outline with a thin smoke wisp while destroyed (current TNG servers).\n"),
     XP_BOOL_OPTION("fxNukeFlash", true, &fxNukeFlash, NULL,
                    XP_OPTFLAG_CONFIG_FX,
                    "Brief bright flash of the whole view when a nuke goes off in sight.\n"),
@@ -458,6 +463,7 @@ bool Fx_paint_ball(float sx, float sy, Uint32 rgb)
 #define FX_SMOKE_LIGHT 2    /* puffs: smart missile */
 #define FX_SMOKE_DARK  3    /* puffs: heat seeker */
 #define FX_SMOKE_FAINT 4    /* puffs: torpedo */
+#define FX_SMOKE_CANNON 5   /* puffs: cannon muzzle and wreck, light and dense */
 
 typedef enum {
     FXK_FIRE,
@@ -1929,6 +1935,9 @@ static void fx_emit(const fx_particle_t *p, float scale)
         } else if (p->variant == FX_SMOKE_FAINT) {
             g = 0.8f;
             a = 0.5f;
+        } else if (p->variant == FX_SMOKE_CANNON) {
+            g = 0.74f + 0.08f * p->seed;
+            a = 0.85f;
         }
         size = p->size0 + (p->size1 - p->size0) * (1.0f - e * e);
         col = (SDL_FColor){ g, g, g, a * fx_smooth(t / 0.1f) * powf(e, 1.3f) };
@@ -2776,6 +2785,206 @@ done:
 }
 
 /* ------------------------------------------------------------------ */
+/* Cannons                                                            */
+/* ------------------------------------------------------------------ */
+
+#define FX_CANNON_NEW_R     48.0f       /* a new shot shows up this close to its cannon */
+#define FX_CANNON_MUZZLE    9.0f        /* muzzle distance from the cannon center */
+#define FX_MAX_CANNON_FX    512
+
+static double fx_cannon_smoke_t[FX_MAX_CANNON_FX];
+
+static inline bool fx_cannons_on(void)
+{
+    return fxCannons && fx_active();
+}
+
+static bool fx_cannon_dead(const tngcannon_t *c)
+{
+    if (c->poly < 0 || c->poly >= num_polygons || c->dstyle == c->nstyle)
+        return false;
+    return polygons[c->poly].style == c->dstyle;
+}
+
+/* Short flash, a flame tongue along the shot and a light smoke puff. */
+static void fx_spawn_muzzle(float x, float y, float ux, float uy)
+{
+    float mx = x + ux * FX_CANNON_MUZZLE, my = y + uy * FX_CANNON_MUZZLE;
+    fx_particle_t *p;
+
+    if ((p = fx_new(FXK_FLASH, mx, my)) != NULL) {
+        p->life = 0.09f;
+        p->size0 = 8.0f;
+        p->size1 = 14.0f;
+        p->cell = CELL_GLOW;
+    }
+    for (int i = 0, n = fx_count(4.0f); i < n; i++) {
+        float sp = fx_range(140.0f, 260.0f), j = fx_range(-20.0f, 20.0f);
+        if ((p = fx_new(FXK_FIRE, mx, my)) == NULL)
+            break;
+        p->vx = ux * sp - uy * j;
+        p->vy = uy * sp + ux * j;
+        p->life = fx_range(0.08f, 0.16f);
+        p->size0 = 3.0f;
+        p->size1 = fx_range(7.0f, 11.0f);
+        p->rot = fx_range(0.0f, 6.283f);
+        p->vrot = fx_range(-3.0f, 3.0f);
+        p->drag = 4.0f;
+        p->cell = (uint8_t)(CELL_FIRE0 + fx_rand_int(4));
+    }
+    for (int i = 0, n = fx_count(3.0f); i < n; i++) {
+        float sp = fx_range(25.0f, 50.0f);
+        if ((p = fx_new(FXK_PUFF, mx + ux * 4.0f, my + uy * 4.0f)) == NULL)
+            break;
+        p->vx = ux * sp + fx_range(-10.0f, 10.0f);
+        p->vy = uy * sp + fx_range(-10.0f, 10.0f);
+        p->life = fx_range(1.1f, 1.6f);
+        p->size0 = 4.0f;
+        p->size1 = fx_range(17.0f, 24.0f);
+        p->rot = fx_range(0.0f, 6.283f);
+        p->vrot = fx_range(-1.0f, 1.0f);
+        p->drag = 1.5f;
+        p->gravity = 6.0f;
+        p->cell = (uint8_t)(CELL_SMOKE0 + fx_rand_int(2));
+        p->variant = FX_SMOKE_CANNON;
+    }
+}
+
+/*
+ * Smoke from a destroyed cannon: puffs spread over the wreck that grow,
+ * linger and only slowly rise, so the cannon stays wrapped in smoke.
+ */
+static void fx_spawn_wreck_smoke(float x, float y)
+{
+    fx_particle_t *p = fx_new(FXK_PUFF, x + fx_range(-10.0f, 10.0f), y + fx_range(-8.0f, 8.0f));
+
+    if (!p)
+        return;
+    p->vx = fx_range(-6.0f, 6.0f);
+    p->vy = fx_range(-3.0f, 5.0f);
+    p->life = fx_range(2.2f, 3.0f);
+    p->size0 = fx_range(8.0f, 12.0f);
+    p->size1 = fx_range(24.0f, 32.0f);
+    p->rot = fx_range(0.0f, 6.283f);
+    p->vrot = fx_range(-0.6f, 0.6f);
+    p->drag = 1.2f;
+    p->gravity = 8.0f;                  /* rises only slowly */
+    p->cell = (uint8_t)(CELL_SMOKE0 + fx_rand_int(2));
+    p->variant = FX_SMOKE_CANNON;       /* light grey: dark smoke vanishes on black */
+}
+
+/*
+ * Once per drawn frame, after the shots were observed: a shot that just
+ * appeared close in front of a cannon (within its +-60 degree firing cone,
+ * with no shot of the last frame on the same line, nearer (the same shot
+ * flying on) or a bit farther (a shot coming in at the cannon)) was fired by
+ * it; its position gives the real direction of this shot, which smart
+ * cannons aim at players. Destroyed cannons smoke.
+ */
+static void fx_cannons_update(void)
+{
+    static long last_loop = -1;
+    double now = (double)SDL_GetTicksNS() / 1e9;
+    int cur = fx_shot_cur, prev = cur ^ 1;
+    bool new_frame = last_loop != loops;
+    bool have_prev = fx_shot_loop[cur] == loops && loops - fx_shot_loop[prev] == 1;
+
+    if (!fx_cannons_on() || num_tngcannons == 0)
+        return;
+    last_loop = loops;
+
+    for (int i = 0; i < num_tngcannons; i++) {
+        const tngcannon_t *c = &tngcannons[i];
+        float dx, dy;
+
+        fx_view_offset((float)c->x, (float)c->y, &dx, &dy);
+        if (fabsf(dx) > (float)ext_view_width * 0.5f + 100.0f
+            || fabsf(dy) > (float)ext_view_height * 0.5f + 100.0f)
+            continue;
+        if (fx_cannon_dead(c)) {
+            if (i < FX_MAX_CANNON_FX && now - fx_cannon_smoke_t[i] > 0.06) {
+                fx_cannon_smoke_t[i] = now;
+                fx_spawn_wreck_smoke((float)c->x, (float)c->y);
+            }
+            continue;
+        }
+        if (!new_frame || !have_prev)
+            continue;
+        float ang = (float)c->dir * 2.0f * (float)M_PI / RES;
+        float ca = cosf(ang), sa = sinf(ang);
+        for (int k = 0; k < fx_num_shots[cur]; k++) {
+            float ex = fx_wrap_dx(fx_shot_x[cur][k] - (float)c->x);
+            float ey = fx_wrap_dy(fx_shot_y[cur][k] - (float)c->y);
+            float d = sqrtf(ex * ex + ey * ey);
+            if (d < 1.0f || d > FX_CANNON_NEW_R || (ex * ca + ey * sa) / d < 0.34f)
+                continue;
+            bool old = false;
+            for (int m = 0; m < fx_num_shots[prev] && !old; m++) {
+                float px = fx_wrap_dx(fx_shot_x[prev][m] - (float)c->x);
+                float py = fx_wrap_dy(fx_shot_y[prev][m] - (float)c->y);
+                float pd = sqrtf(px * px + py * py);
+                if (pd < 0.5f || (px * ex + py * ey) / (pd * d) < 0.95f)
+                    continue;
+                /* nearer last frame: our own shot flying on; farther: incoming */
+                if (pd < d - 2.0f || (pd > d + 2.0f && pd < d + 70.0f))
+                    old = true;
+            }
+            if (old)
+                continue;
+            fx_spawn_muzzle((float)c->x, (float)c->y, ex / d, ey / d);
+            break;                      /* one muzzle flash per cannon and frame */
+        }
+    }
+}
+
+/*
+ * Polygon i of a destroyed cannon: a charred grey dashed outline instead
+ * of whatever the map shows for it (mostly nothing). Returns true when it
+ * was drawn this way.
+ */
+bool Fx_paint_cannon_wreck(int i, int xoff, int yoff)
+{
+    const xp_polygon_t *poly;
+    int k, x, y;
+
+    if (!fx_cannons_on() || num_tngcannons == 0 || !tng_renderer)
+        return false;
+    for (k = 0; k < num_tngcannons; k++)
+        if (tngcannons[k].poly == i)
+            break;
+    if (k == num_tngcannons || !fx_cannon_dead(&tngcannons[k]))
+        return false;
+
+    poly = &polygons[i];
+    x = xoff * Setup->width;
+    y = yoff * Setup->height;
+    SDL_FPoint first = { 0, 0 }, last = { 0, 0 };
+    SDL_SetRenderDrawBlendMode(tng_renderer, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(tng_renderer, 90, 90, 90, 255);
+    for (int p = 0; p <= poly->num_points; p++) {
+        SDL_FPoint pt;
+        if (p < poly->num_points) {
+            x += poly->points[p].x;
+            y += poly->points[p].y;
+            pt = (SDL_FPoint){ Screen_X(x), Screen_Y(y) };
+        } else
+            pt = first;
+        if (p == 0) {
+            first = last = pt;
+            continue;
+        }
+        float ex = pt.x - last.x, ey = pt.y - last.y, len = sqrtf(ex * ex + ey * ey);
+        for (float t = 0.0f; t < len; t += 7.0f) {         /* 4 px dash, 3 px gap */
+            float t1 = fminf(t + 4.0f, len);
+            SDL_RenderLine(tng_renderer, last.x + ex * t / len, last.y + ey * t / len,
+                           last.x + ex * t1 / len, last.y + ey * t1 / len);
+        }
+        last = pt;
+    }
+    return true;
+}
+
+/* ------------------------------------------------------------------ */
 /* Wormholes                                                          */
 /* ------------------------------------------------------------------ */
 
@@ -3072,6 +3281,7 @@ void Fx_render(void)
     fx_flame_update();
     fx_hit_update();
     fx_mines_resolve();
+    fx_cannons_update();
 
     if (!fx_atlas || !tng_renderer)
         return;

@@ -175,6 +175,8 @@ int                 num_bases = 0;
 checkpoint_t        *checks = NULL;
 int                 num_checks = 0;
 mapobject_t         *mapobjects = NULL;
+tngcannon_t         *tngcannons = NULL;
+int                 num_tngcannons = 0;
 int                 num_mapobjects = 0;
 race_result_t       race_result;
 static race_result_t race_result_new;	/* while it arrives */
@@ -1082,6 +1084,28 @@ static int init_polymap(void)
 		mapobjects[i].bounds.h = BLOCK_SZ;
 	    }
 	    num_mapobjects = n;
+	} else if (n > 0)
+	    ptr += n * 5;
+	/* then the cannons (newer TNG servers): x, y, dir, polygon, destroyed style */
+	num_tngcannons = 0;
+	tngcannons = NULL;
+	if (ptr + 2 <= (char *)Setup->map_data + Setup->map_data_len) {
+	    n = get_ushort(&ptr);
+	    if (n > 0 && ptr + n * 8 <= (char *)Setup->map_data + Setup->map_data_len
+		&& (tngcannons = XMALLOC(tngcannon_t, n)) != NULL) {
+		for (i = 0; i < n; i++) {
+		    tngcannons[i].x = get_ushort(&ptr);
+		    tngcannons[i].y = get_ushort(&ptr);
+		    tngcannons[i].dir = *ptr++ & 0xff;
+		    tngcannons[i].poly = get_ushort(&ptr);
+		    if (tngcannons[i].poly == 0xffff || tngcannons[i].poly >= num_polygons)
+			tngcannons[i].poly = -1;
+		    tngcannons[i].dstyle = *ptr++ & 0xff;
+		    tngcannons[i].nstyle = tngcannons[i].poly >= 0
+			? polygons[tngcannons[i].poly].style : -1;
+		}
+		num_tngcannons = n;
+	    }
 	}
     }
 
@@ -1244,6 +1268,10 @@ static int Map_cleanup(void)
     if (num_mapobjects > 0) {
 	XFREE(mapobjects);
 	num_mapobjects = 0;
+    }
+    if (num_tngcannons > 0) {
+	XFREE(tngcannons);
+	num_tngcannons = 0;
     }
     return 0;
 }

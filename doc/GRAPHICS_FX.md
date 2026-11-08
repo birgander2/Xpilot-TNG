@@ -202,7 +202,22 @@ Vorschlag für ein erstes Paket: gefüllter Rumpf mit Facetten (1+2) und Triebwe
   Glühen + dünne hellblau-graue Spur. Raketen haben keine Kennung: pro Frame wird die Fahne vom nächsten
   Heck gleicher Länge im Vorframe fortgesetzt, Rauch gleichmäßig über die Strecke verteilt.
   Verglichen mit Rauchwölkchen einheitlich und glattem Rauchband.
-- **Mündungsfeuer** an Kanonen, 
+- ✅ **Mündungsfeuer / zerstörte Kanone** → Option `fxCannons` („A mit 3“): beim Schuss ein
+  kurzer Blitz, eine Flammenzunge in Schussrichtung und ein helles Rauchwölkchen (keine Funken);
+  eine zerstörte Kanone als grauer gestrichelter Umriss ihres Polygons, eingehüllt in dichten
+  hellgrauen Rauch, der nur langsam aufsteigt, bis sie wieder auftaucht.
+  - *Daten*: der TNG-Server hängt hinter die Kartenobjekte einen zweiten Block mit den Kanonen an
+    (Position, Grundrichtung, erstes Polygon der Gruppe = Index wie in PKT_POLYSTYLE, dessen
+    Zerstört-Stil). Ältere TNG-Clients lesen nur den ersten Block, NG-Clients bekommen keinen.
+    Tot ist eine Kanone, wenn ihr Polygon den Zerstört-Stil trägt (den aktuellen Stil schickt der
+    Server auch beim Einstieg).
+  - *Schussrichtung*: Kanonen zielen je nach `cannonSmartness` im Kegel ±60° um die
+    Grundrichtung. Die Flammenzunge folgt deshalb dem einzelnen Schuss: ein neuer Schuss bis
+    48 px vor der Kanone im Kegel, ohne Schuss im Vorframe auf derselben Linie (näher = derselbe
+    Schuss fliegt weiter, etwas weiter weg = Schuss fliegt auf die Kanone zu).
+  - Nur normale Schüsse; Raketen, Laser und Minen der Kanonen lösen nichts aus. Ohne die Daten
+    (alter Server, Blockkarten) passiert nichts. Falls das Mündungsfeuer stört: nur die
+    Rauchwolke behalten (Blitz und Flammen in `fx_spawn_muzzle` streichen).
 - ✅ **Laser-Glow** → Option `fxLaserGlow`: Laserpulse als weiche Leuchtkapsel aus drei
   Schichten (farbiger Saum ~8 px, überwiegend farbiger Kern ~2 px, dünne weiße Mitte),
   additiv. Team/eigene Pulse in kräftigerem Blau (`#4073FF`) als die Palette, Gegner in sattem Rot (`#FF140A`, Kern weniger weiß).

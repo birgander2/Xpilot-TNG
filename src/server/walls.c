@@ -1630,8 +1630,9 @@ int Polys_to_client(unsigned char **start)
 /*
  * TNG addition to the polygon map data: map objects that are no polygons
  * and that the block map used to carry (gravs, concentrators, wormholes),
- * as client block types (SETUP_*) with their position.  Only TNG clients
- * get it.
+ * as client block types (SETUP_*) with their position, followed by the
+ * cannons (position, direction, polygon, destroyed style).  Only TNG
+ * clients get it.
  */
 int Map_objects_to_client(unsigned char **start)
 {
@@ -1686,6 +1687,31 @@ int Map_objects_to_client(unsigned char **start)
 	       : wh->type == WORM_OUT ? SETUP_WORM_OUT : SETUP_WORM_NORMAL);
 	STORE2(wh->pos.cx >> CLICK_SHIFT);
 	STORE2(wh->pos.cy >> CLICK_SHIFT);
+    }
+
+    /*
+     * Second block: cannons with their base direction, the first polygon
+     * of their group (same index as in PKT_POLYSTYLE) and its destroyed
+     * style, so the client knows exactly when a cannon is down. Clients
+     * reading only the first block stop before this one.
+     */
+    STORE2(Num_cannons());
+    for (i = 0; i < Num_cannons(); i++) {
+	cannon_t *c = Cannon_by_index(i);
+	int j, poly = 0xffff, dstyle = 0xff;
+
+	for (j = 0; j < num_polys; j++) {
+	    if (pdata[j].group == c->group) {
+		poly = j;
+		dstyle = pdata[j].destroyed_style;
+		break;
+	    }
+	}
+	STORE2(c->pos.cx >> CLICK_SHIFT);
+	STORE2(c->pos.cy >> CLICK_SHIFT);
+	STORE1(c->dir);
+	STORE2(poly);
+	STORE1(dstyle);
     }
     return offset;
 }

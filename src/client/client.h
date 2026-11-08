@@ -296,6 +296,15 @@ typedef struct {
     irec_t	bounds;		/* Location on map */
 } mapobject_t;
 
+/* Cannon on a TNG polygon map, from the TNG map data appendix. */
+typedef struct {
+    int		x, y;		/* center, pixels */
+    int		dir;		/* base direction, 0..RES-1 */
+    int		poly;		/* first polygon of the cannon or -1 */
+    int		dstyle;		/* that polygon's style while destroyed */
+    int		nstyle;		/* its normal style (as loaded) */
+} tngcannon_t;
+
 typedef struct {
     int width;			/* Line width, -1 means no line */
     unsigned long color;	/* Line color */
@@ -644,6 +653,8 @@ extern int		num_bases;
 extern checkpoint_t	*checks;
 extern int		num_checks;
 extern mapobject_t	*mapobjects;
+extern tngcannon_t	*tngcannons;
+extern int		 num_tngcannons;
 extern int		num_mapobjects;
 extern xp_polygon_t	*polygons;
 extern int		num_polygons, max_polygons;

@@ -782,6 +782,8 @@ void Gui_paint_polygon(int i, int xoff, int yoff)
     xp_polygon_t *poly = &polygons[i];
     if (poly->num_points < 3) return;
 
+    if (Fx_paint_cannon_wreck(i, xoff, yoff)) return;   /* destroyed cannon */
+
     polygon_style_t style = polygon_styles[poly->style];
     if (BIT(style.flags, STYLE_INVISIBLE)) return;
     if (Fx_wormhole_polygon(i)) return;     /* drawn as a tunnel */

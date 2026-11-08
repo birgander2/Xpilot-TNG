@@ -116,6 +116,7 @@ private:
         bool mines = true;               // fxMines
         bool ball = true;                // fxBall
         bool stars = true;               // fxStars
+        bool cannons = true;             // fxCannons
         bool nuke_flash = true;          // fxNukeFlash
         bool screen_shake = true;        // fxScreenShake
         bool contrails = true;           // fxContrails
