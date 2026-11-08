@@ -68,7 +68,7 @@
 /*
  * Maximum roundtrip time taken as serious for rountrip time calculations.
  */
-#define LEGACY_CLIENT_NOTICE	"You are using an old legacy client. Update it for full functionality: https://xpilot.nought.de"
+#define LEGACY_CLIENT_NOTICE	"You are using an old legacy client. Update it for full functionality: https://xpilot.nought.de [*Server notice*]"
 #define LEGACY_NOTICE_INTERVAL	(5 * 60 * FPS)
 
 #define MAX_RTT			(FPS + 1)
