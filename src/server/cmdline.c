@@ -3693,26 +3693,6 @@ static option_desc opts[] = {
 	OPT_COMMAND | OPT_DEFAULTS | OPT_PASSWORD
     },
     {
-	"clientPortStart",
-	"clientPortStart",
-	"0",
-	&options.clientPortStart,
-	valInt,
-	tuner_dummy,
-	"Obsolete, ignored.  All players use the contactPort.\n",
-	OPT_COMMAND | OPT_DEFAULTS | OPT_VISIBLE
-    },
-    {
-	"clientPortEnd",
-	"clientPortEnd",
-	"0",
-	&options.clientPortEnd,
-	valInt,
-	tuner_dummy,
-	"Obsolete, ignored.  All players use the contactPort.\n",
-	OPT_COMMAND | OPT_DEFAULTS | OPT_VISIBLE
-    },
-    {
 	"maxPauseTime",
 	"maxPauseTime",
 	"14400",	/* can pause 4 hours by default */

@@ -112,11 +112,11 @@ The same layout as the local game, but without client and PLAY. Differences:
 * *Quick settings* start with the server row: **Port**, **Max players** (0 = number of bases
   + 10), **Register at meta server** (on by default) and a **Greeting** message.
 * The **Network** tab contains the settings for hosting behind a router — *Public host name*
-  (`serverHost`) and the *Client ports from … to …* range (`clientPortStart` / `clientPortEnd`).
+  (`serverHost`).
   Preset order (later wins): compiled default, `lib/defaults.txt`, then the xpilotrc
-  (`xpilot.serverHost`, `xpilot.contactPort`, `xpilot.clientPortStart`, `xpilot.clientPortEnd`).
+  (`xpilot.serverHost`, `xpilot.contactPort`).
   Without an entry the port is a free random one. The xpilotrc is read by the launcher only.
-  The tab shows which ports to forward. The complete background is in
+  The tab shows which port to forward. The complete background is in
   [HOWTO-INTERNET-SERVER.md](HOWTO-INTERNET-SERVER.md).
 * The bottom bar shows the complete **Command** that will be run, with a *Copy* button. You can
   use it to start the same server later without the launcher.

@@ -34,7 +34,7 @@ Three parties are involved, and each one needs a different address:
         +--------------------+   (3) CONTACT   |
         |  your server       | <---------------+   UDP  contactPort (15345)
         |  (behind router)   |
-        |                    | <-------------->    UDP  one port per player
+        |                    | <-------------->    UDP  same contactPort
         +--------------------+   (4) game data
 ```
 
@@ -46,9 +46,9 @@ Three parties are involved, and each one needs a different address:
    They connect to the **host name and port** found in that list.
 3. **Contact.** The client sends a UDP packet to the server's **contact port**
    (`contactPort`, default 15345) to ask for a slot.
-4. **Game data.** The server answers by telling the client a *new* UDP port. The server opens
-   **one separate UDP socket per player** (see `Create_client_socket` in
-   `src/server/netserver.c`). All game traffic runs over that socket.
+4. **Game data.** The server answers by telling the client the UDP port for the game. This is
+   the contact port again: all players share the one server socket, the server tells them apart
+   by their address and port (see `Net_dispatch` in `src/server/netserver.c`).
 
 ### Why this breaks behind a router
 
@@ -56,13 +56,13 @@ Three parties are involved, and each one needs a different address:
   machine it runs on (e.g. `mypc` or `mypc.fritz.box`). Nobody on the Internet can resolve that,
   so players see your server in the list but cannot connect. You must tell the server its
   *public* name.
-* **Closed ports (steps 3 and 4).** A router drops unsolicited incoming packets. Packets to the
-  contact port arrive only if you **forward** that port to your machine.
-* **Random player ports (step 4).** By default the per-player port is chosen randomly by the
-  operating system. A port forwarding rule cannot cover a port that is not known in advance, so
-  the client would reach the contact port but then get stuck at "connecting". The options
-  `clientPortStart` / `clientPortEnd` restrict the server to a **fixed range** that you can
-  forward.
+* **Closed port (steps 3 and 4).** A router drops unsolicited incoming packets. Packets to the
+  contact port arrive only if you **forward** that port to your machine. Since contact and game
+  data use the same port, this single rule is all that is needed.
+
+> Older versions opened one UDP port per player and needed a forwarded port range
+> (`clientPortStart` / `clientPortEnd`). These options no longer exist; leftover entries in
+> `defaults.txt` are ignored, on the command line they cause an "Unknown option" warning.
 
 ---
 
@@ -106,28 +106,16 @@ cannot. Watch for that line.
 | Option            | Meaning                                                        | Recommended value        |
 |-------------------|----------------------------------------------------------------|--------------------------|
 | `serverHost`      | Public name reported to the meta server                        | `play.example.org`       |
-| `contactPort`     | UDP port where players first contact the server                | `15345` (default)        |
-| `clientPortStart` | First UDP port for per-player sockets                          | `15400`                  |
-| `clientPortEnd`   | Last UDP port for per-player sockets                           | `15420`                  |
+| `contactPort`     | UDP port for contact and game data of all players              | `15345` (default)        |
 | `reportToMetaServer` | Publish the server in the public list                       | `true` (default)         |
-
-**Size of the port range:** each connected player (including spectators, but not bots) uses
-one port from the range. Pick at least as many ports as the maximum number of human players you
-expect, plus a few spare. 20 ports are plenty for a private server. A port stays reserved while a
-player is connected; if the range is exhausted, new players cannot join and the server logs
-`Could not find a usable port in given port range`.
 
 **In the Launcher** (recommended): *Launch Server* → *Advanced settings* → tab **Network**:
 
 * *Public host name* → `serverHost`
-* *Client ports from … to …* → `clientPortStart` / `clientPortEnd`
 
 The port of the server (`contactPort`) and *Register at meta server* are in *Quick settings*.
-The tab prints the exact ports you have to forward, and the *Command* line at the bottom shows
+The tab prints the port you have to forward, and the *Command* line at the bottom shows
 the resulting server command.
-
-Both ends of the range must be set (start ≤ end, maximum 65535) or both must be 0. The
-launcher refuses to start otherwise.
 
 Values already defined in `lib/defaults.txt` are used as the initial values of these fields.
 
@@ -140,16 +128,14 @@ machine**:
 
 | Protocol | External port(s) | Internal port(s) | Purpose                     |
 |----------|------------------|------------------|-----------------------------|
-| UDP      | 15345            | 15345            | contact port                |
-| UDP      | 15400 – 15420    | 15400 – 15420    | per-player game connections |
+| UDP      | 15345            | 15345            | contact port and game data  |
 
 Rules of thumb:
 
 * The protocol is **UDP** — not TCP. (TCP is only used by *clients* to download the server list.)
-* Keep external and internal ports identical. The server announces its own port numbers to the
-  client; a rule that translates them (e.g. external 20000 → internal 15345) breaks the connection.
-* If you changed `contactPort` (e.g. to run two servers), forward *that* port instead, and use
-  a separate port range per server.
+* Keep external and internal ports identical. The server announces its own port number to the
+  client; a rule that translates it (e.g. external 20000 → internal 15345) breaks the connection.
+* If you changed `contactPort` (e.g. to run two servers), forward *that* port instead.
 
 ---
 
@@ -161,18 +147,16 @@ The router forwards the packets, but the firewall of the machine itself must acc
 
 ```sh
 sudo ufw allow 15345/udp
-sudo ufw allow 15400:15420/udp
 ```
 
 **firewalld (Fedora/RHEL/openSUSE):**
 
 ```sh
 sudo firewall-cmd --permanent --add-port=15345/udp
-sudo firewall-cmd --permanent --add-port=15400-15420/udp
 sudo firewall-cmd --reload
 ```
 
-**nftables / iptables:** accept `udp dport 15345` and `udp dport 15400-15420`.
+**nftables / iptables:** accept `udp dport 15345`.
 
 ---
 
@@ -189,8 +173,7 @@ sudo firewall-cmd --reload
    → *Internet* list. Your server should appear with a ping value. A server without ping
    (`-`) is listed but did not answer the contact packet — i.e. the forwarding or firewall
    is wrong.
-4. Join it. If the client reaches "connecting" but never enters the game, the contact port is
-   open but the player port range is not (step 3/4 for `15400-15420`).
+4. Join it.
 
 You can test the contact port without the game from another machine:
 
@@ -216,7 +199,6 @@ Without the Launcher:
 ./xpilot-tng-server -map ndh.xp2 \
     -serverHost play.example.org \
     -contactPort 15345 \
-    -clientPortStart 15400 -clientPortEnd 15420 \
     -noQuit
 ```
 
@@ -227,8 +209,6 @@ To make the settings permanent put them into `lib/defaults.txt`:
 
 ```
 serverHost:      play.example.org
-clientPortStart: 15400
-clientPortEnd:   15420
 ```
 
 Command line options override `defaults.txt`; the Launcher passes only the values you changed
@@ -250,10 +230,6 @@ in the GUI.
 * The contact port is not reachable from outside: check router rule (UDP!), firewall, and that
   the rule targets the right LAN address.
 
-**Joining starts, then hangs on "connecting"**
-* The per-player port range is not forwarded, or `clientPortStart/End` is not set
-  (random ports cannot be forwarded).
-
 **It worked yesterday, not today**
 * Dynamic DNS did not update after the IP change, or the LAN address of the server machine changed
   (use a DHCP reservation).
@@ -270,7 +246,7 @@ in the GUI.
 
 ## 10. Security notes
 
-* Only forward the ports listed above. Do not expose other services of the server machine.
+* Only forward the port listed above. Do not expose other services of the server machine.
 * The server speaks a custom UDP protocol; keep the software up to date.
 * Do not run the server as `root`.
 * To keep specific addresses out, use the server option `denyHosts` (list of addresses,

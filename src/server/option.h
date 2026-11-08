@@ -303,9 +303,6 @@ extern struct options {
     char	*defaultShipShape;
     char	*tankShipShape;
 
-    int		clientPortStart;
-    int		clientPortEnd;
-
     int		maxPauseTime;
     int		maxIdleTime;
     int		maxClientsPerIP;

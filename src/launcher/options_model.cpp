@@ -310,15 +310,11 @@ std::vector<std::string> OptionsManager::BuildServerArgs(LaunchMode mode, const 
         if (!is_default("highscores", v)) emit("highscores", v);
     }
 
-    // The public name and client ports must reach the server even when they equal the launcher's baseline
+    // The public name must reach the server even when it equals the launcher's baseline
     // (the server may not see the same defaults.txt); never emit an empty name.
     if (mode == LaunchMode::Server) {
-        for (const char* key : {"serverHost", "clientPortStart", "clientPortEnd"}) {
-            std::string lc = Lower(key);
-            std::string v = Get(key);
-            if (!base_.count(lc) || v.empty() || v == "0") continue;
-            emit(lc, v);
-        }
+        std::string v = Get("serverHost");
+        if (base_.count("serverhost") && !v.empty()) emit("serverhost", v);
     }
 
     std::vector<std::string> args;

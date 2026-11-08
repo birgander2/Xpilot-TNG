@@ -142,8 +142,6 @@ void LauncherApp::Init() {
     profile_.Load();
     if (baseline_ok_) {   // network settings: compiled default < lib/defaults.txt < xpilotrc
         CopyTo(server_host_, sizeof(server_host_), options_mgr_.Get("serverHost"));
-        server_cport_start_ = options_mgr_.GetInt("clientPortStart");
-        server_cport_end_ = options_mgr_.GetInt("clientPortEnd");
         if (options_mgr_.InDefaultsFile("contactPort")) server_port_ = options_mgr_.GetInt("contactPort");
     }
     {
@@ -154,8 +152,6 @@ void LauncherApp::Init() {
         std::string host = XpilotrcValue("serverHost");
         if (!host.empty()) CopyTo(server_host_, sizeof(server_host_), host);
         rc_int("contactPort", server_port_);
-        rc_int("clientPortStart", server_cport_start_);
-        rc_int("clientPortEnd", server_cport_end_);
     }
     if (!baseline_ok_)
         process_mgr_.AddLog("LAUNCHER", "Could not read server defaults (" + server_bin_path_ +
@@ -296,8 +292,6 @@ void LauncherApp::ApplyServerModeSettings(OptionsManager& opts) const {
     opts.SetBool("highscores", server_highscores_);
     // always set: an empty/zero value must also be able to override defaults.txt
     opts.Set("serverHost", server_host_);
-    opts.SetInt("clientPortStart", server_cport_start_);
-    opts.SetInt("clientPortEnd", server_cport_end_);
 }
 
 std::string LauncherApp::ServerCommandLine() const {
@@ -318,12 +312,6 @@ void LauncherApp::StartServerMode() {
     int port = server_port_ > 0 ? server_port_ : OptionsManager::FindFreePort();
     if (!OptionsManager::IsPortFree(port)) {
         banner_ = "Port " + std::to_string(port) + " is already in use.";
-        return;
-    }
-
-    if ((server_cport_start_ > 0) != (server_cport_end_ > 0) || server_cport_start_ > server_cport_end_ ||
-        server_cport_start_ > 65535 || server_cport_end_ > 65535) {
-        banner_ = "Invalid client port range: set both ends (start <= end, max 65535) or leave both at 0.";
         return;
     }
 
@@ -946,24 +934,9 @@ void LauncherApp::RenderAdvanced(bool server_mode) {
                 if (ImGui::IsItemHovered())
                     ImGui::SetTooltip("Name reported to the meta server (serverHost).\n"
                                       "Set this to your external host name when you are behind a router.");
-                ImGui::SetNextItemWidth(110);
-                ImGui::InputInt("Client ports from", &server_cport_start_, 0, 0);
-                ImGui::SameLine();
-                ImGui::SetNextItemWidth(110);
-                ImGui::InputInt("to", &server_cport_end_, 0, 0);
-                if (ImGui::IsItemHovered())
-                    ImGui::SetTooltip("UDP port range for the connections of players (clientPortStart/End).\n"
-                                      "0 = random ports, which cannot be forwarded by a router.");
-                server_cport_start_ = std::clamp(server_cport_start_, 0, 65535);
-                server_cport_end_ = std::clamp(server_cport_end_, 0, 65535);
                 const int port = server_port_ > 0 ? server_port_ : kDefaultServerPort;
-                if (server_cport_start_ > 0 && server_cport_end_ >= server_cport_start_)
-                    ImGui::TextDisabled("Forward UDP %d and UDP %d-%d to this machine.", port, server_cport_start_,
-                                        server_cport_end_);
-                else if (server_cport_start_ > 0 || server_cport_end_ > 0)
-                    ImGui::TextColored(kWarn, "Set both ends of the port range (start <= end).");
-                else
-                    ImGui::TextDisabled("Behind a router, set a port range and forward it (see doc/HOWTO-INTERNET-SERVER.md).");
+                ImGui::TextDisabled("Behind a router, forward UDP %d to this machine (see doc/HOWTO-INTERNET-SERVER.md).",
+                                    port);
             } else {
                 ImGui::SetNextItemWidth(140);
                 ImGui::InputInt("Server port (0 = automatic)", &local_port_, 0, 0);
