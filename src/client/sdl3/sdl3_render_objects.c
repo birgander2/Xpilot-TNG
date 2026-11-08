@@ -102,6 +102,11 @@ void Gui_paint_ball(int x, int y, int style)
     if (style >= 0 && style < num_polygon_styles)
         rgb = polygon_styles[style].rgb;
 
+    /* glossy sphere with soft edge; the default (style 0xff) ball is green */
+    if (Fx_paint_ball((float)(PLAYFIELD_X + WINSCALE(x)), (float)WINSCALE(y),
+                      style == 0xff ? 0x20c030 : (Uint32)rgb))
+        return;
+
     if (!texturedObjects) {
         if (rgb == 0)
             Arc_add(ballColor, x - BALL_RADIUS, y - BALL_RADIUS,
@@ -201,12 +206,13 @@ void Gui_paint_mine(int x, int y, int teammine, char *name)
     } else {
         x = X(x);
         y = Y(y);
+        bool fx = Fx_mines_shaded();
         if (teammine == 0) {
-            Bitmap_paint(0, BM_MINE_OTHER,
+            Bitmap_paint(0, fx ? BM_MINE_OTHER_FX : BM_MINE_OTHER,
                          PLAYFIELD_X + WINSCALE(x - 10),
                          WINSCALE(y - 7), 0);
         } else {
-            Bitmap_paint(0, BM_MINE_TEAM,
+            Bitmap_paint(0, fx ? BM_MINE_TEAM_FX : BM_MINE_TEAM,
                          PLAYFIELD_X + WINSCALE(x - 10),
                          WINSCALE(y - 7), 0);
         }

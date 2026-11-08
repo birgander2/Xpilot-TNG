@@ -219,6 +219,21 @@ Vorschlag für ein erstes Paket: gefüllter Rumpf mit Facetten (1+2) und Triebwe
   Messung Bots: killing 95 % < 361 px/s (max 474), tourmination max 320 px/s.
 - **Parallax-Sternenfeld** im Hintergrund (mehrere Ebenen).
 - ✅ **Wurmloch-Strudel** (siehe 6a), ✅ **Hyperjump-Streckeffekt**, 
+- ✅ **Minen** → Option `fxMines`: neue Texturen `mine_team_fx.ppm` / `mine_other_fx.ppm` (21×15,
+  wie die Originale) mit 3D-Schattierung – dieselbe Textur und Silhouette, aber wie eine Kuppel
+  mit Licht von oben links gerechnet (dunklerer Rand, Glanzlicht, schwaches Reflexlicht unten).
+  Gilt nur mit Textur-Objekten; mit `classicGraphics` bzw. `fxMines` aus kommen die
+  Originaltexturen. Stärken verglichen: leicht / mittel / kräftig, genommen wurde „kräftig“.
+  Der erste Versuch (neu gezeichnete Metallkapsel mit Rand-Leuchten, drehende Wurfminen) wurde
+  verworfen: zu weit weg vom Original.
+- ✅ **Ball** → Option `fxBall`: glänzende Kugel (Variante A von drei verglichenen: glänzend,
+  leuchtend, gemustert): feiner Verlauf mit Licht von oben links, schwacher Widerschein unten,
+  scharfes plus breites Glanzlicht, dunklerer Rand. Der Rand ist weich anti-aliased (4×4
+  Samples, keine zusätzliche Weichzeichnung wie in der Vorschau; Rampen von 1,7 und 1 px
+  waren zu weich) – das geht nur mit Alphakanal, deshalb wird die Kugel beim ersten
+  Gebrauch pro Ballfarbe zur Laufzeit als Textur gerechnet (23×23, max. 16 Farben) statt aus
+  `ball_gray16.ppm` gelesen (PPM kennt nur durchsichtig/deckend). Farbe aus dem Kartenstil, der
+  Standardball (Stil 0xff) grün. Zurückgestellt: Lichtschein (B) und rollendes Muster (C).
 - ✅ **Ball-Tether-Glühen** → Option `fxTether`: das Ballseil als mattes blaues Leuchtseil mit
   hellem Kern, in ~6-px-Stücken, die minimal zittern (leichtes Flimmern); der Ball hat einen
   schwachen Lichthof. Über die Ruhelänge gedehnt (`ballConnectorLength`, Standard 120 – der

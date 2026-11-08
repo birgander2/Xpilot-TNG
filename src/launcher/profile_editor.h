@@ -113,6 +113,8 @@ private:
         bool hyperjump = true;           // fxHyperjump
         bool wormholes = true;           // fxWormholes
         bool tether = true;              // fxTether
+        bool mines = true;               // fxMines
+        bool ball = true;                // fxBall
         bool nuke_flash = true;          // fxNukeFlash
         bool screen_shake = true;        // fxScreenShake
         bool contrails = true;           // fxContrails

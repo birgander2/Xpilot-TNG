@@ -146,6 +146,8 @@ void  Fx_paint_shield(float cx, float cy, float radius, int color,
 bool  Fx_shield_enabled(void);
 void  Fx_paint_engine_flame(int id, int x, int y, int dir);
 bool  Fx_classic(void);
+bool  Fx_mines_shaded(void);
+bool  Fx_paint_ball(float sx, float sy, Uint32 rgb);
 void  Store_terrain_options(void);
 bool  Fx_terrain_paint(int i, int xoff, int yoff, SDL_FColor base);
 bool  Fx_terrain_paint_textured(int i, int xoff, int yoff);

@@ -357,6 +357,8 @@ void ProfileEditor::Load(const std::string& stock_ships_path, bool keep_unsaved)
     fx_.hyperjump = get_bool("fxHyperjump", true);
     fx_.wormholes = get_bool("fxWormholes", true);
     fx_.tether = get_bool("fxTether", true);
+    fx_.mines = get_bool("fxMines", true);
+    fx_.ball = get_bool("fxBall", true);
     fx_.nuke_flash = get_bool("fxNukeFlash", true);
     fx_.screen_shake = get_bool("fxScreenShake", true);
     fx_.contrails = get_bool("fxContrails", true);
@@ -439,6 +441,8 @@ std::vector<std::pair<std::string, std::string>> ProfileEditor::FxValues() const
         {"fxHyperjump", b(fx_.hyperjump)},
         {"fxWormholes", b(fx_.wormholes)},
         {"fxTether", b(fx_.tether)},
+        {"fxMines", b(fx_.mines)},
+        {"fxBall", b(fx_.ball)},
         {"fxNukeFlash", b(fx_.nuke_flash)},
         {"fxScreenShake", b(fx_.screen_shake)},
         {"fxContrails", b(fx_.contrails)},
@@ -839,6 +843,13 @@ void ProfileEditor::RenderFx() {
     if (ImGui::IsItemHovered())
         ImGui::SetTooltip("Ball connector and tractor beams as a shimmering glowing rope; the ball\n"
                           "connector turns red the harder it is stretched (xpilot.fxTether)");
+    ImGui::Checkbox("Mines", &fx_.mines);
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("3D-shaded mine textures with a highlight (xpilot.fxMines; needs textured\n"
+                          "objects)");
+    ImGui::Checkbox("Ball", &fx_.ball);
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Ball as a glossy sphere with a soft anti-aliased edge (xpilot.fxBall)");
     ImGui::Checkbox("Nuke flash", &fx_.nuke_flash);
     if (ImGui::IsItemHovered())
         ImGui::SetTooltip("Brief bright flash of the whole view when a nuke goes off in sight (xpilot.fxNukeFlash)");

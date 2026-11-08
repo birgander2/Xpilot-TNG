@@ -54,9 +54,11 @@
 #define BM_METER        42
 #define BM_ASTEROIDCONC 43
 #define BM_BALL_GRAY    44
+#define BM_MINE_TEAM_FX 45
+#define BM_MINE_OTHER_FX 46
 
-#define NUM_OBJECT_BITMAPS 45
-#define NUM_BITMAPS        45
+#define NUM_OBJECT_BITMAPS 47
+#define NUM_BITMAPS        47
 
 #define BG_IMAGE_HEIGHT 442
 #define LOGO_HEIGHT     223

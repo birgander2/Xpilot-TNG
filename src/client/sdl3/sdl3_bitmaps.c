@@ -64,7 +64,9 @@ static const struct {
     { "checkpoint.ppm", -2, false },
     { "meter.ppm", -2, false },
     { "asteroidconcentrator.ppm", 32, false },
-    { "ball_gray16.ppm", -16, false }
+    { "ball_gray16.ppm", -16, false },
+    { "mine_team_fx.ppm", 1, false },
+    { "mine_other_fx.ppm", 1, false }
 };
 
 static tng_pixmap_t *tng_pixmaps = NULL;

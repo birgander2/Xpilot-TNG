@@ -33,6 +33,8 @@ static bool   fxLaserGlow = true;
 static bool   fxHyperjump = true;
 static bool   fxWormholes = true;
 static bool   fxTether = true;
+static bool   fxMines = true;
+static bool   fxBall = true;
 static bool   fxNukeFlash = true;
 static bool   fxScreenShake = true;
 static double fxAmount = 1.0;
@@ -85,6 +87,12 @@ static xp_option_t fx_options[] = {
                    XP_OPTFLAG_CONFIG_FX,
                    "Ball connector and tractor beams as a softly shimmering glowing rope;\n"
                    "the ball connector turns red the harder it is stretched.\n"),
+    XP_BOOL_OPTION("fxMines", true, &fxMines, NULL,
+                   XP_OPTFLAG_CONFIG_FX,
+                   "Use 3D-shaded textures for mines (textured objects).\n"),
+    XP_BOOL_OPTION("fxBall", true, &fxBall, NULL,
+                   XP_OPTFLAG_CONFIG_FX,
+                   "Ball as a glossy sphere with a soft anti-aliased edge.\n"),
     XP_BOOL_OPTION("fxNukeFlash", true, &fxNukeFlash, NULL,
                    XP_OPTFLAG_CONFIG_FX,
                    "Brief bright flash of the whole view when a nuke goes off in sight.\n"),
@@ -116,6 +124,12 @@ void Store_fx_options(void)
 bool Fx_classic(void)
 {
     return classicGraphics;
+}
+
+/* Shaded mine textures instead of the classic ones. */
+bool Fx_mines_shaded(void)
+{
+    return fxMines && fx_active();
 }
 
 /* ------------------------------------------------------------------ */
@@ -290,14 +304,145 @@ int Fx_init(void)
     return fx_atlas ? 0 : -1;
 }
 
+static void fx_ball_cleanup(void);
+
 void Fx_cleanup(void)
 {
+    fx_ball_cleanup();
     if (fx_atlas) {
         SDL_DestroyTexture(fx_atlas);
         fx_atlas = NULL;
     }
     Fx_terrain_cleanup();
     Fx_ship_cleanup();
+}
+
+/* ------------------------------------------------------------------ */
+/* Ball                                                               */
+/* ------------------------------------------------------------------ */
+
+#define FX_BALL_TEX     23              /* 21 px ball plus room for the soft edge */
+#define FX_BALL_MAX     16
+
+static SDL_Texture *fx_ball_tex[FX_BALL_MAX];
+static Uint32       fx_ball_rgb[FX_BALL_MAX];
+static int          fx_num_ball_tex;
+
+static void fx_ball_cleanup(void)
+{
+    for (int i = 0; i < fx_num_ball_tex; i++)
+        if (fx_ball_tex[i])
+            SDL_DestroyTexture(fx_ball_tex[i]);
+    fx_num_ball_tex = 0;
+}
+
+/*
+ * Glossy sphere in color (r, g, b): diffuse light from the upper left, a
+ * little bounce light below, a sharp highlight plus a broad soft one, a
+ * darker rim, and an anti-aliased edge (4x4 samples, no extra blur).
+ */
+static SDL_Texture *fx_ball_make(float tr, float tg, float tb)
+{
+    const int N = FX_BALL_TEX, SS = 4;
+    const float R = 10.5f;
+    float L[3] = { -0.45f, -0.55f, 0.70f };
+    float ll = sqrtf(L[0] * L[0] + L[1] * L[1] + L[2] * L[2]);
+    float Hv[3] = { L[0] / ll, L[1] / ll, L[2] / ll + 1.0f };
+    float hl = sqrtf(Hv[0] * Hv[0] + Hv[1] * Hv[1] + Hv[2] * Hv[2]);
+    SDL_Surface *surf = SDL_CreateSurface(N, N, SDL_PIXELFORMAT_ARGB8888);
+    SDL_Texture *tex;
+
+    if (!surf)
+        return NULL;
+    for (int i = 0; i < 3; i++)
+        L[i] /= ll, Hv[i] /= hl;
+    for (int py = 0; py < N; py++) {
+        for (int px = 0; px < N; px++) {
+            float acc[3] = { 0, 0, 0 }, wsum = 0.0f;
+            for (int sy = 0; sy < SS; sy++) {
+                for (int sx = 0; sx < SS; sx++) {
+                    float u = ((float)px + ((float)sx + 0.5f) / (float)SS - (float)N * 0.5f) / R;
+                    float v = ((float)py + ((float)sy + 0.5f) / (float)SS - (float)N * 0.5f) / R;
+                    float r2 = u * u + v * v, r = sqrtf(r2);
+                    float a = r <= 1.0f ? 1.0f : 0.0f;   /* edge from supersampling only */
+                    if (a <= 0.0f)
+                        continue;
+                    float rr = r > 1.0f ? 1.0f : r2;
+                    float nz = sqrtf(fmaxf(0.0f, 1.0f - rr));
+                    float nx = u, ny = v;
+                    if (r > 1.0f) {
+                        nx /= r;
+                        ny /= r;
+                    }
+                    float d = fmaxf(0.0f, nx * L[0] + ny * L[1] + nz * L[2]);
+                    float nh = fmaxf(0.0f, nx * Hv[0] + ny * Hv[1] + nz * Hv[2]);
+                    float k = 0.16f + 0.84f * powf(d, 1.2f);
+                    float bounce = fx_clamp01(ny) * 0.22f * (1.0f - d);
+                    float fr = powf(1.0f - nz, 3.0f);
+                    float sp = 0.95f * powf(nh, 70.0f) + 0.18f * powf(nh, 10.0f);
+                    float rim = 0.35f * fr * 0.6f;
+                    float edge = fx_clamp01((r - 0.88f) / 0.12f);
+                    float cr = (tr * (k + bounce) + rim + sp) * (1.0f - 0.30f * edge);
+                    float cg = (tg * (k + bounce) + rim + sp) * (1.0f - 0.30f * edge);
+                    float cb = (tb * (k + bounce) + rim + sp) * (1.0f - 0.30f * edge);
+                    acc[0] += fx_clamp01(cr) * a;
+                    acc[1] += fx_clamp01(cg) * a;
+                    acc[2] += fx_clamp01(cb) * a;
+                    wsum += a;
+                }
+            }
+            Uint32 *dst = (Uint32 *)((Uint8 *)surf->pixels + py * surf->pitch) + px;
+            if (wsum <= 0.0f) {
+                *dst = 0;
+            } else {
+                Uint8 al = (Uint8)(wsum / (float)(SS * SS) * 255.0f + 0.5f);
+                *dst = ((Uint32)al << 24)
+                     | ((Uint32)(acc[0] / wsum * 255.0f + 0.5f) << 16)
+                     | ((Uint32)(acc[1] / wsum * 255.0f + 0.5f) << 8)
+                     | (Uint32)(acc[2] / wsum * 255.0f + 0.5f);
+            }
+        }
+    }
+    tex = SDL_CreateTextureFromSurface(tng_renderer, surf);
+    SDL_DestroySurface(surf);
+    if (tex) {
+        SDL_SetTextureScaleMode(tex, SDL_SCALEMODE_LINEAR);
+        SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
+    }
+    return tex;
+}
+
+/*
+ * Paint the ball at screen position (sx, sy) = center, in color rgb
+ * (0xRRGGBB, 0 = white). Returns false for the classic look.
+ */
+bool Fx_paint_ball(float sx, float sy, Uint32 rgb)
+{
+    SDL_Texture *tex = NULL;
+
+    if (!fxBall || !fx_active() || !tng_renderer)
+        return false;
+    rgb &= 0xffffff;
+    if (rgb == 0)
+        rgb = 0xffffff;
+    for (int i = 0; i < fx_num_ball_tex; i++)
+        if (fx_ball_rgb[i] == rgb)
+            tex = fx_ball_tex[i];
+    if (!tex) {
+        if (fx_num_ball_tex >= FX_BALL_MAX)
+            return false;
+        tex = fx_ball_make((float)((rgb >> 16) & 0xff) / 255.0f,
+                           (float)((rgb >> 8) & 0xff) / 255.0f,
+                           (float)(rgb & 0xff) / 255.0f);
+        if (!tex)
+            return false;
+        fx_ball_tex[fx_num_ball_tex] = tex;
+        fx_ball_rgb[fx_num_ball_tex++] = rgb;
+    }
+    SDL_FRect dst = { sx - (float)FX_BALL_TEX * 0.5f, sy - (float)FX_BALL_TEX * 0.5f,
+                      (float)FX_BALL_TEX, (float)FX_BALL_TEX };
+    SDL_RenderTexture(tng_renderer, tex, NULL, &dst);
+    return true;
 }
 
 /* ------------------------------------------------------------------ */
