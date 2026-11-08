@@ -28,7 +28,7 @@
 #define META_PORT	5500
 #define META_HOST	"meta.xpilot.org"
 #define META_HOST_TWO	"meta2.xpilot.org"
-#define META_IP		"64.235.48.198"
-#define META_IP_TWO	"64.235.48.198"
+#define META_IP		"45.55.104.252"
+#define META_IP_TWO	"45.55.104.252"
 
 #endif
