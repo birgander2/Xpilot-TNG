@@ -1281,8 +1281,8 @@ static int Handle_login(connection_t *connp, char *errmsg, size_t errsize)
 	    Set_player_message_f(pl, "Your client doesn't support "
 				 "polygon maps. What you see might not match "
 				 "the real map. %s", sender);
-	    Set_player_message_f(pl, "See http://xpilot.sourceforge.net/ for "
-				 "for a client that supports polygon maps. %s",
+	    Set_player_message_f(pl, "See https://xpilot.nought.de for "
+				 "the XPilot TNG client, which supports polygon maps. %s",
 				 sender);
 	}
     }
