@@ -54,7 +54,7 @@ struct ShipShape {
 };
 
 // Parse a shape definition. Anything before the first '(' is ignored, so whole
-// xpilotrc / shipshapes.txt lines work. Returns false if the text holds no
+// xpilotrc / shipshapes.cfg lines work. Returns false if the text holds no
 // shape at all (or is in the obsolete 3.1 format). Notes about ignored data
 // (duplicates, too many points, unknown keywords) are appended to *notes.
 bool Parse(const std::string& text, ShipShape* out, std::vector<std::string>* notes = nullptr);

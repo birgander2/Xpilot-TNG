@@ -27,20 +27,8 @@
 
 #define META_VERSION	VERSION "tng"
 
-struct MetaServer {
-    char name[64];
-    char addr[16];
-};
-struct MetaServer meta_servers[2] = {
-    {
-	META_HOST,
-	META_IP
-    },
-    {
-	META_HOST_TWO,
-	META_IP_TWO
-    },
-};
+static struct MetaEntry meta_servers[META_MAX_SERVERS];
+static int num_meta_servers;
 
 void Meta_send(char *mesg, size_t len)
 {
@@ -49,7 +37,7 @@ void Meta_send(char *mesg, size_t len)
     if (!options.reportToMetaServer)
 	return;
 
-    for (i = 0; i < NELEM(meta_servers); i++) {
+    for (i = 0; i < num_meta_servers; i++) {
 	if (sock_send_dest(&contactSocket, meta_servers[i].addr,
 			   META_PORT, mesg, (int)len) != (int)len) {
 	    sock_get_error(&contactSocket);
@@ -63,7 +51,7 @@ int Meta_from(char *addr, int port)
 {
     int i;
 
-    for (i = 0; i < NELEM(meta_servers); i++) {
+    for (i = 0; i < num_meta_servers; i++) {
 	if (!strcmp(addr, meta_servers[i].addr))
 	    return (port == META_PORT);
     }
@@ -88,18 +76,19 @@ void Meta_init(void)
     if (!options.reportToMetaServer)
 	return;
 
+    num_meta_servers = Meta_read_config(Conf_metaserver_file(), meta_servers);
+
     xpprintf("%s Locating Internet Meta server... ", showtime());
     fflush(stdout);
 
-    for (i = 0; i < NELEM(meta_servers); i++) {
+    for (i = 0; i < num_meta_servers; i++) {
 	addr = sock_get_addr_by_name(meta_servers[i].name);
-	if (addr)
+	if (addr) {
 	    strlcpy(meta_servers[i].addr, addr, sizeof(meta_servers[i].addr));
-	if (addr)
 	    xpprintf("found %d", i + 1);
-	else
-	    xpprintf("%d not found", i + 1);
-	if (i + 1 == NELEM(meta_servers))
+	} else
+	    xpprintf("%d not found, using %s", i + 1, meta_servers[i].addr);
+	if (i + 1 == num_meta_servers)
 	    xpprintf("\n");
 	else
 	    xpprintf("... ");

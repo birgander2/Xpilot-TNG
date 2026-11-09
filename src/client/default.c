@@ -230,7 +230,7 @@ static void tryToSetShipShape(void)
         fp = fopen(Conf_ship_file(), "r");
     }
     if (!fp) {
-        fp = fopen("lib/shipshapes.txt", "r");
+        fp = fopen("lib/shipshapes.cfg", "r");
     }
     if (!fp) {
 	error("Can't open shipShapeFile \"%s\".", shipShapeFile);

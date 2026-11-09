@@ -137,10 +137,11 @@ void LauncherApp::Init() {
             banner_ += (banner_.empty() ? "" : "\n") + *prob;
         }
 
-    baseline_ok_ = options_mgr_.LoadBaseline(server_bin_path_, data_dir_ + "/defaults.txt");
+    internet_search_.SetMetaConfig(data_dir_ + "/metaserver.cfg");
+    baseline_ok_ = options_mgr_.LoadBaseline(server_bin_path_, data_dir_ + "/defaults.cfg");
 
     profile_.Load();
-    if (baseline_ok_) {   // network settings: compiled default < lib/defaults.txt < xpilotrc
+    if (baseline_ok_) {   // network settings: compiled default < lib/defaults.cfg < xpilotrc
         CopyTo(server_host_, sizeof(server_host_), options_mgr_.Get("serverHost"));
         server_cport_start_ = options_mgr_.GetInt("clientPortStart");
         server_cport_end_ = options_mgr_.GetInt("clientPortEnd");
@@ -210,7 +211,7 @@ void LauncherApp::GoTo(Screen s) {
     if (s == Screen::Menu) {
         banner_.clear();
     }
-    if (s == Screen::Profile) profile_editor_.Load(data_dir_ + "/shipshapes.txt", true);   // keeps unsaved edits
+    if (s == Screen::Profile) profile_editor_.Load(data_dir_ + "/shipshapes.cfg", true);   // keeps unsaved edits
     if (s == Screen::NetworkBrowser) {
         lan_search_.Start();        // full refresh on every visit (no-op while a scan is still running)
         internet_search_.Start();
@@ -294,7 +295,7 @@ void LauncherApp::ApplyServerModeSettings(OptionsManager& opts) const {
     if (server_greeting_[0]) opts.Set("greeting", server_greeting_);
     opts.SetBool("reportToMetaServer", server_meta_);
     opts.SetBool("highscores", server_highscores_);
-    // always set: an empty/zero value must also be able to override defaults.txt
+    // always set: an empty/zero value must also be able to override defaults.cfg
     opts.Set("serverHost", server_host_);
     opts.SetInt("clientPortStart", server_cport_start_);
     opts.SetInt("clientPortEnd", server_cport_end_);
@@ -406,7 +407,7 @@ void LauncherApp::Update() {
     if (process_mgr_.ConsumeClientExited(&code)) FinishPlaying(code);
     // the ship editor may have changed the xpilotrc or the collection
     if (process_mgr_.ConsumeToolExited() && screen_ == Screen::Profile)
-        profile_editor_.Load(data_dir_ + "/shipshapes.txt", true);
+        profile_editor_.Load(data_dir_ + "/shipshapes.cfg", true);
 
     int scode = 0;
     if (process_mgr_.ConsumeServerExited(&scode)) {
@@ -1487,7 +1488,7 @@ void LauncherApp::RenderProfileLeavePopup() {
         ImGui::SetTooltip("Use the changes for the next games, but do not write them to the xpilotrc.");
     ImGui::SameLine();
     if (ImGui::Button("Discard changes", ImVec2(150, 0))) {
-        profile_editor_.Load(data_dir_ + "/shipshapes.txt");   // back to what the xpilotrc has
+        profile_editor_.Load(data_dir_ + "/shipshapes.cfg");   // back to what the xpilotrc has
         ImGui::CloseCurrentPopup();
         GoTo(profile_return_);
     }

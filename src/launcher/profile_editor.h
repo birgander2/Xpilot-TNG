@@ -14,7 +14,7 @@ class ClientProfile;
 // network settings (jitter buffer, turn prediction) and visual effects.
 class ProfileEditor {
 public:
-    // Reads the xpilotrc and the ships (stock_ships_path = lib/shipshapes.txt, plus the
+    // Reads the xpilotrc and the ships (stock_ships_path = lib/shipshapes.cfg, plus the
     // personal collection). keep_unsaved: keep all edits that were not saved yet
     // (they stay "unsaved").
     void Load(const std::string& stock_ships_path, bool keep_unsaved = false);
@@ -67,7 +67,7 @@ private:
 
     char name_[64] = "";
     std::string stock_path_;
-    std::vector<ss::Entry> stock_, mine_;        // lib/shipshapes.txt and the personal collection
+    std::vector<ss::Entry> stock_, mine_;        // lib/shipshapes.cfg and the personal collection
     std::string ship_;                           // chosen ship: full definition, or what the xpilotrc has
     std::string rc_ship_;                        // xpilot.shipShape as loaded (a definition or a ship name)
     ss::ShipPicker ship_picker_;

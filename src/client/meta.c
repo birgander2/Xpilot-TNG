@@ -25,10 +25,25 @@
 
 #include "xpclient.h"
 
-static struct Meta metas[NUM_METAS] = {
-    {META_HOST,     META_IP,     META_INIT_SOCK, MetaConnecting},
-    {META_HOST_TWO, META_IP_TWO, META_INIT_SOCK, MetaConnecting}
-};
+static struct Meta metas[NUM_METAS];
+static int num_metas;
+
+/* Load the meta server list from lib/metaserver.cfg (once). */
+static void Meta_load_config(void)
+{
+    struct MetaEntry list[META_MAX_SERVERS];
+    int i;
+
+    if (num_metas)
+	return;
+    num_metas = Meta_read_config(Conf_metaserver_file(), list);
+    for (i = 0; i < num_metas; i++) {
+	strlcpy(metas[i].name, list[i].name, sizeof(metas[i].name));
+	strlcpy(metas[i].addr, list[i].addr, sizeof(metas[i].addr));
+	metas[i].sock = (sock_t) META_INIT_SOCK;
+	metas[i].state = MetaConnecting;
+    }
+}
 
 list_t server_list;
 time_t server_list_creation_time;
@@ -332,7 +347,7 @@ void Meta_connect(int *connections_ptr, int *maxfd_ptr)
     int connections = 0;
     int max = -1;
 
-    for (i = 0; i < NUM_METAS; i++) {
+    for (i = 0; i < num_metas; i++) {
 	if (metas[i].sock.fd != SOCK_FD_INVALID)
 	    sock_close(&metas[i].sock);
 
@@ -362,7 +377,7 @@ void Meta_dns_lookup(void)
     int i;
     char *addr;
 
-    for (i = 0; i < NUM_METAS; i++) {
+    for (i = 0; i < num_metas; i++) {
 	if (metas[i].sock.fd == -2) {
 	    metas[i].sock.fd = SOCK_FD_INVALID;
 	    addr = sock_get_addr_by_name(metas[i].name);
@@ -592,6 +607,7 @@ int Get_meta_data(char *errorstr)
 
     
     /* lookup addresses. */
+    Meta_load_config();
     Meta_dns_lookup();
 
     /* connect asynchronously. */
@@ -610,7 +626,7 @@ int Get_meta_data(char *errorstr)
     /* setup select(2) structures. */
     FD_ZERO(&rset_in);
     FD_ZERO(&wset_in);
-    for (i = 0; i < NUM_METAS; i++) {
+    for (i = 0; i < num_metas; i++) {
 	metas[i].state = MetaConnecting;
 	if (metas[i].sock.fd != SOCK_FD_INVALID)
 	    FD_SET(metas[i].sock.fd, &wset_in);
@@ -650,7 +666,7 @@ int Get_meta_data(char *errorstr)
 	if (descriptor_count <= 0)
 	    break;
 
-	for (i = 0; i < NUM_METAS; i++) {
+	for (i = 0; i < num_metas; i++) {
 	    if (metas[i].sock.fd == SOCK_FD_INVALID)
 		continue;
 	    else if (FD_ISSET(metas[i].sock.fd, &wset_out)) {
@@ -729,7 +745,7 @@ int Get_meta_data(char *errorstr)
 	}
     }
 
-    for (i = 0; i < NUM_METAS; i++) {
+    for (i = 0; i < num_metas; i++) {
 	if (metas[i].sock.fd != SOCK_FD_INVALID) {
 	    close(metas[i].sock.fd);
 	    metas[i].sock.fd = SOCK_FD_INVALID;

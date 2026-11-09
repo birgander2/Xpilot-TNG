@@ -139,12 +139,12 @@ static char *build_path(const char *sub)
 
 char *Conf_defaults_file_name(void)
 {
-    return build_path("defaults.txt");
+    return build_path("defaults.cfg");
 }
 
 char *Conf_password_file_name(void)
 {
-    return build_path("password.txt");
+    return build_path("password.cfg");
 }
 
 #if 0
@@ -197,7 +197,7 @@ char *Conf_logfile(void)
 
 char *Conf_ship_file(void)
 {
-    return build_path("shipshapes.txt");
+    return build_path("shipshapes.cfg");
 }
 
 char *Conf_texturedir(void)
@@ -214,7 +214,12 @@ char *Conf_localguru(void)
 
 char *Conf_robotfile(void)
 {
-    return build_path("robots.txt");
+    return build_path("robots.cfg");
+}
+
+char *Conf_metaserver_file(void)
+{
+    return build_path("metaserver.cfg");
 }
 
 char *Conf_zcat_ext(void)

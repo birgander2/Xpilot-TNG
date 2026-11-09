@@ -120,7 +120,7 @@ bool OptionsManager::LoadBaseline(const std::string& server_bin, const std::stri
     }
     if (base_.empty()) return false;
 
-    // lib/defaults.txt is honoured by a normal server start, so it is part of the baseline.
+    // lib/defaults.cfg is honoured by a normal server start, so it is part of the baseline.
     ParseDefaultsFile(defaults_path);
 
     current_.clear();
@@ -311,7 +311,7 @@ std::vector<std::string> OptionsManager::BuildServerArgs(LaunchMode mode, const 
     }
 
     // The public name and client ports must reach the server even when they equal the launcher's baseline
-    // (the server may not see the same defaults.txt); never emit an empty name.
+    // (the server may not see the same defaults.cfg); never emit an empty name.
     if (mode == LaunchMode::Server) {
         for (const char* key : {"serverHost", "clientPortStart", "clientPortEnd"}) {
             std::string lc = Lower(key);

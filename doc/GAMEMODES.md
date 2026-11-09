@@ -1,6 +1,6 @@
 # XPilot TNG – Game Modes Overview
 
-In XPilot TNG, game modes are defined through map properties (`.xp` / `.xp2` map files), server configuration (`lib/defaults.txt`), or command-line arguments passed to the server binary. Multiple modes and rules can also be combined.
+In XPilot TNG, game modes are defined through map properties (`.xp` / `.xp2` map files), server configuration (`lib/defaults.cfg`), or command-line arguments passed to the server binary. Multiple modes and rules can also be combined.
 
 ---
 

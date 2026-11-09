@@ -35,7 +35,7 @@
  * Some constants for describing access to the meta servers.
  * XXX These are also defined in some other file.
  */
-#define NUM_METAS		2
+#define NUM_METAS		META_MAX_SERVERS
 #define META_PROG_PORT		4401
 #define META_USER_PORT		4400
 #define NUM_META_DATA_FIELDS	18

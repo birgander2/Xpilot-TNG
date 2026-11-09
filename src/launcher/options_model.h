@@ -13,22 +13,22 @@ enum class LaunchMode { Local, Server };
 
 // Holds the effective server options shown in the GUI.
 //
-//   baseline = compiled defaults (server -dump) <- lib/defaults.txt <- map file
+//   baseline = compiled defaults (server -dump) <- lib/defaults.cfg <- map file
 //   current  = baseline + whatever the user changed in the GUI
 //
 // On launch only options that differ from the baseline are passed on the command
 // line. Command line options have the highest priority in the server, so edits win
 // over map and defaults file, while untouched values keep behaving like a plain
-// server start (defaults.txt is still honoured).
+// server start (defaults.cfg is still honoured).
 class OptionsManager {
 public:
     OptionsManager();
 
-    // Reads compiled defaults (runs "<server_bin> -dump") and defaults.txt.
+    // Reads compiled defaults (runs "<server_bin> -dump") and defaults.cfg.
     // Returns false if the dump could not be read (GUI then works with raw map options only).
     bool LoadBaseline(const std::string& server_bin, const std::string& defaults_path);
 
-    // True if lib/defaults.txt sets the option itself (not just the compiled default).
+    // True if lib/defaults.cfg sets the option itself (not just the compiled default).
     bool InDefaultsFile(const std::string& key) const;
 
     // Switches to a map: discards all GUI edits and loads the map's values.
@@ -65,11 +65,11 @@ public:
     static int FindFreePort(int start_port = kDefaultServerPort);
 
 private:
-    std::set<std::string> defaults_keys_;   // lower-case names set by defaults.txt
+    std::set<std::string> defaults_keys_;   // lower-case names set by defaults.cfg
 
     struct Entry {
         std::string name;   // canonical spelling, e.g. "maxRobots"
-        std::string value;  // baseline value (defaults + defaults.txt)
+        std::string value;  // baseline value (defaults + defaults.cfg)
         bool is_bool = false;
     };
 

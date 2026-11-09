@@ -1,5 +1,5 @@
 #pragma once
-// Ship collections (shipshapes.txt style files); the xpilotrc is handled by
+// Ship collections (shipshapes.cfg style files); the xpilotrc is handled by
 // src/launcher/xpilotrc.cpp, which this code is built together with.
 
 #include <string>
@@ -24,7 +24,7 @@ bool SaveShipFile(const std::string& path, const std::vector<Entry>& entries, st
 // Directory for the personal collection (next to the xpilotrc):
 // $XDG_CONFIG_HOME/xpilot-tng, ~/.config/xpilot-tng, Windows: %APPDATA%/xpilot-tng
 std::string ConfigDir();
-// The personal collection file (ConfigDir()/shipshapes.txt)
+// The personal collection file (ConfigDir()/shipshapes.cfg)
 std::string CollectionPath();
 
 // Value of "xpilot.<key>:" (last one wins); false if not defined

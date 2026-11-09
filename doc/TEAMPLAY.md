@@ -37,7 +37,7 @@ A reserved robot team (`reserveRobotTeam` with bots enabled) is shown as "(robot
 
 ## 3. Server options
 
-Set on the command line (`-option value`), in `lib/defaults.txt`, or in the map file. The launcher shows most of them (see below).
+Set on the command line (`-option value`), in `lib/defaults.cfg`, or in the map file. The launcher shows most of them (see below).
 
 | Option | Default | Effect |
 |---|---|---|

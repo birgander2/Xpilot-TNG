@@ -95,7 +95,7 @@ dist/
 ├── xpilot-tng-server
 ├── xpilot-tng-client
 ├── xpilot-tng-launcher
-└── lib/            maps, textures, sounds, fonts, defaults.txt, ...
+└── lib/            maps, textures, sounds, fonts, defaults.cfg, ...
 ```
 
 Only the binaries that were actually built are copied. Re-run the target

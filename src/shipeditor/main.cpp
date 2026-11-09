@@ -106,7 +106,7 @@ int main(int argc, char* argv[]) {
         if (a == "-h" || a == "--help") {
             std::cout << "Usage: xpilot-tng-shipeditor [shipshapes-file | \"(SH: ...)\"]\n"
                          "Edits XPilot ship shapes; ships are stored in your collection\n"
-                         "(~/.config/xpilot-tng/shipshapes.txt) or as xpilot.shipShape in the xpilotrc.\n";
+                         "(~/.config/xpilot-tng/shipshapes.cfg) or as xpilot.shipShape in the xpilotrc.\n";
             return 0;
         }
         open_arg = a;
