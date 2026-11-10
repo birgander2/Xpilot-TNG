@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <SDL3/SDL.h>
+#include "ship_shape.h"
 #include "client_profile.h"
 #include "profile_editor.h"
 #include "map_preview.h"
@@ -44,6 +45,7 @@ public:
     bool WindowResizable() const { return screen_ != Screen::Menu; }   // welcome screen has a fixed size
     bool WindowHidden() const { return screen_ == Screen::Playing; }
     void RequestQuit();                    // window close button / SDL_QUIT
+    bool WantsAnimation() const { return screen_ == Screen::Menu; }   // welcome screen has a moving background
     bool WantsQuit() const { return quit_; }
 
 private:
@@ -104,6 +106,21 @@ private:
     SDL_Renderer* renderer_ = nullptr;
     std::string app_dir_;
     std::string root_dir_;
+    SDL_Texture* logo_tex_ = nullptr;   // lib/textures/logo_tng2.ppm, dark background keyed out
+    int logo_w_ = 0, logo_h_ = 0;
+    void LoadLogo();
+    SDL_Texture* wall_tex_[2] = {nullptr, nullptr};   // lib/textures/launcher_wall_*.pam: pre-rendered FX walls for the top corners
+    int wall_w_ = 0, wall_h_ = 0;
+    ss::ShipShape menu_ship_;                          // the profile's ship, shown rotating in front of the logo's "P"
+    SDL_Texture* ship_dome_tex_ = nullptr;             // hull light and highlight, same as the client's ship FX
+    SDL_Texture* ship_spec_tex_ = nullptr;
+    void MakeShipTextures();
+    std::string menu_name_;                            // player name from the xpilotrc, empty if not set
+    void LoadMenuShip();
+    void DrawMenuDecor(ImVec2 win_pos, float win_w) const;
+    void DrawMenuShip(ImVec2 center) const;   // the profile's ship, rotating
+    float MenuTileWidth() const;   // width of one welcome-screen tile: just wide enough for its text
+    void DrawStarfield(ImVec2 mn, ImVec2 mx) const;
     std::string data_dir_;   // game data (lib/): $XPILOT_DATADIR, root_dir_/lib or CONF_DATADIR, no trailing slash
 
     OptionsManager options_mgr_;
@@ -116,6 +133,8 @@ private:
     std::string server_bin_path_;
     std::string client_bin_path_;
     std::string ship_editor_bin_path_;
+    std::string mapeditor_bin_path_;
+    bool mapeditor_available_ = false;     // xpilot-tng-mapeditor found next to the launcher
     bool ship_editor_available_ = false;   // xpilot-tng-shipeditor found next to the launcher
     std::string server_problem_;   // non-empty: binary missing or shared library not found
     std::string client_problem_;
@@ -129,6 +148,8 @@ private:
     bool quit_ = false;
     bool open_running_popup_ = false;
     bool open_quit_popup_ = false;
+    bool open_about_popup_ = false;
+    void RenderAboutPopup();
     bool open_leave_profile_popup_ = false;
     bool focus_first_ = true;
     std::string banner_;        // pending error message; shown once in the "Error" dialog

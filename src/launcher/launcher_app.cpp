@@ -3,8 +3,12 @@
 #include <imgui.h>
 
 #include "ui_helpers.h"
+#include "ship_files.h"
+#include "xpilotrc.h"
 
 #include <algorithm>
+#include <cmath>
+#include <functional>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -72,10 +76,16 @@ std::string CheckBinary(const std::string& label, const std::string& path) {
 // lifecycle
 // ============================================================================
 
+static SDL_Texture* LoadPamTexture(SDL_Renderer* renderer, const std::string& path, int* w, int* h);
+
 LauncherApp::LauncherApp(SDL_Window* window, SDL_Renderer* renderer, const std::string& app_dir)
     : window_(window), renderer_(renderer), app_dir_(app_dir) {}
 
 LauncherApp::~LauncherApp() {
+    if (logo_tex_) SDL_DestroyTexture(logo_tex_);
+    for (SDL_Texture* t : wall_tex_) if (t) SDL_DestroyTexture(t);
+    if (ship_dome_tex_) SDL_DestroyTexture(ship_dome_tex_);
+    if (ship_spec_tex_) SDL_DestroyTexture(ship_spec_tex_);
     MapScanner::FreeThumbnails(maps_);
 }
 
@@ -126,6 +136,9 @@ void LauncherApp::Init() {
     client_bin_path_ = ResolveBinaryPath("xpilot-tng-client");
     ship_editor_bin_path_ = ResolveBinaryPath("xpilot-tng-shipeditor");
     // optional: only a found file counts, not a bare name left to the PATH search
+    mapeditor_bin_path_ = ResolveBinaryPath("xpilot-tng-mapeditor");
+    mapeditor_available_ = mapeditor_bin_path_.find_first_of("/\\") != std::string::npos &&
+                           CheckBinary("map editor", mapeditor_bin_path_).empty();
     ship_editor_available_ = ship_editor_bin_path_.find_first_of("/\\") != std::string::npos &&
                              CheckBinary("ship editor", ship_editor_bin_path_).empty();
 
@@ -169,12 +182,20 @@ void LauncherApp::Init() {
         m.full_path = fs::absolute(m.full_path, ec).string();
     }
     process_mgr_.AddLog("LAUNCHER", std::to_string(maps_.size()) + " maps found.");
+    LoadLogo();
+    wall_tex_[0] = LoadPamTexture(renderer_, data_dir_ + "/textures/launcher_wall_left.pam", &wall_w_, &wall_h_);
+    wall_tex_[1] = LoadPamTexture(renderer_, data_dir_ + "/textures/launcher_wall_right.pam", &wall_w_, &wall_h_);
+    MakeShipTextures();
+    LoadMenuShip();
 
     if (server_port_ <= 0) server_port_ = OptionsManager::FindFreePort();
 }
 
 void LauncherApp::DesiredWindowSize(int* w, int* h) const {
-    if (screen_ == Screen::Menu) { *w = 560; *h = 480; }
+    if (screen_ == Screen::Menu) { *w = (int)(MenuTileWidth() * 2 + 10.0f) + 80;
+        // sum of the welcome screen's vertical layout (see RenderMenu): padding, logo, tile rows, bottom bar
+        const float logo_h = logo_tex_ ? 256.0f * logo_h_ / logo_w_ : 50.0f;
+        *h = (int)(10 + 12 + logo_h + 6 + 14 + 114 + 9 + 108 + 20 + 36 + 10); }
     else if (screen_ == Screen::NetworkBrowser) { *w = 900; *h = 700; }
     else { *w = 1120; *h = 740; }
 }
@@ -210,6 +231,7 @@ void LauncherApp::GoTo(Screen s) {
     focus_first_ = true;
     if (s == Screen::Menu) {
         banner_.clear();
+        LoadMenuShip();   // the profile may have changed the ship
     }
     if (s == Screen::Profile) profile_editor_.Load(data_dir_ + "/shipshapes.cfg", true);   // keeps unsaved edits
     if (s == Screen::NetworkBrowser) {
@@ -467,6 +489,11 @@ void LauncherApp::RenderUI() {
         open_quit_popup_ = false;
     }
     RenderQuitPopup();
+    if (open_about_popup_) {
+        ImGui::OpenPopup("About XPilot TNG");
+        open_about_popup_ = false;
+    }
+    RenderAboutPopup();
     if (!banner_.empty()) {   // errors go into their own dialog
         error_text_ = banner_;
         banner_.clear();
@@ -515,96 +542,519 @@ void LauncherApp::RenderHeader(const char* title, bool show_back) {
 // main menu
 // ============================================================================
 
+// Loads the binary PPM logo and turns its near-black background into transparency, so it blends into the window.
+void LauncherApp::LoadLogo() {
+    FILE* f = fopen((data_dir_ + "/textures/logo_tng2.ppm").c_str(), "rb");
+    if (!f) return;
+    int w = 0, h = 0, maxv = 0;
+    if (fscanf(f, "P6 %d %d %d", &w, &h, &maxv) != 3 || w <= 0 || h <= 0 || maxv != 255 || fgetc(f) == EOF) {
+        fclose(f);
+        return;
+    }
+    std::vector<unsigned char> rgb((size_t)w * h * 3);
+    bool ok = fread(rgb.data(), 1, rgb.size(), f) == rgb.size();
+    fclose(f);
+    if (!ok) return;
+    SDL_Surface* surf = SDL_CreateSurface(w, h, SDL_PIXELFORMAT_RGBA32);
+    if (!surf) return;
+    for (int y = 0; y < h; y++) {
+        unsigned char* row = (unsigned char*)surf->pixels + (size_t)y * surf->pitch;
+        for (int x = 0; x < w; x++) {
+            const unsigned char* p = &rgb[((size_t)y * w + x) * 3];
+            int m = std::max(p[0], std::max(p[1], p[2]));
+            int a = std::clamp((m - 6) * 6, 0, 255);   // black -> transparent, soft ramp for glow
+            row[x * 4 + 0] = p[0]; row[x * 4 + 1] = p[1]; row[x * 4 + 2] = p[2]; row[x * 4 + 3] = (unsigned char)a;
+        }
+    }
+    logo_tex_ = SDL_CreateTextureFromSurface(renderer_, surf);
+    SDL_DestroySurface(surf);
+    if (logo_tex_) {
+        SDL_SetTextureScaleMode(logo_tex_, SDL_SCALEMODE_LINEAR);
+        logo_w_ = w;
+        logo_h_ = h;
+    }
+}
+
+// Three parallax layers of procedural stars drifting diagonally; no state, driven by ImGui time.
+void LauncherApp::DrawStarfield(ImVec2 mn, ImVec2 mx) const {
+    ImDrawList* dl = ImGui::GetWindowDrawList();
+    dl->PushClipRect(mn, mx, true);
+    const float t = (float)ImGui::GetTime();
+    const float w = mx.x - mn.x, h = mx.y - mn.y;
+    struct Layer { int n; float speed, size; int alpha; };
+    static const Layer layers[3] = {{60, 4.0f, 1.0f, 90}, {35, 9.0f, 1.4f, 140}, {15, 18.0f, 2.0f, 210}};
+    uint32_t seed = 12345;
+    auto rnd = [&seed]() { seed = seed * 1664525u + 1013904223u; return (seed >> 8) / 16777216.0f; };
+    for (const Layer& L : layers) {
+        for (int i = 0; i < L.n; i++) {
+            float x0 = rnd() * w, y0 = rnd() * h, tw = rnd() * 6.28f;
+            float x = fmodf(x0 - t * L.speed * 0.5f + w * 4, w);
+            float y = fmodf(y0 + t * L.speed + h * 4, h);
+            int a = (int)(L.alpha * (0.7f + 0.3f * sinf(t * 1.5f + tw)));
+            dl->AddCircleFilled(ImVec2(mn.x + x, mn.y + y), L.size * 0.5f + 0.4f, IM_COL32(190, 215, 255, a), 6);
+        }
+    }
+
+    dl->PopClipRect();
+}
+
+float LauncherApp::MenuTileWidth() const {
+    ImFont* hfont = fonts_.heading ? fonts_.heading : ImGui::GetFont();
+    float hsize = fonts_.heading ? fonts_.heading->FontSize : ImGui::GetFontSize() * 1.25f;
+    ImFont* sfont = fonts_.regular ? fonts_.regular : ImGui::GetFont();
+    float ssize = (fonts_.regular ? fonts_.regular->FontSize : ImGui::GetFontSize()) * 0.9f;
+    static const char* const labels[] = {"Start Local Game", "Join Network Game", "Launch Server", "Manage Running Server", "Map Editor"};
+    static const char* const subs[] = {"Play against bots on this machine", "Browse LAN and internet servers",
+                                       "Host a game for other players", "Create and edit maps"};
+    float w = 0;
+    for (const char* l : labels) w = std::max(w, hfont->CalcTextSizeA(hsize, FLT_MAX, -1.0f, l).x);
+    for (const char* t : subs) w = std::max(w, sfont->CalcTextSizeA(ssize, FLT_MAX, -1.0f, t).x);
+    return std::ceil(w) + 40.0f;
+}
+
+// RGBA netpbm (P7) image to a texture; false if missing or malformed.
+static SDL_Texture* LoadPamTexture(SDL_Renderer* renderer, const std::string& path, int* w, int* h) {
+    FILE* f = fopen(path.c_str(), "rb");
+    if (!f) return nullptr;
+    char line[128];
+    int iw = 0, ih = 0, depth = 0;
+    bool ok = fgets(line, sizeof line, f) && strncmp(line, "P7", 2) == 0;
+    while (ok && fgets(line, sizeof line, f)) {
+        if (strncmp(line, "WIDTH", 5) == 0) iw = atoi(line + 5);
+        else if (strncmp(line, "HEIGHT", 6) == 0) ih = atoi(line + 6);
+        else if (strncmp(line, "DEPTH", 5) == 0) depth = atoi(line + 5);
+        else if (strncmp(line, "ENDHDR", 6) == 0) break;
+    }
+    ok = ok && iw > 0 && ih > 0 && depth == 4;
+    SDL_Surface* surf = ok ? SDL_CreateSurface(iw, ih, SDL_PIXELFORMAT_RGBA32) : nullptr;
+    if (surf) {
+        for (int y = 0; y < ih && ok; y++)
+            ok = fread((unsigned char*)surf->pixels + (size_t)y * surf->pitch, 4, (size_t)iw, f) == (size_t)iw;
+    }
+    fclose(f);
+    SDL_Texture* tex = (surf && ok) ? SDL_CreateTextureFromSurface(renderer, surf) : nullptr;
+    if (surf) SDL_DestroySurface(surf);
+    if (tex) {
+        SDL_SetTextureScaleMode(tex, SDL_SCALEMODE_LINEAR);
+        *w = iw;
+        *h = ih;
+    }
+    return tex;
+}
+
+// The ship of the player's xpilotrc (full definition, or a name from the personal or stock collection);
+// the default ship if there is none or it is not usable.
+void LauncherApp::LoadMenuShip() {
+    menu_name_.clear();
+    if (std::string nm; XpilotrcLookup("name", &nm)) {
+        const size_t b = nm.find_first_not_of(" \t"), e = nm.find_last_not_of(" \t");
+        if (b != std::string::npos) menu_name_ = nm.substr(b, e - b + 1);
+    }
+    ss::ShipShape found;
+    bool ok = false;
+    std::string v;
+    if (XpilotrcLookup("shipShape", &v) && !v.empty()) {
+        if (v.find('(') != std::string::npos) {
+            ok = ss::Parse(v, &found) && found.hull().size() >= 3;
+        } else {
+            std::vector<ss::Entry> mine, stock;
+            std::string err;
+            ss::LoadShipFile(ss::CollectionPath(), &mine, &err);
+            ss::LoadShipFile(data_dir_ + "/shipshapes.cfg", &stock, &err);
+            for (const auto* list : {&mine, &stock})
+                for (const auto& e : *list)
+                    if (!ok && e.shape.name == v && e.shape.hull().size() >= 3) { found = e.shape; ok = true; }
+        }
+    }
+    if (!ok) ss::Parse("(NM:default)(SH: 14,0 -8,8 -8,-8)", &found);
+    menu_ship_ = ss::Resolve(found);
+}
+
+// Wall pieces in the top corners.
+void LauncherApp::DrawMenuDecor(ImVec2 wp, float win_w) const {
+    ImDrawList* dl = ImGui::GetWindowDrawList();
+    float s = 1.0f;
+    if (wall_w_ > 0) s = std::min(1.0f, ((win_w - 256.0f) * 0.5f - 4.0f) / (float)wall_w_);
+    if (wall_tex_[0] && wall_tex_[1]) {
+        const ImVec2 sz((float)wall_w_ * s, (float)wall_h_ * s);
+        dl->AddImage((ImTextureID)(intptr_t)wall_tex_[0], wp, ImVec2(wp.x + sz.x, wp.y + sz.y));
+        dl->AddImage((ImTextureID)(intptr_t)wall_tex_[1], ImVec2(wp.x + win_w - sz.x, wp.y),
+                     ImVec2(wp.x + win_w, wp.y + sz.y));
+    }
+
+}
+
+// The player's ship (glossy hull, rim-lit outline) turning slowly around center.
+void LauncherApp::DrawMenuShip(ImVec2 c) const {
+    ImDrawList* dl = ImGui::GetWindowDrawList();
+    const auto& hull = menu_ship_.hull();
+    const int n = (int)hull.size();
+    if (n < 3 || n > 64 || !ship_dome_tex_ || !ship_spec_tex_) return;
+
+    // same light, textures and outline shading as the client's ship FX (src/client/sdl3/sdl3_fx_ship.c)
+    const float ang = (float)ImGui::GetTime() * 0.45f, ca = cosf(ang), sa = sinf(ang);
+    float r0 = 1.0f;
+    for (const ss::IPt& p : hull) r0 = std::max(r0, sqrtf((float)(p.x * p.x + p.y * p.y)));
+    const float sc = 34.0f / r0;
+    std::vector<ImVec2> pts(n);
+    for (int i = 0; i < n; i++) {
+        const float x = (float)hull[i].x, y = (float)hull[i].y;
+        pts[i] = ImVec2(c.x + (x * ca - y * sa) * sc, c.y - (x * sa + y * ca) * sc);
+    }
+    float rmax = 1.0f, area2 = 0.0f;
+    for (int i = 0; i < n; i++) {
+        const ImVec2 a = pts[i], b = pts[(i + 1) % n];
+        rmax = std::max(rmax, sqrtf((a.x - c.x) * (a.x - c.x) + (a.y - c.y) * (a.y - c.y)));
+        area2 += a.x * b.y - b.x * a.y;
+    }
+
+    // triangulation as in SDL3_Triangulate_Polygon (ear clipping that drops collinear points)
+    std::vector<int> tris;
+    {
+        std::vector<int> V(n);
+        for (int i = 0; i < n; i++) V[i] = i;
+        const bool ccw = area2 > 0.0f;
+        int remaining = n, curr = 0, fails = 0;
+        auto in_tri = [](ImVec2 p, ImVec2 a, ImVec2 b, ImVec2 d) {
+            const float c1 = (b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x);
+            const float c2 = (d.x - b.x) * (p.y - b.y) - (d.y - b.y) * (p.x - b.x);
+            const float c3 = (a.x - d.x) * (p.y - d.y) - (a.y - d.y) * (p.x - d.x);
+            const bool neg = c1 < -1e-5f || c2 < -1e-5f || c3 < -1e-5f;
+            const bool pos = c1 > 1e-5f || c2 > 1e-5f || c3 > 1e-5f;
+            return !(neg && pos);
+        };
+        while (remaining > 2 && fails < remaining * 2) {
+            const int prev = (curr + remaining - 1) % remaining, next = (curr + 1) % remaining;
+            const ImVec2 a = pts[V[prev]], b = pts[V[curr]], d = pts[V[next]];
+            const float cr = (b.x - a.x) * (d.y - b.y) - (b.y - a.y) * (d.x - b.x);
+            if (fabsf(cr) <= 1e-5f) {   // collinear or duplicate: adds no area
+                V.erase(V.begin() + curr);
+                remaining--;
+                curr %= remaining;
+                fails = 0;
+                continue;
+            }
+            bool ear = ccw ? cr > 1e-5f : cr < -1e-5f;
+            for (int j = 0; ear && j < remaining; j++) {
+                if (j == prev || j == curr || j == next) continue;
+                const ImVec2 q = pts[V[j]];
+                if ((q.x == a.x && q.y == a.y) || (q.x == b.x && q.y == b.y) || (q.x == d.x && q.y == d.y)) continue;
+                if (in_tri(q, a, b, d)) ear = false;
+            }
+            if (ear) {
+                tris.insert(tris.end(), {V[prev], V[curr], V[next]});
+                V.erase(V.begin() + curr);
+                remaining--;
+                curr %= remaining;
+                fails = 0;
+            } else {
+                curr = (curr + 1) % remaining;
+                fails++;
+            }
+        }
+        for (int i = 1; remaining > 2 && i < remaining - 1; i++)   // fallback: fan
+            tris.insert(tris.end(), {V[0], V[i], V[i + 1]});
+    }
+
+    // hull: the dome light texture mapped in screen orientation, then its highlight
+    const float inv = 0.5f / rmax;
+    auto paint = [&](SDL_Texture* tex, ImU32 col) {
+        dl->PushTextureID((ImTextureID)(intptr_t)tex);
+        for (size_t k = 0; k + 2 < tris.size(); k += 3) {
+            dl->PrimReserve(3, 3);
+            const ImDrawIdx base = (ImDrawIdx)dl->_VtxCurrentIdx;
+            for (int q = 0; q < 3; q++) {
+                const ImVec2 p = pts[tris[k + q]];
+                dl->PrimWriteVtx(p, ImVec2(0.5f + (p.x - c.x) * inv, 0.5f + (p.y - c.y) * inv), col);
+            }
+            dl->PrimWriteIdx(base); dl->PrimWriteIdx((ImDrawIdx)(base + 1)); dl->PrimWriteIdx((ImDrawIdx)(base + 2));
+        }
+        dl->PopTextureID();
+    };
+    paint(ship_dome_tex_, IM_COL32(158, 158, 158, 255));   // white ship tinted by 0.62
+    paint(ship_spec_tex_, IM_COL32(255, 255, 255, 217));
+
+    // outline lit by the same light: full color towards it, dim away from it
+    const float ll = sqrtf(0.25f + 0.36f), lx = -0.5f / ll, ly = -0.6f / ll;
+    for (int i = 0; i < n; i++) {
+        const ImVec2 a = pts[i], b = pts[(i + 1) % n];
+        const float ex = b.x - a.x, ey = b.y - a.y, el = sqrtf(ex * ex + ey * ey);
+        if (el < 1e-4f) continue;
+        float nx = ey / el, ny = -ex / el;
+        if (area2 < 0.0f) { nx = -nx; ny = -ny; }
+        const float k = 0.35f + 0.65f * (0.5f + 0.5f * (nx * lx + ny * ly));
+        const int v = (int)(std::clamp(k, 0.0f, 1.0f) * 255.0f);
+        dl->AddLine(a, b, IM_COL32(v, v, v, 255), 1.0f);
+    }
+}
+
+// Dome-shaped hull light and its highlight, generated like the client does (sh_make_textures).
+void LauncherApp::MakeShipTextures() {
+    const int N = 128;
+    std::vector<unsigned char> dome((size_t)N * N * 4), spec((size_t)N * N * 4);
+    auto cl = [](float v) { return v < 0 ? 0.0f : (v > 1 ? 1.0f : v); };
+    const float L[3] = {-0.50f, -0.60f, 0.62f};
+    const float ll = sqrtf(L[0] * L[0] + L[1] * L[1] + L[2] * L[2]);
+    const float lx = L[0] / ll, ly = L[1] / ll, lz = L[2] / ll;
+    float hx = lx, hy = ly, hz = lz + 1.0f;
+    const float hl = sqrtf(hx * hx + hy * hy + hz * hz);
+    hx /= hl; hy /= hl; hz /= hl;
+    for (int y = 0; y < N; y++) {
+        for (int x = 0; x < N; x++) {
+            float u = ((float)x + 0.5f) / N * 2.0f - 1.0f, v = ((float)y + 0.5f) / N * 2.0f - 1.0f;
+            float r = sqrtf(u * u + v * v);
+            if (r > 0.999f) { u *= 0.999f / r; v *= 0.999f / r; r = 0.999f; }
+            float nx = u * 0.8f, ny = v * 0.8f, nz = sqrtf(1.0f - r * r) + 0.35f;
+            const float nl = sqrtf(nx * nx + ny * ny + nz * nz);
+            nx /= nl; ny /= nl; nz /= nl;
+            const float diff = cl(nx * lx + ny * ly + nz * lz);
+            const float lum = cl(0.10f + 0.85f * diff * diff);
+            const float hi = powf(cl(nx * hx + ny * hy + nz * hz), 40.0f);
+            unsigned char* o = &dome[((size_t)y * N + x) * 4];
+            o[0] = o[1] = o[2] = (unsigned char)(lum * 255.0f + 0.5f);
+            o[3] = 255;
+            o = &spec[((size_t)y * N + x) * 4];
+            o[0] = o[1] = o[2] = 255;
+            o[3] = (unsigned char)(cl(hi * 0.9f) * 255.0f + 0.5f);
+        }
+    }
+    auto make = [&](const std::vector<unsigned char>& px) {
+        SDL_Texture* t = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, N, N);
+        if (t) {
+            SDL_UpdateTexture(t, nullptr, px.data(), N * 4);
+            SDL_SetTextureScaleMode(t, SDL_SCALEMODE_LINEAR);
+            SDL_SetTextureBlendMode(t, SDL_BLENDMODE_BLEND);
+        }
+        return t;
+    };
+    ship_dome_tex_ = make(dome);
+    ship_spec_tex_ = make(spec);
+}
+
 void LauncherApp::RenderMenu() {
-    const float col_w = 440.0f;
+    const float col_w = MenuTileWidth() * 2 + 10.0f;
     const float x0 = (ImGui::GetWindowWidth() - col_w) * 0.5f;
 
-    ImGui::Dummy(ImVec2(0, 16));
-    if (fonts_.title) ImGui::PushFont(fonts_.title);
-    float tw = ImGui::CalcTextSize("XPILOT TNG").x;
-    ImGui::SetCursorPosX((ImGui::GetWindowWidth() - tw) * 0.5f);
-    ImGui::TextColored(kAccent, "XPILOT TNG");
-    if (fonts_.title) ImGui::PopFont();
+    {
+        const ImVec2 wp = ImGui::GetWindowPos();
+        DrawStarfield(wp, ImVec2(wp.x + ImGui::GetWindowWidth(), wp.y + ImGui::GetWindowHeight()));
+        DrawMenuDecor(wp, ImGui::GetWindowWidth());
+    }
+    enum class Icon { Play, Globe, Server, Editor, Info, Power };
+    // Vector icons, drawn centered on c with half-size r.
+    auto draw_icon = [](ImDrawList* dl, Icon ic, ImVec2 c, float r, ImU32 col) {
+        const float th = 2.0f;
+        switch (ic) {
+        case Icon::Play:
+            dl->AddTriangleFilled(ImVec2(c.x - r * 0.6f, c.y - r), ImVec2(c.x - r * 0.6f, c.y + r),
+                                  ImVec2(c.x + r, c.y), col);
+            break;
+        case Icon::Globe:
+            dl->AddCircle(c, r, col, 24, th);
+            dl->AddEllipse(c, ImVec2(r * 0.45f, r), col, 0.0f, 20, th * 0.75f);
+            dl->AddLine(ImVec2(c.x - r, c.y), ImVec2(c.x + r, c.y), col, th * 0.75f);
+            break;
+        case Icon::Server:
+            for (int i = 0; i < 2; i++) {
+                float y0 = c.y - r + i * r;
+                dl->AddRect(ImVec2(c.x - r, y0), ImVec2(c.x + r, y0 + r * 0.85f), col, 2.0f, 0, th);
+                dl->AddCircleFilled(ImVec2(c.x + r * 0.5f, y0 + r * 0.425f), 1.6f, col);
+            }
+            break;
+        case Icon::Editor: {   // folded map with a marked spot
+            const float k = r / 3.0f;
+            const ImVec2 outline[8] = {
+                {c.x - r, c.y - 0.6f * r}, {c.x - k, c.y - 0.9f * r}, {c.x + k, c.y - 0.6f * r}, {c.x + r, c.y - 0.9f * r},
+                {c.x + r, c.y + 0.6f * r}, {c.x + k, c.y + 0.9f * r}, {c.x - k, c.y + 0.6f * r}, {c.x - r, c.y + 0.9f * r}};
+            dl->AddPolyline(outline, 8, col, ImDrawFlags_Closed, th * 0.8f);
+            dl->AddLine(outline[1], outline[6], col, th * 0.6f);
+            dl->AddLine(outline[2], outline[5], col, th * 0.6f);
+            dl->AddCircleFilled(ImVec2(c.x + k * 0.1f, c.y + 0.05f * r), 1.8f, col);
+            break;
+        }
+        case Icon::Info:
+            dl->AddCircle(c, r, col, 24, th);
+            dl->AddCircleFilled(ImVec2(c.x, c.y - r * 0.45f), 1.5f, col);
+            dl->AddLine(ImVec2(c.x, c.y - r * 0.05f), ImVec2(c.x, c.y + r * 0.55f), col, th);
+            break;
+        case Icon::Power:
+            dl->PathArcTo(c, r, -1.5708f + 0.6f, -1.5708f + 6.2832f - 0.6f, 20);
+            dl->PathStroke(col, 0, th);
+            dl->AddLine(ImVec2(c.x, c.y - r * 1.05f), ImVec2(c.x, c.y - r * 0.1f), col, th);
+            break;
+        }
+    };
+    const ImU32 accent_col = ImGui::ColorConvertFloat4ToU32(kAccent);
 
-    if (fonts_.subtitle) ImGui::PushFont(fonts_.subtitle);
-    float sw = ImGui::CalcTextSize("Launcher").x;
-    ImGui::SetCursorPosX((ImGui::GetWindowWidth() - sw) * 0.5f);
-    ImGui::TextColored(ImVec4(0.55f, 0.62f, 0.72f, 1.0f), "Launcher");
-    if (fonts_.subtitle) ImGui::PopFont();
-    ImGui::Dummy(ImVec2(0, 12));
-
-    auto menu_button = [&](const char* id, const char* label, const char* sub) {
-        ImGui::SetCursorPosX(x0);
-        float btn_h = sub[0] ? 62.0f : 50.0f;
-        bool clicked = ImGui::Button((std::string("##") + id).c_str(), ImVec2(col_w, btn_h));
-        ImVec2 mn = ImGui::GetItemRectMin();
+    float last_btn_bottom = 0;   // window-local bottom edge of the most recent button (without its spacer)
+    // Tile in the 2x2 grid (or the small Quit button). primary: highlighted in accent color;
+    // row_first: the next tile follows on the same line, so no vertical gap yet.
+    auto menu_button = [&](const char* id, const char* label, const char* sub, Icon icon,
+                           bool primary = false, bool compact = false, bool row_first = false,
+                           bool same_line = false, int align = 0) {
+        const float w = compact ? 170.0f : (col_w - 10.0f) * 0.5f;
+        const float btn_h = compact ? 36.0f : 108.0f;
+        if (align != 0) {   // flush with the left (-1) or right (1) edge of the grid
+            const float x = align < 0 ? x0 : x0 + col_w - w;
+            if (same_line) ImGui::SameLine(x); else ImGui::SetCursorPosX(x);
+        } else if (same_line) ImGui::SameLine(0, 10.0f);
+        else ImGui::SetCursorPosX(x0 + (col_w - (compact ? w : col_w)) * 0.5f);
+        if (primary) {
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.10f, 0.36f, 0.56f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.15f, 0.46f, 0.70f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.18f, 0.52f, 0.78f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_Border, kAccent);
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.5f);
+        } else if (compact) {
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.12f, 0.15f, 0.21f, 0.8f));
+        }
+        bool clicked = ImGui::Button((std::string("##") + id).c_str(), ImVec2(w, btn_h));
+        if (primary) { ImGui::PopStyleColor(4); ImGui::PopStyleVar(); }
+        else if (compact) ImGui::PopStyleColor();
+        const bool hovered = ImGui::IsItemHovered();
+        const ImVec2 mn = ImGui::GetItemRectMin();
+        last_btn_bottom = ImGui::GetItemRectMax().y - ImGui::GetWindowPos().y;
         ImDrawList* dl = ImGui::GetWindowDrawList();
+
+        // accent bar along the bottom edge on hover
+        if (hovered && !compact)
+            dl->AddRectFilled(ImVec2(mn.x + 8, mn.y + btn_h - 4), ImVec2(mn.x + w - 8, mn.y + btn_h - 2),
+                              accent_col, 2.0f);
 
         ImFont* hfont = fonts_.heading ? fonts_.heading : ImGui::GetFont();
         float hfont_size = fonts_.heading ? fonts_.heading->FontSize : ImGui::GetFontSize() * 1.25f;
-        ImVec2 label_size = hfont->CalcTextSizeA(hfont_size, FLT_MAX, -1.0f, label);
+        if (compact) {
+            hfont = fonts_.regular ? fonts_.regular : ImGui::GetFont();
+            hfont_size = fonts_.regular ? fonts_.regular->FontSize : ImGui::GetFontSize();
+        }
+        const ImVec2 label_size = hfont->CalcTextSizeA(hfont_size, FLT_MAX, -1.0f, label);
+        const ImU32 label_col = compact ? IM_COL32(170, 182, 200, 255) : IM_COL32(235, 240, 250, 255);
 
-        if (sub[0]) {
-            ImFont* sfont = fonts_.regular ? fonts_.regular : ImGui::GetFont();
-            float sfont_size = fonts_.regular ? fonts_.regular->FontSize : ImGui::GetFontSize();
-            ImVec2 sub_size = sfont->CalcTextSizeA(sfont_size, FLT_MAX, -1.0f, sub);
-
-            float total_text_h = label_size.y + 3.0f + sub_size.y;
-            float start_y = mn.y + (btn_h - total_text_h) * 0.5f;
-
-            float label_x = mn.x + (col_w - label_size.x) * 0.5f;
-            dl->AddText(hfont, hfont_size, ImVec2(label_x, start_y),
-                        IM_COL32(235, 240, 250, 255), label);
-
-            float sub_x = mn.x + (col_w - sub_size.x) * 0.5f;
-            dl->AddText(sfont, sfont_size, ImVec2(sub_x, start_y + label_size.y + 3.0f),
-                        IM_COL32(140, 155, 175, 255), sub);
+        if (compact) {
+            // icon left of the centered label
+            const float gap = 10.0f, ir = 7.0f;
+            const float total = ir * 2 + gap + label_size.x;
+            const float sx = mn.x + (w - total) * 0.5f;
+            draw_icon(dl, icon, ImVec2(sx + ir, mn.y + btn_h * 0.5f), ir,
+                      hovered ? accent_col : IM_COL32(150, 170, 195, 255));
+            dl->AddText(hfont, hfont_size, ImVec2(sx + ir * 2 + gap, mn.y + (btn_h - label_size.y) * 0.5f),
+                        label_col, label);
         } else {
-            float label_x = mn.x + (col_w - label_size.x) * 0.5f;
-            float label_y = mn.y + (btn_h - label_size.y) * 0.5f;
-            dl->AddText(hfont, hfont_size, ImVec2(label_x, label_y),
-                        IM_COL32(235, 240, 250, 255), label);
+            // icon on top, label and subtitle centered below
+            draw_icon(dl, icon, ImVec2(mn.x + w * 0.5f, mn.y + 28), 12.0f,
+                      primary || hovered ? accent_col : IM_COL32(150, 170, 195, 255));
+            const float ly = mn.y + 50.0f;
+            dl->AddText(hfont, hfont_size, ImVec2(mn.x + (w - label_size.x) * 0.5f, ly), label_col, label);
+            ImFont* sfont = fonts_.regular ? fonts_.regular : ImGui::GetFont();
+            const float sfont_size = (fonts_.regular ? fonts_.regular->FontSize : ImGui::GetFontSize()) * 0.9f;
+            const ImVec2 sub_size = sfont->CalcTextSizeA(sfont_size, FLT_MAX, -1.0f, sub);
+            dl->AddText(sfont, sfont_size, ImVec2(mn.x + (w - sub_size.x) * 0.5f, ly + label_size.y + 3.0f),
+                        primary ? IM_COL32(170, 205, 235, 255) : IM_COL32(140, 155, 175, 255), sub);
         }
 
-        ImGui::Dummy(ImVec2(0, 3));
+        if (!row_first) ImGui::Dummy(ImVec2(0, 3));
         return clicked;
     };
+
+    ImGui::Dummy(ImVec2(0, 6));
+    if (logo_tex_) {
+        const float lw = 256.0f, lh = lw * logo_h_ / logo_w_;
+        ImGui::SetCursorPosX((ImGui::GetWindowWidth() - lw) * 0.5f);
+        ImGui::Image((ImTextureID)(intptr_t)logo_tex_, ImVec2(lw, lh));
+        // in front of the "P" of PILOT (its left edge and middle in the 256 px logo: x 27, y 117)
+        const ImVec2 lmin = ImGui::GetItemRectMin();
+        DrawMenuShip(ImVec2(lmin.x - 42.0f, lmin.y + 117.0f * lw / (float)logo_w_));
+        // player name behind the logo's right end, level with the ship; only if one is set
+        if (!menu_name_.empty()) {
+            const float ky = lw / (float)logo_w_;
+            ImFont* nf = fonts_.regular ? fonts_.regular : ImGui::GetFont();
+            const float nsize = (fonts_.regular ? fonts_.regular->FontSize : ImGui::GetFontSize()) * 1.15f;
+            const float nx = lmin.x + lw + 2.0f;
+            const float room = (ImGui::GetWindowPos().x + ImGui::GetWindowWidth()) - nx - 8.0f;   // all the way to the window edge (over the wall)
+            std::string txt = menu_name_;
+            while (txt.size() > 1 && nf->CalcTextSizeA(nsize, FLT_MAX, -1.0f, txt.c_str()).x > room) {
+                txt.pop_back();
+                if (txt.size() > 3 && nf->CalcTextSizeA(nsize, FLT_MAX, -1.0f, (txt + "...").c_str()).x <= room) { txt += "..."; break; }
+            }
+            const ImVec2 ts = nf->CalcTextSizeA(nsize, FLT_MAX, -1.0f, txt.c_str());
+            const ImVec2 tp(nx, lmin.y + 117.0f * ky - ts.y * 0.5f);
+            ImDrawList* dl = ImGui::GetWindowDrawList();
+            dl->AddText(nf, nsize, ImVec2(tp.x + 1, tp.y + 1), IM_COL32(0, 0, 0, 160), txt.c_str());
+            dl->AddText(nf, nsize, tp, IM_COL32(235, 240, 250, 255), txt.c_str());
+        }
+    } else {
+        if (fonts_.title) ImGui::PushFont(fonts_.title);
+        float tw = ImGui::CalcTextSize("XPILOT TNG").x;
+        ImGui::SetCursorPosX((ImGui::GetWindowWidth() - tw) * 0.5f);
+        ImGui::TextColored(kAccent, "XPILOT TNG");
+        if (fonts_.title) ImGui::PopFont();
+    }
+    ImGui::Dummy(ImVec2(0, 8));
 
     if (focus_first_) {
         ImGui::SetKeyboardFocusHere();
         focus_first_ = false;
     }
-    bool local = menu_button("local", "Start Local Game", "Play against bots on this machine");
-    bool join = menu_button("join", "Join Network Game", "Browse LAN and internet servers");
+    bool local = menu_button("local", "Start Local Game", "Play against bots on this machine", Icon::Play, true, false, true);
+    bool join = menu_button("join", "Join Network Game", "Browse LAN and internet servers", Icon::Globe, false, false, false, true);
     const bool server_active = process_mgr_.IsServerRunning() && !local_shutdown_pending_;
     char server_sub[256] = "";
     if (server_active) {
         int humans = process_mgr_.HumanCount();
-        snprintf(server_sub, sizeof server_sub, "Server %s  -  %s  -  %d player%s",
-                 process_mgr_.IsServerReady() ? "running" : "starting",
-                 running_map_file_.c_str(), humans, humans == 1 ? "" : "s");
+        // the tile is only as wide as its static texts: shorten the map name with "..." until the line fits
+        ImFont* sfont = fonts_.regular ? fonts_.regular : ImGui::GetFont();
+        const float ssize = (fonts_.regular ? fonts_.regular->FontSize : ImGui::GetFontSize()) * 0.9f;
+        std::string map = running_map_file_;
+        for (;;) {
+            snprintf(server_sub, sizeof server_sub, "Server %s  -  %s  -  %d player%s",
+                     process_mgr_.IsServerReady() ? "running" : "starting",
+                     map.c_str(), humans, humans == 1 ? "" : "s");
+            if (map.size() <= 4 || sfont->CalcTextSizeA(ssize, FLT_MAX, -1.0f, server_sub).x <= MenuTileWidth() - 24.0f)
+                break;
+            map = map.substr(0, map.size() - (map.size() > 7 && map.compare(map.size() - 3, 3, "...") == 0 ? 4 : 1)) + "...";
+        }
     }
     bool server = server_active
-        ? menu_button("server", "Manage Running Server", server_sub)
-        : menu_button("server", "Launch Server", "Host a game for other players");
-    bool quit = menu_button("quit", "Quit", "");
+        ? menu_button("server", "Manage Running Server", server_sub, Icon::Server, false, false, true)
+        : menu_button("server", "Launch Server", "Host a game for other players", Icon::Server, false, false, true);
+    ImGui::BeginDisabled(!mapeditor_available_ || process_mgr_.IsToolRunning());
+    bool editor = menu_button("editor", "Map Editor", "Create and edit maps", Icon::Editor, false, false, false, true);
+    const float tiles_bottom = last_btn_bottom;
+    ImGui::EndDisabled();
+    if (!mapeditor_available_ && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+        ImGui::SetTooltip("xpilot-tng-mapeditor was not found next to the launcher");
+    // bottom bar: separator, then About (left) and Quit (right) with the version centered between them
+    const float bar_h = 36.0f;
+    const float gap = 10.0f;   // same distance above and below the separator
+    const float bar_y = tiles_bottom + 2 * gap;
+    {   // separator as wide as the grid
+        const ImVec2 wp = ImGui::GetWindowPos();
+        const float ly = wp.y + bar_y - gap;
+        ImGui::GetWindowDrawList()->AddLine(ImVec2(wp.x + x0, ly), ImVec2(wp.x + x0 + col_w, ly),
+                                            ImGui::GetColorU32(ImGuiCol_Separator), 1.0f);
+    }
+    ImGui::SetCursorPosY(bar_y);
+    bool about = menu_button("about", "About", "", Icon::Info, false, true, true, false, -1);
+    bool quit = menu_button("quit", "Quit", "", Icon::Power, false, true, false, true, 1);
+    {
+        const std::string ver = std::string("v") + XPILOT_TNG_VERSION;
+        const ImVec2 vs = ImGui::CalcTextSize(ver.c_str());
+        ImGui::SetCursorPos(ImVec2((ImGui::GetWindowWidth() - vs.x) * 0.5f, bar_y + (bar_h - vs.y) * 0.5f));
+        ImGui::TextDisabled("%s", ver.c_str());
+    }
 
     local |= HotkeyPressed(ImGuiKey_L);
     join |= HotkeyPressed(ImGuiKey_J);
     server |= HotkeyPressed(ImGuiKey_S);
     quit |= HotkeyPressed(ImGuiKey_Q);
 
-    // footer
-    ImGui::SetCursorPosY(ImGui::GetWindowHeight() - 32);
-    ImGui::Separator();
-    std::string ver = std::string("v") + XPILOT_TNG_VERSION;
-    float vx = (ImGui::GetWindowWidth() - ImGui::CalcTextSize(ver.c_str()).x) * 0.5f;
-    ImGui::SetCursorPosX(vx);
-    ImGui::TextDisabled("%s", ver.c_str());
 
+    if (about) open_about_popup_ = true;
     if (local) GoTo(Screen::LocalSetup);
     else if (join) { banner_.clear(); GoTo(Screen::NetworkBrowser); }
     else if (server) GoTo(server_active ? Screen::ServerRunning : Screen::ServerSetup);
+    else if (editor && !process_mgr_.StartTool(mapeditor_bin_path_, {}))
+        banner_ = "The map editor could not be started (" + mapeditor_bin_path_ + ").";
     else if (quit) RequestQuit();
 }
 
@@ -1493,6 +1943,47 @@ void LauncherApp::RenderProfileLeavePopup() {
         GoTo(profile_return_);
     }
     if (ImGui::IsKeyPressed(ImGuiKey_Escape))   // Esc: stay in the profile editor
+        ImGui::CloseCurrentPopup();
+    ImGui::EndPopup();
+}
+
+void LauncherApp::RenderAboutPopup() {
+    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+    if (!ImGui::BeginPopupModal("About XPilot TNG", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) return;
+    auto centered = [](const char* text, const ImVec4& col) {
+        ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize(text).x) * 0.5f);
+        ImGui::TextColored(col, "%s", text);
+    };
+    if (logo_tex_) {
+        const float lw = 200.0f, lh = lw * logo_h_ / logo_w_;
+        ImGui::SetCursorPosX((ImGui::GetWindowWidth() - lw) * 0.5f);
+        ImGui::Image((ImTextureID)(intptr_t)logo_tex_, ImVec2(lw, lh));
+    }
+    auto link = [](const char* url) {   // centered, underlined on hover, opens in the default browser
+        const ImVec2 sz = ImGui::CalcTextSize(url);
+        ImGui::SetCursorPosX((ImGui::GetWindowWidth() - sz.x) * 0.5f);
+        ImGui::TextColored(ImVec4(0.40f, 0.70f, 1.00f, 1.0f), "%s", url);
+        if (ImGui::IsItemHovered()) {
+            ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+            ImVec2 a = ImGui::GetItemRectMin(), b = ImGui::GetItemRectMax();
+            ImGui::GetWindowDrawList()->AddLine(ImVec2(a.x, b.y), ImVec2(b.x, b.y), IM_COL32(102, 178, 255, 255));
+            ImGui::SetTooltip("Open in browser");
+        }
+        if (ImGui::IsItemClicked()) SDL_OpenURL(url);
+    };
+    const ImVec4 dim(0.55f, 0.62f, 0.72f, 1.0f);
+    centered((std::string("XPilot TNG  v") + XPILOT_TNG_VERSION).c_str(), kAccent);
+    ImGui::Spacing();
+    centered("The Next Generation of the classic 2D multiplayer space game.", dim);
+    centered("Original XPilot by Bjorn Stabell and Ken Ronny Schouten.", dim);
+    centered("XPilot TNG changes by Andreas Reigber and friends.", dim);
+    centered("Free software under the GNU General Public License v2.", dim);
+    centered("", dim);
+    link("https://xpilot.nought.de");
+    link("https://github.com/birgander2/xpilot-tng");
+    ImGui::Spacing();
+    ImGui::SetCursorPosX((ImGui::GetWindowWidth() - 100) * 0.5f);
+    if (ImGui::Button("Close", ImVec2(100, 0)) || ImGui::IsKeyPressed(ImGuiKey_Escape))
         ImGui::CloseCurrentPopup();
     ImGui::EndPopup();
 }

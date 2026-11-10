@@ -217,6 +217,7 @@ int main(int argc, char* argv[]) {
             }
             got = SDL_PollEvent(&event);
         }
+        if (app.WantsAnimation()) active_frames = 30;   // animated background: run at vsync
         if (active_frames > 0) active_frames--;
 
         app.Update();
