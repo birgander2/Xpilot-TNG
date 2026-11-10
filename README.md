@@ -26,6 +26,7 @@ First conceived in 1991 by Bjørn Stabell and Ken Ronny Schouten, XPilot reliabl
 
 - 🤖 **Smartbots**: Strong AI-powered robots that will make you suffer (see below)
 - 🚀 **Launcher**: A cool new launcher app for both client and server. 
+- ✨ **Improved graphics**: A modern look with smoother rendering, many effects and spectacular explosions — way more fun to blow things up. Prefer the old days? Switch back to the classic style anytime in the launcher.
 - 🎧 **Voice chat**: Bark orders at your team over crackling radio, or trash-talk everyone within earshot — headset not included.
 - 🤝 **Teamplay**: Better team selection and balancing, now with robots on your side — or against you. Try Blood's Music against a smartbot team if you dare.
 - 🐣 **Newbie mode**: Finally repaired after 30 years — now you can learn to fly without being fed to the cannons on day one.
@@ -37,7 +38,7 @@ First conceived in 1991 by Bjørn Stabell and Ken Ronny Schouten, XPilot reliabl
 
 ## 📖 Background
 
-I'm an old XPilot player (Sri Synadasti back in the day), and after almost 30 years I wanted to fly a few rounds with my kids. The catch: the available versions all had their problems. What a pity — it was such a cool game! So I rolled up my sleeves and, over a longer period, put some effort into bringing it back to life and improving a few things. Then a miracle happened: when introducing my gaming-savvy teenagers to XPilot, they really liked it, and I got lots of "modern" input on how the game should work. As a result, we spent many, many hours together changing things, testing, and of course playing like in the old times! Generative AI was a big help, too.
+I'm an old XPilot player (Sri Synadasti back in the day), and after almost 30 years I wanted to fly a few rounds with my kids. The catch: the available versions all had their problems. What a pity — it was such a cool game! So I rolled up my sleeves and, over a longer period, put some effort into bringing it back to life and improving a few things. Then a miracle happened: when introducing my gaming-savvy teenagers to XPilot, they really liked it, and I got lots of "modern" input on how the game should work. As a result, we spent many, many hours together changing things, testing, train the smartbots and of course playing a lot like in the old times! Generative AI was a big help, too.
 
 Let's hope this effort helps to bring XPilot again a bit more attention.
 
@@ -77,9 +78,7 @@ cmake --build build -j$(nproc)
 ```
 *(Tip: If you have Ninja installed, you can pass `-G Ninja` for even faster builds).*
 
-The resulting binaries will be right inside `build/` (and symlinked directly into the project root):
-- `./xpilot-tng-server` (or `build/xpilot-tng-server`)
-- `./xpilot-tng-client` (or `build/xpilot-tng-client`)
+All binaries end up in `build/`; only the launcher is symlinked into the project root as `./xpilot-tng`.
 
 ### Windows release (cross-compiled on Linux)
 Needs MinGW-w64 with the POSIX thread model (Debian/Ubuntu: `sudo apt install g++-mingw-w64-x86-64-posix`), `git` and `zip`:
@@ -95,7 +94,7 @@ The first run downloads and statically builds SDL3, SDL3_ttf, Opus, zlib and exp
 The easiest way to fly is the graphical **launcher**. It starts the server and the client for you, so there is no command line involved:
 
 ```bash
-./xpilot-tng-launcher
+./xpilot-tng
 ```
 
 ### Play against bots
@@ -146,6 +145,7 @@ Behind the scenes, mainly because there are so few players around nowadays, the 
 - They compute predictive ballistic deflection firing solutions.
 - They bounce shots off walls with billiards-grade geometry.
 - They sense when your fuel is low and swarm in for the kill.
+- There are specialised bots for ballgame and racing. Don't underestimate them on maximum level!
 
 Give them hell, or join forces with them in team-play mode! Ball-games against pure smartbot teams are possible, but the guys still have to learn that a bit better.
 

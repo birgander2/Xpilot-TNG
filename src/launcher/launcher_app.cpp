@@ -645,11 +645,6 @@ static SDL_Texture* LoadPamTexture(SDL_Renderer* renderer, const std::string& pa
 // The ship of the player's xpilotrc (full definition, or a name from the personal or stock collection);
 // the default ship if there is none or it is not usable.
 void LauncherApp::LoadMenuShip() {
-    menu_name_.clear();
-    if (std::string nm; XpilotrcLookup("name", &nm)) {
-        const size_t b = nm.find_first_not_of(" \t"), e = nm.find_last_not_of(" \t");
-        if (b != std::string::npos) menu_name_ = nm.substr(b, e - b + 1);
-    }
     ss::ShipShape found;
     bool ok = false;
     std::string v;
@@ -684,7 +679,7 @@ void LauncherApp::DrawMenuDecor(ImVec2 wp, float win_w) const {
 
 }
 
-// The player's ship (glossy hull, rim-lit outline) turning slowly around center.
+// The player's ship (glossy hull, rim-lit outline), static and pointing up, centered on c.
 void LauncherApp::DrawMenuShip(ImVec2 c) const {
     ImDrawList* dl = ImGui::GetWindowDrawList();
     const auto& hull = menu_ship_.hull();
@@ -692,13 +687,16 @@ void LauncherApp::DrawMenuShip(ImVec2 c) const {
     if (n < 3 || n > 64 || !ship_dome_tex_ || !ship_spec_tex_) return;
 
     // same light, textures and outline shading as the client's ship FX (src/client/sdl3/sdl3_fx_ship.c)
-    const float ang = (float)ImGui::GetTime() * 0.45f, ca = cosf(ang), sa = sinf(ang);
+    const float ca = 0.0f, sa = 1.0f;   // ship heading is +x; a quarter turn makes it point up
     float r0 = 1.0f;
     for (const ss::IPt& p : hull) r0 = std::max(r0, sqrtf((float)(p.x * p.x + p.y * p.y)));
     const float sc = 34.0f / r0;
+    int bx0 = hull[0].x, bx1 = bx0, by0 = hull[0].y, by1 = by0;   // center the hull's bounding box on c
+    for (const ss::IPt& p : hull) { bx0 = std::min(bx0, p.x); bx1 = std::max(bx1, p.x); by0 = std::min(by0, p.y); by1 = std::max(by1, p.y); }
+    const float mx = 0.5f * (bx0 + bx1), my = 0.5f * (by0 + by1);
     std::vector<ImVec2> pts(n);
     for (int i = 0; i < n; i++) {
-        const float x = (float)hull[i].x, y = (float)hull[i].y;
+        const float x = (float)hull[i].x - mx, y = (float)hull[i].y - my;
         pts[i] = ImVec2(c.x + (x * ca - y * sa) * sc, c.y - (x * sa + y * ca) * sc);
     }
     float rmax = 1.0f, area2 = 0.0f;
@@ -785,6 +783,45 @@ void LauncherApp::DrawMenuShip(ImVec2 c) const {
         const float k = 0.35f + 0.65f * (0.5f + 0.5f * (nx * lx + ny * ly));
         const int v = (int)(std::clamp(k, 0.0f, 1.0f) * 255.0f);
         dl->AddLine(a, b, IM_COL32(v, v, v, 255), 1.0f);
+    }
+}
+
+// The player's ship in the classic graphics: a plain white outline in chunky pixels (a coarse grid, lines
+// drawn with Bresenham), static and pointing up, its bounding box centered on c.
+void LauncherApp::DrawMenuShipClassic(ImVec2 c) const {
+    const auto& hull = menu_ship_.hull();
+    const int n = (int)hull.size();
+    if (n < 3 || n > 64) return;
+    const float cell = 2.0f;   // screen pixels per ship pixel
+    int bx0 = hull[0].x, bx1 = bx0, by0 = hull[0].y, by1 = by0;
+    for (const ss::IPt& p : hull) { bx0 = std::min(bx0, p.x); bx1 = std::max(bx1, p.x); by0 = std::min(by0, p.y); by1 = std::max(by1, p.y); }
+    const float mx = 0.5f * (bx0 + bx1), my = 0.5f * (by0 + by1);
+    float r0 = 1.0f;
+    for (const ss::IPt& p : hull) r0 = std::max(r0, sqrtf((float)(p.x * p.x + p.y * p.y)));
+    const float sc = 34.0f / r0 / cell;   // ship units -> grid cells
+    // grid point of every vertex (heading is +x; a quarter turn makes the ship point up)
+    std::vector<std::pair<int, int>> g(n);
+    for (int i = 0; i < n; i++)
+        g[i] = {(int)lroundf(-((float)hull[i].y - my) * sc), (int)lroundf(-((float)hull[i].x - mx) * sc)};
+    ImDrawList* dl = ImGui::GetWindowDrawList();
+    const ImU32 col = IM_COL32(255, 255, 255, 255);
+    const ImVec2 o(floorf(c.x), floorf(c.y));
+    auto dot = [&](int x, int y) {
+        dl->AddRectFilled(ImVec2(o.x + x * cell - cell * 0.5f, o.y + y * cell - cell * 0.5f),
+                          ImVec2(o.x + x * cell + cell * 0.5f, o.y + y * cell + cell * 0.5f), col);
+    };
+    for (int i = 0; i < n; i++) {
+        int x0 = g[i].first, y0 = g[i].second;
+        const int x1 = g[(i + 1) % n].first, y1 = g[(i + 1) % n].second;
+        const int dx = abs(x1 - x0), dy = -abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1;
+        int err = dx + dy;
+        for (;;) {
+            dot(x0, y0);
+            if (x0 == x1 && y0 == y1) break;
+            const int e2 = 2 * err;
+            if (e2 >= dy) { err += dy; x0 += sx; }
+            if (e2 <= dx) { err += dx; y0 += sy; }
+        }
     }
 }
 
@@ -961,27 +998,12 @@ void LauncherApp::RenderMenu() {
         const float lw = 256.0f, lh = lw * logo_h_ / logo_w_;
         ImGui::SetCursorPosX((ImGui::GetWindowWidth() - lw) * 0.5f);
         ImGui::Image((ImTextureID)(intptr_t)logo_tex_, ImVec2(lw, lh));
-        // in front of the "P" of PILOT (its left edge and middle in the 256 px logo: x 27, y 117)
+        // classic ship in front of the "P" of PILOT (its left edge in the 256 px logo: x 27),
+        // the same ship with the FX graphics behind the logo's right end
         const ImVec2 lmin = ImGui::GetItemRectMin();
-        DrawMenuShip(ImVec2(lmin.x - 42.0f, lmin.y + 117.0f * lw / (float)logo_w_));
-        // player name behind the logo's right end, level with the ship; only if one is set
-        if (!menu_name_.empty()) {
-            const float ky = lw / (float)logo_w_;
-            ImFont* nf = fonts_.regular ? fonts_.regular : ImGui::GetFont();
-            const float nsize = (fonts_.regular ? fonts_.regular->FontSize : ImGui::GetFontSize()) * 1.15f;
-            const float nx = lmin.x + lw + 2.0f;
-            const float room = (ImGui::GetWindowPos().x + ImGui::GetWindowWidth()) - nx - 8.0f;   // all the way to the window edge (over the wall)
-            std::string txt = menu_name_;
-            while (txt.size() > 1 && nf->CalcTextSizeA(nsize, FLT_MAX, -1.0f, txt.c_str()).x > room) {
-                txt.pop_back();
-                if (txt.size() > 3 && nf->CalcTextSizeA(nsize, FLT_MAX, -1.0f, (txt + "...").c_str()).x <= room) { txt += "..."; break; }
-            }
-            const ImVec2 ts = nf->CalcTextSizeA(nsize, FLT_MAX, -1.0f, txt.c_str());
-            const ImVec2 tp(nx, lmin.y + 117.0f * ky - ts.y * 0.5f);
-            ImDrawList* dl = ImGui::GetWindowDrawList();
-            dl->AddText(nf, nsize, ImVec2(tp.x + 1, tp.y + 1), IM_COL32(0, 0, 0, 160), txt.c_str());
-            dl->AddText(nf, nsize, tp, IM_COL32(235, 240, 250, 255), txt.c_str());
-        }
+        const float ship_y = lmin.y + 124.0f * lw / (float)logo_w_;   // vertical middle of the "PILOT" lettering
+        DrawMenuShipClassic(ImVec2(lmin.x - 42.0f, ship_y));
+        DrawMenuShip(ImVec2(lmin.x + lw + 42.0f, ship_y));
     } else {
         if (fonts_.title) ImGui::PushFont(fonts_.title);
         float tw = ImGui::CalcTextSize("XPILOT TNG").x;
