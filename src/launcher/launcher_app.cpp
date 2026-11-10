@@ -1976,7 +1976,7 @@ void LauncherApp::RenderAboutPopup() {
     ImGui::Spacing();
     centered("The Next Generation of the classic 2D multiplayer space game.", dim);
     centered("Original XPilot by Bjorn Stabell and Ken Ronny Schouten.", dim);
-    centered("XPilot TNG changes by Andreas Reigber and friends.", dim);
+    centered("XPilot TNG modifications by Andreas Reigber and friends.", dim);
     centered("Free software under the GNU General Public License v2.", dim);
     centered("", dim);
     link("https://xpilot.nought.de");
