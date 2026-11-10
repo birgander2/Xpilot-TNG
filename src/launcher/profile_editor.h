@@ -105,6 +105,7 @@ private:
     // visual effects: client options classicGraphics, fx*
     struct Fx {
         bool classic = false;            // classicGraphics: all modern effects off
+        bool fullscreen = true;          // fullScreen: start the game in fullscreen
         bool explosions = true;          // fxExplosions
         bool sparks = true;              // fxSparks
         bool mine_explosions = true;     // fxMineExplosions
