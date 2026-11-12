@@ -610,11 +610,11 @@ int SDL3_Run_Welcome(char *target_server, size_t target_server_size)
                 for (int i = 0; i < local_server_count; i++) {
                     float row_y = (float)layout.subform_y + 1.0f + (float)(33 + i * 33);
                     float btn_x = (float)(layout.subform_x + 1.0f + 20.0f);
-                    float btn_w = max_local_name_width + 20.0f;
-                    float btn_h = 23.0f;
-                    Draw_X11_Label(btn_x, row_y, btn_w, btn_h, local_servers[i].server_name, XP_COLOR_BLUE, XP_COLOR_BLACK, true);
+                    float row_btn_w = max_local_name_width + 20.0f;
+                    float row_btn_h = 23.0f;
+                    Draw_X11_Label(btn_x, row_y, row_btn_w, row_btn_h, local_servers[i].server_name, XP_COLOR_BLUE, XP_COLOR_BLACK, true);
 
-                    float jbtn_x = btn_x + btn_w + 20.0f;
+                    float jbtn_x = btn_x + row_btn_w + 20.0f;
                     float jbtn_w = 89.0f;
                     float jbtn_h = 23.0f;
                     bool pressed = (pressed_button_id == BTN_ID_JOIN_LOCAL + i);

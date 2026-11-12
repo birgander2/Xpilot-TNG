@@ -3,7 +3,6 @@
 #include <imgui.h>
 
 #include "ui_helpers.h"
-#include "ship_files.h"
 #include "xpilotrc.h"
 
 #include <algorithm>
@@ -84,8 +83,6 @@ LauncherApp::LauncherApp(SDL_Window* window, SDL_Renderer* renderer, const std::
 LauncherApp::~LauncherApp() {
     if (logo_tex_) SDL_DestroyTexture(logo_tex_);
     for (SDL_Texture* t : wall_tex_) if (t) SDL_DestroyTexture(t);
-    if (ship_dome_tex_) SDL_DestroyTexture(ship_dome_tex_);
-    if (ship_spec_tex_) SDL_DestroyTexture(ship_spec_tex_);
     MapScanner::FreeThumbnails(maps_);
 }
 
@@ -178,24 +175,22 @@ void LauncherApp::Init() {
     process_mgr_.AddLog("LAUNCHER", "Scanning maps in " + data_dir_ + "/maps ...");
     maps_ = MapScanner::ScanDirectory(data_dir_ + "/maps", renderer_);
     for (auto& m : maps_) {
-        std::error_code ec;
-        m.full_path = fs::absolute(m.full_path, ec).string();
+        std::error_code abs_ec;
+        m.full_path = fs::absolute(m.full_path, abs_ec).string();
     }
     process_mgr_.AddLog("LAUNCHER", std::to_string(maps_.size()) + " maps found.");
     LoadLogo();
     wall_tex_[0] = LoadPamTexture(renderer_, data_dir_ + "/textures/launcher_wall_left.pam", &wall_w_, &wall_h_);
     wall_tex_[1] = LoadPamTexture(renderer_, data_dir_ + "/textures/launcher_wall_right.pam", &wall_w_, &wall_h_);
-    MakeShipTextures();
-    LoadMenuShip();
 
     if (server_port_ <= 0) server_port_ = OptionsManager::FindFreePort();
 }
 
 void LauncherApp::DesiredWindowSize(int* w, int* h) const {
     if (screen_ == Screen::Menu) { *w = (int)(MenuTileWidth() * 2 + 10.0f) + 80;
-        // sum of the welcome screen's vertical layout (see RenderMenu): padding, logo, tile rows, bottom bar
-        const float logo_h = logo_tex_ ? 256.0f * logo_h_ / logo_w_ : 50.0f;
-        *h = (int)(10 + 12 + logo_h + 6 + 14 + 114 + 9 + 108 + 20 + 36 + 10); }
+        // sum of the welcome screen's vertical layout (see RenderMenu): padding, title, tile rows, bottom bar
+        const float title_h = 74.0f;
+        *h = (int)(10 + 12 + title_h + 6 + 14 + 114 + 9 + 108 + 20 + 36 + 10); }
     else if (screen_ == Screen::NetworkBrowser) { *w = 900; *h = 700; }
     else { *w = 1120; *h = 740; }
 }
@@ -231,7 +226,6 @@ void LauncherApp::GoTo(Screen s) {
     focus_first_ = true;
     if (s == Screen::Menu) {
         banner_.clear();
-        LoadMenuShip();   // the profile may have changed the ship
     }
     if (s == Screen::Profile) profile_editor_.Load(data_dir_ + "/shipshapes.cfg", true);   // keeps unsaved edits
     if (s == Screen::NetworkBrowser) {
@@ -642,29 +636,6 @@ static SDL_Texture* LoadPamTexture(SDL_Renderer* renderer, const std::string& pa
     return tex;
 }
 
-// The ship of the player's xpilotrc (full definition, or a name from the personal or stock collection);
-// the default ship if there is none or it is not usable.
-void LauncherApp::LoadMenuShip() {
-    ss::ShipShape found;
-    bool ok = false;
-    std::string v;
-    if (XpilotrcLookup("shipShape", &v) && !v.empty()) {
-        if (v.find('(') != std::string::npos) {
-            ok = ss::Parse(v, &found) && found.hull().size() >= 3;
-        } else {
-            std::vector<ss::Entry> mine, stock;
-            std::string err;
-            ss::LoadShipFile(ss::CollectionPath(), &mine, &err);
-            ss::LoadShipFile(data_dir_ + "/shipshapes.cfg", &stock, &err);
-            for (const auto* list : {&mine, &stock})
-                for (const auto& e : *list)
-                    if (!ok && e.shape.name == v && e.shape.hull().size() >= 3) { found = e.shape; ok = true; }
-        }
-    }
-    if (!ok) ss::Parse("(NM:default)(SH: 14,0 -8,8 -8,-8)", &found);
-    menu_ship_ = ss::Resolve(found);
-}
-
 // Wall pieces in the top corners.
 void LauncherApp::DrawMenuDecor(ImVec2 wp, float win_w) const {
     ImDrawList* dl = ImGui::GetWindowDrawList();
@@ -677,195 +648,6 @@ void LauncherApp::DrawMenuDecor(ImVec2 wp, float win_w) const {
                      ImVec2(wp.x + win_w, wp.y + sz.y));
     }
 
-}
-
-// The player's ship (glossy hull, rim-lit outline), static and pointing up, centered on c.
-void LauncherApp::DrawMenuShip(ImVec2 c) const {
-    ImDrawList* dl = ImGui::GetWindowDrawList();
-    const auto& hull = menu_ship_.hull();
-    const int n = (int)hull.size();
-    if (n < 3 || n > 64 || !ship_dome_tex_ || !ship_spec_tex_) return;
-
-    // same light, textures and outline shading as the client's ship FX (src/client/sdl3/sdl3_fx_ship.c)
-    const float ca = 0.0f, sa = 1.0f;   // ship heading is +x; a quarter turn makes it point up
-    float r0 = 1.0f;
-    for (const ss::IPt& p : hull) r0 = std::max(r0, sqrtf((float)(p.x * p.x + p.y * p.y)));
-    const float sc = 34.0f / r0;
-    int bx0 = hull[0].x, bx1 = bx0, by0 = hull[0].y, by1 = by0;   // center the hull's bounding box on c
-    for (const ss::IPt& p : hull) { bx0 = std::min(bx0, p.x); bx1 = std::max(bx1, p.x); by0 = std::min(by0, p.y); by1 = std::max(by1, p.y); }
-    const float mx = 0.5f * (bx0 + bx1), my = 0.5f * (by0 + by1);
-    std::vector<ImVec2> pts(n);
-    for (int i = 0; i < n; i++) {
-        const float x = (float)hull[i].x - mx, y = (float)hull[i].y - my;
-        pts[i] = ImVec2(c.x + (x * ca - y * sa) * sc, c.y - (x * sa + y * ca) * sc);
-    }
-    float rmax = 1.0f, area2 = 0.0f;
-    for (int i = 0; i < n; i++) {
-        const ImVec2 a = pts[i], b = pts[(i + 1) % n];
-        rmax = std::max(rmax, sqrtf((a.x - c.x) * (a.x - c.x) + (a.y - c.y) * (a.y - c.y)));
-        area2 += a.x * b.y - b.x * a.y;
-    }
-
-    // triangulation as in SDL3_Triangulate_Polygon (ear clipping that drops collinear points)
-    std::vector<int> tris;
-    {
-        std::vector<int> V(n);
-        for (int i = 0; i < n; i++) V[i] = i;
-        const bool ccw = area2 > 0.0f;
-        int remaining = n, curr = 0, fails = 0;
-        auto in_tri = [](ImVec2 p, ImVec2 a, ImVec2 b, ImVec2 d) {
-            const float c1 = (b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x);
-            const float c2 = (d.x - b.x) * (p.y - b.y) - (d.y - b.y) * (p.x - b.x);
-            const float c3 = (a.x - d.x) * (p.y - d.y) - (a.y - d.y) * (p.x - d.x);
-            const bool neg = c1 < -1e-5f || c2 < -1e-5f || c3 < -1e-5f;
-            const bool pos = c1 > 1e-5f || c2 > 1e-5f || c3 > 1e-5f;
-            return !(neg && pos);
-        };
-        while (remaining > 2 && fails < remaining * 2) {
-            const int prev = (curr + remaining - 1) % remaining, next = (curr + 1) % remaining;
-            const ImVec2 a = pts[V[prev]], b = pts[V[curr]], d = pts[V[next]];
-            const float cr = (b.x - a.x) * (d.y - b.y) - (b.y - a.y) * (d.x - b.x);
-            if (fabsf(cr) <= 1e-5f) {   // collinear or duplicate: adds no area
-                V.erase(V.begin() + curr);
-                remaining--;
-                curr %= remaining;
-                fails = 0;
-                continue;
-            }
-            bool ear = ccw ? cr > 1e-5f : cr < -1e-5f;
-            for (int j = 0; ear && j < remaining; j++) {
-                if (j == prev || j == curr || j == next) continue;
-                const ImVec2 q = pts[V[j]];
-                if ((q.x == a.x && q.y == a.y) || (q.x == b.x && q.y == b.y) || (q.x == d.x && q.y == d.y)) continue;
-                if (in_tri(q, a, b, d)) ear = false;
-            }
-            if (ear) {
-                tris.insert(tris.end(), {V[prev], V[curr], V[next]});
-                V.erase(V.begin() + curr);
-                remaining--;
-                curr %= remaining;
-                fails = 0;
-            } else {
-                curr = (curr + 1) % remaining;
-                fails++;
-            }
-        }
-        for (int i = 1; remaining > 2 && i < remaining - 1; i++)   // fallback: fan
-            tris.insert(tris.end(), {V[0], V[i], V[i + 1]});
-    }
-
-    // hull: the dome light texture mapped in screen orientation, then its highlight
-    const float inv = 0.5f / rmax;
-    auto paint = [&](SDL_Texture* tex, ImU32 col) {
-        dl->PushTextureID((ImTextureID)(intptr_t)tex);
-        for (size_t k = 0; k + 2 < tris.size(); k += 3) {
-            dl->PrimReserve(3, 3);
-            const ImDrawIdx base = (ImDrawIdx)dl->_VtxCurrentIdx;
-            for (int q = 0; q < 3; q++) {
-                const ImVec2 p = pts[tris[k + q]];
-                dl->PrimWriteVtx(p, ImVec2(0.5f + (p.x - c.x) * inv, 0.5f + (p.y - c.y) * inv), col);
-            }
-            dl->PrimWriteIdx(base); dl->PrimWriteIdx((ImDrawIdx)(base + 1)); dl->PrimWriteIdx((ImDrawIdx)(base + 2));
-        }
-        dl->PopTextureID();
-    };
-    paint(ship_dome_tex_, IM_COL32(158, 158, 158, 255));   // white ship tinted by 0.62
-    paint(ship_spec_tex_, IM_COL32(255, 255, 255, 217));
-
-    // outline lit by the same light: full color towards it, dim away from it
-    const float ll = sqrtf(0.25f + 0.36f), lx = -0.5f / ll, ly = -0.6f / ll;
-    for (int i = 0; i < n; i++) {
-        const ImVec2 a = pts[i], b = pts[(i + 1) % n];
-        const float ex = b.x - a.x, ey = b.y - a.y, el = sqrtf(ex * ex + ey * ey);
-        if (el < 1e-4f) continue;
-        float nx = ey / el, ny = -ex / el;
-        if (area2 < 0.0f) { nx = -nx; ny = -ny; }
-        const float k = 0.35f + 0.65f * (0.5f + 0.5f * (nx * lx + ny * ly));
-        const int v = (int)(std::clamp(k, 0.0f, 1.0f) * 255.0f);
-        dl->AddLine(a, b, IM_COL32(v, v, v, 255), 1.0f);
-    }
-}
-
-// The player's ship in the classic graphics: a plain white outline in chunky pixels (a coarse grid, lines
-// drawn with Bresenham), static and pointing up, its bounding box centered on c.
-void LauncherApp::DrawMenuShipClassic(ImVec2 c) const {
-    const auto& hull = menu_ship_.hull();
-    const int n = (int)hull.size();
-    if (n < 3 || n > 64) return;
-    const float cell = 2.0f;   // screen pixels per ship pixel
-    int bx0 = hull[0].x, bx1 = bx0, by0 = hull[0].y, by1 = by0;
-    for (const ss::IPt& p : hull) { bx0 = std::min(bx0, p.x); bx1 = std::max(bx1, p.x); by0 = std::min(by0, p.y); by1 = std::max(by1, p.y); }
-    const float mx = 0.5f * (bx0 + bx1), my = 0.5f * (by0 + by1);
-    float r0 = 1.0f;
-    for (const ss::IPt& p : hull) r0 = std::max(r0, sqrtf((float)(p.x * p.x + p.y * p.y)));
-    const float sc = 34.0f / r0 / cell;   // ship units -> grid cells
-    // grid point of every vertex (heading is +x; a quarter turn makes the ship point up)
-    std::vector<std::pair<int, int>> g(n);
-    for (int i = 0; i < n; i++)
-        g[i] = {(int)lroundf(-((float)hull[i].y - my) * sc), (int)lroundf(-((float)hull[i].x - mx) * sc)};
-    ImDrawList* dl = ImGui::GetWindowDrawList();
-    const ImU32 col = IM_COL32(255, 255, 255, 255);
-    const ImVec2 o(floorf(c.x), floorf(c.y));
-    auto dot = [&](int x, int y) {
-        dl->AddRectFilled(ImVec2(o.x + x * cell - cell * 0.5f, o.y + y * cell - cell * 0.5f),
-                          ImVec2(o.x + x * cell + cell * 0.5f, o.y + y * cell + cell * 0.5f), col);
-    };
-    for (int i = 0; i < n; i++) {
-        int x0 = g[i].first, y0 = g[i].second;
-        const int x1 = g[(i + 1) % n].first, y1 = g[(i + 1) % n].second;
-        const int dx = abs(x1 - x0), dy = -abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1;
-        int err = dx + dy;
-        for (;;) {
-            dot(x0, y0);
-            if (x0 == x1 && y0 == y1) break;
-            const int e2 = 2 * err;
-            if (e2 >= dy) { err += dy; x0 += sx; }
-            if (e2 <= dx) { err += dx; y0 += sy; }
-        }
-    }
-}
-
-// Dome-shaped hull light and its highlight, generated like the client does (sh_make_textures).
-void LauncherApp::MakeShipTextures() {
-    const int N = 128;
-    std::vector<unsigned char> dome((size_t)N * N * 4), spec((size_t)N * N * 4);
-    auto cl = [](float v) { return v < 0 ? 0.0f : (v > 1 ? 1.0f : v); };
-    const float L[3] = {-0.50f, -0.60f, 0.62f};
-    const float ll = sqrtf(L[0] * L[0] + L[1] * L[1] + L[2] * L[2]);
-    const float lx = L[0] / ll, ly = L[1] / ll, lz = L[2] / ll;
-    float hx = lx, hy = ly, hz = lz + 1.0f;
-    const float hl = sqrtf(hx * hx + hy * hy + hz * hz);
-    hx /= hl; hy /= hl; hz /= hl;
-    for (int y = 0; y < N; y++) {
-        for (int x = 0; x < N; x++) {
-            float u = ((float)x + 0.5f) / N * 2.0f - 1.0f, v = ((float)y + 0.5f) / N * 2.0f - 1.0f;
-            float r = sqrtf(u * u + v * v);
-            if (r > 0.999f) { u *= 0.999f / r; v *= 0.999f / r; r = 0.999f; }
-            float nx = u * 0.8f, ny = v * 0.8f, nz = sqrtf(1.0f - r * r) + 0.35f;
-            const float nl = sqrtf(nx * nx + ny * ny + nz * nz);
-            nx /= nl; ny /= nl; nz /= nl;
-            const float diff = cl(nx * lx + ny * ly + nz * lz);
-            const float lum = cl(0.10f + 0.85f * diff * diff);
-            const float hi = powf(cl(nx * hx + ny * hy + nz * hz), 40.0f);
-            unsigned char* o = &dome[((size_t)y * N + x) * 4];
-            o[0] = o[1] = o[2] = (unsigned char)(lum * 255.0f + 0.5f);
-            o[3] = 255;
-            o = &spec[((size_t)y * N + x) * 4];
-            o[0] = o[1] = o[2] = 255;
-            o[3] = (unsigned char)(cl(hi * 0.9f) * 255.0f + 0.5f);
-        }
-    }
-    auto make = [&](const std::vector<unsigned char>& px) {
-        SDL_Texture* t = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, N, N);
-        if (t) {
-            SDL_UpdateTexture(t, nullptr, px.data(), N * 4);
-            SDL_SetTextureScaleMode(t, SDL_SCALEMODE_LINEAR);
-            SDL_SetTextureBlendMode(t, SDL_BLENDMODE_BLEND);
-        }
-        return t;
-    };
-    ship_dome_tex_ = make(dome);
-    ship_spec_tex_ = make(spec);
 }
 
 void LauncherApp::RenderMenu() {
@@ -994,23 +776,16 @@ void LauncherApp::RenderMenu() {
     };
 
     ImGui::Dummy(ImVec2(0, 6));
-    if (logo_tex_) {
-        const float lw = 256.0f, lh = lw * logo_h_ / logo_w_;
-        ImGui::SetCursorPosX((ImGui::GetWindowWidth() - lw) * 0.5f);
-        ImGui::Image((ImTextureID)(intptr_t)logo_tex_, ImVec2(lw, lh));
-        // classic ship in front of the "P" of PILOT (its left edge in the 256 px logo: x 27),
-        // the same ship with the FX graphics behind the logo's right end
-        const ImVec2 lmin = ImGui::GetItemRectMin();
-        const float ship_y = lmin.y + 124.0f * lw / (float)logo_w_;   // vertical middle of the "PILOT" lettering
-        DrawMenuShipClassic(ImVec2(lmin.x - 42.0f, ship_y));
-        DrawMenuShip(ImVec2(lmin.x + lw + 42.0f, ship_y));
-    } else {
-        if (fonts_.title) ImGui::PushFont(fonts_.title);
-        float tw = ImGui::CalcTextSize("XPILOT TNG").x;
-        ImGui::SetCursorPosX((ImGui::GetWindowWidth() - tw) * 0.5f);
-        ImGui::TextColored(kAccent, "XPILOT TNG");
-        if (fonts_.title) ImGui::PopFont();
-    }
+    if (fonts_.title) ImGui::PushFont(fonts_.title);
+    const float tw = ImGui::CalcTextSize("XPILOT TNG").x;
+    ImGui::SetCursorPosX((ImGui::GetWindowWidth() - tw) * 0.5f);
+    ImGui::TextColored(kAccent, "XPILOT TNG");
+    if (fonts_.title) ImGui::PopFont();
+    if (fonts_.subtitle) ImGui::PushFont(fonts_.subtitle);
+    const float sw = ImGui::CalcTextSize("Launcher").x;
+    ImGui::SetCursorPosX((ImGui::GetWindowWidth() - sw) * 0.5f);
+    ImGui::TextColored(ImVec4(0.55f, 0.62f, 0.72f, 1.0f), "Launcher");
+    if (fonts_.subtitle) ImGui::PopFont();
     ImGui::Dummy(ImVec2(0, 8));
 
     if (focus_first_) {
@@ -1234,7 +1009,7 @@ void LauncherApp::RenderIdentityRow() {
 
     // small profile editor button, right-aligned
     const float bw = ImGui::CalcTextSize("Profile...").x + ImGui::GetStyle().FramePadding.x * 2;
-    ImGui::SameLine(ImGui::GetWindowContentRegionMax().x - bw);
+    ImGui::SameLine(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - bw);
     if (ImGui::Button("Profile...") && !launching_) {
         profile_return_ = screen_;
         GoTo(Screen::Profile);

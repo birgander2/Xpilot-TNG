@@ -681,9 +681,9 @@ void ProfileEditor::RenderModBanks() {
                            text.empty() ? "(empty)" : text.c_str());
         ImGui::Indent(24);
         // "Label: [value]" - label first, then the choice
-        auto label = [](const char* text, const char* tip = nullptr) {
+        auto label = [](const char* caption, const char* tip = nullptr) {
             ImGui::AlignTextToFramePadding();
-            ImGui::TextUnformatted(text);
+            ImGui::TextUnformatted(caption);
             if (tip && ImGui::IsItemHovered()) ImGui::SetTooltip("%s", tip);
             ImGui::SameLine();
         };

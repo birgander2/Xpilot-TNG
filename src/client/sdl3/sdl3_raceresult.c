@@ -64,11 +64,6 @@ static void Rr_close(void)
     Net_highscore_done();
 }
 
-bool SDL3_RaceResult_Active(void)
-{
-    return rr_active;
-}
-
 /* Esc, Enter and Space close it; all other keys go on to the game. */
 bool SDL3_RaceResult_Handle_Key_Down(SDL_Keycode key)
 {
@@ -122,7 +117,8 @@ static void Rr_draw_top(const char *title, const race_result_line_t *l, int n,
         SDL3_Draw_Text_Len(l[i].name, (int)strnlen(l[i].name, 14), x + 34.0f, y, color);
         Rr_format(l[i].time_ms, buf, sizeof(buf));
         SDL3_Draw_Text(buf, x + w - 74.0f - SDL3_Text_Width(buf), y, color);
-        if (tm != NULL && strftime(date, sizeof(date), "%d.%m.%y", tm) > 0)
+        if (tm != NULL && snprintf(date, sizeof(date), "%02d.%02d.%02d", tm->tm_mday,
+                                    tm->tm_mon + 1, tm->tm_year % 100) > 0)
             SDL3_Draw_Text(date, x + w - SDL3_Text_Width(date), y, XP_COLOR_GRAY);
     }
 }

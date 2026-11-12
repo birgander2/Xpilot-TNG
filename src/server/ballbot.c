@@ -40,6 +40,7 @@
  */
 
 #include "xpserver.h"
+#include "botcore.h"
 
 #define BB_TYPE_NAME		"ball"
 
@@ -255,8 +256,6 @@ static const poly_t	*BbPdata;
 static int		BbNumPolys = -1;
 static int		BbMapW = -1, BbMapH = -1;
 static bool		BbMapOk;
-static bool		BbWrap;
-static double		BbW, BbH;
 static int		FineW, FineH;
 static double		FineCX, FineCY, FineStep;
 static float		*ShipClear, *BallClear;
@@ -276,9 +275,7 @@ static float		*NavRX, *NavRY, *NavClear;
 static uint8_t		*NavEdge[BB_NUM_KINDS];
 static float		*NavCost[BB_NUM_KINDS];
 
-typedef struct { float f; int32_t c; } bb_heap_t;
-static bb_heap_t	*Heap;
-static int		HeapN, HeapCap;
+static bot_heap_t	Heap;
 
 static bb_field_t	*StaticF[BB_MAX_TREASURES][BB_NUM_KINDS];
 static bb_field_t	*GoalF[MAX_TEAMS][BB_NUM_KINDS];
@@ -350,67 +347,12 @@ static inline bool Bb_ally(player_t *a, player_t *b)
     return a == b;
 }
 
-static inline double Bb_px(click_t c)
-{
-    return (double)c / CLICK;
-}
-
-static inline double Bb_wdx(double dx)
-{
-    if (BbWrap) {
-	if (dx > BbW * 0.5)
-	    dx -= BbW;
-	else if (dx < -BbW * 0.5)
-	    dx += BbW;
-    }
-    return dx;
-}
-
-static inline double Bb_wdy(double dy)
-{
-    if (BbWrap) {
-	if (dy > BbH * 0.5)
-	    dy -= BbH;
-	else if (dy < -BbH * 0.5)
-	    dy += BbH;
-    }
-    return dy;
-}
-
-static inline double Bb_dist(double x1, double y1, double x2, double y2)
-{
-    return LENGTH(Bb_wdx(x2 - x1), Bb_wdy(y2 - y1));
-}
-
-static inline int Bb_angle_diff(int a, int b)
-{
-    int d = MOD2(a - b, RES);
-
-    return d > RES / 2 ? d - RES : d;
-}
-
-static inline int Bb_dir_of(double x, double y)
-{
-    return MOD2((int)(findDir(x, y) + 0.5), RES);
-}
-
 static int Bb_level(bb_data_t *d)
 {
     int lvl = d->level > 0 ? d->level : options.smartRobotLevel;
 
     LIMIT(lvl, 1, 100);
     return lvl;
-}
-
-static int Bb_turn_rate(int level)
-{
-    return 3 + (level * 9) / 100;	/* same as the smartbot */
-}
-
-static bool Bb_player_active(player_t *pl)
-{
-    return pl != NULL && !Player_is_tank(pl) && Player_is_alive(pl)
-	&& !Player_is_paused(pl) && !Player_is_waiting(pl);
 }
 
 static int Bb_treasure_index(const treasure_t *tr)
@@ -457,11 +399,11 @@ static inline int Bb_fine_index(double x, double y)
 {
     int ix, iy;
 
-    if (BbWrap) {
-	while (x < 0) x += BbW;
-	while (x >= BbW) x -= BbW;
-	while (y < 0) y += BbH;
-	while (y >= BbH) y -= BbH;
+    if (BotWrap) {
+	while (x < 0) x += BotW;
+	while (x >= BotW) x -= BotW;
+	while (y < 0) y += BotH;
+	while (y >= BotH) y -= BotH;
     }
     ix = (int)(x / FineCX);
     iy = (int)(y / FineCY);
@@ -505,7 +447,7 @@ static inline int Bb_zone_team(int z)
 static double Bb_segment_clear(const float *grid, double x1, double y1,
 			       double x2, double y2, double need)
 {
-    double dx = Bb_wdx(x2 - x1), dy = Bb_wdy(y2 - y1);
+    double dx = Bot_wdx(x2 - x1), dy = Bot_wdy(y2 - y1);
     double len = LENGTH(dx, dy), m = 1e9;
     int i, n = (int)(len / FineStep) + 1;
 
@@ -521,36 +463,6 @@ static double Bb_segment_clear(const float *grid, double x1, double y1,
 	}
     }
     return m;
-}
-
-/* 1-D squared distance transform (Felzenszwalb & Huttenlocher). */
-static void Bb_dt1d(const double *f, double *d, int n, int *v, double *z)
-{
-    int q, k = 0;
-
-    v[0] = 0;
-    z[0] = -1e30;
-    z[1] = 1e30;
-    for (q = 1; q < n; q++) {
-	double s = ((f[q] + (double)q * q) - (f[v[k]] + (double)v[k] * v[k]))
-		   / (2.0 * q - 2.0 * v[k]);
-
-	while (s <= z[k]) {
-	    k--;
-	    s = ((f[q] + (double)q * q) - (f[v[k]] + (double)v[k] * v[k]))
-		/ (2.0 * q - 2.0 * v[k]);
-	}
-	k++;
-	v[k] = q;
-	z[k] = s;
-	z[k + 1] = 1e30;
-    }
-    k = 0;
-    for (q = 0; q < n; q++) {
-	while (z[k + 1] < q)
-	    k++;
-	d[q] = (double)(q - v[k]) * (q - v[k]) + f[v[k]];
-    }
 }
 
 /*
@@ -576,7 +488,7 @@ static bool Bb_edt(const uint8_t *obst, float *out)
 
     /* columns */
     for (x = 0; x < FineW; x++) {
-	if (BbWrap) {
+	if (BotWrap) {
 	    n = 3 * FineH;
 	    off = FineH;
 	    for (i = 0; i < n; i++)
@@ -588,13 +500,13 @@ static bool Bb_edt(const uint8_t *obst, float *out)
 	    for (i = 0; i < FineH; i++)
 		f[i + 1] = obst[i * FineW + x] ? 0.0 : big;
 	}
-	Bb_dt1d(f, d, n, v, z);
+	Bot_dt1d(f, d, n, v, z);
 	for (y = 0; y < FineH; y++)
 	    tmp[y * FineW + x] = d[y + off];
     }
     /* rows */
     for (y = 0; y < FineH; y++) {
-	if (BbWrap) {
+	if (BotWrap) {
 	    n = 3 * FineW;
 	    off = FineW;
 	    for (i = 0; i < n; i++)
@@ -606,7 +518,7 @@ static bool Bb_edt(const uint8_t *obst, float *out)
 	    for (i = 0; i < FineW; i++)
 		f[i + 1] = tmp[y * FineW + i];
 	}
-	Bb_dt1d(f, d, n, v, z);
+	Bot_dt1d(f, d, n, v, z);
 	for (x = 0; x < FineW; x++) {
 	    double c = sqrt(MIN(d[x + off], 1e8)) * cell - 0.5 * cell;
 
@@ -625,11 +537,11 @@ static inline int Bb_nav_cell(double x, double y)
 {
     int ix, iy;
 
-    if (BbWrap) {
-	while (x < 0) x += BbW;
-	while (x >= BbW) x -= BbW;
-	while (y < 0) y += BbH;
-	while (y >= BbH) y -= BbH;
+    if (BotWrap) {
+	while (x < 0) x += BotW;
+	while (x >= BotW) x -= BotW;
+	while (y < 0) y += BotH;
+	while (y >= BotH) y -= BotH;
     }
     ix = (int)(x / NavCX);
     iy = (int)(y / NavCY);
@@ -642,53 +554,12 @@ static inline int Bb_nav_nb(int c, int dx, int dy)
 {
     int x = c % NavW + dx, y = c / NavW + dy;
 
-    if (BbWrap) {
+    if (BotWrap) {
 	x = (x + NavW) % NavW;
 	y = (y + NavH) % NavH;
     } else if (x < 0 || x >= NavW || y < 0 || y >= NavH)
 	return -1;
     return y * NavW + x;
-}
-
-static void Bb_heap_push(float f, int32_t c)
-{
-    int i;
-
-    if (HeapN >= HeapCap)
-	return;
-    i = HeapN++;
-    while (i > 0) {
-	int parent = (i - 1) / 2;
-
-	if (Heap[parent].f <= f)
-	    break;
-	Heap[i] = Heap[parent];
-	i = parent;
-    }
-    Heap[i].f = f;
-    Heap[i].c = c;
-}
-
-static bb_heap_t Bb_heap_pop(void)
-{
-    bb_heap_t top = Heap[0], last = Heap[--HeapN];
-    int i = 0;
-
-    while (HeapN > 0) {
-	int child = 2 * i + 1;
-
-	if (child >= HeapN)
-	    break;
-	if (child + 1 < HeapN && Heap[child + 1].f < Heap[child].f)
-	    child++;
-	if (Heap[child].f >= last.f)
-	    break;
-	Heap[i] = Heap[child];
-	i = child;
-    }
-    if (HeapN > 0)
-	Heap[i] = last;
-    return top;
 }
 
 static void Bb_field_free(bb_field_t *fd)
@@ -707,12 +578,11 @@ static void Bb_map_free(void)
     int i, j, k;
 
     free(ShipClear); free(BallClear); free(TargetClear); free(Zone);
-    free(NavRX); free(NavRY); free(NavClear); free(Heap);
+    free(NavRX); free(NavRY); free(NavClear);
     ShipClear = BallClear = TargetClear = NULL;
     Zone = NULL;
     NavRX = NavRY = NavClear = NULL;
-    Heap = NULL;
-    HeapCap = HeapN = 0;
+    Bot_heap_free(&Heap);
     for (k = 0; k < BB_NUM_KINDS; k++) {
 	free(NavEdge[k]);
 	free(NavCost[k]);
@@ -850,15 +720,13 @@ static bool Bb_map_build(void)
 
     while (blocks / ((long)nb * nb) > 40000)
 	nb++;
-    BbWrap = BIT(world->rules->mode, WRAP_PLAY) ? true : false;
-    BbW = (double)world->cwidth / CLICK;
-    BbH = (double)world->cheight / CLICK;
+    Bot_geo_init();
     NavF = 5;
-    NavW = MAX(1, (int)(BbW / (BLOCK_SZ * nb) + 0.5));
-    NavH = MAX(1, (int)(BbH / (BLOCK_SZ * nb) + 0.5));
+    NavW = MAX(1, (int)(BotW / (BLOCK_SZ * nb) + 0.5));
+    NavH = MAX(1, (int)(BotH / (BLOCK_SZ * nb) + 0.5));
     NavN = NavW * NavH;
-    NavCX = BbW / NavW;
-    NavCY = BbH / NavH;
+    NavCX = BotW / NavW;
+    NavCY = BotH / NavH;
     FineW = NavW * NavF;
     FineH = NavH * NavF;
     FineCX = NavCX / NavF;
@@ -874,14 +742,13 @@ static bool Bb_map_build(void)
     NavRX = malloc(sizeof(float) * NavN);
     NavRY = malloc(sizeof(float) * NavN);
     NavClear = malloc(sizeof(float) * NavN);
-    HeapCap = NavN * 8 + 64;
-    Heap = malloc(sizeof(bb_heap_t) * HeapCap);
+    Bot_heap_alloc(&Heap, NavN * 8 + 64);
     for (k = 0; k < BB_NUM_KINDS; k++) {
 	NavEdge[k] = calloc(NavN, 1);
 	NavCost[k] = malloc(sizeof(float) * NavN * 8);
     }
     if (!ShipClear || !BallClear || !TargetClear || !Zone || !obs_ship || !obs_ball || !NavRX
-	|| !NavRY || !NavClear || !Heap || !NavEdge[0] || !NavEdge[1]
+	|| !NavRY || !NavClear || !Heap.e || !NavEdge[0] || !NavEdge[1]
 	|| !NavCost[0] || !NavCost[1]) {
 	free(obs_ship);
 	free(obs_ball);
@@ -970,7 +837,7 @@ static bool Bb_map_build(void)
 
 			    if (dx * dx + dy * dy > r * r)
 				continue;
-			    if (BbWrap) {
+			    if (BotWrap) {
 				xx = (xx + FineW) % FineW;
 				yy = (yy + FineH) % FineH;
 			    } else if (xx < 0 || xx >= FineW || yy < 0 || yy >= FineH)
@@ -1044,7 +911,7 @@ static bool Bb_map_build(void)
 				     NavRX[n], NavRY[n], BbEdgeR[k]);
 		if (m < BbEdgeR[k])
 		    continue;
-		len = Bb_dist(NavRX[c], NavRY[c], NavRX[n], NavRY[n]);
+		len = Bot_dist(NavRX[c], NavRY[c], NavRX[n], NavRY[n]);
 		pen = MAX(0.0, (BbPrefR[k] - m) / BbPrefR[k]);
 		NavEdge[k][c] |= (uint8_t)(1 << j);
 		NavCost[k][c * 8 + j] = (float)(len * (1.0 + BbPrefW[k] * pen * pen));
@@ -1085,7 +952,7 @@ static bool Bb_field_compute(bb_field_t *fd, double gx, double gy, int kind)
 	fd->dist[c] = BB_INF;
 	fd->next[c] = -1;
     }
-    HeapN = 0;
+    Heap.n = 0;
     /* Seed open cells near the goal; the goal itself may lie in a BallArea */
     for (r = 1; r <= 6 && seeded == 0; r += (r < 2 ? 1 : 2)) {
 	int dx, dy;
@@ -1097,7 +964,7 @@ static bool Bb_field_compute(bb_field_t *fd, double gx, double gy, int kind)
 
 		if (n < 0 || NavClear[n] < BbPassR[kind])
 		    continue;
-		d = Bb_dist(gx, gy, NavRX[n], NavRY[n]);
+		d = Bot_dist(gx, gy, NavRX[n], NavRY[n]);
 		if (d > (r + 0.75) * MAX(NavCX, NavCY))
 		    continue;
 		if (Bb_segment_clear(BallClear, gx, gy, NavRX[n], NavRY[n], 2.0) < 2.0)
@@ -1105,14 +972,14 @@ static bool Bb_field_compute(bb_field_t *fd, double gx, double gy, int kind)
 		if (d < fd->dist[n]) {
 		    fd->dist[n] = (float)d;
 		    fd->next[n] = -2;
-		    Bb_heap_push((float)d, n);
+		    Bot_heap_push(&Heap, (float)d, n);
 		    seeded++;
 		}
 	    }
 	}
     }
-    while (HeapN > 0) {
-	bb_heap_t e = Bb_heap_pop();
+    while (Heap.n > 0) {
+	bot_heapent_t e = Bot_heap_pop(&Heap);
 	int j;
 
 	if (e.f > fd->dist[e.c])
@@ -1128,7 +995,7 @@ static bool Bb_field_compute(bb_field_t *fd, double gx, double gy, int kind)
 	    if (nd < fd->dist[n]) {
 		fd->dist[n] = nd;
 		fd->next[n] = e.c;
-		Bb_heap_push(nd, n);
+		Bot_heap_push(&Heap, nd, n);
 	    }
 	}
     }
@@ -1155,7 +1022,7 @@ static int Bb_field_best_cell(const bb_field_t *fd, double x, double y, double *
 
 	    if (n < 0 || fd->dist[n] >= BB_INF)
 		continue;
-	    v = fd->dist[n] + Bb_dist(x, y, NavRX[n], NavRY[n]);
+	    v = fd->dist[n] + Bot_dist(x, y, NavRX[n], NavRY[n]);
 	    if (v < bv) {
 		bv = v;
 		best = n;
@@ -1173,7 +1040,7 @@ static double Bb_field_value(const bb_field_t *fd, double x, double y)
     double v;
 
     if (Bb_field_best_cell(fd, x, y, &v) < 0)
-	return 1e5 + Bb_dist(x, y, fd->gx, fd->gy) * 3.0;
+	return 1e5 + Bot_dist(x, y, fd->gx, fd->gy) * 3.0;
     return v;
 }
 
@@ -1245,8 +1112,8 @@ static bb_field_t *Bb_static_field(int tr, int kind)
 	StaticF[tr][kind] = calloc(1, sizeof(bb_field_t));
 	if (StaticF[tr][kind] == NULL)
 	    return NULL;
-	if (!Bb_field_compute(StaticF[tr][kind], Bb_px(t->pos.cx),
-			      Bb_px(t->pos.cy), kind)) {
+	if (!Bb_field_compute(StaticF[tr][kind], Bot_px(t->pos.cx),
+			      Bot_px(t->pos.cy), kind)) {
 	    free(StaticF[tr][kind]);
 	    StaticF[tr][kind] = NULL;
 	    return NULL;
@@ -1287,7 +1154,7 @@ static int Bb_enemy_goal(int team, double x, double y)
 
 	if (k == team || k == options.specialBallTeam || !BbGoalOk[k])
 	    continue;
-	d = Bb_dist(x, y, BbGoalX[k], BbGoalY[k]);
+	d = Bot_dist(x, y, BbGoalX[k], BbGoalY[k]);
 	if (d < bd) {
 	    bd = d;
 	    best = k;
@@ -1337,7 +1204,7 @@ static bb_field_t *Bb_dyn_field(double gx, double gy, int kind, int max_age)
 		return NULL;
 	    return fd;
 	} else {
-	    double d = Bb_dist(gx, gy, fd->gx, fd->gy);
+	    double d = Bot_dist(gx, gy, fd->gx, fd->gy);
 
 	    if (d < near_d) {
 		near_d = d;
@@ -1369,7 +1236,7 @@ static double Bb_path_time(const float *px, const float *py, int n)
     bool have_prev = false;
 
     for (i = step; i < n; i += step) {
-	double dx = Bb_wdx(px[i] - px[i - step]), dy = Bb_wdy(py[i] - py[i - step]);
+	double dx = Bot_wdx(px[i] - px[i - step]), dy = Bot_wdy(py[i] - py[i - step]);
 	double len = LENGTH(dx, dy), ang;
 
 	if (len < 1.0)
@@ -1406,7 +1273,7 @@ static double Bb_min_dist_to_routes(const bb_routes_t *rs, int nr, double x, dou
 
     for (k = 0; k < nr; k++) {
 	for (i = 0; i < rs->v[k].npts; i++) {
-	    double d = Bb_dist(x, y, rs->v[k].px[i], rs->v[k].py[i]);
+	    double d = Bot_dist(x, y, rs->v[k].px[i], rs->v[k].py[i]);
 
 	    if (d < m)
 		m = d;
@@ -1437,8 +1304,8 @@ static bb_routes_t *Bb_routes(int src, int dst)
 	return NULL;
     Routes[src][dst] = rs;
     ts = Treasure_by_index(src);
-    sx = Bb_px(ts->pos.cx);
-    sy = Bb_px(ts->pos.cy);
+    sx = Bot_px(ts->pos.cx);
+    sy = Bot_px(ts->pos.cy);
     best = Bb_field_value(fd, sx, sy);
 
     /* direct route */
@@ -1514,9 +1381,9 @@ static bool Bb_team_sees(int team, double x, double y)
     for (i = 0; i < NumPlayers; i++) {
 	player_t *pl = Player_by_index(i);
 
-	if (!Bb_in_team(pl, team) || !Bb_player_active(pl))
+	if (!Bb_in_team(pl, team) || !Bot_player_active(pl))
 	    continue;
-	if (Bb_dist(Bb_px(pl->pos.cx), Bb_px(pl->pos.cy), x, y) <= BbVisibility)
+	if (Bot_dist(Bot_px(pl->pos.cx), Bot_px(pl->pos.cy), x, y) <= BbVisibility)
 	    return true;
     }
     return false;
@@ -1536,12 +1403,12 @@ static void Bb_update_team(int team)
 	if (e->id < 0 || e->id >= NUM_IDS)
 	    continue;
 	c = &tm->c[e->id];
-	if (Bb_in_team(e, team) || !Bb_player_active(e) || Player_is_phasing(e)) {
+	if (Bb_in_team(e, team) || !Bot_player_active(e) || Player_is_phasing(e)) {
 	    c->known = c->seen = false;
 	    continue;
 	}
-	x = Bb_px(e->pos.cx);
-	y = Bb_px(e->pos.cy);
+	x = Bot_px(e->pos.cx);
+	y = Bot_px(e->pos.cy);
 	c->seen = Bb_team_sees(team, x, y) && !Player_is_cloaked(e);
 	if (c->seen) {
 	    c->vx = e->vel.x;
@@ -1557,8 +1424,8 @@ static void Bb_update_team(int team)
 	} else if (options.playersOnRadar && !Player_is_cloaked(e)) {
 	    /* radar: position only, speed from consecutive dots */
 	    if (c->known && BbTick - c->last_known == 1) {
-		c->vx = 0.7 * c->vx + 0.3 * Bb_wdx(x - c->x);
-		c->vy = 0.7 * c->vy + 0.3 * Bb_wdy(y - c->y);
+		c->vx = 0.7 * c->vx + 0.3 * Bot_wdx(x - c->x);
+		c->vy = 0.7 * c->vy + 0.3 * Bot_wdy(y - c->y);
 	    }
 	} else {
 	    if (c->known && BbTick - c->last_known > 3 * 12)
@@ -1588,8 +1455,8 @@ static void Bb_update_team(int team)
 	tr = Bb_treasure_index(b->ball_treasure);
 	if (tr < 0)
 	    continue;
-	x = Bb_px(b->pos.cx);
-	y = Bb_px(b->pos.cy);
+	x = Bot_px(b->pos.cx);
+	y = Bot_px(b->pos.cy);
 	if (!Bb_team_sees(team, x, y))
 	    continue;
 	tm->ball[tr].known = tm->ball[tr].seen = true;
@@ -1631,7 +1498,7 @@ static void Bb_update_team(int team)
 	    continue;
 	}
 	if (!tm->ball_away[j]
-	    && (Bb_team_sees(team, Bb_px(tr->pos.cx), Bb_px(tr->pos.cy))
+	    && (Bb_team_sees(team, Bot_px(tr->pos.cx), Bot_px(tr->pos.cy))
 		|| (tm->ball[j].seen && !tm->ball[j].home)))
 	    tm->ball_away[j] = true;
     }
@@ -1639,7 +1506,7 @@ static void Bb_update_team(int team)
 	player_t *t = Player_by_id(tm->thief_id);
 
 	/* a dead thief has dropped the ball; seen balls tell the rest */
-	if (t == NULL || !Bb_player_active(t)
+	if (t == NULL || !Bot_player_active(t)
 	    || BbTick - tm->thief_time > BB_THIEF_MEMORY)
 	    tm->thief_id = NO_ID;
     }
@@ -1653,7 +1520,7 @@ static bool Bb_believes_home(int team, int tr)
 
     if (t->empty)
 	return false;
-    if (Bb_team_sees(team, Bb_px(t->pos.cx), Bb_px(t->pos.cy)))
+    if (Bb_team_sees(team, Bot_px(t->pos.cx), Bot_px(t->pos.cy)))
 	return t->have;
     if (tm->ball[tr].known && !tm->ball[tr].home)
 	return false;
@@ -1671,7 +1538,7 @@ static int Bb_home_treasure(int team, double x, double y)
 
 	if (t->team != team || t->empty)
 	    continue;
-	d = Bb_dist(x, y, Bb_px(t->pos.cx), Bb_px(t->pos.cy));
+	d = Bot_dist(x, y, Bot_px(t->pos.cx), Bot_px(t->pos.cy));
 	if (d < bd) {
 	    bd = d;
 	    best = i;
@@ -1692,7 +1559,7 @@ static int Bb_enemy_treasure(int team, double x, double y)
 
 	if (t->team == team || t->empty || t->team == TEAM_NOT_SET)
 	    continue;
-	d = Bb_dist(x, y, Bb_px(t->pos.cx), Bb_px(t->pos.cy));
+	d = Bot_dist(x, y, Bot_px(t->pos.cx), Bot_px(t->pos.cy));
 	if (d < ad) {
 	    ad = d;
 	    any = i;
@@ -1723,7 +1590,7 @@ typedef struct {
 static int Bb_threats(player_t *pl, double range)
 {
     bb_team_t *tm = &BbTeams[Bb_slot(pl)];
-    double x = Bb_px(pl->pos.cx), y = Bb_px(pl->pos.cy);
+    double x = Bot_px(pl->pos.cx), y = Bot_px(pl->pos.cy);
     int i, n = 0;
 
     for (i = 0; i < NumPlayers; i++) {
@@ -1731,7 +1598,7 @@ static int Bb_threats(player_t *pl, double range)
 
 	if (Bb_ally(e, pl) || e->id < 0 || e->id >= NUM_IDS)
 	    continue;
-	if (tm->c[e->id].seen && Bb_dist(x, y, tm->c[e->id].x, tm->c[e->id].y) < range)
+	if (tm->c[e->id].seen && Bot_dist(x, y, tm->c[e->id].x, tm->c[e->id].y) < range)
 	    n++;
     }
     return n;
@@ -1741,16 +1608,16 @@ static int Bb_threats(player_t *pl, double range)
 static bool Bb_enemy_is_mine(player_t *pl, player_t *e)
 {
     bb_contact_t *c = &BbTeams[Bb_slot(pl)].c[e->id];
-    double mine = Bb_dist(Bb_px(pl->pos.cx), Bb_px(pl->pos.cy), c->x, c->y);
+    double mine = Bot_dist(Bot_px(pl->pos.cx), Bot_px(pl->pos.cy), c->x, c->y);
     int i;
 
     for (i = 0; i < NumPlayers; i++) {
 	player_t *p = Player_by_index(i);
 
-	if (p == pl || !Bb_ally(p, pl) || !Bb_player_active(p)
+	if (p == pl || !Bb_ally(p, pl) || !Bot_player_active(p)
 	    || BIT(p->have, HAS_BALL))
 	    continue;
-	if (Bb_dist(Bb_px(p->pos.cx), Bb_px(p->pos.cy), c->x, c->y) < mine - 50.0)
+	if (Bot_dist(Bot_px(p->pos.cx), Bot_px(p->pos.cy), c->x, c->y) < mine - 50.0)
 	    return false;
     }
     return true;
@@ -1786,7 +1653,7 @@ static void Bb_assign_roles(int team)
     for (i = 0; i < NumPlayers; i++) {
 	player_t *pl = Player_by_index(i);
 
-	if (!Bb_in_team(pl, team) || !Bb_player_active(pl))
+	if (!Bb_in_team(pl, team) || !Bot_player_active(pl))
 	    continue;
 	if (BIT(pl->have, HAS_BALL)) {
 	    ballobject_t *b = Bb_towed_ball(pl);
@@ -1813,15 +1680,15 @@ static void Bb_assign_roles(int team)
 	hy = BbGoalY[team];
 	enemy_tr = -1;
     } else {
-	home = ball_game ? Bb_home_treasure(team, Bb_px(bots[0]->pos.cx),
-					     Bb_px(bots[0]->pos.cy)) : -1;
+	home = ball_game ? Bb_home_treasure(team, Bot_px(bots[0]->pos.cx),
+					     Bot_px(bots[0]->pos.cy)) : -1;
 	if (home < 0) {
 	    for (i = 0; i < nbots; i++)
 		Bb_set_role(bots[i], BB_ROLE_FIGHT, 0);
 	    return;
 	}
-	hx = Bb_px(Treasure_by_index(home)->pos.cx);
-	hy = Bb_px(Treasure_by_index(home)->pos.cy);
+	hx = Bot_px(Treasure_by_index(home)->pos.cx);
+	hy = Bot_px(Treasure_by_index(home)->pos.cy);
 	enemy_tr = Bb_enemy_treasure(team, hx, hy);
     }
 
@@ -1829,16 +1696,16 @@ static void Bb_assign_roles(int team)
     for (i = 0; i < NumPlayers; i++) {
 	player_t *p = Player_by_index(i);
 
-	if (!Bb_player_active(p) || p->id < 0 || p->id >= NUM_IDS)
+	if (!Bot_player_active(p) || p->id < 0 || p->id >= NUM_IDS)
 	    continue;
 	if (!Bb_in_team(p, team)) {
 	    if (tm->c[p->id].known
-		&& Bb_dist(tm->c[p->id].x, tm->c[p->id].y, hx, hy) < 1300.0)
+		&& Bot_dist(tm->c[p->id].x, tm->c[p->id].y, hx, hy) < 1300.0)
 		home_threat = true;
 	} else {
 	    members++;
 	    if (!Bb_is_ballbot(p) && !BIT(p->have, HAS_BALL)
-		&& Bb_dist(Bb_px(p->pos.cx), Bb_px(p->pos.cy), hx, hy) < 700.0)
+		&& Bot_dist(Bot_px(p->pos.cx), Bot_px(p->pos.cy), hx, hy) < 700.0)
 		human_home = true;
 	}
     }
@@ -1896,7 +1763,7 @@ static void Bb_assign_roles(int team)
 	player_t *o = bi->known && bi->owner_id != NO_ID
 		      ? Player_by_id(bi->owner_id) : NULL;
 
-	if (o != NULL && !Bb_in_team(o, team) && Bb_player_active(o))
+	if (o != NULL && !Bb_in_team(o, team) && Bot_player_active(o))
 	    enemy_carrier = o->id;
 	if (enemy_carrier != NO_ID) {
 	    /* they have the ball: all but one go after the carrier */
@@ -1908,8 +1775,8 @@ static void Bb_assign_roles(int team)
 		ADD_TASK(BB_ROLE_DEFEND, -1, hx, hy);
 	} else {
 	    treasure_t *bt = Treasure_by_index(sp);
-	    double bx = bi->known && !bi->home ? bi->x : Bb_px(bt->pos.cx);
-	    double by = bi->known && !bi->home ? bi->y : Bb_px(bt->pos.cy);
+	    double bx = bi->known && !bi->home ? bi->x : Bot_px(bt->pos.cx);
+	    double by = bi->known && !bi->home ? bi->y : Bot_px(bt->pos.cy);
 	    bool have_grab = false;
 
 	    for (j = 0; j < ntasks; j++) {
@@ -1930,7 +1797,7 @@ static void Bb_assign_roles(int team)
 	}
     } else if (carrier != NO_ID) {
 	player_t *cp = Player_by_id(carrier);
-	double cx = Bb_px(cp->pos.cx), cy = Bb_px(cp->pos.cy);
+	double cx = Bot_px(cp->pos.cx), cy = Bot_px(cp->pos.cy);
 
 	ADD_TASK(BB_ROLE_ESCORT, carrier, cx, cy);
 	if (!human_home)
@@ -1938,7 +1805,7 @@ static void Bb_assign_roles(int team)
 	ADD_TASK(BB_ROLE_ESCORT, carrier, cx, cy);
     } else if (enemy_tr >= 0) {
 	treasure_t *et = Treasure_by_index(enemy_tr);
-	double ex = Bb_px(et->pos.cx), ey = Bb_px(et->pos.cy);
+	double ex = Bot_px(et->pos.cx), ey = Bot_px(et->pos.cy);
 
 	if (Bb_believes_home(team, enemy_tr))
 	    ADD_TASK(BB_ROLE_GRAB, enemy_tr, ex, ey);
@@ -1978,7 +1845,7 @@ static void Bb_assign_roles(int team)
 
 		if (taken[i])
 		    continue;
-		c = Bb_dist(Bb_px(bots[i]->pos.cx), Bb_px(bots[i]->pos.cy),
+		c = Bot_dist(Bot_px(bots[i]->pos.cx), Bot_px(bots[i]->pos.cy),
 			    tasks[j].x, tasks[j].y);
 		if (tasks[j].role == BB_ROLE_GRAB) {
 		    /* whoever is close and not in a fight takes the ball */
@@ -2007,8 +1874,6 @@ static void Bb_assign_roles(int team)
  * Physics model and the sampling flight controller
  * ------------------------------------------------------------------------ */
 
-static bool Bb_lead(double rx, double ry, double wvx, double wvy, double s,
-		    double *dir, double *tof);
 static player_t *Bb_pick_enemy(player_t *pl, double x, double y, double range,
 			       bool seen_only);
 
@@ -2043,14 +1908,6 @@ static double Bb_thrust_acc(player_t *pl)
     else if (a)
 	power = AFTER_BURN_POWER(power, a);
     return power / MAX(pl->mass, 1.0);
-}
-
-static inline int Bb_turn_toward(int dir, int want, int rate)
-{
-    int d = Bb_angle_diff(want, dir);
-
-    LIMIT(d, -rate, rate);
-    return MOD2(dir + d, RES);
 }
 
 /* Outward wall normal at (x, y) (absolute) from a clearance grid. */
@@ -2239,7 +2096,7 @@ static void Bb_tow_action(const bb_ctx_t *cx, const bb_state_t *s,
     if (fabs(phi) <= 0.171)
 	phi = 0.0;
     *want = MOD2((int)((th + phi) * RES / (2.0 * PI) + RES + 0.5), RES);
-    *thrust = on && ABS(Bb_angle_diff(*want, s->dir)) <= 8;
+    *thrust = on && ABS(Bot_angle_diff(*want, s->dir)) <= 8;
 }
 
 /* Built-in policy used after a candidate's own actions run out. */
@@ -2286,9 +2143,9 @@ static void Bb_default_action(const bb_ctx_t *cx, const bb_state_t *s,
 	*thrust = false;
 	return;
     }
-    w = Bb_dir_of(ax, ay);
+    w = Bot_dir_of(ax, ay);
     *want = w;
-    *thrust = ABS(Bb_angle_diff(w, s->dir)) <= 10;
+    *thrust = ABS(Bot_angle_diff(w, s->dir)) <= 10;
 }
 
 /* Free distance along (ux, uy) from (x, y) (relative), up to max. */
@@ -2302,27 +2159,6 @@ static double Bb_ray_free(const bb_ctx_t *cx, double x, double y,
 	    return t;
     }
     return max;
-}
-
-/*
- * Squared closest distance during one tick between a ship moving from
- * (ax0, ay0) to (ax1, ay1) and an object moving from (bx0, by0) to (bx1, by1).
- * Fast shots would otherwise tunnel through between two samples.
- */
-static inline double Bb_cpa2(double ax0, double ay0, double ax1, double ay1,
-			     double bx0, double by0, double bx1, double by1)
-{
-    double rx = bx0 - ax0, ry = by0 - ay0;
-    double wx = (bx1 - bx0) - (ax1 - ax0), wy = (by1 - by0) - (ay1 - ay0);
-    double ww = wx * wx + wy * wy, t = 0.0;
-
-    if (ww > 1e-9) {
-	t = -(rx * wx + ry * wy) / ww;
-	LIMIT(t, 0.0, 1.0);
-    }
-    rx += wx * t;
-    ry += wy * t;
-    return rx * rx + ry * ry;
 }
 
 /* Can the ship coast on (absolute) without hitting a target before it turns? */
@@ -2355,8 +2191,8 @@ static int Bb_throw_ticks(double x, double y, double vx, double vy,
     if (!Bb_coast_safe(sx, sy, svx, svy))
 	return 0;
     /* the released ball must not hit our own ship (sends it home) */
-    rx = Bb_wdx(sx - x);
-    ry = Bb_wdy(sy - y);
+    rx = Bot_wdx(sx - x);
+    ry = Bot_wdy(sy - y);
     if ((rx * vx + ry * vy) / v > 0.0
 	&& fabs(rx * vy - ry * vx) / v < BB_SHIP_R + options.ballRadius + 8.0)
 	return 0;
@@ -2380,7 +2216,7 @@ static int Bb_throw_ticks(double x, double y, double vx, double vy,
 static double Bb_throw_miss(double x, double y, double vx, double vy,
 			    double gx, double gy)
 {
-    double rx = Bb_wdx(gx - x), ry = Bb_wdy(gy - y), v2 = vx * vx + vy * vy, t;
+    double rx = Bot_wdx(gx - x), ry = Bot_wdy(gy - y), v2 = vx * vx + vy * vy, t;
 
     if (v2 < 4.0)
 	return -1.0;
@@ -2414,9 +2250,10 @@ static double Bb_rollout(const bb_ctx_t *cx, const bb_cand_t *cand, bb_cand_t *r
 	    thr = cand->thr[t];
 	} else
 	    Bb_default_action(cx, &s, &want, &thr);
-	s.dir = Bb_turn_toward(s.dir, want, cx->turn);
+	s.dir = Bot_turn_toward(s.dir, want, cx->turn);
 	rec->dir[t] = (short)s.dir;
 	rec->thr[t] = thr;
+	rec->len = t + 1;	/* the rollout may end early: only these steps are valid */
 	Bb_sim_tick(cx, &s, thr);
 
 	/* pointing at the target now is worth more than later */
@@ -2425,7 +2262,7 @@ static double Bb_rollout(const bb_ctx_t *cx, const bb_cand_t *cand, bb_cand_t *r
 					       cx->ty + cx->tvy * tt - py0,
 					       cx->tvx - s.svx, cx->tvy - s.svy,
 					       cx->shot_speed, options.shotLife * 0.9, NULL);
-	    int err = ABS(Bb_angle_diff(s.dir, cx->lead_dir));
+	    int err = ABS(Bot_angle_diff(s.dir, cx->lead_dir));
 
 	    /* turning towards the lead counts too, not only being on it */
 	    cost += g->aim_w * 12.0 * MIN(err, 32);
@@ -2520,7 +2357,7 @@ static double Bb_rollout(const bb_ctx_t *cx, const bb_cand_t *cand, bb_cand_t *r
 		continue;
 	    t0 -= sh->t0;
 	    t1 -= sh->t0;
-	    if (Bb_cpa2(px0, py0, s.sx, s.sy, sh->x + sh->vx * t0, sh->y + sh->vy * t0,
+	    if (Bot_cpa2(px0, py0, s.sx, s.sy, sh->x + sh->vx * t0, sh->y + sh->vy * t0,
 			sh->x + sh->vx * t1, sh->y + sh->vy * t1)
 		< sqr(BB_SHIP_R + 4.0 + cx->margin)) {
 		cost += sh->weight * (1.0 - 0.5 * t / cx->H);
@@ -2534,7 +2371,7 @@ static double Bb_rollout(const bb_ctx_t *cx, const bb_cand_t *cand, bb_cand_t *r
 	    double d = LENGTH(s.sx - ex, s.sy - ey);
 
 	    /* crashing into a ship kills (allowPlayerCrashes) */
-	    if (Bb_cpa2(px0, py0, s.sx, s.sy, ex - e->vx, ey - e->vy, ex, ey)
+	    if (Bot_cpa2(px0, py0, s.sx, s.sy, ex - e->vx, ey - e->vy, ex, ey)
 		< sqr(2.0 * BB_SHIP_R + 8.0))
 		cost += 5e5 * (1.0 - 0.5 * t / cx->H);
 	    else if (g->enemy_w > 0.0 && d < 250.0)
@@ -2599,12 +2436,12 @@ static double Bb_rollout(const bb_ctx_t *cx, const bb_cand_t *cand, bb_cand_t *r
 	if (g->field)
 	    ctg = Bb_field_value(g->field, cx->ox + px, cx->oy + py);
 	else
-	    ctg = Bb_dist(cx->ox + px, cx->oy + py, g->gx, g->gy);
-	gd = Bb_dist(cx->ox + px, cx->oy + py, g->gx, g->gy);
+	    ctg = Bot_dist(cx->ox + px, cx->oy + py, g->gx, g->gy);
+	gd = Bot_dist(cx->ox + px, cx->oy + py, g->gx, g->gy);
 	/* close to the target the ball itself has to get in: straight distance */
 	if (cx->carry && g->score_team >= 0) {
 	    double qx = cx->ox + s.bx, qy = cx->oy + s.by;
-	    double de = Bb_dist(qx, qy, g->gx, g->gy);
+	    double de = Bot_dist(qx, qy, g->gx, g->gy);
 
 	    if (de < 600.0 && de < ctg
 		&& Bb_segment_clear(BallClear, qx, qy, g->gx, g->gy, cx->ball_r)
@@ -2636,8 +2473,8 @@ static double Bb_rollout(const bb_ctx_t *cx, const bb_cand_t *cand, bb_cand_t *r
 
 	    if (dist < 900.0) {
 		double tof = dist / MAX(cx->shot_speed, 1.0);
-		int lead = Bb_dir_of(rx + (cx->tvx - vx) * tof, ry + (cx->tvy - vy) * tof);
-		double err = ABS(Bb_angle_diff(lead, s.dir)) * (360.0 / RES);
+		int lead = Bot_dir_of(rx + (cx->tvx - vx) * tof, ry + (cx->tvy - vy) * tof);
+		double err = ABS(Bot_angle_diff(lead, s.dir)) * (360.0 / RES);
 
 		cost += g->aim_w * err * 1.5;
 	    }
@@ -2650,7 +2487,7 @@ static double Bb_rollout(const bb_ctx_t *cx, const bb_cand_t *cand, bb_cand_t *r
 
 	    if (!e->seen || d > 700.0)
 		continue;
-	    if (ABS(Bb_angle_diff(Bb_dir_of(s.sx - ex, s.sy - ey), e->dir)) < 5)
+	    if (ABS(Bot_angle_diff(Bot_dir_of(s.sx - ex, s.sy - ey), e->dir)) < 5)
 		cost += (700.0 - d) * 0.5;
 	}
     }
@@ -2685,14 +2522,14 @@ static void Bb_fly(player_t *pl, bb_data_t *d, const bb_goal_t *g, int level)
     cx.pl = pl;
     cx.d = d;
     cx.g = g;
-    cx.ox = Bb_px(pl->pos.cx);
-    cx.oy = Bb_px(pl->pos.cy);
+    cx.ox = Bot_px(pl->pos.cx);
+    cx.oy = Bot_px(pl->pos.cy);
     cx.s0.svx = pl->vel.x;
     cx.s0.svy = pl->vel.y;
     cx.s0.dir = pl->dir;
     cx.acc = Bb_thrust_acc(pl);
     cx.ms = MAX(pl->mass, 1.0);
-    cx.turn = Bb_turn_rate(level);
+    cx.turn = Bot_turn_rate(level);
     cx.frames = MAX(1, (int)(1.0 / timeStep + 0.5));
     cx.dt = 1.0 / cx.frames;
     cx.margin = 2.0 + (1.0 - f) * 6.0;
@@ -2707,8 +2544,8 @@ static void Bb_fly(player_t *pl, bb_data_t *d, const bb_goal_t *g, int level)
 	cx.k = options.ballConnectorSpringConstant;
 	cx.damp = options.ballConnectorDamping;
 	cx.ratio_max = options.maxBallConnectorRatio;
-	cx.s0.bx = Bb_wdx(Bb_px(ball->pos.cx) - cx.ox);
-	cx.s0.by = Bb_wdy(Bb_px(ball->pos.cy) - cx.oy);
+	cx.s0.bx = Bot_wdx(Bot_px(ball->pos.cx) - cx.ox);
+	cx.s0.by = Bot_wdy(Bot_px(ball->pos.cy) - cx.oy);
 	cx.s0.bvx = ball->vel.x;
 	cx.s0.bvy = ball->vel.y;
 	cx.a_eff = cx.acc * cx.ms / (cx.ms + cx.mb);
@@ -2719,7 +2556,7 @@ static void Bb_fly(player_t *pl, bb_data_t *d, const bb_goal_t *g, int level)
 	    cx.alpha = cx.acc * cx.ms * rs / (cx.ms * rs * rs + cx.mb * rb * rb);
 	}
 	cx.throw_check = g->score_team >= 0
-	    && Bb_dist(cx.ox + cx.s0.bx, cx.oy + cx.s0.by, g->thx, g->thy) < 900.0;
+	    && Bot_dist(cx.ox + cx.s0.bx, cx.oy + cx.s0.by, g->thx, g->thy) < 900.0;
     } else
 	cx.a_eff = cx.acc;
 
@@ -2733,13 +2570,13 @@ static void Bb_fly(player_t *pl, bb_data_t *d, const bb_goal_t *g, int level)
 	}
 	if (g->field && Bb_field_carrot(g->field, ax, ay, BB_SHIP_R + 10.0, 8,
 					&carx, &cary, &is_goal)) {
-	    cx.cx = Bb_wdx(carx - cx.ox);
-	    cx.cy = Bb_wdy(cary - cx.oy);
+	    cx.cx = Bot_wdx(carx - cx.ox);
+	    cx.cy = Bot_wdy(cary - cx.oy);
 	    cx.carrot_is_goal = is_goal
-		|| Bb_dist(carx, cary, g->gx, g->gy) < 2.0 * MAX(NavCX, NavCY);
+		|| Bot_dist(carx, cary, g->gx, g->gy) < 2.0 * MAX(NavCX, NavCY);
 	} else {
-	    cx.cx = Bb_wdx(g->gx - cx.ox);
-	    cx.cy = Bb_wdy(g->gy - cx.oy);
+	    cx.cx = Bot_wdx(g->gx - cx.ox);
+	    cx.cy = Bot_wdy(g->gy - cx.oy);
 	    cx.carrot_is_goal = true;
 	}
     }
@@ -2758,8 +2595,8 @@ static void Bb_fly(player_t *pl, bb_data_t *d, const bb_goal_t *g, int level)
 	    || (options.teamImmunity && o->team == pl->team
 		&& BIT(world->rules->mode, TEAM_PLAY)))
 	    continue;
-	rx = Bb_wdx(Bb_px(o->pos.cx) - cx.ox);
-	ry = Bb_wdy(Bb_px(o->pos.cy) - cx.oy);
+	rx = Bot_wdx(Bot_px(o->pos.cx) - cx.ox);
+	ry = Bot_wdy(Bot_px(o->pos.cy) - cx.oy);
 	if (LENGTH(rx, ry) > BbVisibility)
 	    continue;
 	/* closest approach to a ship that keeps its speed */
@@ -2795,8 +2632,8 @@ static void Bb_fly(player_t *pl, bb_data_t *d, const bb_goal_t *g, int level)
 	    c = &tm->c[e->id];
 	    if (!c->known)
 		continue;
-	    rx = Bb_wdx(c->x - c->vx * delay - cx.ox);
-	    ry = Bb_wdy(c->y - c->vy * delay - cx.oy);
+	    rx = Bot_wdx(c->x - c->vx * delay - cx.ox);
+	    ry = Bot_wdy(c->y - c->vy * delay - cx.oy);
 	    if (LENGTH(rx, ry) > 900.0)
 		continue;
 	    cx.en[cx.nen].x = rx;
@@ -2823,9 +2660,9 @@ static void Bb_fly(player_t *pl, bb_data_t *d, const bb_goal_t *g, int level)
     for (i = 0; i < cx.nen && cx.nshots < BB_MAX_SHOTS - 3; i++) {
 	const bb_enemy_t *e = &cx.en[i];
 	double dist = LENGTH(e->x, e->y);
-	int k, toward = Bb_dir_of(-e->x, -e->y);
+	int k, toward = Bot_dir_of(-e->x, -e->y);
 
-	if (!e->seen || dist > 700.0 || ABS(Bb_angle_diff(e->dir, toward)) > 16)
+	if (!e->seen || dist > 700.0 || ABS(Bot_angle_diff(e->dir, toward)) > 16)
 	    continue;
 	for (k = 0; k < 3; k++) {
 	    bb_shot_t *sh = &cx.shots[cx.nshots++];
@@ -2853,8 +2690,8 @@ static void Bb_fly(player_t *pl, bb_data_t *d, const bb_goal_t *g, int level)
 	b = BALL_IND(i);
 	if (b->id == pl->id || b->ball_treasure == NULL)
 	    continue;
-	rx = Bb_wdx(Bb_px(b->pos.cx) - cx.ox);
-	ry = Bb_wdy(Bb_px(b->pos.cy) - cx.oy);
+	rx = Bot_wdx(Bot_px(b->pos.cx) - cx.ox);
+	ry = Bot_wdy(Bot_px(b->pos.cy) - cx.oy);
 	if (LENGTH(rx, ry) > MIN(BbVisibility, 700.0))
 	    continue;
 	tr = Bb_treasure_index(b->ball_treasure);
@@ -2880,11 +2717,11 @@ static void Bb_fly(player_t *pl, bb_data_t *d, const bb_goal_t *g, int level)
     /* candidates: headings x {short thrust, short coast, long thrust} */
     nheads = level >= 50 ? 16 : 8;
     specials[nspec++] = pl->dir;
-    specials[nspec++] = Bb_dir_of(cx.cx, cx.cy);
+    specials[nspec++] = Bot_dir_of(cx.cx, cx.cy);
     if (LENGTH(pl->vel.x, pl->vel.y) > 1.0)
-	specials[nspec++] = Bb_dir_of(-pl->vel.x, -pl->vel.y);
+	specials[nspec++] = Bot_dir_of(-pl->vel.x, -pl->vel.y);
     if (cx.carry) {
-	int rope = Bb_dir_of(-cx.s0.bx, -cx.s0.by);
+	int rope = Bot_dir_of(-cx.s0.bx, -cx.s0.by);
 
 	specials[nspec++] = rope;
 	specials[nspec++] = MOD2(rope + RES / 16, RES);
@@ -2896,11 +2733,11 @@ static void Bb_fly(player_t *pl, bb_data_t *d, const bb_goal_t *g, int level)
     if (cx.has_target) {
 	double ldir, tof;
 
-	if (Bb_lead(cx.tx, cx.ty, cx.tvx - pl->vel.x, cx.tvy - pl->vel.y,
+	if (Bot_lead(cx.tx, cx.ty, cx.tvx - pl->vel.x, cx.tvy - pl->vel.y,
 		    cx.shot_speed, &ldir, &tof))
 	    cx.lead_dir = MOD2((int)(ldir + 0.5), RES);
 	else
-	    cx.lead_dir = Bb_dir_of(cx.tx, cx.ty);
+	    cx.lead_dir = Bot_dir_of(cx.tx, cx.ty);
 	specials[nspec++] = cx.lead_dir;
     }
     for (h = 0; h < nheads + nspec; h++) {
@@ -2942,9 +2779,9 @@ static void Bb_fly(player_t *pl, bb_data_t *d, const bb_goal_t *g, int level)
     if (best_cost >= 1e30)
 	return;
 
-    d->plan_len = cx.H;
-    memcpy(d->plan_dir, best_rec.dir, sizeof(short) * cx.H);
-    memcpy(d->plan_thr, best_rec.thr, sizeof(bool) * cx.H);
+    d->plan_len = best_rec.len;
+    memcpy(d->plan_dir, best_rec.dir, sizeof(short) * best_rec.len);
+    memcpy(d->plan_thr, best_rec.thr, sizeof(bool) * best_rec.len);
 
     /* apply: heading (rate limited, as in the model) and thrust */
     want = best_rec.dir[0];
@@ -2965,37 +2802,10 @@ static void Bb_fly(player_t *pl, bb_data_t *d, const bb_goal_t *g, int level)
  * Combat
  * ------------------------------------------------------------------------ */
 
-/* Lead direction for a shot that inherits the shooter's velocity. */
-static bool Bb_lead(double rx, double ry, double wvx, double wvy, double s,
-		    double *dir, double *tof)
-{
-    double a = wvx * wvx + wvy * wvy - s * s;
-    double b = 2.0 * (rx * wvx + ry * wvy);
-    double c = rx * rx + ry * ry, t;
-
-    if (ABS(a) < 1e-6)
-	t = b < 0.0 ? -c / b : -1.0;
-    else {
-	double disc = b * b - 4.0 * a * c, t1, t2;
-
-	if (disc < 0.0)
-	    return false;
-	disc = sqrt(disc);
-	t1 = (-b - disc) / (2.0 * a);
-	t2 = (-b + disc) / (2.0 * a);
-	t = (t1 > 0.0 && (t1 < t2 || t2 <= 0.0)) ? t1 : t2;
-    }
-    if (t <= 0.0)
-	return false;
-    *dir = findDir(rx + wvx * t, ry + wvy * t);
-    *tof = t;
-    return true;
-}
-
 static void Bb_fire(player_t *pl, bb_data_t *d, int level)
 {
     bb_team_t *tm = &BbTeams[Bb_slot(pl)];
-    double ox = Bb_px(pl->pos.cx), oy = Bb_px(pl->pos.cy), f = level / 100.0;
+    double ox = Bot_px(pl->pos.cx), oy = Bot_px(pl->pos.cy), f = level / 100.0;
     int i;
 
     if (!Can_shoot_normal_shot(pl) || Player_is_phasing(pl))
@@ -3012,13 +2822,13 @@ static void Bb_fire(player_t *pl, bb_data_t *d, int level)
 
 	if (e->team == pl->team && BIT(world->rules->mode, TEAM_PLAY))
 	    continue;
-	if (e == pl || e->id < 0 || e->id >= NUM_IDS || !Bb_player_active(e))
+	if (e == pl || e->id < 0 || e->id >= NUM_IDS || !Bot_player_active(e))
 	    continue;
 	c = &tm->c[e->id];
 	if (!c->seen)
 	    continue;
-	rx = Bb_wdx(c->x - ox);
-	ry = Bb_wdy(c->y - oy);
+	rx = Bot_wdx(c->x - ox);
+	ry = Bot_wdy(c->y - oy);
 	dist = LENGTH(rx, ry);
 	if (dist > BbVisibility * 0.9)
 	    continue;
@@ -3061,7 +2871,7 @@ static player_t *Bb_pick_enemy(player_t *pl, double x, double y, double range,
 	c = &tm->c[e->id];
 	if (!c->known || (seen_only && !c->seen))
 	    continue;
-	dd = Bb_dist(x, y, c->x, c->y) + (c->seen ? 0.0 : 200.0);
+	dd = Bot_dist(x, y, c->x, c->y) + (c->seen ? 0.0 : 200.0);
 	if (dd < bd) {
 	    bd = dd;
 	    best = e;
@@ -3074,8 +2884,8 @@ static player_t *Bb_pick_enemy(player_t *pl, double x, double y, double range,
 static void Bb_goal_engage(player_t *pl, bb_goal_t *g, player_t *e, double range)
 {
     bb_contact_t *c = &BbTeams[Bb_slot(pl)].c[e->id];
-    double ox = Bb_px(pl->pos.cx), oy = Bb_px(pl->pos.cy);
-    double dist = Bb_dist(ox, oy, c->x, c->y), lead = MIN(dist / 20.0, 15.0);
+    double ox = Bot_px(pl->pos.cx), oy = Bot_px(pl->pos.cy);
+    double dist = Bot_dist(ox, oy, c->x, c->y), lead = MIN(dist / 20.0, 15.0);
 
     g->gx = c->x + c->vx * lead;
     g->gy = c->y + c->vy * lead;
@@ -3119,7 +2929,7 @@ static void Bb_open_point(double *x, double *y, double need)
 
 	    if (n < 0 || NavClear[n] < need)
 		continue;
-	    d = Bb_dist(*x, *y, NavRX[n], NavRY[n]);
+	    d = Bot_dist(*x, *y, NavRX[n], NavRY[n]);
 	    if (d < bd) {
 		bd = d;
 		best = n;
@@ -3148,8 +2958,8 @@ static void Bb_exit_dir(int dst, const bb_field_t *via, double bx, double by,
     n = Bb_field_trace(fd, bx, by, px, py, 12);
     if (n < 2)
 	return;
-    dx = Bb_wdx(px[n - 1] - bx);
-    dy = Bb_wdy(py[n - 1] - by);
+    dx = Bot_wdx(px[n - 1] - bx);
+    dy = Bot_wdy(py[n - 1] - by);
     l = LENGTH(dx, dy);
     if (l > 1.0) {
 	*ex = dx / l;
@@ -3176,7 +2986,7 @@ static bool Bb_route_guarded(int team, const bb_routes_t *rs, int k, double from
 	for (j = 0; j < rs->v[k].npts; j++) {
 	    if (Bb_field_value(fd, rs->v[k].px[j], rs->v[k].py[j]) > from_val)
 		continue;
-	    if (Bb_dist(c->x, c->y, rs->v[k].px[j], rs->v[k].py[j]) < 300.0)
+	    if (Bot_dist(c->x, c->y, rs->v[k].px[j], rs->v[k].py[j]) < 300.0)
 		return true;
 	}
     }
@@ -3237,7 +3047,7 @@ static void Bb_choose_route(player_t *pl, bb_data_t *d, int src, int dst,
 static bool Bb_throw_line(double gx, double gy, double bx, double by,
 			  double len, double *ux, double *uy)
 {
-    double fx = Bb_wdx(bx - gx), fy = Bb_wdy(by - gy), fl = LENGTH(fx, fy);
+    double fx = Bot_wdx(bx - gx), fy = Bot_wdy(by - gy), fl = LENGTH(fx, fy);
     double best = -1e9;
     int a;
 
@@ -3276,8 +3086,8 @@ static bool Bb_throw_line(double gx, double gy, double bx, double by,
 static void Bb_behave_carry(player_t *pl, bb_data_t *d, bb_goal_t *g,
 			    ballobject_t *ball)
 {
-    double x = Bb_px(pl->pos.cx), y = Bb_px(pl->pos.cy);
-    double bx = Bb_px(ball->pos.cx), by = Bb_px(ball->pos.cy);
+    double x = Bot_px(pl->pos.cx), y = Bot_px(pl->pos.cy);
+    double bx = Bot_px(ball->pos.cx), by = Bot_px(ball->pos.cy);
     int src = Bb_treasure_index(ball->ball_treasure);
     int dst = BbSpecial ? -1 : Bb_home_treasure(pl->team, x, y);
     int gteam = pl->team;
@@ -3299,8 +3109,8 @@ static void Bb_behave_carry(player_t *pl, bb_data_t *d, bb_goal_t *g,
 	fd = Bb_static_field(dst, BB_KIND_BALL);
 	if (fd == NULL)
 	    return;
-	homex = Bb_px(Treasure_by_index(dst)->pos.cx);
-	homey = Bb_px(Treasure_by_index(dst)->pos.cy);
+	homex = Bot_px(Treasure_by_index(dst)->pos.cx);
+	homey = Bot_px(Treasure_by_index(dst)->pos.cy);
     }
     if (!d->had_ball) {
 	if (BbSpecial) {
@@ -3333,7 +3143,7 @@ static void Bb_behave_carry(player_t *pl, bb_data_t *d, bb_goal_t *g,
     if (rs && d->route_var > 0 && d->route_var < rs->n && !d->via_passed) {
 	double vx = rs->v[d->route_var].vx, vy = rs->v[d->route_var].vy;
 
-	if (Bb_dist(x, y, vx, vy) < 5 * BLOCK_SZ
+	if (Bot_dist(x, y, vx, vy) < 5 * BLOCK_SZ
 	    || Bb_field_value(fd, x, y) < rs->v[d->route_var].via_rest + 2 * BLOCK_SZ)
 	    d->via_passed = true;
 	else
@@ -3341,8 +3151,8 @@ static void Bb_behave_carry(player_t *pl, bb_data_t *d, bb_goal_t *g,
     }
     g->vmax = 25.0 + 4.0 * Bb_level(d) / 100.0;
     /* their ships respawn at their base: get away from it quickly */
-    if (Bb_dist(x, y, Bb_px(ball->ball_treasure->pos.cx),
-		Bb_px(ball->ball_treasure->pos.cy)) < 1200.0
+    if (Bot_dist(x, y, Bot_px(ball->ball_treasure->pos.cx),
+		Bot_px(ball->ball_treasure->pos.cy)) < 1200.0
 	&& ball->ball_treasure->team != pl->team)
 	g->vmax += 4.0;
     /*
@@ -3350,12 +3160,12 @@ static void Bb_behave_carry(player_t *pl, bb_data_t *d, bb_goal_t *g,
      * target, arriving with its velocity along the line.
      */
     if (ball->ball_treasure->team != pl->team) {
-	double gd = Bb_dist(bx, by, g->gx, g->gy), ux = 0.0, uy = 0.0, R = 300.0;
+	double gd = Bot_dist(bx, by, g->gx, g->gy), ux = 0.0, uy = 0.0, R = 300.0;
 
 	if (gd > 1100.0)
 	    d->in_line = false;
 	else if (Bb_throw_line(g->gx, g->gy, bx, by, R + 60.0, &ux, &uy)) {
-	    double rx = Bb_wdx(bx - g->gx), ry = Bb_wdy(by - g->gy);
+	    double rx = Bot_wdx(bx - g->gx), ry = Bot_wdy(by - g->gy);
 	    double along = rx * ux + ry * uy, lat = fabs(rx * uy - ry * ux);
 	    double vin = -(ball->vel.x * ux + ball->vel.y * uy);
 
@@ -3442,7 +3252,7 @@ static void Bb_behave_fetch(player_t *pl, bb_data_t *d, bb_goal_t *g, int tr)
     bb_team_t *tm = &BbTeams[Bb_slot(pl)];
     treasure_t *t = Treasure_by_index(tr);
     ballobject_t *ball = Bb_ball_of(tr);
-    double x = Bb_px(pl->pos.cx), y = Bb_px(pl->pos.cy), bx, by, dist;
+    double x = Bot_px(pl->pos.cx), y = Bot_px(pl->pos.cy), bx, by, dist;
     double L = options.ballConnectorLength;
     int dst = BbSpecial ? -1 : Bb_home_treasure(pl->team, x, y);
     bool armed = pl->ball != NULL;
@@ -3451,15 +3261,15 @@ static void Bb_behave_fetch(player_t *pl, bb_data_t *d, bb_goal_t *g, int tr)
 	bx = tm->ball[tr].x;
 	by = tm->ball[tr].y;
     } else {
-	bx = Bb_px(t->pos.cx);
-	by = Bb_px(t->pos.cy);
+	bx = Bot_px(t->pos.cx);
+	by = Bot_px(t->pos.cy);
     }
     /* close enough to see the actual ball */
-    if (ball != NULL && Bb_dist(x, y, Bb_px(ball->pos.cx), Bb_px(ball->pos.cy)) < BbVisibility) {
-	bx = Bb_px(ball->pos.cx);
-	by = Bb_px(ball->pos.cy);
+    if (ball != NULL && Bot_dist(x, y, Bot_px(ball->pos.cx), Bot_px(ball->pos.cy)) < BbVisibility) {
+	bx = Bot_px(ball->pos.cx);
+	by = Bot_px(ball->pos.cy);
     }
-    dist = Bb_dist(x, y, bx, by);
+    dist = Bot_dist(x, y, bx, by);
 
     if (!d->spot_valid || BbTick - d->spot_time > 24 || d->grab_tr != tr) {
 	const bb_field_t *via = NULL;
@@ -3495,8 +3305,8 @@ static void Bb_behave_fetch(player_t *pl, bb_data_t *d, bb_goal_t *g, int tr)
     /* the server attaches the ball at L only while the connector is held */
     if (ball != NULL && ball->id == NO_ID && !(t->have && t->team == pl->team)
 	&& (armed || (dist < L - 2.0
-		      && Bb_segment_clear(BallClear, x, y, Bb_px(ball->pos.cx),
-					  Bb_px(ball->pos.cy), 2.0) >= 2.0))) {
+		      && Bb_segment_clear(BallClear, x, y, Bot_px(ball->pos.cx),
+					  Bot_px(ball->pos.cy), 2.0) >= 2.0))) {
 	SET_BIT(pl->used, USES_CONNECTOR);
 	armed = true;
     }
@@ -3539,7 +3349,7 @@ static void Bb_behave_fetch(player_t *pl, bb_data_t *d, bb_goal_t *g, int tr)
 	nx = -ey;
 	ny = ex;
 	if (best > -1e8) {
-	    double rx = Bb_wdx(x - bx), ry = Bb_wdy(y - by);
+	    double rx = Bot_wdx(x - bx), ry = Bot_wdy(y - by);
 	    double along = rx * ex + ry * ey, lat = (rx * nx + ry * ny) * side;
 	    double vin = pl->vel.x * ex + pl->vel.y * ey;
 
@@ -3571,7 +3381,7 @@ static void Bb_behave_fetch(player_t *pl, bb_data_t *d, bb_goal_t *g, int tr)
 	return;
     }
     if (d->spot_valid) {
-	double sd = Bb_dist(x, y, d->spot_x, d->spot_y);
+	double sd = Bot_dist(x, y, d->spot_x, d->spot_y);
 
 	Bb_goal_point(g, d->spot_x, d->spot_y, 0.0, BB_FREE_VMAX, BB_KIND_SHIP);
 	/* arrive moving out along the exit direction: a fly-by pickup */
@@ -3603,7 +3413,7 @@ static player_t *Bb_team_carrier(int team)
 	player_t *p = Player_by_index(i);
 	ballobject_t *b;
 
-	if (!Bb_in_team(p, team) || !Bb_player_active(p) || !BIT(p->have, HAS_BALL))
+	if (!Bb_in_team(p, team) || !Bot_player_active(p) || !BIT(p->have, HAS_BALL))
 	    continue;
 	b = Bb_towed_ball(p);
 	if (b && b->ball_treasure && b->ball_treasure->team != team)
@@ -3636,13 +3446,13 @@ static void Bb_behave_guard(player_t *pl, bb_data_t *d, bb_goal_t *g, int tr,
     } else {
 	treasure_t *t = Treasure_by_index(tr);
 
-	tx = Bb_px(t->pos.cx);
-	ty = Bb_px(t->pos.cy);
+	tx = Bot_px(t->pos.cx);
+	ty = Bot_px(t->pos.cy);
     }
     threat = Bb_pick_enemy(pl, tx, ty, engage, false);
     if (threat != NULL) {
 	bb_contact_t *c = &tm->c[threat->id];
-	double dx = Bb_wdx(c->x - tx), dy = Bb_wdy(c->y - ty), l = LENGTH(dx, dy);
+	double dx = Bot_wdx(c->x - tx), dy = Bot_wdy(c->y - ty), l = LENGTH(dx, dy);
 
 	if (c->seen && l < engage * 0.6) {
 	    Bb_goal_engage(pl, g, threat, 220.0);
@@ -3684,12 +3494,12 @@ static void Bb_behave_guard(player_t *pl, bb_data_t *d, bb_goal_t *g, int tr,
 static bool Bb_behave_ram(player_t *pl, bb_data_t *d, bb_goal_t *g, int tr)
 {
     bb_ballinfo_t *bi = &BbTeams[Bb_slot(pl)].ball[tr];
-    double x = Bb_px(pl->pos.cx), y = Bb_px(pl->pos.cy), dist, lead;
+    double x = Bot_px(pl->pos.cx), y = Bot_px(pl->pos.cy), dist, lead;
 
     (void)d;
     if (!bi->known)
 	return false;
-    dist = Bb_dist(x, y, bi->x, bi->y);
+    dist = Bot_dist(x, y, bi->x, bi->y);
     lead = MIN(dist / 22.0, 20.0);
     Bb_goal_point(g, bi->x + bi->vx * lead, bi->y + bi->vy * lead, 0.0, 24.0,
 		  BB_KIND_SHIP);
@@ -3704,17 +3514,17 @@ static bool Bb_behave_ram(player_t *pl, bb_data_t *d, bb_goal_t *g, int tr)
 static void Bb_behave_hunt(player_t *pl, bb_data_t *d, bb_goal_t *g)
 {
     bb_team_t *tm = &BbTeams[Bb_slot(pl)];
-    double x = Bb_px(pl->pos.cx), y = Bb_px(pl->pos.cy);
+    double x = Bot_px(pl->pos.cx), y = Bot_px(pl->pos.cy);
     player_t *thief = tm->thief_id != NO_ID ? Player_by_id(tm->thief_id) : NULL;
 
     /* neutral ball: the hunted one is the enemy carrier, he runs to our goal */
     if (BbSpecial)
 	thief = d->role_arg >= 0 ? Player_by_id(d->role_arg) : NULL;
-    if (thief != NULL && !Bb_player_active(thief))
+    if (thief != NULL && !Bot_player_active(thief))
 	thief = NULL;
     if (thief != NULL && tm->c[thief->id].known) {
 	bb_contact_t *c = &tm->c[thief->id];
-	double dist = Bb_dist(x, y, c->x, c->y);
+	double dist = Bot_dist(x, y, c->x, c->y);
 	int their = BbSpecial ? 0 : Bb_home_treasure(thief->team, c->x, c->y);
 
 	if (dist < 900.0 || their < 0) {
@@ -3740,8 +3550,8 @@ static void Bb_behave_hunt(player_t *pl, bb_data_t *d, bb_goal_t *g)
 	    if (fd != NULL) {
 		n = Bb_field_trace(fd, c->x, c->y, px, py, BB_ROUTE_PTS);
 		for (i = 1; i < n; i++) {
-		    tlen += Bb_dist(px[i - 1], py[i - 1], px[i], py[i]);
-		    if (Bb_dist(x, y, px[i], py[i]) / 18.0 <= tlen / tv)
+		    tlen += Bot_dist(px[i - 1], py[i - 1], px[i], py[i]);
+		    if (Bot_dist(x, y, px[i], py[i]) / 18.0 <= tlen / tv)
 			break;
 		}
 		if (n > 0) {
@@ -3778,17 +3588,17 @@ static void Bb_behave_hunt(player_t *pl, bb_data_t *d, bb_goal_t *g)
 static void Bb_behave_escort(player_t *pl, bb_data_t *d, bb_goal_t *g)
 {
     player_t *c = Player_by_id(d->role_arg);
-    double x = Bb_px(pl->pos.cx), y = Bb_px(pl->pos.cy), cx, cy, ax, ay;
+    double x = Bot_px(pl->pos.cx), y = Bot_px(pl->pos.cy), cx, cy, ax, ay;
     double ux = 0.0, uy = 0.0, l;
     player_t *e;
     int src;
 
-    if (c == NULL || !Bb_player_active(c)) {
+    if (c == NULL || !Bot_player_active(c)) {
 	Bb_behave_guard(pl, d, g, Bb_home_treasure(pl->team, x, y), 200.0, 900.0);
 	return;
     }
-    cx = Bb_px(c->pos.cx);
-    cy = Bb_px(c->pos.cy);
+    cx = Bot_px(c->pos.cx);
+    cy = Bot_px(c->pos.cy);
     /* enemies near the carrier first */
     e = Bb_pick_enemy(pl, cx, cy, 700.0, true);
     if (e != NULL) {
@@ -3804,19 +3614,19 @@ static void Bb_behave_escort(player_t *pl, bb_data_t *d, bb_goal_t *g)
     if (e != NULL) {
 	bb_contact_t *ct = &BbTeams[Bb_slot(pl)].c[e->id];
 
-	ux = Bb_wdx(ct->x - cx);
-	uy = Bb_wdy(ct->y - cy);
+	ux = Bot_wdx(ct->x - cx);
+	uy = Bot_wdy(ct->y - cy);
     } else if (BbSpecial) {
 	/* no enemy base: pursuers come from where our goal is not */
 	if (BbGoalOk[pl->team]) {
-	    ux = Bb_wdx(BbGoalX[pl->team] - cx);
-	    uy = Bb_wdy(BbGoalY[pl->team] - cy);
+	    ux = Bot_wdx(BbGoalX[pl->team] - cx);
+	    uy = Bot_wdy(BbGoalY[pl->team] - cy);
 	}
     } else if ((src = Bb_enemy_treasure(pl->team, cx, cy)) >= 0) {
 	treasure_t *t = Treasure_by_index(src);
 
-	ux = Bb_wdx(Bb_px(t->pos.cx) - cx);
-	uy = Bb_wdy(Bb_px(t->pos.cy) - cy);
+	ux = Bot_wdx(Bot_px(t->pos.cx) - cx);
+	uy = Bot_wdy(Bot_px(t->pos.cy) - cy);
     }
     l = LENGTH(ux, uy);
     if (l > 1.0) {
@@ -3833,7 +3643,7 @@ static void Bb_behave_escort(player_t *pl, bb_data_t *d, bb_goal_t *g)
 
 static void Bb_behave_mid(player_t *pl, bb_data_t *d, bb_goal_t *g)
 {
-    double x = Bb_px(pl->pos.cx), y = Bb_px(pl->pos.cy);
+    double x = Bot_px(pl->pos.cx), y = Bot_px(pl->pos.cy);
     int home = Bb_home_treasure(pl->team, x, y);
     int enemy = d->role_arg;
     bb_field_t *fe = Bb_static_field(enemy, BB_KIND_SHIP);
@@ -3846,7 +3656,7 @@ static void Bb_behave_mid(player_t *pl, bb_data_t *d, bb_goal_t *g)
     {
 	static float px[BB_ROUTE_PTS], py[BB_ROUTE_PTS];
 	treasure_t *h = Treasure_by_index(home);
-	int n = Bb_field_trace(fe, Bb_px(h->pos.cx), Bb_px(h->pos.cy), px, py,
+	int n = Bb_field_trace(fe, Bot_px(h->pos.cx), Bot_px(h->pos.cy), px, py,
 			       BB_ROUTE_PTS);
 	double mx, my;
 
@@ -3869,7 +3679,7 @@ static void Bb_behave_support(player_t *pl, bb_data_t *d, bb_goal_t *g)
 {
     int tr = d->role_arg;
     treasure_t *t;
-    double tx, ty, x = Bb_px(pl->pos.cx), y = Bb_px(pl->pos.cy), ux, uy, gx, gy;
+    double tx, ty, x = Bot_px(pl->pos.cx), y = Bot_px(pl->pos.cy), ux, uy, gx, gy;
     player_t *e;
 
     if (tr < 0 || tr >= Num_treasures()) {
@@ -3877,8 +3687,8 @@ static void Bb_behave_support(player_t *pl, bb_data_t *d, bb_goal_t *g)
 	return;
     }
     t = Treasure_by_index(tr);
-    tx = Bb_px(t->pos.cx);
-    ty = Bb_px(t->pos.cy);
+    tx = Bot_px(t->pos.cx);
+    ty = Bot_px(t->pos.cy);
     if (BbSpecial) {
 	/* the neutral ball wanders: cover it where we think it is */
 	bb_ballinfo_t *bi = &BbTeams[Bb_slot(pl)].ball[tr];
@@ -3906,7 +3716,7 @@ static void Bb_behave_support(player_t *pl, bb_data_t *d, bb_goal_t *g)
 
 static void Bb_behave_fight(player_t *pl, bb_data_t *d, bb_goal_t *g)
 {
-    double x = Bb_px(pl->pos.cx), y = Bb_px(pl->pos.cy);
+    double x = Bot_px(pl->pos.cx), y = Bot_px(pl->pos.cy);
     player_t *e = Bb_pick_enemy(pl, x, y, 1e9, false);
 
     (void)d;
@@ -4017,8 +3827,8 @@ static void Robot_ball_play(player_t *pl)
     g.enemy_w = 0.3;
     g.wall_w = 1.0;
     g.match_w = 4.0;
-    g.gx = Bb_px(pl->pos.cx);
-    g.gy = Bb_px(pl->pos.cy);
+    g.gx = Bot_px(pl->pos.cx);
+    g.gy = Bot_px(pl->pos.cy);
 
     d->alive_ticks++;
     ball = Bb_towed_ball(pl);
@@ -4059,16 +3869,16 @@ static void Robot_ball_play(player_t *pl)
 		double hx, hy;
 
 		if (BbSpecial) {
-		    hx = BbGoalOk[pl->team] ? BbGoalX[pl->team] : Bb_px(pl->pos.cx);
-		    hy = BbGoalOk[pl->team] ? BbGoalY[pl->team] : Bb_px(pl->pos.cy);
+		    hx = BbGoalOk[pl->team] ? BbGoalX[pl->team] : Bot_px(pl->pos.cx);
+		    hy = BbGoalOk[pl->team] ? BbGoalY[pl->team] : Bot_px(pl->pos.cy);
 		} else if (d->role_arg >= 0 && d->role_arg < Num_treasures()) {
 		    treasure_t *t = Treasure_by_index(d->role_arg);
 
-		    hx = Bb_px(t->pos.cx);
-		    hy = Bb_px(t->pos.cy);
+		    hx = Bot_px(t->pos.cx);
+		    hy = Bot_px(t->pos.cy);
 		} else {
-		    hx = Bb_px(pl->pos.cx);
-		    hy = Bb_px(pl->pos.cy);
+		    hx = Bot_px(pl->pos.cx);
+		    hy = Bot_px(pl->pos.cy);
 		}
 		if (c != NULL && c != pl
 		    && Bb_pick_enemy(pl, hx, hy, 1100.0, false) == NULL) {
@@ -4089,7 +3899,7 @@ static void Robot_ball_play(player_t *pl)
     }
     /* opportunistic aiming at the nearest enemy in view */
     if (g.target == NULL) {
-	g.target = Bb_pick_enemy(pl, Bb_px(pl->pos.cx), Bb_px(pl->pos.cy), 600.0, true);
+	g.target = Bb_pick_enemy(pl, Bot_px(pl->pos.cx), Bot_px(pl->pos.cy), 600.0, true);
 	if (g.target != NULL)
 	    g.aim_w = ball != NULL ? 0.3 : 0.6;
     }

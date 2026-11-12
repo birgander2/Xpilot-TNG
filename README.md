@@ -17,7 +17,7 @@ First conceived in 1991 by Bjørn Stabell and Ken Ronny Schouten, XPilot reliabl
 - 🦾 **C23 & GCC 15 Ready:** Pure, type-safe C code, UTF-8 clean, and stripped of deprecated syntactic fossils.
 - 🎨 **SDL3 & GPU 2D Renderer:** Say goodbye to vintage OpenGL 1.1 immediate mode (`glBegin`/`glEnd`) and obsolete GLU. Crisp 2D vector rendering powered directly by `SDL_Renderer` with native Wayland and X11 support.
 - 🔊 **Modern Sound:** Crisp audio effects delivered through native **SDL3 Audio Streams**.
-- 🌐 **Modernized Networking:** Clean, thread-safe POSIX sockets (`getaddrinfo`, `getnameinfo`, `sockaddr_storage`) replacing archaic `SIGALRM` DNS timeouts from the 90s. Single-port operation of the server. Game traffic itself is still **IPv4 only** for now — full IPv6 is on the to-do list (tricky because of the old IPv4 metaserver) 🚧
+- 🌐 **Modernized Networking:** Clean, thread-safe POSIX sockets (`getaddrinfo`, `getnameinfo`, `sockaddr_storage`) replacing archaic `SIGALRM` DNS timeouts from the 90s. Single-port operation of the server. Game traffic itself is still **IPv4 only** for now — full IPv6 is on the to-do list (but tricky because of the old IPv4 metaserver) 🚧
 - 🛡️ **Hardened Server:** Three decades of `strcpy` optimism met a fuzzer and lost. Buffer overflows are fixed, the network code is sanitizer-tested and the binary is built with modern compiler hardening. Old clients still connect just fine — they just won't be able to crash your lobby anymore.
 
 ---
@@ -38,7 +38,7 @@ First conceived in 1991 by Bjørn Stabell and Ken Ronny Schouten, XPilot reliabl
 
 ## 📖 Background
 
-I'm an old XPilot player (Sri Synadasti back in the day), and after almost 30 years I wanted to fly a few rounds with my kids. The catch: the available versions all had their problems. What a pity — it was such a cool game! So I rolled up my sleeves and, over a longer period, put some effort into bringing it back to life and improving a few things. Then a miracle happened: when introducing my gaming-savvy teenagers to XPilot, they really liked it, and I got lots of "modern" input on how the game should work. As a result, we spent many, many hours together changing things, testing, train the smartbots and of course playing a lot like in the old times! Generative AI was a big help, too.
+I'm an old XPilot player (Sri Synadasti back in the day), and after almost 30 years I wanted to fly a few rounds with my kids. The catch: the available versions all had their problems. What a pity — it was such a cool game! So I rolled up my sleeves and, over a longer period, put some effort into bringing it back to life and improving a few things. Then a miracle happened: when introducing my gaming-savvy teenagers to XPilot, they really loved it, and I got lots of "modern" input on how the game should work. As a result, we spent many, many hours together changing things (AI assisted), testing everything, training the smartbots and of course playing a lot like in the old times! 
 
 Let's hope this effort helps to bring XPilot again a bit more attention.
 

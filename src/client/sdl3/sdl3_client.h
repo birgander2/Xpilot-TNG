@@ -233,11 +233,9 @@ void SDL3_Render_Talk_Window(void);
 
 /* Team selection dialog */
 void SDL3_TeamSelect_Open(void);
-bool SDL3_TeamSelect_Active(void);
 bool SDL3_TeamSelect_Handle_Key_Down(SDL_Keycode key);
 bool SDL3_TeamSelect_Handle_Mouse_Down(int x, int y, int button);
 void SDL3_TeamSelect_Render(void);
-bool SDL3_RaceResult_Active(void);
 bool SDL3_RaceResult_Handle_Key_Down(SDL_Keycode key);
 bool SDL3_RaceResult_Handle_Mouse_Down(int x, int y, int button);
 void SDL3_RaceResult_Render(void);
@@ -248,6 +246,5 @@ void SDL3_BallResult_Render(void);
 /* Audio */
 int  SDL3_Init_Audio(void);
 void SDL3_Cleanup_Audio(void);
-void SDL3_Play_Sound(int sound_ind, int volume);
 
 #endif /* SDL3_CLIENT_H */

@@ -62,7 +62,7 @@ bool OptionsManager::SameValue(const std::string& a, const std::string& b) {
     std::string lx = Lower(x), ly = Lower(y);
     static const char* kBool[] = {"yes", "no", "true", "false", "on", "off"};
     auto is_bool = [](const std::string& s) {
-        for (const char* b : kBool) if (s == b) return true;
+        for (const char* w : kBool) if (s == w) return true;
         return false;
     };
     if (is_bool(lx) && is_bool(ly)) return ParseBool(lx) == ParseBool(ly);

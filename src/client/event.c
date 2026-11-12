@@ -205,14 +205,14 @@ void Key_turn_tick(void)
 }
 
 /* Called for every frame shown: turn one frame's worth while a key is held. */
-void Key_turn_frame(long loops)
+void Key_turn_frame(long frame_loops)
 {
     static long last_loops_seen, usual = 1;
-    long frames = loops - last_loops_seen;
+    long frames = frame_loops - last_loops_seen;
     double units_per_frame;
     int move;
 
-    last_loops_seen = loops;
+    last_loops_seen = frame_loops;
     Key_turn_tick();
     if (key_turn_dir == 0 || frames < 1)
 	return;

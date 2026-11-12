@@ -106,11 +106,6 @@ void SDL3_TeamSelect_Open(void)
     ts_active = true;
 }
 
-bool SDL3_TeamSelect_Active(void)
-{
-    return ts_active;
-}
-
 bool SDL3_TeamSelect_Handle_Key_Down(SDL_Keycode key)
 {
     if (!ts_active)

@@ -200,9 +200,16 @@ const char *Robot_smart_driver(void);
 #define BALL_ROBOT_TYPE		"ball"
 #define RACE_ROBOT_TYPE		"race"
 #define FIGHT_ROBOT_TYPE	"fight"
+
+/* Setup routines of the robot types (robotdef.c, smartbot.c, ballbot.c, ...) */
+int Robot_default_setup(robot_type_t *type_ptr);
+int Robot_smart_setup(robot_type_t *type_ptr);
+int Robot_ball_setup(robot_type_t *type_ptr);
+int Robot_race_setup(robot_type_t *type_ptr);
+int Robot_fight_setup(robot_type_t *type_ptr);
+
 bool Robot_ball_game(void);
 bool Robot_race_map(void);
-bool Robot_fight_map(void);
 void Robot_war(player_t *robot, player_t *killer);
 void Robot_reset_war(player_t *robot);
 int Robot_war_on_player(player_t *robot);

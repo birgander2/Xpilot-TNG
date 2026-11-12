@@ -165,7 +165,8 @@ static void Br_render(br_popup_t *p)
         else
             Br_format(l->time_ms, buf, sizeof(buf));
         SDL3_Draw_Text(buf, x + w - BR_PAD - 84.0f - SDL3_Text_Width(buf), cy, color);
-        if (tm != NULL && strftime(date, sizeof(date), "%d.%m.%y", tm) > 0)
+        if (tm != NULL && snprintf(date, sizeof(date), "%02d.%02d.%02d", tm->tm_mday,
+                                    tm->tm_mon + 1, tm->tm_year % 100) > 0)
             SDL3_Draw_Text(date, x + w - BR_PAD - SDL3_Text_Width(date), cy, dcolor);
     }
 

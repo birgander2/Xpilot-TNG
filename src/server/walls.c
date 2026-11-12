@@ -211,7 +211,7 @@ void Object_crash(object_t *obj, int crashtype, int mapobj_ind)
 
 void Player_crash(player_t *pl, int crashtype, int mapobj_ind, int pt)
 {
-    const char *howfmt = NULL;
+    const char *how = NULL, *where = "";
     const char *hudmsg = NULL;
 
     msg[0] = '\0';
@@ -228,38 +228,44 @@ void Player_crash(player_t *pl, int crashtype, int mapobj_ind, int pt)
 	break;
 
     case CrashWall:
-	howfmt = "%s crashed%s against a wall";
+	how = "crashed";
+	where = " against a wall";
 	hudmsg = "[Wall]";
 	sound_play_sensors(pl->pos, PLAYER_HIT_WALL_SOUND);
 	break;
 
     case CrashWallSpeed:
-	howfmt = "%s smashed%s against a wall";
+	how = "smashed";
+	where = " against a wall";
 	hudmsg = "[Wall]";
 	sound_play_sensors(pl->pos, PLAYER_HIT_WALL_SOUND);
 	break;
 
     case CrashWallNoFuel:
-	howfmt = "%s smacked%s against a wall";
+	how = "smacked";
+	where = " against a wall";
 	hudmsg = "[Wall]";
 	sound_play_sensors(pl->pos, PLAYER_HIT_WALL_SOUND);
 	break;
 
     case CrashWallAngle:
-	howfmt = "%s was trashed%s against a wall";
+	how = "was trashed";
+	where = " against a wall";
 	hudmsg = "[Wall]";
 	sound_play_sensors(pl->pos, PLAYER_HIT_WALL_SOUND);
 	break;
 
     case CrashTarget:
-	howfmt = "%s smashed%s against a target";
+	how = "smashed";
+	where = " against a target";
 	hudmsg = "[Target]";
 	sound_play_sensors(pl->pos, PLAYER_HIT_WALL_SOUND);
 	Object_hits_target(OBJ_PTR(pl), Target_by_index(mapobj_ind), -1.0);
 	break;
 
     case CrashTreasure:
-	howfmt = "%s smashed%s against a treasure";
+	how = "smashed";
+	where = " against a treasure";
 	hudmsg = "[Treasure]";
 	sound_play_sensors(pl->pos, PLAYER_HIT_WALL_SOUND);
 	break;
@@ -269,7 +275,8 @@ void Player_crash(player_t *pl, int crashtype, int mapobj_ind, int pt)
 	    cannon_t *cannon = Cannon_by_index(mapobj_ind);
 
 	    if (!Player_uses_emergency_shield(pl)) {
-		howfmt = "%s smashed%s against a cannon";
+		how = "smashed";
+		where = " against a cannon";
 		hudmsg = "[Cannon]";
 		sound_play_sensors(pl->pos, PLAYER_HIT_CANNON_SOUND);
 	    }
@@ -284,19 +291,21 @@ void Player_crash(player_t *pl, int crashtype, int mapobj_ind, int pt)
 	break;
 
     case CrashUniverse:
-	howfmt = "%s left the known universe%s";
+	how = "left the known universe";
+	where = "";
 	hudmsg = "[Universe]";
 	sound_play_sensors(pl->pos, PLAYER_HIT_WALL_SOUND);
 	break;
 
     case CrashUnknown:
-	howfmt = "%s slammed%s into a programming error";
+	how = "slammed";
+	where = " into a programming error";
 	hudmsg = "[Bug]";
 	sound_play_sensors(pl->pos, PLAYER_HIT_WALL_SOUND);
 	break;
     }
 
-    if (howfmt && hudmsg) {
+    if (how && hudmsg) {
 	player_t	*pushers[MAX_RECORDED_SHOVES];
 	int		cnt[MAX_RECORDED_SHOVES];
 	int		num_pushers = 0;
@@ -305,7 +314,9 @@ void Player_crash(player_t *pl, int crashtype, int mapobj_ind, int pt)
 	int		i, j;
 
 	Player_set_state(pl, PL_STATE_KILLED);
-	sprintf(msg, howfmt, pl->name, (!pt) ? " head first" : "");
+	/* "<name> crashed[ head first] against a wall" */
+	snprintf(msg, sizeof(msg), "%s %s%s%s", pl->name, how,
+		 (!pt) ? " head first" : "", where);
 
 	/* get a list of who pushed me */
 	for (i = 0; i < MAX_RECORDED_SHOVES; i++) {

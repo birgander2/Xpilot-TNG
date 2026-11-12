@@ -290,6 +290,7 @@ if(BUILD_SERVER)
         src/server/shot.c
         src/server/showtime.c
         src/server/smartbot.c
+        src/server/botcore.c
         src/server/ballbot.c
         src/server/racebot.c
         src/server/fightbot.c

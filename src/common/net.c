@@ -352,7 +352,6 @@ int Sockbuf_copy(sockbuf_t *dest, sockbuf_t *src, int len)
 int Packet_printf(sockbuf_t *sbuf, const char *fmt, ...)
 {
 #define PRINTF_FMT	1
-#define PRINTF_IO	2
 #define PRINTF_SIZE	3
 
     int			i,

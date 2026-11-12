@@ -108,7 +108,6 @@ bool NameUsable(const std::string& name, std::string* why);
 void FlipFrontBack(ShipShape& s);   // x -> -x
 void FlipLeftRight(ShipShape& s);   // y -> -y, left and right parts swapped
 void Rotate90(ShipShape& s, bool ccw);
-void Shift(ShipShape& s, int dx, int dy);
 bool MakeSymmetric(ShipShape& s, bool keep_left);   // mirror one half of the hull
 
 } // namespace ss

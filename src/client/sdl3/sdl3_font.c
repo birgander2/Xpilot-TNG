@@ -99,9 +99,9 @@ static int Init_Fallback_Bitmap_Font(void)
         const unsigned char *glyph = &gfxPrimitivesFontdata[c * 8];
 
         for (int y = 0; y < 8; y++) {
-            unsigned char byte = glyph[y];
+            unsigned char bits = glyph[y];
             for (int x = 0; x < 8; x++) {
-                if ((byte >> (7 - x)) & 1) {
+                if ((bits >> (7 - x)) & 1) {
                     pixels[(cell_y + y) * pitch_pixels + (cell_x + x)] = 0xFFFFFFFF;
                 }
             }

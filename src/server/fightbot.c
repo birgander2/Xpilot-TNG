@@ -58,6 +58,7 @@
  */
 
 #include "xpserver.h"
+#include "botcore.h"
 #include <sys/stat.h>
 
 #define FB_TYPE_NAME		"fight"
@@ -83,7 +84,7 @@
 #define FB_SHOT_COST		4e4	/* a hit by a seen shot */
 #define FB_VSHOT_COST		1.5e3	/* a hit by a virtual shot */
 /*
- * Skill below level 100 (see Fb_unskill(): 0 at level 100, 1 at level 1).
+ * Skill below level 100 (see Bot_unskill(): 0 at level 100, 1 at level 1).
  */
 #define FB_DELAY_MAX		3.5	/* reaction delay at level 1 (ticks) */
 #define FB_PLAN_NOISE		500.0	/* noise on plan costs at level 1 */
@@ -330,8 +331,6 @@ static const poly_t	*FbPdata;
 static int		FbNumPolys = -1;
 static int		FbMapW = -1, FbMapH = -1;
 static bool		FbMapOk;
-static bool		FbWrap;
-static double		FbW, FbH;
 static int		FineW, FineH;
 static double		FineCX, FineCY, FineStep;
 static float		*ShipClear;
@@ -341,9 +340,7 @@ static float		*NavRX, *NavRY, *NavClear;
 static uint8_t		*NavEdge;
 static float		*NavCost;
 
-typedef struct { float f; int32_t c; } fb_heap_t;
-static fb_heap_t	*Heap;
-static int		HeapN, HeapCap;
+static bot_heap_t	Heap;
 
 /* wormholes: nav cell, can be entered, can be an exit */
 #define FB_MAX_WORM	64
@@ -412,70 +409,18 @@ static inline bool Fb_id_ok(int id)
     return id >= 0 && id < NUM_IDS;
 }
 
-static inline double Fb_px(click_t c)
-{
-    return (double)c / CLICK;
-}
-
-static inline double Fb_wdx(double dx)
-{
-    if (FbWrap) {
-	if (dx > FbW * 0.5)
-	    dx -= FbW;
-	else if (dx < -FbW * 0.5)
-	    dx += FbW;
-    }
-    return dx;
-}
-
-static inline double Fb_wdy(double dy)
-{
-    if (FbWrap) {
-	if (dy > FbH * 0.5)
-	    dy -= FbH;
-	else if (dy < -FbH * 0.5)
-	    dy += FbH;
-    }
-    return dy;
-}
-
 /* Absolute position back into the map. */
 static inline void Fb_wrap_pos(double *x, double *y)
 {
-    if (FbWrap) {
-	while (*x < 0) *x += FbW;
-	while (*x >= FbW) *x -= FbW;
-	while (*y < 0) *y += FbH;
-	while (*y >= FbH) *y -= FbH;
+    if (BotWrap) {
+	while (*x < 0) *x += BotW;
+	while (*x >= BotW) *x -= BotW;
+	while (*y < 0) *y += BotH;
+	while (*y >= BotH) *y -= BotH;
     } else {
-	LIMIT(*x, 0.0, FbW - 1.0);
-	LIMIT(*y, 0.0, FbH - 1.0);
+	LIMIT(*x, 0.0, BotW - 1.0);
+	LIMIT(*y, 0.0, BotH - 1.0);
     }
-}
-
-static inline double Fb_dist(double x1, double y1, double x2, double y2)
-{
-    return LENGTH(Fb_wdx(x2 - x1), Fb_wdy(y2 - y1));
-}
-
-static inline int Fb_angle_diff(int a, int b)
-{
-    int d = MOD2(a - b, RES);
-
-    return d > RES / 2 ? d - RES : d;
-}
-
-static inline int Fb_dir_of(double x, double y)
-{
-    return MOD2((int)(findDir(x, y) + 0.5), RES);
-}
-
-static inline int Fb_turn_toward(int dir, int want, int rate)
-{
-    int d = Fb_angle_diff(want, dir);
-
-    LIMIT(d, -rate, rate);
-    return MOD2(dir + d, RES);
 }
 
 static int Fb_level(const fb_data_t *d)
@@ -486,29 +431,9 @@ static int Fb_level(const fb_data_t *d)
     return lvl;
 }
 
-/*
- * How far below level 100: 0 at level 100, 1 at level 1.  Rising faster
- * than linear from level 100 down, so middle levels feel it too.
- */
-static double Fb_unskill(int level)
-{
-    return pow((100 - level) / 99.0, 0.7);
-}
-
-static int Fb_turn_rate(int level)
-{
-    return 3 + (level * 9) / 100;	/* same as the other smart robots */
-}
-
 static int Fb_delay(int level)
 {
-    return (int)(Fb_unskill(level) * FB_DELAY_MAX + 0.5);
-}
-
-static bool Fb_player_active(player_t *pl)
-{
-    return pl != NULL && !Player_is_tank(pl) && Player_is_alive(pl)
-	&& !Player_is_paused(pl) && !Player_is_waiting(pl);
+    return (int)(Bot_unskill(level) * FB_DELAY_MAX + 0.5);
 }
 
 static double Fb_gauss(void)
@@ -544,11 +469,11 @@ static inline int Fb_fine_index(double x, double y)
 {
     int ix, iy;
 
-    if (FbWrap) {
-	while (x < 0) x += FbW;
-	while (x >= FbW) x -= FbW;
-	while (y < 0) y += FbH;
-	while (y >= FbH) y -= FbH;
+    if (BotWrap) {
+	while (x < 0) x += BotW;
+	while (x >= BotW) x -= BotW;
+	while (y < 0) y += BotH;
+	while (y >= BotH) y -= BotH;
     }
     ix = (int)(x / FineCX);
     iy = (int)(y / FineCY);
@@ -567,7 +492,7 @@ static inline float Fb_ship_clear(double x, double y)
 /* Minimum clearance along a segment (absolute px), stops below 'need'. */
 static double Fb_segment_clear(double x1, double y1, double x2, double y2, double need)
 {
-    double dx = Fb_wdx(x2 - x1), dy = Fb_wdy(y2 - y1);
+    double dx = Bot_wdx(x2 - x1), dy = Bot_wdy(y2 - y1);
     double len = LENGTH(dx, dy), m = 1e9;
     int i, n = (int)(len / FineStep) + 1;
 
@@ -590,36 +515,6 @@ static inline bool Fb_line_free(double x1, double y1, double x2, double y2)
     return Fb_segment_clear(x1, y1, x2, y2, 1.0) >= 1.0;
 }
 
-/* 1-D squared distance transform (Felzenszwalb & Huttenlocher). */
-static void Fb_dt1d(const double *f, double *d, int n, int *v, double *z)
-{
-    int q, k = 0;
-
-    v[0] = 0;
-    z[0] = -1e30;
-    z[1] = 1e30;
-    for (q = 1; q < n; q++) {
-	double s = ((f[q] + (double)q * q) - (f[v[k]] + (double)v[k] * v[k]))
-		   / (2.0 * q - 2.0 * v[k]);
-
-	while (s <= z[k]) {
-	    k--;
-	    s = ((f[q] + (double)q * q) - (f[v[k]] + (double)v[k] * v[k]))
-		/ (2.0 * q - 2.0 * v[k]);
-	}
-	k++;
-	v[k] = q;
-	z[k] = s;
-	z[k + 1] = 1e30;
-    }
-    k = 0;
-    for (q = 0; q < n; q++) {
-	while (z[k + 1] < q)
-	    k++;
-	d[q] = (double)(q - v[k]) * (q - v[k]) + f[v[k]];
-    }
-}
-
 /* Exact Euclidean clearance (px) of every fine cell to the nearest obstacle. */
 static bool Fb_edt(const uint8_t *obst, float *out)
 {
@@ -637,7 +532,7 @@ static bool Fb_edt(const uint8_t *obst, float *out)
 	return false;
     }
     for (x = 0; x < FineW; x++) {
-	if (FbWrap) {
+	if (BotWrap) {
 	    n = 3 * FineH;
 	    off = FineH;
 	    for (i = 0; i < n; i++)
@@ -649,12 +544,12 @@ static bool Fb_edt(const uint8_t *obst, float *out)
 	    for (i = 0; i < FineH; i++)
 		f[i + 1] = obst[i * FineW + x] ? 0.0 : big;
 	}
-	Fb_dt1d(f, d, n, v, z);
+	Bot_dt1d(f, d, n, v, z);
 	for (y = 0; y < FineH; y++)
 	    tmp[y * FineW + x] = d[y + off];
     }
     for (y = 0; y < FineH; y++) {
-	if (FbWrap) {
+	if (BotWrap) {
 	    n = 3 * FineW;
 	    off = FineW;
 	    for (i = 0; i < n; i++)
@@ -666,7 +561,7 @@ static bool Fb_edt(const uint8_t *obst, float *out)
 	    for (i = 0; i < FineW; i++)
 		f[i + 1] = tmp[y * FineW + i];
 	}
-	Fb_dt1d(f, d, n, v, z);
+	Bot_dt1d(f, d, n, v, z);
 	for (x = 0; x < FineW; x++) {
 	    double c = sqrt(MIN(d[x + off], 1e8)) * cell - 0.5 * cell;
 
@@ -685,11 +580,11 @@ static inline int Fb_nav_cell(double x, double y)
 {
     int ix, iy;
 
-    if (FbWrap) {
-	while (x < 0) x += FbW;
-	while (x >= FbW) x -= FbW;
-	while (y < 0) y += FbH;
-	while (y >= FbH) y -= FbH;
+    if (BotWrap) {
+	while (x < 0) x += BotW;
+	while (x >= BotW) x -= BotW;
+	while (y < 0) y += BotH;
+	while (y >= BotH) y -= BotH;
     }
     ix = (int)(x / NavCX);
     iy = (int)(y / NavCY);
@@ -702,7 +597,7 @@ static inline int Fb_nav_nb(int c, int dx, int dy)
 {
     int x = c % NavW + dx, y = c / NavW + dy;
 
-    if (FbWrap) {
+    if (BotWrap) {
 	x = (x + NavW) % NavW;
 	y = (y + NavH) % NavH;
     } else if (x < 0 || x >= NavW || y < 0 || y >= NavH)
@@ -715,52 +610,11 @@ static int Fb_cell_dist(int a, int b)
 {
     int dx = ABS(a % NavW - b % NavW), dy = ABS(a / NavW - b / NavW);
 
-    if (FbWrap) {
+    if (BotWrap) {
 	dx = MIN(dx, NavW - dx);
 	dy = MIN(dy, NavH - dy);
     }
     return MAX(dx, dy);
-}
-
-static void Fb_heap_push(float f, int32_t c)
-{
-    int i;
-
-    if (HeapN >= HeapCap)
-	return;
-    i = HeapN++;
-    while (i > 0) {
-	int parent = (i - 1) / 2;
-
-	if (Heap[parent].f <= f)
-	    break;
-	Heap[i] = Heap[parent];
-	i = parent;
-    }
-    Heap[i].f = f;
-    Heap[i].c = c;
-}
-
-static fb_heap_t Fb_heap_pop(void)
-{
-    fb_heap_t top = Heap[0], last = Heap[--HeapN];
-    int i = 0;
-
-    while (HeapN > 0) {
-	int child = 2 * i + 1;
-
-	if (child >= HeapN)
-	    break;
-	if (child + 1 < HeapN && Heap[child + 1].f < Heap[child].f)
-	    child++;
-	if (Heap[child].f >= last.f)
-	    break;
-	Heap[i] = Heap[child];
-	i = child;
-    }
-    if (HeapN > 0)
-	Heap[i] = last;
-    return top;
 }
 
 static void Fb_field_free(fb_field_t *fd)
@@ -776,14 +630,13 @@ static void Fb_map_free(void)
 {
     int i;
 
-    free(ShipClear); free(NavRX); free(NavRY); free(NavClear); free(Heap);
+    free(ShipClear); free(NavRX); free(NavRY); free(NavClear);
     free(NavEdge); free(NavCost);
     ShipClear = NULL;
     NavRX = NavRY = NavClear = NULL;
     NavEdge = NULL;
     NavCost = NULL;
-    Heap = NULL;
-    HeapCap = HeapN = 0;
+    Bot_heap_free(&Heap);
     for (i = 0; i < FB_NFIELDS; i++)
 	Fb_field_free(&Fields[i]);
     if (StationF) {
@@ -806,8 +659,8 @@ static float RelaxLimit = FB_INF;
 
 static void Fb_relax(fb_field_t *fd)
 {
-    while (HeapN > 0) {
-	fb_heap_t e = Fb_heap_pop();
+    while (Heap.n > 0) {
+	bot_heapent_t e = Bot_heap_pop(&Heap);
 	int j;
 
 	if (e.f > fd->dist[e.c])
@@ -827,7 +680,7 @@ static void Fb_relax(fb_field_t *fd)
 	    if (nd < fd->dist[n]) {
 		fd->dist[n] = nd;
 		fd->next[n] = e.c;
-		Fb_heap_push(nd, n);
+		Bot_heap_push(&Heap, nd, n);
 	    }
 	}
     }
@@ -857,7 +710,7 @@ static bool Fb_field_compute_for(fb_field_t *fd, double gx, double gy, double sx
 	fd->dist[c] = FB_INF;
 	fd->next[c] = -1;
     }
-    HeapN = 0;
+    Heap.n = 0;
     /* the open nodes nearest to the goal */
     for (r = 0; r <= 6 && seeded == 0; r++) {
 	int dx, dy;
@@ -869,13 +722,13 @@ static bool Fb_field_compute_for(fb_field_t *fd, double gx, double gy, double sx
 
 		if (n < 0 || NavClear[n] < FB_PASS_R)
 		    continue;
-		dd = Fb_dist(gx, gy, NavRX[n], NavRY[n]);
+		dd = Bot_dist(gx, gy, NavRX[n], NavRY[n]);
 		if (dd > (r + 0.75) * MAX(NavCX, NavCY))
 		    continue;
 		if (dd < fd->dist[n]) {
 		    fd->dist[n] = (float)dd;
 		    fd->next[n] = -2;
-		    Fb_heap_push((float)dd, n);
+		    Bot_heap_push(&Heap, (float)dd, n);
 		    seeded++;
 		}
 	    }
@@ -911,7 +764,7 @@ static bool Fb_field_compute_for(fb_field_t *fd, double gx, double gy, double sx
 	    if (v < fd->dist[WormCell[w]]) {
 		fd->dist[WormCell[w]] = v;
 		fd->next[WormCell[w]] = -3;	/* into the wormhole */
-		Fb_heap_push(v, WormCell[w]);
+		Bot_heap_push(&Heap, v, WormCell[w]);
 		changed = true;
 	    }
 	}
@@ -921,7 +774,7 @@ static bool Fb_field_compute_for(fb_field_t *fd, double gx, double gy, double sx
     }
     RelaxStop = -1;
     RelaxLimit = FB_INF;
-    HeapN = 0;
+    Heap.n = 0;
     fd->gx = gx;
     fd->gy = gy;
     fd->goal = gcell;
@@ -948,7 +801,7 @@ static int Fb_field_best_cell(const fb_field_t *fd, double x, double y, double *
 
 	    if (n < 0 || fd->dist[n] >= FB_INF)
 		continue;
-	    v = fd->dist[n] + Fb_dist(x, y, NavRX[n], NavRY[n]);
+	    v = fd->dist[n] + Bot_dist(x, y, NavRX[n], NavRY[n]);
 	    if (v < bv) {
 		bv = v;
 		best = n;
@@ -966,7 +819,7 @@ static double Fb_field_value(const fb_field_t *fd, double x, double y)
     double v;
 
     if (Fb_field_best_cell(fd, x, y, &v) < 0)
-	return 1e5 + Fb_dist(x, y, fd->gx, fd->gy) * 3.0;
+	return 1e5 + Bot_dist(x, y, fd->gx, fd->gy) * 3.0;
     return v;
 }
 
@@ -1026,15 +879,13 @@ static bool Fb_map_build(void)
 
     while (blocks / ((long)nb * nb) > 90000)
 	nb++;
-    FbWrap = BIT(world->rules->mode, WRAP_PLAY) ? true : false;
-    FbW = (double)world->cwidth / CLICK;
-    FbH = (double)world->cheight / CLICK;
+    Bot_geo_init();
     NavF = 5;
-    NavW = MAX(1, (int)(FbW / (BLOCK_SZ * nb) + 0.5));
-    NavH = MAX(1, (int)(FbH / (BLOCK_SZ * nb) + 0.5));
+    NavW = MAX(1, (int)(BotW / (BLOCK_SZ * nb) + 0.5));
+    NavH = MAX(1, (int)(BotH / (BLOCK_SZ * nb) + 0.5));
     NavN = NavW * NavH;
-    NavCX = FbW / NavW;
-    NavCY = FbH / NavH;
+    NavCX = BotW / NavW;
+    NavCY = BotH / NavH;
     FineW = NavW * NavF;
     FineH = NavH * NavF;
     FineCX = NavCX / NavF;
@@ -1046,13 +897,12 @@ static bool Fb_map_build(void)
     NavRX = malloc(sizeof(float) * NavN);
     NavRY = malloc(sizeof(float) * NavN);
     NavClear = malloc(sizeof(float) * NavN);
-    HeapCap = NavN * 8 + 64;
-    Heap = malloc(sizeof(fb_heap_t) * HeapCap);
+    Bot_heap_alloc(&Heap, NavN * 8 + 64);
     NavEdge = calloc(NavN, 1);
     NavCost = malloc(sizeof(float) * NavN * 8);
     NumStationF = Num_fuels();
     StationF = calloc(MAX(NumStationF, 1), sizeof(fb_field_t));
-    if (!ShipClear || !obs || !NavRX || !NavRY || !NavClear || !Heap
+    if (!ShipClear || !obs || !NavRX || !NavRY || !NavClear || !Heap.e
 	|| !NavEdge || !NavCost || !StationF) {
 	free(obs);
 	Fb_map_free();
@@ -1081,13 +931,13 @@ static bool Fb_map_build(void)
 	const poly_t *p = &pdata[i];
 	group_t *gp = groupptr_by_id(p->group);
 	const int *e = edgeptr + p->edges;
-	double ex = Fb_px(p->pos.cx), ey = Fb_px(p->pos.cy);
+	double ex = Bot_px(p->pos.cx), ey = Bot_px(p->pos.cy);
 
 	if (p->is_decor || (gp != NULL && ((gp->hitmask & NONBALL_BIT)
 					   || gp->type == FRICTION || gp->type == WORMHOLE)))
 	    continue;
 	for (j = 0; j < p->num_points; j++) {
-	    double dx = Fb_px(e[2 * j]), dy = Fb_px(e[2 * j + 1]);
+	    double dx = Bot_px(e[2 * j]), dy = Bot_px(e[2 * j + 1]);
 	    int k, n = (int)(LENGTH(dx, dy) / (0.5 * FineStep)) + 1;
 
 	    for (k = 0; k <= n; k++) {
@@ -1145,7 +995,7 @@ static bool Fb_map_build(void)
 	    m = Fb_segment_clear(NavRX[c], NavRY[c], NavRX[n], NavRY[n], FB_EDGE_R);
 	    if (m < FB_EDGE_R)
 		continue;
-	    len = Fb_dist(NavRX[c], NavRY[c], NavRX[n], NavRY[n]);
+	    len = Bot_dist(NavRX[c], NavRY[c], NavRX[n], NavRY[n]);
 	    pen = MAX(0.0, (FB_PREF_R - m) / FB_PREF_R);
 	    NavEdge[c] |= (uint8_t)(1 << j);
 	    NavCost[c * 8 + j] = (float)(len * (1.0 + FB_PREF_W * pen * pen
@@ -1156,8 +1006,8 @@ static bool Fb_map_build(void)
     for (i = 0; i < NumWorm; i++) {
 	wormhole_t *w = Wormhole_by_index(i);
 
-	WormX[i] = Fb_px(w->pos.cx);
-	WormY[i] = Fb_px(w->pos.cy);
+	WormX[i] = Bot_px(w->pos.cx);
+	WormY[i] = Bot_px(w->pos.cy);
 	WormCell[i] = Fb_nav_cell(WormX[i], WormY[i]);
 	WormIn[i] = w->type == WORM_NORMAL || w->type == WORM_IN;
 	WormOut[i] = w->type == WORM_NORMAL || w->type == WORM_OUT;
@@ -1167,7 +1017,7 @@ static bool Fb_map_build(void)
     for (i = 0; i < NumStationF; i++) {
 	fuel_t *f = Fuel_by_index(i);
 
-	Fb_field_compute(&StationF[i], Fb_px(f->pos.cx), Fb_px(f->pos.cy));
+	Fb_field_compute(&StationF[i], Bot_px(f->pos.cx), Bot_px(f->pos.cy));
     }
     FB_LOG("[fightbot] map analysed: fine %dx%d (%.1f px), nav %dx%d\n",
 	   FineW, FineH, FineCX, NavW, NavH);
@@ -1256,7 +1106,7 @@ static const fb_field_t *Fb_station_field(int fs)
 	    return NULL;
 	FieldBudget--;
 	f = Fuel_by_index(fs);
-	if (!Fb_field_compute(&StationF[fs], Fb_px(f->pos.cx), Fb_px(f->pos.cy)))
+	if (!Fb_field_compute(&StationF[fs], Bot_px(f->pos.cx), Bot_px(f->pos.cy)))
 	    return NULL;
     }
     return &StationF[fs];
@@ -1265,38 +1115,6 @@ static const fb_field_t *Fb_station_field(int fs)
 /* ------------------------------------------------------------------------
  * Learning: genes per map, kept in a small text file
  * ------------------------------------------------------------------------ */
-
-static const char *Fb_learn_path(bool mkdirs)
-{
-    static char path[PATH_MAX];
-    const char *base = Conf_user_data_dir();
-    char name[MAX_CHARS], *p;
-    int i, n = 0;
-
-    for (i = 0; Learn.map[i] != '\0' && n < (int)sizeof(name) - 1; i++) {
-	char ch = Learn.map[i];
-
-	if (isalnum((unsigned char)ch) || ch == '-' || ch == '_')
-	    name[n++] = (char)tolower((unsigned char)ch);
-	else if (n > 0 && name[n - 1] != '_')
-	    name[n++] = '_';
-    }
-    name[n] = '\0';
-    if (n == 0)
-	strlcpy(name, "unnamed", sizeof(name));
-
-    if (base == NULL)
-	return NULL;
-    snprintf(path, sizeof(path), "%s/" FB_LEARN_SUBDIR "/%s.txt", base, name);
-    if (mkdirs) {
-	for (p = path + 1; (p = strchr(p, '/')) != NULL; p++) {
-	    *p = '\0';
-	    mkdir(path, 0755);
-	    *p = '/';
-	}
-    }
-    return path;
-}
 
 static void Fb_learn_reset(void)
 {
@@ -1320,7 +1138,7 @@ static void Fb_learn_save(void)
 
     if (!Learn.loaded)
 	return;
-    path = Fb_learn_path(true);
+    path = Bot_learn_path(Learn.map, FB_LEARN_SUBDIR, true);
     if (path == NULL)
 	return;
     /* write a temporary file and rename it, a crash never leaves half a file */
@@ -1359,7 +1177,7 @@ static void Fb_learn_load(void)
     Fb_learn_reset();
     Learn.loaded = true;
 
-    path = Fb_learn_path(false);
+    path = Bot_learn_path(Learn.map, FB_LEARN_SUBDIR, false);
     if (path == NULL || (fp = fopen(path, "r")) == NULL)
 	return;
     if (fgets(line, sizeof(line), fp) != NULL) {
@@ -1458,11 +1276,11 @@ static void Fb_record_history(void)
 	player_t *pl = Player_by_index(i);
 	fb_snap_t *s;
 
-	if (!Fb_id_ok(pl->id) || !Fb_player_active(pl))
+	if (!Fb_id_ok(pl->id) || !Bot_player_active(pl))
 	    continue;
 	s = &Hist[HistHead][pl->id];
-	s->x = Fb_px(pl->pos.cx);
-	s->y = Fb_px(pl->pos.cy);
+	s->x = Bot_px(pl->pos.cx);
+	s->y = Bot_px(pl->pos.cy);
 	s->vx = pl->vel.x;
 	s->vy = pl->vel.y;
 	s->dir = pl->dir;
@@ -1577,7 +1395,7 @@ static void Fb_update_opponents(void)
 	fb_opp_t *o;
 	double T = FB_PRED_T;
 
-	if (!Fb_id_ok(e->id) || !Fb_player_active(e))
+	if (!Fb_id_ok(e->id) || !Bot_player_active(e))
 	    continue;
 	s = &Hist[HistHead][e->id];
 	if (!s->valid || FbTick - SeenTick[e->id] > 1)
@@ -1595,8 +1413,8 @@ static void Fb_update_opponents(void)
 	o->pv_time = FbTick;
 	if (o->pred_time[slot] == FbTick - FB_PRED_T && o->pred_time[slot] > 0) {
 	    for (k = 0; k < FB_NMODELS; k++) {
-		double ex = Fb_wdx(s->x - o->pred[slot][k][0]);
-		double ey = Fb_wdy(s->y - o->pred[slot][k][1]);
+		double ex = Bot_wdx(s->x - o->pred[slot][k][0]);
+		double ey = Bot_wdy(s->y - o->pred[slot][k][1]);
 		double e2 = MIN(ex * ex + ey * ey, 1e5);
 
 		o->err[k] = 0.97 * o->err[k] + 0.03 * e2;
@@ -1616,8 +1434,8 @@ static void Fb_update_opponents(void)
 
 static void Fb_perceive(player_t *pl, fb_data_t *d, int level)
 {
-    double ox = Fb_px(pl->pos.cx), oy = Fb_px(pl->pos.cy);
-    double rcw = FbW / 256.0, rch = FbH / 256.0;	/* radar resolution */
+    double ox = Bot_px(pl->pos.cx), oy = Bot_px(pl->pos.cy);
+    double rcw = BotW / 256.0, rch = BotH / 256.0;	/* radar resolution */
     bool blind = pl->damaged > 0;
     bool lv = BIT(world->rules->mode, LIMITED_VISIBILITY) ? true : false;
     int i, delay = Fb_delay(level);
@@ -1632,7 +1450,7 @@ static void Fb_perceive(player_t *pl, fb_data_t *d, int level)
 	if (e == pl || !Fb_id_ok(e->id))
 	    continue;
 	c = &d->c[e->id];
-	if (Fb_ally(pl, e) || !Fb_player_active(e)) {
+	if (Fb_ally(pl, e) || !Bot_player_active(e)) {
 	    c->known = c->seen = c->radar = false;
 	    continue;
 	}
@@ -1643,8 +1461,8 @@ static void Fb_perceive(player_t *pl, fb_data_t *d, int level)
 		c->known = false;
 	    continue;
 	}
-	dx = Fb_wdx(s->x - ox);
-	dy = Fb_wdy(s->y - oy);
+	dx = Bot_wdx(s->x - ox);
+	dy = Bot_wdy(s->y - oy);
 	dist = LENGTH(dx, dy);
 	cansee = pl->visibility[i].canSee;
 	sensor_ok = !lv || dist <= pl->sensor_range;
@@ -1675,8 +1493,8 @@ static void Fb_perceive(player_t *pl, fb_data_t *d, int level)
 		&& FbTick - c->radar_time <= 3) {
 		double n = (double)(FbTick - c->radar_time);
 
-		c->vx = 0.75 * c->vx + 0.25 * Fb_wdx(qx - c->qx) / n;
-		c->vy = 0.75 * c->vy + 0.25 * Fb_wdy(qy - c->qy) / n;
+		c->vx = 0.75 * c->vx + 0.25 * Bot_wdx(qx - c->qx) / n;
+		c->vy = 0.75 * c->vy + 0.25 * Bot_wdy(qy - c->qy) / n;
 	    } else if (!c->known) {
 		c->vx = c->vy = 0.0;
 	    }
@@ -1752,7 +1570,7 @@ static bool Fb_object_hostile(player_t *pl, object_t *o)
  */
 static void Fb_scan_objects(player_t *pl, fb_data_t *d, int level, fb_ctx_t *cx)
 {
-    double ox = cx->ox, oy = cx->oy, u = Fb_unskill(level);
+    double ox = cx->ox, oy = cx->oy, u = Bot_unskill(level);
     int i, delay = Fb_delay(level), near_miss = 0;
     unsigned overlook = (unsigned)(FB_OVERLOOK * u * 1000.0);
     static int fired[NUM_IDS];
@@ -1769,8 +1587,8 @@ static void Fb_scan_objects(player_t *pl, fb_data_t *d, int level, fb_ctx_t *cx)
 
 	if (!Fb_object_hostile(pl, o))
 	    continue;
-	rx = Fb_wdx(Fb_px(o->pos.cx) - ox);
-	ry = Fb_wdy(Fb_px(o->pos.cy) - oy);
+	rx = Bot_wdx(Bot_px(o->pos.cx) - ox);
+	ry = Bot_wdy(Bot_px(o->pos.cy) - oy);
 	if (!Fb_in_view(rx, ry))
 	    continue;
 	if (o->type == OBJ_SHOT)
@@ -1785,8 +1603,9 @@ static void Fb_scan_objects(player_t *pl, fb_data_t *d, int level, fb_ctx_t *cx)
 	}
 	if (age < delay)
 	    continue;	/* not noticed yet */
+	/* the same shots each tick: hashed by pool slot, reproducible runs */
 	if (overlook > 0
-	    && ((((uintptr_t)o >> 4) * 2654435761u) >> 7) % 1000 < overlook)
+	    && (((unsigned)Object_slot(o) * 2654435761u) >> 16) % 1000 < overlook)
 	    continue;
 	rx -= o->vel.x * delay;
 	ry -= o->vel.y * delay;
@@ -1861,26 +1680,6 @@ static void Fb_scan_objects(player_t *pl, fb_data_t *d, int level, fb_ctx_t *cx)
 /* ------------------------------------------------------------------------
  * Physics model (as the race bot)
  * ------------------------------------------------------------------------ */
-
-static double Fb_ship_radius(player_t *pl)
-{
-    double r = SHIP_SZ;
-    int i;
-
-    if (pl->ship == NULL)
-	return r + 1.0;
-    for (i = 0; i < pl->ship->num_points; i++) {
-	clpos_t pt = pl->ship->pts[i][0];
-
-	r = MAX(r, LENGTH(pt.cx, pt.cy) / CLICK);
-    }
-    return r + 1.0;
-}
-
-static double Fb_power(int level)
-{
-    return MAX_PLAYER_POWER * (1.0 - FB_POWER_LOSS * Fb_unskill(level));
-}
 
 static double Fb_thrust_acc(player_t *pl)
 {
@@ -1961,7 +1760,7 @@ static inline void Fb_gravity(double x, double y, double *gx, double *gy)
 {
     int bx = (int)(x / BLOCK_SZ), by = (int)(y / BLOCK_SZ);
 
-    if (FbWrap) {
+    if (BotWrap) {
 	bx = (bx % world->x + world->x) % world->x;
 	by = (by % world->y + world->y) % world->y;
     }
@@ -2069,52 +1868,6 @@ static double Fb_ray_free(const fb_ctx_t *cx, double x, double y,
     return max;
 }
 
-static inline double Fb_cpa2(double ax0, double ay0, double ax1, double ay1,
-			     double bx0, double by0, double bx1, double by1)
-{
-    double rx = bx0 - ax0, ry = by0 - ay0;
-    double wx = (bx1 - bx0) - (ax1 - ax0), wy = (by1 - by0) - (ay1 - ay0);
-    double ww = wx * wx + wy * wy, t = 0.0;
-
-    if (ww > 1e-9) {
-	t = -(rx * wx + ry * wy) / ww;
-	LIMIT(t, 0.0, 1.0);
-    }
-    rx += wx * t;
-    ry += wy * t;
-    return rx * rx + ry * ry;
-}
-
-/*
- * Lead direction for a shot of speed s at a target at (rx, ry) moving at
- * (wvx, wvy) relative to us (the shot inherits our velocity).
- */
-static bool Fb_lead(double rx, double ry, double wvx, double wvy, double s,
-		    double *dir, double *tof)
-{
-    double a = wvx * wvx + wvy * wvy - s * s;
-    double b = 2.0 * (rx * wvx + ry * wvy);
-    double c = rx * rx + ry * ry, t;
-
-    if (ABS(a) < 1e-6)
-	t = b < 0.0 ? -c / b : -1.0;
-    else {
-	double disc = b * b - 4.0 * a * c, t1, t2;
-
-	if (disc < 0.0)
-	    return false;
-	disc = sqrt(disc);
-	t1 = (-b - disc) / (2.0 * a);
-	t2 = (-b + disc) / (2.0 * a);
-	t = (t1 > 0.0 && (t1 < t2 || t2 <= 0.0)) ? t1 : t2;
-    }
-    if (t <= 0.0)
-	return false;
-    *dir = findDir(rx + wvx * t, ry + wvy * t);
-    *tof = t;
-    return true;
-}
-
 /* Target position relative to us at time t, its acceleration lasting 8 ticks. */
 static inline void Fb_target_at(double rx, double ry, double wvx, double wvy,
 				double ax, double ay, double t, double *x, double *y)
@@ -2200,14 +1953,14 @@ static void Fb_policy(const fb_ctx_t *cx, const fb_state_t *s, double trx, doubl
 	ay = vdy - s->vy;
 	amag = LENGTH(ax, ay);
 	if (amag > 4.0 * cx->acc) {
-	    *want = Fb_dir_of(ax, ay);
-	    *thrust = ABS(Fb_angle_diff(*want, s->dir)) <= 10;
+	    *want = Bot_dir_of(ax, ay);
+	    *thrust = ABS(Bot_angle_diff(*want, s->dir)) <= 10;
 	    return;
 	}
-	if (Fb_lead(rx, ry, cx->tvx - s->vx, cx->tvy - s->vy, cx->shot_speed, &ldir, &tof))
+	if (Bot_lead(rx, ry, cx->tvx - s->vx, cx->tvy - s->vy, cx->shot_speed, &ldir, &tof))
 	    *want = MOD2((int)(ldir + 0.5), RES);
 	else
-	    *want = Fb_dir_of(rx, ry);
+	    *want = Bot_dir_of(rx, ry);
 	*thrust = false;
 	return;
     }
@@ -2232,8 +1985,8 @@ static void Fb_policy(const fb_ctx_t *cx, const fb_state_t *s, double trx, doubl
 	    *thrust = false;
 	    return;
 	}
-	*want = Fb_dir_of(ax, ay);
-	*thrust = ABS(Fb_angle_diff(*want, s->dir)) <= 10;
+	*want = Bot_dir_of(ax, ay);
+	*thrust = ABS(Bot_angle_diff(*want, s->dir)) <= 10;
 	return;
     }
     *want = s->dir;
@@ -2264,9 +2017,10 @@ static double Fb_rollout(const fb_ctx_t *cx, const fb_cand_t *cand, fb_cand_t *r
 	    thr = cand->thr[t];
 	} else
 	    Fb_policy(cx, &s, trx, try_, &want, &thr);
-	s.dir = Fb_turn_toward(s.dir, want, cx->turn);
+	s.dir = Bot_turn_toward(s.dir, want, cx->turn);
 	rec->dir[t] = (short)s.dir;
 	rec->thr[t] = thr;
+	rec->len = t + 1;	/* the rollout may end early: only these steps are valid */
 	Fb_sim_tick(cx, &s, thr);
 	if (thr)
 	    cost += cx->thrust_cost;
@@ -2290,7 +2044,7 @@ static double Fb_rollout(const fb_ctx_t *cx, const fb_cand_t *cand, fb_cand_t *r
 	/* wormholes we do not mean to take throw us anywhere */
 	for (i = 0; i < NumWorm; i++) {
 	    if (WormIn[i] && i != cx->worm_ok
-		&& sqr(Fb_wdx(cx->ox + s.x - WormX[i])) + sqr(Fb_wdy(cx->oy + s.y - WormY[i]))
+		&& sqr(Bot_wdx(cx->ox + s.x - WormX[i])) + sqr(Bot_wdy(cx->oy + s.y - WormY[i]))
 		   < sqr((double)WORMHOLE_RADIUS / CLICK + cx->ship_r + 6.0)) {
 		cost += 4000.0 * (1.0 - 0.5 * t / FB_H);
 		break;
@@ -2314,14 +2068,14 @@ static double Fb_rollout(const fb_ctx_t *cx, const fb_cand_t *cand, fb_cand_t *r
 		double ldir, tof;
 		int lead, err;
 
-		if (Fb_lead(rx, ry, cx->tvx - s.vx, cx->tvy - s.vy, cx->shot_speed, &ldir, &tof)
+		if (Bot_lead(rx, ry, cx->tvx - s.vx, cx->tvy - s.vy, cx->shot_speed, &ldir, &tof)
 		    && tof < cx->shot_life)
 		    lead = MOD2((int)(ldir + 0.5), RES);
 		else {
-		    lead = Fb_dir_of(rx, ry);
+		    lead = Bot_dir_of(rx, ry);
 		    tof = 1e9;
 		}
-		err = ABS(Fb_angle_diff(s.dir, lead));
+		err = ABS(Bot_angle_diff(s.dir, lead));
 		/* pointing at the lead soon is worth most, being on it more */
 		cost += cx->aim_w * (t < 4 ? 10.0 : 3.0) * MIN(err, 32);
 		if (t < 4 && tof < cx->shot_life
@@ -2345,7 +2099,7 @@ static double Fb_rollout(const fb_ctx_t *cx, const fb_cand_t *cand, fb_cand_t *r
 
 	    if (k < 0 || k + 1 >= sh->n || !(sh->reach & (1u << k)))
 		continue;
-	    if (Fb_cpa2(px0, py0, s.x, s.y, sh->px[k], sh->py[k], sh->px[k + 1], sh->py[k + 1])
+	    if (Bot_cpa2(px0, py0, s.x, s.y, sh->px[k], sh->py[k], sh->px[k + 1], sh->py[k + 1])
 		< sqr(sh->r + cx->margin)) {
 		cost += sh->weight * (1.0 - 0.5 * t / FB_NEAR_H);
 		if (fl && fl->shot_t < 0 && sh->t0 == 0.0 && sh->weight >= FB_SHOT_COST)
@@ -2356,7 +2110,7 @@ static double Fb_rollout(const fb_ctx_t *cx, const fb_cand_t *cand, fb_cand_t *r
 	for (i = 0; i < cx->nen; i++) {
 	    const fb_enemy_t *e = &cx->en[i];
 	    double ex = e->x + e->vx * tt, ey = e->y + e->vy * tt;
-	    double d2 = Fb_cpa2(px0, py0, s.x, s.y, ex - e->vx, ey - e->vy, ex, ey);
+	    double d2 = Bot_cpa2(px0, py0, s.x, s.y, ex - e->vx, ey - e->vy, ex, ey);
 	    double hit = cx->ship_r + FB_SHIP_R + 6.0;
 	    double may = hit + MIN(0.5 * cx->acc * tt * tt, 20.0);
 
@@ -2428,14 +2182,14 @@ static void Fb_ctx_init(player_t *pl, fb_data_t *d, int level, fb_ctx_t *cx)
     memset(&cx->s0, 0, sizeof(cx->s0));
     cx->pl = pl;
     cx->d = d;
-    cx->ox = Fb_px(pl->pos.cx);
-    cx->oy = Fb_px(pl->pos.cy);
+    cx->ox = Bot_px(pl->pos.cx);
+    cx->oy = Bot_px(pl->pos.cy);
     cx->s0.vx = pl->vel.x;
     cx->s0.vy = pl->vel.y;
     cx->s0.dir = pl->dir;
     cx->acc = Fb_thrust_acc(pl);
-    cx->ship_r = Fb_ship_radius(pl);
-    cx->turn = Fb_turn_rate(level);
+    cx->ship_r = Bot_ship_radius(pl);
+    cx->turn = Bot_turn_rate(level);
     cx->frames = MAX(1, MIN((int)(1.0 / timeStep + 0.5), 2));
     cx->dt = 1.0 / cx->frames;
     cx->fric_keep = pow(MAX(1.0 - options.frictionSetting, 0.0), cx->dt);
@@ -2482,8 +2236,8 @@ static void Fb_ctx_init(player_t *pl, fb_data_t *d, int level, fb_ctx_t *cx)
 	c = &d->c[e->id];
 	if (!c->known || (!c->seen && FbTick - c->last_seen > 2))
 	    continue;
-	rx = Fb_wdx(c->x - cx->ox);
-	ry = Fb_wdy(c->y - cx->oy);
+	rx = Bot_wdx(c->x - cx->ox);
+	ry = Bot_wdy(c->y - cx->oy);
 	if (LENGTH(rx, ry) > 900.0)
 	    continue;
 	cx->en[cx->nen].x = rx;
@@ -2504,11 +2258,11 @@ static void Fb_ctx_init(player_t *pl, fb_data_t *d, int level, fb_ctx_t *cx)
 	c = &d->c[e->id];
 	if (!c->seen || c->shield)
 	    continue;
-	rx = Fb_wdx(c->x - cx->ox);
-	ry = Fb_wdy(c->y - cx->oy);
+	rx = Bot_wdx(c->x - cx->ox);
+	ry = Bot_wdy(c->y - cx->oy);
 	dist = LENGTH(rx, ry);
 	if (dist > Fb_shot_range() * 1.1
-	    || ABS(Fb_angle_diff(c->dir, Fb_dir_of(-rx, -ry))) > 12)
+	    || ABS(Bot_angle_diff(c->dir, Bot_dir_of(-rx, -ry))) > 12)
 	    continue;
 	w = FB_VSHOT_COST * Fb_opp_respect(e);
 	for (k = 0; k < 3; k++) {
@@ -2536,7 +2290,7 @@ static fb_flags_t Fb_fly(player_t *pl, fb_data_t *d, int level, fb_ctx_t *cx)
     static fb_cand_t cand[FB_MAX_CAND];
     fb_cand_t rec, best_rec;
     fb_flags_t fl = { false, 0, false, -1, -1 };
-    double best_cost = 1e30, u = Fb_unskill(level);
+    double best_cost = 1e30, u = Bot_unskill(level);
     int nc = 0, i, h, nheads, prev_i = -1;
     int specials[12], nspec = 0;
 
@@ -2583,10 +2337,10 @@ static fb_flags_t Fb_fly(player_t *pl, fb_data_t *d, int level, fb_ctx_t *cx)
     }
     specials[nspec++] = pl->dir;
     if (LENGTH(pl->vel.x, pl->vel.y) > 1.0)
-	specials[nspec++] = Fb_dir_of(-pl->vel.x, -pl->vel.y);
+	specials[nspec++] = Bot_dir_of(-pl->vel.x, -pl->vel.y);
     if (cx->have_car || cx->point) {
 	double rx = cx->point ? cx->gx : cx->carx, ry = cx->point ? cx->gy : cx->cary;
-	int dc = Fb_dir_of(rx, ry);
+	int dc = Bot_dir_of(rx, ry);
 
 	specials[nspec++] = dc;
 	specials[nspec++] = MOD2(dc + RES / 32, RES);
@@ -2596,17 +2350,17 @@ static fb_flags_t Fb_fly(player_t *pl, fb_data_t *d, int level, fb_ctx_t *cx)
 	double ldir, tof;
 	int lead;
 
-	if (Fb_lead(cx->tx, cx->ty, cx->tvx - pl->vel.x, cx->tvy - pl->vel.y,
+	if (Bot_lead(cx->tx, cx->ty, cx->tvx - pl->vel.x, cx->tvy - pl->vel.y,
 		    cx->shot_speed, &ldir, &tof))
 	    lead = MOD2((int)(ldir + 0.5), RES);
 	else
-	    lead = Fb_dir_of(cx->tx, cx->ty);
+	    lead = Bot_dir_of(cx->tx, cx->ty);
 	specials[nspec++] = lead;
 	specials[nspec++] = MOD2(lead + 2, RES);
 	specials[nspec++] = MOD2(lead - 2, RES);
 	/* side steps across the target's line of fire */
-	specials[nspec++] = MOD2(Fb_dir_of(cx->tx, cx->ty) + RES / 4, RES);
-	specials[nspec++] = MOD2(Fb_dir_of(cx->tx, cx->ty) - RES / 4, RES);
+	specials[nspec++] = MOD2(Bot_dir_of(cx->tx, cx->ty) + RES / 4, RES);
+	specials[nspec++] = MOD2(Bot_dir_of(cx->tx, cx->ty) - RES / 4, RES);
     }
     for (h = 0; h < nheads + nspec; h++) {
 	int dir = h < nheads ? (h * RES) / nheads : specials[h - nheads];
@@ -2650,11 +2404,10 @@ static fb_flags_t Fb_fly(player_t *pl, fb_data_t *d, int level, fb_ctx_t *cx)
     if (best_cost >= 1e30)
 	return fl;
 
-    best_rec.len = FB_H;
     Fb_rollout(cx, &best_rec, &rec, &fl);
-    d->plan_len = FB_H;
-    memcpy(d->plan_dir, best_rec.dir, sizeof(short) * FB_H);
-    memcpy(d->plan_thr, best_rec.thr, sizeof(bool) * FB_H);
+    d->plan_len = best_rec.len;
+    memcpy(d->plan_dir, best_rec.dir, sizeof(short) * best_rec.len);
+    memcpy(d->plan_thr, best_rec.thr, sizeof(bool) * best_rec.len);
     fl.valid = true;
     fl.dir = best_rec.dir[0];
     fl.thrust = best_rec.thr[0];
@@ -2671,20 +2424,6 @@ static double Fb_free_ray(double x, double y, int dir, double need, double max)
 	    return t;
     }
     return max;
-}
-
-static void Fb_steer(player_t *pl, int want, bool thrust)
-{
-    if (want != pl->dir) {
-	pl->turnspeed = 0;
-	pl->turnresistance = 0;
-	pl->turnacc = 0;
-	pl->turnvel = 0;
-	Player_set_float_dir(pl, (double)want);
-	pl->wanted_float_dir = pl->float_dir;
-	Turn_player(pl, true);
-    }
-    Thrust(pl, thrust);
 }
 
 /* ------------------------------------------------------------------------
@@ -2706,7 +2445,7 @@ static player_t *Fb_target(fb_data_t *d)
     if (!Fb_id_ok(d->target_id) || d->target_id == NO_ID)
 	return NULL;
     e = Player_by_id(d->target_id);
-    if (e == NULL || !Fb_player_active(e))
+    if (e == NULL || !Bot_player_active(e))
 	return NULL;
     return e;
 }
@@ -2730,8 +2469,8 @@ static double Fb_fight_dist(fb_data_t *d, player_t *e)
  */
 static void Fb_pick_target(player_t *pl, fb_data_t *d, int level)
 {
-    double ox = Fb_px(pl->pos.cx), oy = Fb_px(pl->pos.cy), best = 1e30;
-    int i, every = 3 + (int)(8.0 * Fb_unskill(level)), best_id = NO_ID;
+    double ox = Bot_px(pl->pos.cx), oy = Bot_px(pl->pos.cy), best = 1e30;
+    int i, every = 3 + (int)(8.0 * Bot_unskill(level)), best_id = NO_ID;
 
     if (d->war_id != NO_ID) {
 	player_t *w = Fb_id_ok(d->war_id) ? Player_by_id(d->war_id) : NULL;
@@ -2757,7 +2496,7 @@ static void Fb_pick_target(player_t *pl, fb_data_t *d, int level)
 	c = &d->c[e->id];
 	if (!c->known)
 	    continue;
-	dist = Fb_dist(ox, oy, c->x, c->y);
+	dist = Bot_dist(ox, oy, c->x, c->y);
 	cost = dist;
 	if (!Fb_line_free(ox, oy, c->x, c->y))
 	    cost *= 1.5;
@@ -2784,7 +2523,7 @@ static void Fb_pick_target(player_t *pl, fb_data_t *d, int level)
 /* Somewhere to look for enemies: where one was last seen, else bases and stations. */
 static void Fb_pick_search(player_t *pl, fb_data_t *d)
 {
-    double ox = Fb_px(pl->pos.cx), oy = Fb_px(pl->pos.cy);
+    double ox = Bot_px(pl->pos.cx), oy = Bot_px(pl->pos.cy);
     int tries;
 
     /* getting unstuck: a fuel station surely reachable from here */
@@ -2792,10 +2531,10 @@ static void Fb_pick_search(player_t *pl, fb_data_t *d)
 	for (tries = 0; tries < 12; tries++) {
 	    int k = (int)(rfrac() * NumStationF);
 	    fuel_t *fs = Fuel_by_index(k);
-	    double sx = Fb_px(fs->pos.cx), sy = Fb_px(fs->pos.cy);
+	    double sx = Bot_px(fs->pos.cx), sy = Bot_px(fs->pos.cy);
 
 	    if (!StationF[k].valid || Fb_field_value(&StationF[k], ox, oy) >= 1e5
-		|| Fb_dist(ox, oy, sx, sy) < 400.0)
+		|| Bot_dist(ox, oy, sx, sy) < 400.0)
 		continue;
 	    d->search_x = sx;
 	    d->search_y = sy;
@@ -2807,7 +2546,7 @@ static void Fb_pick_search(player_t *pl, fb_data_t *d)
     if (FbTick >= d->unstick_until && Fb_id_ok(d->target_id) && d->target_id != NO_ID
 	&& d->c[d->target_id].last_known > 0
 	&& FbTick - d->c[d->target_id].last_known < 12 * 12
-	&& Fb_dist(ox, oy, d->c[d->target_id].x, d->c[d->target_id].y) > 250.0
+	&& Bot_dist(ox, oy, d->c[d->target_id].x, d->c[d->target_id].y) > 250.0
 	&& !d->search_valid) {
 	d->search_x = d->c[d->target_id].x;
 	d->search_y = d->c[d->target_id].y;
@@ -2822,11 +2561,11 @@ static void Fb_pick_search(player_t *pl, fb_data_t *d)
 	if (nb + nf > 0 && rfrac() < 0.7) {
 	    k = (int)(rfrac() * (nb + nf));
 	    if (k < nb) {
-		x = Fb_px(Base_by_index(k)->pos.cx);
-		y = Fb_px(Base_by_index(k)->pos.cy);
+		x = Bot_px(Base_by_index(k)->pos.cx);
+		y = Bot_px(Base_by_index(k)->pos.cy);
 	    } else {
-		x = Fb_px(Fuel_by_index(k - nb)->pos.cx);
-		y = Fb_px(Fuel_by_index(k - nb)->pos.cy);
+		x = Bot_px(Fuel_by_index(k - nb)->pos.cx);
+		y = Bot_px(Fuel_by_index(k - nb)->pos.cy);
 	    }
 	} else {
 	    int c = (int)(rfrac() * NavN);
@@ -2836,7 +2575,7 @@ static void Fb_pick_search(player_t *pl, fb_data_t *d)
 	    x = NavRX[c];
 	    y = NavRY[c];
 	}
-	if (Fb_dist(ox, oy, x, y) < 600.0 && tries < 12)
+	if (Bot_dist(ox, oy, x, y) < 600.0 && tries < 12)
 	    continue;
 	d->search_x = x;
 	d->search_y = y;
@@ -2880,7 +2619,7 @@ static double Fb_item_value(player_t *pl, int type)
 /* The best item in view worth a detour; false if none. */
 static bool Fb_pick_item(player_t *pl, fb_data_t *d, double max_dist)
 {
-    double ox = Fb_px(pl->pos.cx), oy = Fb_px(pl->pos.cy), best = 0.0;
+    double ox = Bot_px(pl->pos.cx), oy = Bot_px(pl->pos.cy), best = 0.0;
     int i;
     bool found = false;
 
@@ -2892,8 +2631,8 @@ static bool Fb_pick_item(player_t *pl, fb_data_t *d, double max_dist)
 
 	if (o->type != OBJ_ITEM || Fb_item_rogue(o))
 	    continue;
-	rx = Fb_wdx(Fb_px(o->pos.cx) - ox);
-	ry = Fb_wdy(Fb_px(o->pos.cy) - oy);
+	rx = Bot_wdx(Bot_px(o->pos.cx) - ox);
+	ry = Bot_wdy(Bot_px(o->pos.cy) - oy);
 	if (!Fb_in_view(rx, ry))
 	    continue;
 	dist = LENGTH(rx, ry);
@@ -2903,7 +2642,7 @@ static bool Fb_pick_item(player_t *pl, fb_data_t *d, double max_dist)
 	if (Fb_segment_clear(ox, oy, ox + rx, oy + ry, FB_SHIP_R * 0.6) < FB_SHIP_R * 0.6)
 	    continue;
 	if (FbTick < d->item_ban_until
-	    && Fb_dist(ox + rx, oy + ry, d->item_ban_x, d->item_ban_y) < 60.0)
+	    && Bot_dist(ox + rx, oy + ry, d->item_ban_x, d->item_ban_y) < 60.0)
 	    continue;
 	score = Fb_item_value(pl, ITEM_PTR(o)->item_type) * 600.0 - dist;
 	if (score > best) {
@@ -2919,7 +2658,7 @@ static bool Fb_pick_item(player_t *pl, fb_data_t *d, double max_dist)
 /* The fuel station with the shortest way there (straight lines as a guess). */
 static int Fb_pick_station(player_t *pl)
 {
-    double ox = Fb_px(pl->pos.cx), oy = Fb_px(pl->pos.cy), best = 1e30;
+    double ox = Bot_px(pl->pos.cx), oy = Bot_px(pl->pos.cy), best = 1e30;
     int i, bi = -1;
 
     for (i = 0; i < Num_fuels(); i++) {
@@ -2930,7 +2669,7 @@ static int Fb_pick_station(player_t *pl)
 	    || (BIT(world->rules->mode, TEAM_PLAY) && options.teamFuel
 		&& fs->team != pl->team))
 	    continue;
-	dist = Fb_dist(ox, oy, Fb_px(fs->pos.cx), Fb_px(fs->pos.cy));
+	dist = Bot_dist(ox, oy, Bot_px(fs->pos.cx), Bot_px(fs->pos.cy));
 	if (StationF != NULL && i < NumStationF && StationF[i].valid) {
 	    /* the way there; none (walls, wormholes only): not this one */
 	    dist = Fb_field_value(&StationF[i], ox, oy);
@@ -2938,7 +2677,7 @@ static int Fb_pick_station(player_t *pl)
 		continue;
 	    c = dist;
 	} else
-	    c = dist * (Fb_line_free(ox, oy, Fb_px(fs->pos.cx), Fb_px(fs->pos.cy)) ? 1.0 : 1.6);
+	    c = dist * (Fb_line_free(ox, oy, Bot_px(fs->pos.cx), Bot_px(fs->pos.cy)) ? 1.0 : 1.6);
 	c -= fs->fuel * 0.1;
 	if (c < best) {
 	    best = c;
@@ -2954,7 +2693,7 @@ static int Fb_pick_station(player_t *pl)
  */
 static double Fb_outgunned(player_t *pl, fb_data_t *d, player_t *tgt)
 {
-    double ox = Fb_px(pl->pos.cx), oy = Fb_px(pl->pos.cy), s = 0.0;
+    double ox = Bot_px(pl->pos.cx), oy = Bot_px(pl->pos.cy), s = 0.0;
     int i, attackers = 0, eguns = 0;
     int guns = 1 + 2 * pl->item[ITEM_WIDEANGLE] + pl->item[ITEM_REARSHOT];
 
@@ -2966,10 +2705,10 @@ static double Fb_outgunned(player_t *pl, fb_data_t *d, player_t *tgt)
 	if (e == pl || !Fb_id_ok(e->id))
 	    continue;
 	c = &d->c[e->id];
-	if (!c->seen || Fb_dist(ox, oy, c->x, c->y) > 800.0)
+	if (!c->seen || Bot_dist(ox, oy, c->x, c->y) > 800.0)
 	    continue;
 	if (FbTick - d->threat_time[e->id] < 3 * 12
-	    || ABS(Fb_angle_diff(c->dir, Fb_dir_of(Fb_wdx(ox - c->x), Fb_wdy(oy - c->y)))) < 10)
+	    || ABS(Bot_angle_diff(c->dir, Bot_dir_of(Bot_wdx(ox - c->x), Bot_wdy(oy - c->y)))) < 10)
 	    attackers++;
 	eguns = MAX(eguns, c->guns);
     }
@@ -2988,7 +2727,7 @@ static double Fb_outgunned(player_t *pl, fb_data_t *d, player_t *tgt)
 /* Decide what to do this tick. */
 static void Fb_think(player_t *pl, fb_data_t *d, int level)
 {
-    double ox = Fb_px(pl->pos.cx), oy = Fb_px(pl->pos.cy), u = Fb_unskill(level);
+    double ox = Bot_px(pl->pos.cx), oy = Bot_px(pl->pos.cy), u = Bot_unskill(level);
     player_t *tgt;
     fb_contact_t *c = NULL;
     double dist = 1e9, near_enemy = 1e9, refuel_lo, thr;
@@ -3001,13 +2740,13 @@ static void Fb_think(player_t *pl, fb_data_t *d, int level)
     if (tgt) {
 	c = &d->c[tgt->id];
 	if (c->known)
-	    dist = Fb_dist(ox, oy, c->x, c->y);
+	    dist = Bot_dist(ox, oy, c->x, c->y);
     }
     for (i = 0; i < NumPlayers; i++) {
 	player_t *e = Player_by_index(i);
 
 	if (e != pl && Fb_id_ok(e->id) && d->c[e->id].seen)
-	    near_enemy = MIN(near_enemy, Fb_dist(ox, oy, d->c[e->id].x, d->c[e->id].y));
+	    near_enemy = MIN(near_enemy, Bot_dist(ox, oy, d->c[e->id].x, d->c[e->id].y));
     }
 
     /*
@@ -3045,8 +2784,8 @@ static void Fb_think(player_t *pl, fb_data_t *d, int level)
     if (d->mode == FB_REFUEL) {
 	/* no way closer in a while: give up on that station */
 	if (d->station >= 0 && FbTick - d->mode_since > 15 * 12
-	    && Fb_dist(ox, oy, Fb_px(Fuel_by_index(d->station)->pos.cx),
-		       Fb_px(Fuel_by_index(d->station)->pos.cy)) > 200.0)
+	    && Bot_dist(ox, oy, Bot_px(Fuel_by_index(d->station)->pos.cx),
+		       Bot_px(Fuel_by_index(d->station)->pos.cy)) > 200.0)
 	    d->station = -1;
 	if (pl->fuel.sum >= MIN(Fb_fuel_ref(pl) * 0.9, pl->fuel.max - 1.0)
 	    || (near_enemy < 600.0 && pl->fuel.sum >= 20.0) || d->station < 0
@@ -3087,7 +2826,7 @@ static void Fb_think(player_t *pl, fb_data_t *d, int level)
 
     if (tgt == NULL || !c->known) {
 	if (d->mode != FB_SEARCH || !d->search_valid
-	    || Fb_dist(ox, oy, d->search_x, d->search_y) < 200.0
+	    || Bot_dist(ox, oy, d->search_x, d->search_y) < 200.0
 	    || FbTick - d->search_time > 20 * 12) {
 	    d->search_valid = false;
 	    Fb_pick_search(pl, d);
@@ -3187,8 +2926,8 @@ static void Fb_run_goal(player_t *pl, fb_data_t *d, fb_ctx_t *cx)
     cx->run = true;
     cx->engage = true;
     cx->point = true;
-    cx->gx = Fb_wdx(d->run_gx - cx->ox);
-    cx->gy = Fb_wdy(d->run_gy - cx->oy);
+    cx->gx = Bot_wdx(d->run_gx - cx->ox);
+    cx->gy = Bot_wdy(d->run_gy - cx->oy);
     cx->arrive_r = 0.0;
     cx->vmax = 26.0;
     cx->band_w = 0.0;
@@ -3200,7 +2939,7 @@ static void Fb_run_goal(player_t *pl, fb_data_t *d, fb_ctx_t *cx)
 /* Fill in goal and combat terms of the planning context. */
 static void Fb_set_goal(player_t *pl, fb_data_t *d, int level, fb_ctx_t *cx)
 {
-    double u = Fb_unskill(level);
+    double u = Bot_unskill(level);
     player_t *tgt = Fb_target(d);
     fb_contact_t *c = tgt ? &d->c[tgt->id] : NULL;
     const fb_field_t *fd = NULL;
@@ -3224,8 +2963,8 @@ static void Fb_set_goal(player_t *pl, fb_data_t *d, int level, fb_ctx_t *cx)
 	double k = level >= 40 ? Fb_opp_accel_k(tgt) : 0.0;
 
 	cx->has_target = true;
-	cx->tx = Fb_wdx(c->x - cx->ox);
-	cx->ty = Fb_wdy(c->y - cx->oy);
+	cx->tx = Bot_wdx(c->x - cx->ox);
+	cx->ty = Bot_wdy(c->y - cx->oy);
 	cx->tvx = c->vx;
 	cx->tvy = c->vy;
 	cx->tax = c->seen ? c->ax * k : 0.0;
@@ -3263,7 +3002,7 @@ static void Fb_set_goal(player_t *pl, fb_data_t *d, int level, fb_ctx_t *cx)
 	break;
     case FB_HUNT:
 	/* in sight and not far: straight there, no way to work out */
-	if (goal && !(Fb_dist(cx->ox, cx->oy, gx, gy) < 1200.0
+	if (goal && !(Bot_dist(cx->ox, cx->oy, gx, gy) < 1200.0
 		      && Fb_segment_clear(cx->ox, cx->oy, gx, gy, FB_SHIP_R) >= FB_SHIP_R)) {
 	    fd = Fb_goal_field(gx, gy, 24, cx->ox, cx->oy);
 	    cx->goal_slack = cx->has_target ? cx->d_pref * 0.8 : 0.0;
@@ -3279,13 +3018,13 @@ static void Fb_set_goal(player_t *pl, fb_data_t *d, int level, fb_ctx_t *cx)
     case FB_REFUEL:
 	if (d->station >= 0) {
 	    fuel_t *fs = Fuel_by_index(d->station);
-	    double sx = Fb_px(fs->pos.cx), sy = Fb_px(fs->pos.cy);
+	    double sx = Bot_px(fs->pos.cx), sy = Bot_px(fs->pos.cy);
 
-	    if (Fb_dist(cx->ox, cx->oy, sx, sy) < 400.0
+	    if (Bot_dist(cx->ox, cx->oy, sx, sy) < 400.0
 		&& Fb_line_free(cx->ox, cx->oy, sx, sy)) {
 		cx->point = true;
-		cx->gx = Fb_wdx(sx - cx->ox);
-		cx->gy = Fb_wdy(sy - cx->oy);
+		cx->gx = Bot_wdx(sx - cx->ox);
+		cx->gy = Bot_wdy(sy - cx->oy);
 		cx->arrive_r = 40.0;
 		cx->vmax = 8.0;
 	    } else {
@@ -3297,8 +3036,8 @@ static void Fb_set_goal(player_t *pl, fb_data_t *d, int level, fb_ctx_t *cx)
     case FB_ITEM:
 	cx->point = true;
 	cx->through = true;
-	cx->gx = Fb_wdx(d->item_x - cx->ox);
-	cx->gy = Fb_wdy(d->item_y - cx->oy);
+	cx->gx = Bot_wdx(d->item_x - cx->ox);
+	cx->gy = Bot_wdy(d->item_y - cx->oy);
 	cx->arrive_r = 0.0;
 	cx->vmax = 12.0;
 	break;
@@ -3310,8 +3049,8 @@ static void Fb_set_goal(player_t *pl, fb_data_t *d, int level, fb_ctx_t *cx)
 	int i;
 
 	if (Fb_field_carrot(fd, cx->ox, cx->oy, FB_SHIP_R * 0.5, 12, &rx, &ry)) {
-	    cx->carx = Fb_wdx(rx - cx->ox);
-	    cx->cary = Fb_wdy(ry - cx->oy);
+	    cx->carx = Bot_wdx(rx - cx->ox);
+	    cx->cary = Bot_wdy(ry - cx->oy);
 	    cx->have_car = true;
 	    for (i = 0; i < NumWorm; i++)
 		if (WormX[i] == rx && WormY[i] == ry)
@@ -3330,7 +3069,7 @@ static void Fb_set_goal(player_t *pl, fb_data_t *d, int level, fb_ctx_t *cx)
     if (tgt && c->known) {
 	pl->lock.pl_id = tgt->id;
 	SET_BIT(pl->lock.tagged, LOCK_PLAYER);
-	pl->lock.distance = Fb_dist(cx->ox, cx->oy, c->x, c->y);
+	pl->lock.distance = Bot_dist(cx->ox, cx->oy, c->x, c->y);
     }
 }
 
@@ -3341,7 +3080,7 @@ static void Fb_set_goal(player_t *pl, fb_data_t *d, int level, fb_ctx_t *cx)
 /* Would one of our shots in 'dir' hit a teammate before the target? */
 static bool Fb_friendly_in_line(player_t *pl, int dir, double tof)
 {
-    double ox = Fb_px(pl->pos.cx), oy = Fb_px(pl->pos.cy);
+    double ox = Bot_px(pl->pos.cx), oy = Bot_px(pl->pos.cy);
     int i;
 
     if (!BIT(world->rules->mode, TEAM_PLAY) || options.teamImmunity)
@@ -3350,10 +3089,10 @@ static bool Fb_friendly_in_line(player_t *pl, int dir, double tof)
 	player_t *a = Player_by_index(i);
 	double rx, ry, w;
 
-	if (a == pl || !Fb_player_active(a) || !Fb_ally(pl, a))
+	if (a == pl || !Bot_player_active(a) || !Fb_ally(pl, a))
 	    continue;
-	rx = Fb_wdx(Fb_px(a->pos.cx) - ox);
-	ry = Fb_wdy(Fb_px(a->pos.cy) - oy);
+	rx = Bot_wdx(Bot_px(a->pos.cx) - ox);
+	ry = Bot_wdy(Bot_px(a->pos.cy) - oy);
 	if (Fb_shot_miss(dir, 0.0, 0.0, rx, ry, a->vel.x - pl->vel.x, a->vel.y - pl->vel.y,
 			 0.0, 0.0, options.shotSpeed, MIN(tof + 2.0, options.shotLife), &w)
 	    < FB_SHIP_R + 8.0)
@@ -3369,7 +3108,7 @@ static bool Fb_friendly_in_line(player_t *pl, int dir, double tof)
  */
 static bool Fb_fire(player_t *pl, fb_data_t *d, int level, bool may_drop_shield)
 {
-    double ox = Fb_px(pl->pos.cx), oy = Fb_px(pl->pos.cy), u = Fb_unskill(level);
+    double ox = Bot_px(pl->pos.cx), oy = Bot_px(pl->pos.cy), u = Bot_unskill(level);
     double tol = MAX(FB_SHIP_R + 3.0 - 6.0 * u, 7.0), life = options.shotLife * 0.95;
     int dirs[16], ndirs = 0, i, g, spread = MODS_SPREAD_MAX - Mods_get(pl->mods, ModsSpread);
     bool spare = pl->shots < options.maxPlayerShots / 2;
@@ -3413,8 +3152,8 @@ static bool Fb_fire(player_t *pl, fb_data_t *d, int level, bool may_drop_shield)
 	    continue;
 	is_tgt = e->id == d->target_id;
 	/* at war only the war target, unless someone else is right on us */
-	rx = Fb_wdx(c->x - ox);
-	ry = Fb_wdy(c->y - oy);
+	rx = Bot_wdx(c->x - ox);
+	ry = Bot_wdy(c->y - oy);
 	if (d->war_id != NO_ID && !is_tgt && LENGTH(rx, ry) > 250.0)
 	    continue;
 	if (LENGTH(rx, ry) > Fb_shot_range() + 200.0)
@@ -3471,7 +3210,7 @@ static bool Fb_fire(player_t *pl, fb_data_t *d, int level, bool may_drop_shield)
 /* Another enemy a reprogrammed robot could be sent after (or NO_ID). */
 static int Fb_ecm_victim(player_t *pl, fb_data_t *d, player_t *robot)
 {
-    double ox = Fb_px(pl->pos.cx), oy = Fb_px(pl->pos.cy), best = 1e30;
+    double ox = Bot_px(pl->pos.cx), oy = Bot_px(pl->pos.cy), best = 1e30;
     int i, id = NO_ID;
 
     for (i = 0; i < NumPlayers; i++) {
@@ -3484,7 +3223,7 @@ static int Fb_ecm_victim(player_t *pl, fb_data_t *d, player_t *robot)
 	c = &d->c[e->id];
 	if (!c->known || !pl->visibility[i].canSee)
 	    continue;
-	dist = Fb_dist(ox, oy, c->x, c->y);
+	dist = Bot_dist(ox, oy, c->x, c->y);
 	if (BIT(world->rules->mode, LIMITED_VISIBILITY) && dist > pl->sensor_range)
 	    continue;
 	if (dist < best) {
@@ -3498,7 +3237,7 @@ static int Fb_ecm_victim(player_t *pl, fb_data_t *d, player_t *robot)
 static void Fb_use_items(player_t *pl, fb_data_t *d, int level, const fb_flags_t *fl,
 			 bool fired)
 {
-    double ox = Fb_px(pl->pos.cx), oy = Fb_px(pl->pos.cy);
+    double ox = Bot_px(pl->pos.cx), oy = Bot_px(pl->pos.cy);
     player_t *tgt = Fb_target(d);
     fb_contact_t *c = tgt ? &d->c[tgt->id] : NULL;
     double dist = 1e9, err = 64.0;
@@ -3507,14 +3246,14 @@ static void Fb_use_items(player_t *pl, fb_data_t *d, int level, const fb_flags_t
 
     (void)level;
     if (c && c->known) {
-	double rx = Fb_wdx(c->x - ox), ry = Fb_wdy(c->y - oy);
+	double rx = Bot_wdx(c->x - ox), ry = Bot_wdy(c->y - oy);
 
 	dist = LENGTH(rx, ry);
 	seen = c->seen;
 	los = Fb_line_free(ox, oy, c->x, c->y);
-	err = ABS(Fb_angle_diff(pl->dir, Fb_dir_of(rx, ry)));
+	err = ABS(Bot_angle_diff(pl->dir, Bot_dir_of(rx, ry)));
 	/* he is behind us and closing in */
-	behind = seen && ABS(Fb_angle_diff(pl->dir, Fb_dir_of(rx, ry))) > RES * 3 / 8
+	behind = seen && ABS(Bot_angle_diff(pl->dir, Bot_dir_of(rx, ry))) > RES * 3 / 8
 	    && (c->vx - pl->vel.x) * -rx + (c->vy - pl->vel.y) * -ry > 0.0;
     }
 
@@ -3552,7 +3291,7 @@ static void Fb_use_items(player_t *pl, fb_data_t *d, int level, const fb_flags_t
 	    if (victim != NO_ID) {
 		pl->lock.pl_id = victim;
 		SET_BIT(pl->lock.tagged, LOCK_PLAYER);
-		pl->lock.distance = Fb_dist(ox, oy, d->c[victim].x, d->c[victim].y);
+		pl->lock.distance = Bot_dist(ox, oy, d->c[victim].x, d->c[victim].y);
 	    } else if (options.ecmsReprogramRobots && tgt != NULL && Player_is_robot(tgt)) {
 		CLR_BIT(pl->lock.tagged, LOCK_PLAYER);	/* blind it instead */
 	    }
@@ -3599,9 +3338,9 @@ static void Fb_use_items(player_t *pl, fb_data_t *d, int level, const fb_flags_t
 	&& !BIT(pl->used, HAS_SHIELD)) {
 	double ldir, tof;
 
-	if (Fb_lead(Fb_wdx(c->x - ox), Fb_wdy(c->y - oy), c->vx - pl->vel.x,
+	if (Bot_lead(Bot_wdx(c->x - ox), Bot_wdy(c->y - oy), c->vx - pl->vel.x,
 		    c->vy - pl->vel.y, options.pulseSpeed, &ldir, &tof)
-	    && ABS(Fb_angle_diff(pl->dir, MOD2((int)(ldir + 0.5), RES))) <= 1)
+	    && ABS(Bot_angle_diff(pl->dir, MOD2((int)(ldir + 0.5), RES))) <= 1)
 	    SET_BIT(pl->used, USES_LASER);
     }
 
@@ -3743,7 +3482,7 @@ static void Robot_fight_play(player_t *pl)
 {
     fb_data_t *d = Fb_data(pl);
     int level = Fb_level(d);
-    double u = Fb_unskill(level);
+    double u = Bot_unskill(level);
     static fb_ctx_t cx;
     fb_flags_t fl;
     bool spawn_shield, fired;
@@ -3753,7 +3492,7 @@ static void Robot_fight_play(player_t *pl)
     spawn_shield = pl->shield_time > 0 && BIT(pl->used, HAS_SHIELD);
     if (!spawn_shield)
 	CLR_BIT(pl->used, USES_SHIELD);
-    pl->power = Fb_power(level);
+    pl->power = Bot_power(level, FB_POWER_LOSS);
     /*
      * Out of fuel with no station to get to, or not getting anywhere for
      * long: start over, as a human would.
@@ -3763,7 +3502,7 @@ static void Robot_fight_play(player_t *pl)
 		     && (d->mode != FB_REFUEL || d->station < 0 || d->still_ticks > 10 * 12))
 	    || d->frozen_ticks > 5 * 12	/* stuck in a wall (broken maps) */
 	    || (d->frozen_ticks > 12
-		&& Fb_ship_clear(Fb_px(pl->pos.cx), Fb_px(pl->pos.cy)) <= 0.0);
+		&& Fb_ship_clear(Bot_px(pl->pos.cx), Bot_px(pl->pos.cy)) <= 0.0);
 
 	if (want != d->destruct) {
 	    Player_self_destruct(pl, want);
@@ -3819,9 +3558,9 @@ static void Robot_fight_play(player_t *pl)
 	FB_LOG("[fightbot] %s stuck: escaping towards %d\n", pl->name, d->escape_dir);
     }
     if (FbTick < d->escape_until) {
-	int dir = Fb_turn_toward(pl->dir, d->escape_dir, Fb_turn_rate(level));
+	int dir = Bot_turn_toward(pl->dir, d->escape_dir, Bot_turn_rate(level));
 
-	Fb_steer(pl, dir, ABS(Fb_angle_diff(dir, d->escape_dir)) <= 8);
+	Bot_steer(pl, dir, ABS(Bot_angle_diff(dir, d->escape_dir)) <= 8);
     } else if (fl.valid) {
 	int dir = fl.dir;
 
@@ -3831,7 +3570,7 @@ static void Robot_fight_play(player_t *pl)
 	    d->steer_time = FbTick;
 	}
 	dir = MOD2(dir + (int)(d->steer_off + (d->steer_off < 0 ? -0.5 : 0.5)), RES);
-	Fb_steer(pl, dir, fl.thrust);
+	Bot_steer(pl, dir, fl.thrust);
     } else
 	Thrust(pl, false);
 
@@ -3985,12 +3724,4 @@ int Robot_fight_setup(robot_type_t *type_ptr)
 {
     *type_ptr = robot_fight_type;
     return 0;
-}
-
-/*
- * The maps fightbots are for: no team ball game and no race.
- */
-bool Robot_fight_map(void)
-{
-    return !Robot_ball_game() && !Robot_race_map();
 }

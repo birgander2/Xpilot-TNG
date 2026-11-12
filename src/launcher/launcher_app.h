@@ -4,7 +4,6 @@
 #include <string>
 #include <vector>
 #include <SDL3/SDL.h>
-#include "ship_shape.h"
 #include "client_profile.h"
 #include "profile_editor.h"
 #include "map_preview.h"
@@ -111,14 +110,7 @@ private:
     void LoadLogo();
     SDL_Texture* wall_tex_[2] = {nullptr, nullptr};   // lib/textures/launcher_wall_*.pam: pre-rendered FX walls for the top corners
     int wall_w_ = 0, wall_h_ = 0;
-    ss::ShipShape menu_ship_;                          // the profile's ship, shown static beside the logo, classic and FX
-    SDL_Texture* ship_dome_tex_ = nullptr;             // hull light and highlight, same as the client's ship FX
-    SDL_Texture* ship_spec_tex_ = nullptr;
-    void MakeShipTextures();
-    void LoadMenuShip();
     void DrawMenuDecor(ImVec2 win_pos, float win_w) const;
-    void DrawMenuShipClassic(ImVec2 center) const;   // the same ship as a plain outline
-    void DrawMenuShip(ImVec2 center) const;   // the profile's ship with FX graphics, static, pointing up
     float MenuTileWidth() const;   // width of one welcome-screen tile: just wide enough for its text
     void DrawStarfield(ImVec2 mn, ImVec2 mx) const;
     std::string data_dir_;   // game data (lib/): $XPILOT_DATADIR, root_dir_/lib or CONF_DATADIR, no trailing slash

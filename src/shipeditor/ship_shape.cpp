@@ -371,10 +371,6 @@ void Rotate90(ShipShape& s, bool ccw) {
         for (auto& p : part) p = ccw ? IPt{-p.y, p.x} : IPt{p.y, -p.x};
 }
 
-void Shift(ShipShape& s, int dx, int dy) {
-    for (auto& part : s.pts) for (auto& p : part) { p.x += dx; p.y += dy; }
-}
-
 bool MakeSymmetric(ShipShape& s, bool keep_left) {
     auto& h = s.pts[kHull];
     const int n = (int)h.size();

@@ -58,9 +58,9 @@ static void SetupTheme() {
     colors[ImGuiCol_HeaderActive]         = ImVec4(0.28f, 0.38f, 0.52f, 1.00f);
     colors[ImGuiCol_Tab]                  = ImVec4(0.12f, 0.15f, 0.21f, 1.00f);
     colors[ImGuiCol_TabHovered]           = ImVec4(0.24f, 0.32f, 0.44f, 1.00f);
-    colors[ImGuiCol_TabActive]            = ImVec4(0.20f, 0.27f, 0.38f, 1.00f);
-    colors[ImGuiCol_TabUnfocused]         = ImVec4(0.10f, 0.12f, 0.17f, 1.00f);
-    colors[ImGuiCol_TabUnfocusedActive]   = ImVec4(0.15f, 0.19f, 0.26f, 1.00f);
+    colors[ImGuiCol_TabSelected]          = ImVec4(0.20f, 0.27f, 0.38f, 1.00f);
+    colors[ImGuiCol_TabDimmed]            = ImVec4(0.10f, 0.12f, 0.17f, 1.00f);
+    colors[ImGuiCol_TabDimmedSelected]    = ImVec4(0.15f, 0.19f, 0.26f, 1.00f);
 }
 
 static std::string FindFont(const std::vector<std::string>& candidates) {

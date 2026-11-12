@@ -166,7 +166,7 @@ void teamcup_round_start(void)
 
 void teamcup_round_end(int winning_team)
 {
-    int i, j, *list, best, team_players[MAX_TEAMS], best_team;
+    int i, j, *list, best, team_players[MAX_TEAMS], best_team = -1;
     double team_score[MAX_TEAMS];
     double best_score = -FLT_MAX;
     double best_team_score = -FLT_MAX;

@@ -537,14 +537,9 @@ static robot_t	*TypedRobots;
 static int	MAX_TYPED_ROBOTS = 0;
 
 /*
- * Function prototype for robot type setup routines.
- * Add your own robot type setup routine here.
+ * Robot type setup routines are declared in robot.h.
+ * Add your own robot type setup routine there and below.
  */
-extern int Robot_default_setup(robot_type_t *type_ptr);
-extern int Robot_smart_setup(robot_type_t *type_ptr);
-extern int Robot_ball_setup(robot_type_t *type_ptr);
-extern int Robot_race_setup(robot_type_t *type_ptr);
-extern int Robot_fight_setup(robot_type_t *type_ptr);
 
 /*
  * Array to store function pointers to robot type setup routines.

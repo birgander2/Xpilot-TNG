@@ -48,6 +48,7 @@
  */
 
 #include "xpserver.h"
+#include "botcore.h"
 #include <sys/stat.h>
 
 #define RB_TYPE_NAME		"race"
@@ -69,7 +70,7 @@
 #define RB_BOUNCE_COST		80.0	/* a wall bounce, besides the speed lost */
 #define RB_HARD_COST		3000.0	/* a bounce only the shield survives */
 /*
- * Skill below level 100 (see Rb_unskill(): 0 at level 100, 1 at level 1):
+ * Skill below level 100 (see Bot_unskill(): 0 at level 100, 1 at level 1):
  * a little less thrust and less exact manoeuvres, so lower levels lose
  * time like a weaker human pilot.
  */
@@ -224,8 +225,6 @@ static const poly_t	*RbPdata;
 static int		RbNumPolys = -1;
 static int		RbMapW = -1, RbMapH = -1, RbNumChecks = -1;
 static bool		RbMapOk;
-static bool		RbWrap;
-static double		RbW, RbH;
 static int		FineW, FineH;
 static double		FineCX, FineCY, FineStep;
 static float		*ShipClear;
@@ -236,9 +235,7 @@ static uint8_t		*NavEdge;
 static float		*NavCost;
 static float		*NavCostG;	/* NavCost, strong gravity costing more */
 
-typedef struct { float f; int32_t c; } rb_heap_t;
-static rb_heap_t	*Heap;
-static int		HeapN, HeapCap;
+static bot_heap_t	Heap;
 
 /*
  * CheckF[d][i]: cost to pass checkpoint i and then the d checkpoints after
@@ -300,75 +297,12 @@ static inline bool Rb_ally(player_t *a, player_t *b)
     return Team_immune(a->id, b->id);
 }
 
-static inline double Rb_px(click_t c)
-{
-    return (double)c / CLICK;
-}
-
-static inline double Rb_wdx(double dx)
-{
-    if (RbWrap) {
-	if (dx > RbW * 0.5)
-	    dx -= RbW;
-	else if (dx < -RbW * 0.5)
-	    dx += RbW;
-    }
-    return dx;
-}
-
-static inline double Rb_wdy(double dy)
-{
-    if (RbWrap) {
-	if (dy > RbH * 0.5)
-	    dy -= RbH;
-	else if (dy < -RbH * 0.5)
-	    dy += RbH;
-    }
-    return dy;
-}
-
-static inline double Rb_dist(double x1, double y1, double x2, double y2)
-{
-    return LENGTH(Rb_wdx(x2 - x1), Rb_wdy(y2 - y1));
-}
-
-static inline int Rb_angle_diff(int a, int b)
-{
-    int d = MOD2(a - b, RES);
-
-    return d > RES / 2 ? d - RES : d;
-}
-
-static inline int Rb_dir_of(double x, double y)
-{
-    return MOD2((int)(findDir(x, y) + 0.5), RES);
-}
-
 static int Rb_level(rb_data_t *d)
 {
     int lvl = d->level > 0 ? d->level : options.smartRobotLevel;
 
     LIMIT(lvl, 1, 100);
     return lvl;
-}
-
-static int Rb_turn_rate(int level)
-{
-    return 3 + (level * 9) / 100;	/* same as the other smart robots */
-}
-
-static bool Rb_player_active(player_t *pl)
-{
-    return pl != NULL && !Player_is_tank(pl) && Player_is_alive(pl)
-	&& !Player_is_paused(pl) && !Player_is_waiting(pl);
-}
-
-static inline int Rb_turn_toward(int dir, int want, int rate)
-{
-    int d = Rb_angle_diff(want, dir);
-
-    LIMIT(d, -rate, rate);
-    return MOD2(dir + d, RES);
 }
 
 /* ------------------------------------------------------------------------
@@ -379,11 +313,11 @@ static inline int Rb_fine_index(double x, double y)
 {
     int ix, iy;
 
-    if (RbWrap) {
-	while (x < 0) x += RbW;
-	while (x >= RbW) x -= RbW;
-	while (y < 0) y += RbH;
-	while (y >= RbH) y -= RbH;
+    if (BotWrap) {
+	while (x < 0) x += BotW;
+	while (x >= BotW) x -= BotW;
+	while (y < 0) y += BotH;
+	while (y >= BotH) y -= BotH;
     }
     ix = (int)(x / FineCX);
     iy = (int)(y / FineCY);
@@ -402,7 +336,7 @@ static inline float Rb_ship_clear(double x, double y)
 /* Minimum clearance along a segment (absolute px), stops below 'need'. */
 static double Rb_segment_clear(double x1, double y1, double x2, double y2, double need)
 {
-    double dx = Rb_wdx(x2 - x1), dy = Rb_wdy(y2 - y1);
+    double dx = Bot_wdx(x2 - x1), dy = Bot_wdy(y2 - y1);
     double len = LENGTH(dx, dy), m = 1e9;
     int i, n = (int)(len / FineStep) + 1;
 
@@ -418,36 +352,6 @@ static double Rb_segment_clear(double x1, double y1, double x2, double y2, doubl
 	}
     }
     return m;
-}
-
-/* 1-D squared distance transform (Felzenszwalb & Huttenlocher). */
-static void Rb_dt1d(const double *f, double *d, int n, int *v, double *z)
-{
-    int q, k = 0;
-
-    v[0] = 0;
-    z[0] = -1e30;
-    z[1] = 1e30;
-    for (q = 1; q < n; q++) {
-	double s = ((f[q] + (double)q * q) - (f[v[k]] + (double)v[k] * v[k]))
-		   / (2.0 * q - 2.0 * v[k]);
-
-	while (s <= z[k]) {
-	    k--;
-	    s = ((f[q] + (double)q * q) - (f[v[k]] + (double)v[k] * v[k]))
-		/ (2.0 * q - 2.0 * v[k]);
-	}
-	k++;
-	v[k] = q;
-	z[k] = s;
-	z[k + 1] = 1e30;
-    }
-    k = 0;
-    for (q = 0; q < n; q++) {
-	while (z[k + 1] < q)
-	    k++;
-	d[q] = (double)(q - v[k]) * (q - v[k]) + f[v[k]];
-    }
 }
 
 /*
@@ -471,7 +375,7 @@ static bool Rb_edt(const uint8_t *obst, float *out)
 	return false;
     }
     for (x = 0; x < FineW; x++) {
-	if (RbWrap) {
+	if (BotWrap) {
 	    n = 3 * FineH;
 	    off = FineH;
 	    for (i = 0; i < n; i++)
@@ -483,12 +387,12 @@ static bool Rb_edt(const uint8_t *obst, float *out)
 	    for (i = 0; i < FineH; i++)
 		f[i + 1] = obst[i * FineW + x] ? 0.0 : big;
 	}
-	Rb_dt1d(f, d, n, v, z);
+	Bot_dt1d(f, d, n, v, z);
 	for (y = 0; y < FineH; y++)
 	    tmp[y * FineW + x] = d[y + off];
     }
     for (y = 0; y < FineH; y++) {
-	if (RbWrap) {
+	if (BotWrap) {
 	    n = 3 * FineW;
 	    off = FineW;
 	    for (i = 0; i < n; i++)
@@ -500,7 +404,7 @@ static bool Rb_edt(const uint8_t *obst, float *out)
 	    for (i = 0; i < FineW; i++)
 		f[i + 1] = tmp[y * FineW + i];
 	}
-	Rb_dt1d(f, d, n, v, z);
+	Bot_dt1d(f, d, n, v, z);
 	for (x = 0; x < FineW; x++) {
 	    double c = sqrt(MIN(d[x + off], 1e8)) * cell - 0.5 * cell;
 
@@ -519,11 +423,11 @@ static inline int Rb_nav_cell(double x, double y)
 {
     int ix, iy;
 
-    if (RbWrap) {
-	while (x < 0) x += RbW;
-	while (x >= RbW) x -= RbW;
-	while (y < 0) y += RbH;
-	while (y >= RbH) y -= RbH;
+    if (BotWrap) {
+	while (x < 0) x += BotW;
+	while (x >= BotW) x -= BotW;
+	while (y < 0) y += BotH;
+	while (y >= BotH) y -= BotH;
     }
     ix = (int)(x / NavCX);
     iy = (int)(y / NavCY);
@@ -536,53 +440,12 @@ static inline int Rb_nav_nb(int c, int dx, int dy)
 {
     int x = c % NavW + dx, y = c / NavW + dy;
 
-    if (RbWrap) {
+    if (BotWrap) {
 	x = (x + NavW) % NavW;
 	y = (y + NavH) % NavH;
     } else if (x < 0 || x >= NavW || y < 0 || y >= NavH)
 	return -1;
     return y * NavW + x;
-}
-
-static void Rb_heap_push(float f, int32_t c)
-{
-    int i;
-
-    if (HeapN >= HeapCap)
-	return;
-    i = HeapN++;
-    while (i > 0) {
-	int parent = (i - 1) / 2;
-
-	if (Heap[parent].f <= f)
-	    break;
-	Heap[i] = Heap[parent];
-	i = parent;
-    }
-    Heap[i].f = f;
-    Heap[i].c = c;
-}
-
-static rb_heap_t Rb_heap_pop(void)
-{
-    rb_heap_t top = Heap[0], last = Heap[--HeapN];
-    int i = 0;
-
-    while (HeapN > 0) {
-	int child = 2 * i + 1;
-
-	if (child >= HeapN)
-	    break;
-	if (child + 1 < HeapN && Heap[child + 1].f < Heap[child].f)
-	    child++;
-	if (Heap[child].f >= last.f)
-	    break;
-	Heap[i] = Heap[child];
-	i = child;
-    }
-    if (HeapN > 0)
-	Heap[i] = last;
-    return top;
 }
 
 static void Rb_field_free(rb_field_t *fd)
@@ -604,14 +467,13 @@ static void Rb_map_free(void)
 {
     int i, d;
 
-    free(ShipClear); free(NavRX); free(NavRY); free(NavClear); free(Heap);
+    free(ShipClear); free(NavRX); free(NavRY); free(NavClear);
     free(NavEdge); free(NavCost); free(NavCostG);
     ShipClear = NULL;
     NavRX = NavRY = NavClear = NULL;
     NavEdge = NULL;
     NavCost = NavCostG = NULL;
-    Heap = NULL;
-    HeapCap = HeapN = 0;
+    Bot_heap_free(&Heap);
     for (d = 0; d <= RB_DEPTH; d++) {
 	if (CheckF[d]) {
 	    for (i = 0; i < RbNumChecks; i++)
@@ -664,7 +526,7 @@ static bool Rb_field_compute(rb_field_t *fd, double gx, double gy, double seed_r
 	fd->dist[c] = RB_INF;
 	fd->next[c] = -1;
     }
-    HeapN = 0;
+    Heap.n = 0;
     if (seed_r > 0.0) {
 	int rx = (int)(seed_r / NavCX) + 1, ry = (int)(seed_r / NavCY) + 1, dx, dy;
 
@@ -674,14 +536,14 @@ static bool Rb_field_compute(rb_field_t *fd, double gx, double gy, double seed_r
 		float v0;
 
 		if (n < 0 || NavClear[n] < RB_PASS_R
-		    || Rb_dist(gx, gy, NavRX[n], NavRY[n]) > seed_r)
+		    || Bot_dist(gx, gy, NavRX[n], NavRY[n]) > seed_r)
 		    continue;
 		v0 = then ? then->dist[n] : 0.0f;
 		if (v0 >= RB_INF)
 		    continue;
 		fd->dist[n] = v0;
 		fd->next[n] = -2;
-		Rb_heap_push(v0, n);
+		Bot_heap_push(&Heap, v0, n);
 		seeded++;
 	    }
 	}
@@ -697,20 +559,20 @@ static bool Rb_field_compute(rb_field_t *fd, double gx, double gy, double seed_r
 
 		if (n < 0 || NavClear[n] < RB_PASS_R)
 		    continue;
-		d = Rb_dist(gx, gy, NavRX[n], NavRY[n]);
+		d = Bot_dist(gx, gy, NavRX[n], NavRY[n]);
 		if (d > (r + 0.75) * MAX(NavCX, NavCY))
 		    continue;
 		if (d < fd->dist[n]) {
 		    fd->dist[n] = (float)d;
 		    fd->next[n] = -2;
-		    Rb_heap_push((float)d, n);
+		    Bot_heap_push(&Heap, (float)d, n);
 		    seeded++;
 		}
 	    }
 	}
     }
-    while (HeapN > 0) {
-	rb_heap_t e = Rb_heap_pop();
+    while (Heap.n > 0) {
+	bot_heapent_t e = Bot_heap_pop(&Heap);
 	int j;
 
 	if (e.f > fd->dist[e.c])
@@ -726,7 +588,7 @@ static bool Rb_field_compute(rb_field_t *fd, double gx, double gy, double seed_r
 	    if (nd < fd->dist[n]) {
 		fd->dist[n] = nd;
 		fd->next[n] = e.c;
-		Rb_heap_push(nd, n);
+		Bot_heap_push(&Heap, nd, n);
 	    }
 	}
     }
@@ -749,7 +611,7 @@ static int Rb_field_best_cell(const rb_field_t *fd, double x, double y, double *
 
 	    if (n < 0 || fd->dist[n] >= RB_INF)
 		continue;
-	    v = fd->dist[n] + Rb_dist(x, y, NavRX[n], NavRY[n]);
+	    v = fd->dist[n] + Bot_dist(x, y, NavRX[n], NavRY[n]);
 	    if (v < bv) {
 		bv = v;
 		best = n;
@@ -767,7 +629,7 @@ static double Rb_field_value(const rb_field_t *fd, double x, double y)
     double v;
 
     if (Rb_field_best_cell(fd, x, y, &v) < 0)
-	return 1e5 + Rb_dist(x, y, fd->gx, fd->gy) * 3.0;
+	return 1e5 + Bot_dist(x, y, fd->gx, fd->gy) * 3.0;
     return v;
 }
 
@@ -872,15 +734,13 @@ static bool Rb_map_build(void)
 
     while (blocks / ((long)nb * nb) > 90000)
 	nb++;
-    RbWrap = BIT(world->rules->mode, WRAP_PLAY) ? true : false;
-    RbW = (double)world->cwidth / CLICK;
-    RbH = (double)world->cheight / CLICK;
+    Bot_geo_init();
     NavF = 5;
-    NavW = MAX(1, (int)(RbW / (BLOCK_SZ * nb) + 0.5));
-    NavH = MAX(1, (int)(RbH / (BLOCK_SZ * nb) + 0.5));
+    NavW = MAX(1, (int)(BotW / (BLOCK_SZ * nb) + 0.5));
+    NavH = MAX(1, (int)(BotH / (BLOCK_SZ * nb) + 0.5));
     NavN = NavW * NavH;
-    NavCX = RbW / NavW;
-    NavCY = RbH / NavH;
+    NavCX = BotW / NavW;
+    NavCY = BotH / NavH;
     FineW = NavW * NavF;
     FineH = NavH * NavF;
     FineCX = NavCX / NavF;
@@ -893,8 +753,7 @@ static bool Rb_map_build(void)
     NavRX = malloc(sizeof(float) * NavN);
     NavRY = malloc(sizeof(float) * NavN);
     NavClear = malloc(sizeof(float) * NavN);
-    HeapCap = NavN * 8 + 64;
-    Heap = malloc(sizeof(rb_heap_t) * HeapCap);
+    Bot_heap_alloc(&Heap, NavN * 8 + 64);
     NavEdge = calloc(NavN, 1);
     NavCost = malloc(sizeof(float) * NavN * 8);
     NavCostG = malloc(sizeof(float) * NavN * 8);
@@ -904,7 +763,7 @@ static bool Rb_map_build(void)
     }
     NumFuelF = Num_fuels();
     FuelF = calloc(MAX(NumFuelF, 1), sizeof(rb_field_t));
-    if (!ShipClear || !obs || !NavRX || !NavRY || !NavClear || !Heap
+    if (!ShipClear || !obs || !NavRX || !NavRY || !NavClear || !Heap.e
 	|| !NavEdge || !NavCost || !NavCostG || !CheckF[0] || !CheckF[1] || !CheckF[2]
 	|| !CheckF[RB_DEPTH] || !DetourF[0] || !DetourF[1] || !DetourF[2]
 	|| !DetourF[RB_DEPTH] || !FuelF) {
@@ -929,13 +788,13 @@ static bool Rb_map_build(void)
 	const poly_t *p = &pdata[i];
 	group_t *gp = groupptr_by_id(p->group);
 	const int *e = edgeptr + p->edges;
-	double ex = Rb_px(p->pos.cx), ey = Rb_px(p->pos.cy);
+	double ex = Bot_px(p->pos.cx), ey = Bot_px(p->pos.cy);
 
 	if (p->is_decor || (gp != NULL && ((gp->hitmask & NONBALL_BIT)
 					   || gp->type == FRICTION)))
 	    continue;
 	for (j = 0; j < p->num_points; j++) {
-	    double dx = Rb_px(e[2 * j]), dy = Rb_px(e[2 * j + 1]);
+	    double dx = Bot_px(e[2 * j]), dy = Bot_px(e[2 * j + 1]);
 	    int k, n = (int)(LENGTH(dx, dy) / (0.5 * FineStep)) + 1;
 
 	    for (k = 0; k <= n; k++) {
@@ -993,7 +852,7 @@ static bool Rb_map_build(void)
 	    m = Rb_segment_clear(NavRX[c], NavRY[c], NavRX[n], NavRY[n], RB_EDGE_R);
 	    if (m < RB_EDGE_R)
 		continue;
-	    len = Rb_dist(NavRX[c], NavRY[c], NavRX[n], NavRY[n]);
+	    len = Bot_dist(NavRX[c], NavRY[c], NavRX[n], NavRY[n]);
 	    pen = MAX(0.0, (RB_PREF_R - m) / RB_PREF_R);
 	    NavEdge[c] |= (uint8_t)(1 << j);
 	    NavCost[c * 8 + j] = (float)(len * (1.0 + RB_PREF_W * pen * pen));
@@ -1021,7 +880,7 @@ static bool Rb_map_build(void)
 	    check_t *ch = Check_by_index(i);
 	    const rb_field_t *then = d > 0 ? &CheckF[d - 1][(i + 1) % RbNumChecks] : NULL;
 
-	    if (!Rb_field_compute(&CheckF[d][i], Rb_px(ch->pos.cx), Rb_px(ch->pos.cy),
+	    if (!Rb_field_compute(&CheckF[d][i], Bot_px(ch->pos.cx), Bot_px(ch->pos.cy),
 				  MAX(CheckR - 12.0, 8.0), then, NULL)) {
 		Rb_map_free();
 		return false;
@@ -1060,7 +919,7 @@ static rb_field_t *Rb_fuel_field(int fs)
 	return NULL;
     if (!FuelF[fs].valid) {
 	f = Fuel_by_index(fs);
-	if (!Rb_field_compute(&FuelF[fs], Rb_px(f->pos.cx), Rb_px(f->pos.cy), 0.0, NULL, NULL))
+	if (!Rb_field_compute(&FuelF[fs], Bot_px(f->pos.cx), Bot_px(f->pos.cy), 0.0, NULL, NULL))
 	    return NULL;
     }
     return &FuelF[fs];
@@ -1080,7 +939,7 @@ static const rb_field_t *Rb_detour_field(int d, int i)
 
 	if (d > 0 && (then = Rb_detour_field(d - 1, (i + 1) % RbNumChecks)) == NULL)
 	    return NULL;
-	if (!Rb_field_compute(fd, Rb_px(ch->pos.cx), Rb_px(ch->pos.cy),
+	if (!Rb_field_compute(fd, Bot_px(ch->pos.cx), Bot_px(ch->pos.cy),
 			      MAX(CheckR - 12.0, 8.0), then, NavCostG))
 	    return NULL;
 	if (d < RB_DEPTH) {
@@ -1100,38 +959,6 @@ bool Robot_race_map(void)
 /* ------------------------------------------------------------------------
  * Learning: per map and segment, kept in a small text file
  * ------------------------------------------------------------------------ */
-
-static const char *Rb_learn_path(bool mkdirs)
-{
-    static char path[PATH_MAX];
-    const char *base = Conf_user_data_dir();
-    char name[MAX_CHARS], *p;
-    int i, n = 0;
-
-    for (i = 0; Learn.map[i] != '\0' && n < (int)sizeof(name) - 1; i++) {
-	char ch = Learn.map[i];
-
-	if (isalnum((unsigned char)ch) || ch == '-' || ch == '_')
-	    name[n++] = (char)tolower((unsigned char)ch);
-	else if (n > 0 && name[n - 1] != '_')
-	    name[n++] = '_';
-    }
-    name[n] = '\0';
-    if (n == 0)
-	strlcpy(name, "unnamed", sizeof(name));
-
-    if (base == NULL)
-	return NULL;
-    snprintf(path, sizeof(path), "%s/" RB_LEARN_SUBDIR "/%s.txt", base, name);
-    if (mkdirs) {
-	for (p = path + 1; (p = strchr(p, '/')) != NULL; p++) {
-	    *p = '\0';
-	    mkdir(path, 0755);
-	    *p = '/';
-	}
-    }
-    return path;
-}
 
 static void Rb_learn_reset(void)
 {
@@ -1163,7 +990,7 @@ static void Rb_learn_load(void)
     Learn.loaded = true;
     Rb_learn_reset();
 
-    path = Rb_learn_path(false);
+    path = Bot_learn_path(Learn.map, RB_LEARN_SUBDIR, false);
     if (path == NULL || (fp = fopen(path, "r")) == NULL)
 	return;
     if (fgets(line, sizeof(line), fp) != NULL) {
@@ -1202,7 +1029,7 @@ static void Rb_learn_save(void)
 
     if (!Learn.loaded || Learn.seg == NULL)
 	return;
-    path = Rb_learn_path(true);
+    path = Bot_learn_path(Learn.map, RB_LEARN_SUBDIR, true);
     if (path == NULL)
 	return;
     /* write a temporary file and rename it, a crash never leaves half a file */
@@ -1294,7 +1121,7 @@ static double Rb_fuel_needed(player_t *pl)
 	     * speed.  Too low a guess is no harm, the first lap measures it.
 	     */
 	    check_t *a = Check_by_index((seg + n - 1) % n);
-	    double len = Rb_field_value(&CheckF[0][seg], Rb_px(a->pos.cx), Rb_px(a->pos.cy));
+	    double len = Rb_field_value(&CheckF[0][seg], Bot_px(a->pos.cx), Bot_px(a->pos.cy));
 
 	    f = MIN(len, 1e4) / 35.0 * MAX_PLAYER_POWER * 0.0008 + 0.5;
 	}
@@ -1306,37 +1133,6 @@ static double Rb_fuel_needed(player_t *pl)
 /* ------------------------------------------------------------------------
  * Physics model and the sampling flight controller
  * ------------------------------------------------------------------------ */
-
-/* Farthest point of the ship shape from its centre (px), at least SHIP_SZ. */
-static double Rb_ship_radius(player_t *pl)
-{
-    double r = SHIP_SZ;
-    int i;
-
-    if (pl->ship == NULL)
-	return r + 1.0;
-    for (i = 0; i < pl->ship->num_points; i++) {
-	clpos_t pt = pl->ship->pts[i][0];
-
-	r = MAX(r, LENGTH(pt.cx, pt.cy) / CLICK);
-    }
-    return r + 1.0;
-}
-
-/*
- * How far below level 100: 0 at level 100, 1 at level 1.  Rising faster
- * than linear from level 100 down, so middle levels feel it too.
- */
-static double Rb_unskill(int level)
-{
-    return pow((100 - level) / 99.0, 0.7);
-}
-
-/* Thrust power of the skill level; the model uses what the ship gets. */
-static double Rb_power(int level)
-{
-    return MAX_PLAYER_POWER * (1.0 - RB_POWER_LOSS * Rb_unskill(level));
-}
 
 static double Rb_thrust_acc(player_t *pl)
 {
@@ -1424,7 +1220,7 @@ static inline void Rb_gravity(double x, double y, double *gx, double *gy)
 {
     int bx = (int)(x / BLOCK_SZ), by = (int)(y / BLOCK_SZ);
 
-    if (RbWrap) {
+    if (BotWrap) {
 	bx = (bx % world->x + world->x) % world->x;
 	by = (by % world->y + world->y) % world->y;
     }
@@ -1508,9 +1304,9 @@ static void Rb_default_action(const rb_ctx_t *cx, const rb_state_t *s,
 	*thrust = false;
 	return;
     }
-    w = Rb_dir_of(ax, ay);
+    w = Bot_dir_of(ax, ay);
     *want = w;
-    *thrust = ABS(Rb_angle_diff(w, s->dir)) <= 10;
+    *thrust = ABS(Bot_angle_diff(w, s->dir)) <= 10;
 }
 
 /* Free distance along (ux, uy) from (x, y) (relative), up to max. */
@@ -1524,23 +1320,6 @@ static double Rb_ray_free(const rb_ctx_t *cx, double x, double y,
 	    return t;
     }
     return max;
-}
-
-/* Squared closest distance during one tick between two moving points. */
-static inline double Rb_cpa2(double ax0, double ay0, double ax1, double ay1,
-			     double bx0, double by0, double bx1, double by1)
-{
-    double rx = bx0 - ax0, ry = by0 - ay0;
-    double wx = (bx1 - bx0) - (ax1 - ax0), wy = (by1 - by0) - (ay1 - ay0);
-    double ww = wx * wx + wy * wy, t = 0.0;
-
-    if (ww > 1e-9) {
-	t = -(rx * wx + ry * wy) / ww;
-	LIMIT(t, 0.0, 1.0);
-    }
-    rx += wx * t;
-    ry += wy * t;
-    return rx * rx + ry * ry;
 }
 
 static double Rb_shot_miss(int dir, double rx, double ry, double wvx, double wvy,
@@ -1563,8 +1342,8 @@ static double Rb_shot_miss(int dir, double rx, double ry, double wvx, double wvy
 static inline bool Rb_in_check(const rb_ctx_t *cx, int ci, double x, double y)
 {
     check_t *ch = Check_by_index(ci);
-    double dx = Rb_wdx(cx->ox + x - Rb_px(ch->pos.cx));
-    double dy = Rb_wdy(cx->oy + y - Rb_px(ch->pos.cy));
+    double dx = Bot_wdx(cx->ox + x - Bot_px(ch->pos.cx));
+    double dy = Bot_wdy(cx->oy + y - Bot_px(ch->pos.cy));
 
     return dx * dx + dy * dy < cx->check_r2;
 }
@@ -1601,11 +1380,11 @@ static double Rb_rollout(const rb_ctx_t *cx, const rb_cand_t *cand, rb_cand_t *r
 
 		/* the cache is no change of the field: cast the const away */
 		if (fd && Rb_field_carrot_cell((rb_field_t *)fd, ax, ay, &rx, &ry, &car_goal)) {
-		    carx = Rb_wdx(rx - cx->ox);
-		    cary = Rb_wdy(ry - cx->oy);
+		    carx = Bot_wdx(rx - cx->ox);
+		    cary = Bot_wdy(ry - cx->oy);
 		} else if (!cx->race) {
-		    carx = Rb_wdx(cx->gx - cx->ox);
-		    cary = Rb_wdy(cx->gy - cx->oy);
+		    carx = Bot_wdx(cx->gx - cx->ox);
+		    cary = Bot_wdy(cx->gy - cx->oy);
 		    car_goal = true;
 		}
 		have_car = true;
@@ -1613,9 +1392,10 @@ static double Rb_rollout(const rb_ctx_t *cx, const rb_cand_t *cand, rb_cand_t *r
 	    }
 	    Rb_default_action(cx, &s, carx, cary, car_goal, &want, &thr);
 	}
-	s.dir = Rb_turn_toward(s.dir, want, cx->turn);
+	s.dir = Bot_turn_toward(s.dir, want, cx->turn);
 	rec->dir[t] = (short)s.dir;
 	rec->thr[t] = thr;
+	rec->len = t + 1;	/* the rollout may end early: only these steps are valid */
 	Rb_sim_tick(cx, &s, thr);
 
 	if (s.crashed
@@ -1670,7 +1450,7 @@ static double Rb_rollout(const rb_ctx_t *cx, const rb_cand_t *cand, rb_cand_t *r
 
 	/* aiming at an attacker: pointing at him early is worth most */
 	if (cx->has_target && t < 4) {
-	    int err = ABS(Rb_angle_diff(s.dir, cx->lead_dir));
+	    int err = ABS(Bot_angle_diff(s.dir, cx->lead_dir));
 
 	    cost += cx->aim_w * 10.0 * MIN(err, 32);
 	}
@@ -1686,7 +1466,7 @@ static double Rb_rollout(const rb_ctx_t *cx, const rb_cand_t *cand, rb_cand_t *r
 		continue;
 	    t0 -= sh->t0;
 	    t1 -= sh->t0;
-	    if (Rb_cpa2(px0, py0, s.x, s.y, sh->x + sh->vx * t0, sh->y + sh->vy * t0,
+	    if (Bot_cpa2(px0, py0, s.x, s.y, sh->x + sh->vx * t0, sh->y + sh->vy * t0,
 			sh->x + sh->vx * t1, sh->y + sh->vy * t1)
 		< sqr(RB_SHIP_R + 4.0 + cx->margin)) {
 		cost += sh->weight * (1.0 - 0.5 * t / RB_NEAR_H);
@@ -1702,7 +1482,7 @@ static double Rb_rollout(const rb_ctx_t *cx, const rb_cand_t *cand, rb_cand_t *r
 	for (i = 0; i < cx->nen; i++) {
 	    const rb_enemy_t *e = &cx->en[i];
 	    double tt = t + 1.0, ex = e->x + e->vx * tt, ey = e->y + e->vy * tt;
-	    double d2 = Rb_cpa2(px0, py0, s.x, s.y, ex - e->vx, ey - e->vy, ex, ey);
+	    double d2 = Bot_cpa2(px0, py0, s.x, s.y, ex - e->vx, ey - e->vy, ex, ey);
 	    double hit = cx->ship_r + RB_SHIP_R + 8.0;
 	    double may = hit + MIN(0.5 * cx->acc * tt * tt, 45.0);
 
@@ -1736,9 +1516,9 @@ static double Rb_rollout(const rb_ctx_t *cx, const rb_cand_t *cand, rb_cand_t *r
 	    double gd;
 
 	    ctg = fd ? Rb_field_value(fd, cx->ox + s.x, cx->oy + s.y)
-		     : Rb_dist(cx->ox + s.x, cx->oy + s.y, cx->gx, cx->gy);
+		     : Bot_dist(cx->ox + s.x, cx->oy + s.y, cx->gx, cx->gy);
 	    ctg = MAX(0.0, ctg - cx->arrive_r);
-	    gd = Rb_dist(cx->ox + s.x, cx->oy + s.y, cx->gx, cx->gy);
+	    gd = Bot_dist(cx->ox + s.x, cx->oy + s.y, cx->gx, cx->gy);
 	    if (gd < cx->arrive_r * 2.0 + 60.0)
 		cost += (s.vx * s.vx + s.vy * s.vy) * 6.0;
 	}
@@ -1772,32 +1552,6 @@ static void Rb_cand_set(rb_cand_t *c, int dir, bool thr, int len)
     }
 }
 
-static bool Rb_lead(double rx, double ry, double wvx, double wvy, double s,
-		    double *dir, double *tof)
-{
-    double a = wvx * wvx + wvy * wvy - s * s;
-    double b = 2.0 * (rx * wvx + ry * wvy);
-    double c = rx * rx + ry * ry, t;
-
-    if (ABS(a) < 1e-6)
-	t = b < 0.0 ? -c / b : -1.0;
-    else {
-	double disc = b * b - 4.0 * a * c, t1, t2;
-
-	if (disc < 0.0)
-	    return false;
-	disc = sqrt(disc);
-	t1 = (-b - disc) / (2.0 * a);
-	t2 = (-b + disc) / (2.0 * a);
-	t = (t1 > 0.0 && (t1 < t2 || t2 <= 0.0)) ? t1 : t2;
-    }
-    if (t <= 0.0)
-	return false;
-    *dir = findDir(rx + wvx * t, ry + wvy * t);
-    *tof = t;
-    return true;
-}
-
 static bool Rb_is_threat(const rb_data_t *d, const player_t *e)
 {
     return e->id >= 0 && e->id < NUM_IDS && d->threat_time[e->id] > 0
@@ -1823,14 +1577,14 @@ static rb_flags_t Rb_fly(player_t *pl, rb_data_t *d, int level, int pit,
     memset(&cx.s0, 0, sizeof(cx.s0));
     cx.pl = pl;
     cx.d = d;
-    cx.ox = Rb_px(pl->pos.cx);
-    cx.oy = Rb_px(pl->pos.cy);
+    cx.ox = Bot_px(pl->pos.cx);
+    cx.oy = Bot_px(pl->pos.cy);
     cx.s0.vx = pl->vel.x;
     cx.s0.vy = pl->vel.y;
     cx.s0.dir = pl->dir;
     cx.acc = Rb_thrust_acc(pl);
-    cx.ship_r = Rb_ship_radius(pl);
-    cx.turn = Rb_turn_rate(level);
+    cx.ship_r = Bot_ship_radius(pl);
+    cx.turn = Bot_turn_rate(level);
     cx.frames = MAX(1, (int)(1.0 / timeStep + 0.5));
     cx.dt = 1.0 / cx.frames;
     cx.fric_keep = pow(MAX(1.0 - options.frictionSetting, 0.0), cx.dt);
@@ -1882,8 +1636,8 @@ static rb_flags_t Rb_fly(player_t *pl, rb_data_t *d, int level, int pit,
 	fuel_t *fs = Fuel_by_index(pit);
 
 	cx.pfield = Rb_fuel_field(pit);
-	cx.gx = Rb_px(fs->pos.cx);
-	cx.gy = Rb_px(fs->pos.cy);
+	cx.gx = Bot_px(fs->pos.cx);
+	cx.gy = Bot_px(fs->pos.cy);
 	cx.arrive_r = 25.0;
     }
     cx.vmax = cx.race ? 80.0 : 22.0;
@@ -1902,8 +1656,8 @@ static rb_flags_t Rb_fly(player_t *pl, rb_data_t *d, int level, int pit,
 	    || (options.teamImmunity && o->team == pl->team
 		&& BIT(world->rules->mode, TEAM_PLAY)))
 	    continue;
-	rx = Rb_wdx(Rb_px(o->pos.cx) - cx.ox);
-	ry = Rb_wdy(Rb_px(o->pos.cy) - cx.oy);
+	rx = Bot_wdx(Bot_px(o->pos.cx) - cx.ox);
+	ry = Bot_wdy(Bot_px(o->pos.cy) - cx.oy);
 	if (LENGTH(rx, ry) > vis)
 	    continue;
 	dvx = o->vel.x - pl->vel.x;
@@ -1933,10 +1687,10 @@ static rb_flags_t Rb_fly(player_t *pl, rb_data_t *d, int level, int pit,
 	    player_t *e = Player_by_index(i);
 	    double rx, ry;
 
-	    if (Rb_ally(e, pl) || !Rb_player_active(e))
+	    if (Rb_ally(e, pl) || !Bot_player_active(e))
 		continue;
-	    rx = Rb_wdx(Rb_px(e->pos.cx) - e->vel.x * delay - cx.ox);
-	    ry = Rb_wdy(Rb_px(e->pos.cy) - e->vel.y * delay - cx.oy);
+	    rx = Bot_wdx(Bot_px(e->pos.cx) - e->vel.x * delay - cx.ox);
+	    ry = Bot_wdy(Bot_px(e->pos.cy) - e->vel.y * delay - cx.oy);
 	    if (LENGTH(rx, ry) > 900.0)
 		continue;
 	    cx.en[cx.nen].x = rx;
@@ -1960,12 +1714,12 @@ static rb_flags_t Rb_fly(player_t *pl, rb_data_t *d, int level, int pit,
 	double rx, ry, dist;
 	int k;
 
-	if (Rb_ally(e, pl) || !Rb_player_active(e) || !Rb_is_threat(d, e))
+	if (Rb_ally(e, pl) || !Bot_player_active(e) || !Rb_is_threat(d, e))
 	    continue;
-	rx = Rb_wdx(Rb_px(e->pos.cx) - cx.ox);
-	ry = Rb_wdy(Rb_px(e->pos.cy) - cx.oy);
+	rx = Bot_wdx(Bot_px(e->pos.cx) - cx.ox);
+	ry = Bot_wdy(Bot_px(e->pos.cy) - cx.oy);
 	dist = LENGTH(rx, ry);
-	if (dist > 700.0 || ABS(Rb_angle_diff(e->dir, Rb_dir_of(-rx, -ry))) > 12)
+	if (dist > 700.0 || ABS(Bot_angle_diff(e->dir, Bot_dir_of(-rx, -ry))) > 12)
 	    continue;
 	for (k = 0; k < 3; k++) {
 	    rb_shot_t *sh = &cx.shots[cx.nshots++];
@@ -1984,25 +1738,25 @@ static rb_flags_t Rb_fly(player_t *pl, rb_data_t *d, int level, int pit,
 	double ldir, tof;
 
 	cx.aim_w = 0.25;
-	if (Rb_lead(cx.tx, cx.ty, cx.tvx - pl->vel.x, cx.tvy - pl->vel.y,
+	if (Bot_lead(cx.tx, cx.ty, cx.tvx - pl->vel.x, cx.tvy - pl->vel.y,
 		    options.shotSpeed, &ldir, &tof))
 	    cx.lead_dir = MOD2((int)(ldir + 0.5), RES);
 	else
-	    cx.lead_dir = Rb_dir_of(cx.tx, cx.ty);
+	    cx.lead_dir = Bot_dir_of(cx.tx, cx.ty);
     }
 
     /* candidates: headings x {short thrust, short coast, long thrust} */
     nheads = level >= 50 ? 32 : 16;
     specials[nspec++] = pl->dir;
     if (LENGTH(pl->vel.x, pl->vel.y) > 1.0)
-	specials[nspec++] = Rb_dir_of(-pl->vel.x, -pl->vel.y);
+	specials[nspec++] = Bot_dir_of(-pl->vel.x, -pl->vel.y);
     {
 	const rb_field_t *fd = cx.race ? cx.pf[0] : cx.pfield;
 	double rx, ry;
 	bool g;
 
 	if (fd && Rb_field_carrot(fd, cx.ox, cx.oy, RB_SHIP_R + 6.0, 10, &rx, &ry, &g)) {
-	    int dc = Rb_dir_of(Rb_wdx(rx - cx.ox), Rb_wdy(ry - cx.oy));
+	    int dc = Bot_dir_of(Bot_wdx(rx - cx.ox), Bot_wdy(ry - cx.oy));
 
 	    specials[nspec++] = dc;
 	    specials[nspec++] = MOD2(dc + RES / 32, RES);
@@ -2044,7 +1798,7 @@ static rb_flags_t Rb_fly(player_t *pl, rb_data_t *d, int level, int pit,
 	double c = Rb_rollout(&cx, &cand[i], &rec, NULL);
 
 	/* lower levels misjudge: now and then a worse plan looks best */
-	c += rfrac() * RB_PLAN_NOISE * Rb_unskill(level);
+	c += rfrac() * RB_PLAN_NOISE * Bot_unskill(level);
 
 	/* a little inertia against dithering between equal plans */
 	if (i == prev_i)
@@ -2057,36 +1811,17 @@ static rb_flags_t Rb_fly(player_t *pl, rb_data_t *d, int level, int pit,
     if (best_cost >= 1e30)
 	return fl;
 
-    best_rec.len = RB_H;
     Rb_rollout(&cx, &best_rec, &rec, &fl);
     if (cx.race)
 	fl.progress = Rb_field_value(cx.vf[0], cx.ox, cx.oy) - fl.end_value;
-    d->plan_len = RB_H;
-    memcpy(d->plan_dir, best_rec.dir, sizeof(short) * RB_H);
-    memcpy(d->plan_thr, best_rec.thr, sizeof(bool) * RB_H);
+    d->plan_len = best_rec.len;
+    memcpy(d->plan_dir, best_rec.dir, sizeof(short) * best_rec.len);
+    memcpy(d->plan_thr, best_rec.thr, sizeof(bool) * best_rec.len);
 
     fl.valid = true;
     fl.dir = best_rec.dir[0];
     fl.thrust = best_rec.thr[0];
     return fl;
-}
-
-/*
- * Heading (rate limited, as in the model) and thrust.  Turning can push the
- * ship off a wall, which is a bounce: the shield must be decided before.
- */
-static void Rb_steer(player_t *pl, int want, bool thrust)
-{
-    if (want != pl->dir) {
-	pl->turnspeed = 0;
-	pl->turnresistance = 0;
-	pl->turnacc = 0;
-	pl->turnvel = 0;
-	Player_set_float_dir(pl, (double)want);
-	pl->wanted_float_dir = pl->float_dir;
-	Turn_player(pl, true);
-    }
-    Thrust(pl, thrust);
 }
 
 /* ------------------------------------------------------------------------
@@ -2096,7 +1831,7 @@ static void Rb_steer(player_t *pl, int want, bool thrust)
 /* Who shoots at us or pushes us?  Remembered as threats for a while. */
 static void Rb_update_threats(player_t *pl, rb_data_t *d)
 {
-    double ox = Rb_px(pl->pos.cx), oy = Rb_px(pl->pos.cy);
+    double ox = Bot_px(pl->pos.cx), oy = Bot_px(pl->pos.cy);
     int i;
 
     for (i = 0; i < NumObjs; i++) {
@@ -2113,8 +1848,8 @@ static void Rb_update_threats(player_t *pl, rb_data_t *d)
 	e = Player_by_id(o->id);
 	if (e == NULL || Rb_ally(e, pl))
 	    continue;
-	rx = Rb_wdx(Rb_px(o->pos.cx) - ox);
-	ry = Rb_wdy(Rb_px(o->pos.cy) - oy);
+	rx = Bot_wdx(Bot_px(o->pos.cx) - ox);
+	ry = Bot_wdy(Bot_px(o->pos.cy) - oy);
 	if (LENGTH(rx, ry) > 600.0)
 	    continue;
 	dvx = o->vel.x - pl->vel.x;
@@ -2135,9 +1870,9 @@ static void Rb_update_threats(player_t *pl, rb_data_t *d)
 	    player_t *e = Player_by_index(i);
 	    double dist;
 
-	    if (Rb_ally(e, pl) || !Rb_player_active(e))
+	    if (Rb_ally(e, pl) || !Bot_player_active(e))
 		continue;
-	    dist = Rb_dist(ox, oy, Rb_px(e->pos.cx), Rb_px(e->pos.cy));
+	    dist = Bot_dist(ox, oy, Bot_px(e->pos.cx), Bot_px(e->pos.cy));
 	    if (dist < 3.0 * RB_SHIP_R + 10.0 && (bumped || d->alive_ticks < 2))
 		d->threat_time[e->id] = RbTick;
 	}
@@ -2149,7 +1884,7 @@ static void Rb_update_threats(player_t *pl, rb_data_t *d)
 /* The closest threat we can see, for aiming and shooting back. */
 static player_t *Rb_pick_target(player_t *pl, rb_data_t *d)
 {
-    double ox = Rb_px(pl->pos.cx), oy = Rb_px(pl->pos.cy), bd = 700.0;
+    double ox = Bot_px(pl->pos.cx), oy = Bot_px(pl->pos.cy), bd = 700.0;
     player_t *best = NULL;
     int i;
 
@@ -2157,9 +1892,9 @@ static player_t *Rb_pick_target(player_t *pl, rb_data_t *d)
 	player_t *e = Player_by_index(i);
 	double dist;
 
-	if (Rb_ally(e, pl) || !Rb_player_active(e) || !Rb_is_threat(d, e))
+	if (Rb_ally(e, pl) || !Bot_player_active(e) || !Rb_is_threat(d, e))
 	    continue;
-	dist = Rb_dist(ox, oy, Rb_px(e->pos.cx), Rb_px(e->pos.cy));
+	dist = Bot_dist(ox, oy, Bot_px(e->pos.cx), Bot_px(e->pos.cy));
 	if (dist < bd) {
 	    bd = dist;
 	    best = e;
@@ -2171,7 +1906,7 @@ static player_t *Rb_pick_target(player_t *pl, rb_data_t *d)
 /* Shoot at a threat when the shot would hit (walls stop shots). */
 static void Rb_fire(player_t *pl, rb_data_t *d, int level)
 {
-    double ox = Rb_px(pl->pos.cx), oy = Rb_px(pl->pos.cy), f = level / 100.0;
+    double ox = Bot_px(pl->pos.cx), oy = Bot_px(pl->pos.cy), f = level / 100.0;
     int i;
 
     if (!BIT(pl->have, HAS_SHOT) || !Can_shoot_normal_shot(pl)
@@ -2188,10 +1923,10 @@ static void Rb_fire(player_t *pl, rb_data_t *d, int level)
 	double rx, ry, tof = 0.0, tol, miss, hx, hy;
 	int fdir;
 
-	if (Rb_ally(e, pl) || !Rb_player_active(e) || !Rb_is_threat(d, e))
+	if (Rb_ally(e, pl) || !Bot_player_active(e) || !Rb_is_threat(d, e))
 	    continue;
-	rx = Rb_wdx(Rb_px(e->pos.cx) - ox);
-	ry = Rb_wdy(Rb_px(e->pos.cy) - oy);
+	rx = Bot_wdx(Bot_px(e->pos.cx) - ox);
+	ry = Bot_wdy(Bot_px(e->pos.cy) - oy);
 	if (LENGTH(rx, ry) > VISIBILITY_DISTANCE * 0.8)
 	    continue;
 	fdir = MOD2(pl->dir + (int)(d->aim_off + (d->aim_off < 0 ? -0.5 : 0.5)), RES);
@@ -2221,7 +1956,7 @@ static void Rb_fire(player_t *pl, rb_data_t *d, int level)
  */
 static int Rb_pick_station(player_t *pl, int exclude)
 {
-    double ox = Rb_px(pl->pos.cx), oy = Rb_px(pl->pos.cy), best = 1e30;
+    double ox = Bot_px(pl->pos.cx), oy = Bot_px(pl->pos.cy), best = 1e30;
     const rb_field_t *cf = &CheckF[0][pl->check];
     double here = Rb_field_value(cf, ox, oy);
     int i, j, bi = -1;
@@ -2230,7 +1965,7 @@ static int Rb_pick_station(player_t *pl, int exclude)
 	return -1;
     for (i = 0; i < Num_fuels(); i++) {
 	fuel_t *fs = Fuel_by_index(i);
-	double sx = Rb_px(fs->pos.cx), sy = Rb_px(fs->pos.cy), to, c;
+	double sx = Bot_px(fs->pos.cx), sy = Bot_px(fs->pos.cy), to, c;
 
 	if (i == exclude || fs->fuel < 20.0
 	    || (BIT(world->rules->mode, TEAM_PLAY) && options.teamFuel
@@ -2244,9 +1979,9 @@ static int Rb_pick_station(player_t *pl, int exclude)
 	for (j = 0; j < NumPlayers; j++) {
 	    player_t *o = Player_by_index(j);
 
-	    if (o == pl || !Rb_player_active(o))
+	    if (o == pl || !Bot_player_active(o))
 		continue;
-	    if (Rb_dist(sx, sy, Rb_px(o->pos.cx), Rb_px(o->pos.cy)) < 80.0
+	    if (Bot_dist(sx, sy, Bot_px(o->pos.cx), Bot_px(o->pos.cy)) < 80.0
 		|| (Rb_is_racebot(o) && Rb_data(o)->pit && Rb_data(o)->pit_station == i))
 		c += 1000.0;
 	}
@@ -2428,7 +2163,7 @@ static void Rb_track_progress(player_t *pl, rb_data_t *d)
  */
 static void Rb_check_stuck(player_t *pl, rb_data_t *d, int pit)
 {
-    double v = Rb_field_value(&CheckF[0][pl->check], Rb_px(pl->pos.cx), Rb_px(pl->pos.cy));
+    double v = Rb_field_value(&CheckF[0][pl->check], Bot_px(pl->pos.cx), Bot_px(pl->pos.cy));
 
     if (pl->check != d->stuck_check || pit >= 0 || Player_is_refueling(pl)
 	|| v < d->stuck_best - RB_STUCK_GAIN) {
@@ -2441,14 +2176,14 @@ static void Rb_check_stuck(player_t *pl, rb_data_t *d, int pit)
     if (!d->destruct && RbTick - d->stuck_since > RB_STUCK_TICKS) {
 	d->destruct = true;
 	RB_LOG("[racebot] %s is stuck at %.0f,%.0f: self-destruct\n", pl->name,
-	       Rb_px(pl->pos.cx), Rb_px(pl->pos.cy));
+	       Bot_px(pl->pos.cx), Bot_px(pl->pos.cy));
     }
 }
 
 /* Strongest gravity within 'range' px of the ship. */
 static double Rb_gravity_near(player_t *pl, double range)
 {
-    int bx0 = (int)(Rb_px(pl->pos.cx) / BLOCK_SZ), by0 = (int)(Rb_px(pl->pos.cy) / BLOCK_SZ);
+    int bx0 = (int)(Bot_px(pl->pos.cx) / BLOCK_SZ), by0 = (int)(Bot_px(pl->pos.cy) / BLOCK_SZ);
     int r = (int)(range / BLOCK_SZ) + 1, bx, by;
     double g = 0.0;
 
@@ -2490,7 +2225,7 @@ static void Rb_check_detour(player_t *pl, rb_data_t *d, const rb_flags_t *fl)
 	d->detour = true;
 	d->plan_len = 0;
 	RB_LOG("[racebot] %s too slow for the gravity at %.0f,%.0f: detour\n",
-	       pl->name, Rb_px(pl->pos.cx), Rb_px(pl->pos.cy));
+	       pl->name, Bot_px(pl->pos.cx), Bot_px(pl->pos.cy));
     }
 }
 
@@ -2503,7 +2238,7 @@ static void Robot_race_play(player_t *pl)
 
     CLR_BIT(pl->used, USES_SHOT | USES_SHIELD | USES_LASER | USES_CONNECTOR);
     Player_self_destruct(pl, d->destruct);
-    pl->power = Rb_power(level);	/* before planning: the model uses it */
+    pl->power = Bot_power(level, RB_POWER_LOSS);	/* before planning: the model uses it */
     if (pl->damaged > 0 || !Robot_race_map() || !RbMapOk
 	|| BIT(pl->pl_status, FINISH | RACE_OVER)) {
 	Thrust(pl, false);
@@ -2525,8 +2260,8 @@ static void Robot_race_play(player_t *pl)
      * only a shield survives, or a ship closing in fast (ships swerve).
      */
     if (BIT(pl->have, HAS_SHIELD) && pl->fuel.sum > 5.0) {
-	double v = LENGTH(pl->vel.x, pl->vel.y), x = Rb_px(pl->pos.cx), y = Rb_px(pl->pos.cy);
-	double r = Rb_ship_radius(pl);
+	double v = LENGTH(pl->vel.x, pl->vel.y), x = Bot_px(pl->pos.cx), y = Bot_px(pl->pos.cy);
+	double r = Bot_ship_radius(pl);
 	bool danger = (fl.shot_t >= 0 && fl.shot_t <= 2) || (fl.ram_t >= 0 && fl.ram_t <= 1)
 	    || (fl.hard_t >= 0 && fl.hard_t <= 2);
 	int i;
@@ -2542,10 +2277,10 @@ static void Robot_race_play(player_t *pl)
 	    player_t *e = Player_by_index(i);
 	    double rx, ry, rvx, rvy;
 
-	    if (Rb_ally(e, pl) || !Rb_player_active(e))
+	    if (Rb_ally(e, pl) || !Bot_player_active(e))
 		continue;
-	    rx = Rb_wdx(Rb_px(e->pos.cx) - x);
-	    ry = Rb_wdy(Rb_px(e->pos.cy) - y);
+	    rx = Bot_wdx(Bot_px(e->pos.cx) - x);
+	    ry = Bot_wdy(Bot_px(e->pos.cy) - y);
 	    rvx = e->vel.x - pl->vel.x;
 	    rvy = e->vel.y - pl->vel.y;
 	    danger = rx * rvx + ry * rvy < 0.0
@@ -2562,12 +2297,12 @@ static void Robot_race_play(player_t *pl)
 	 * in strong gravity, where it would only get the ship stuck.
 	 */
 	if (RbTick - d->steer_time > 10) {
-	    d->steer_off = (rfrac() - 0.5) * 2.0 * RB_STEER_ERR * Rb_unskill(level);
+	    d->steer_off = (rfrac() - 0.5) * 2.0 * RB_STEER_ERR * Bot_unskill(level);
 	    d->steer_time = RbTick;
 	}
 	if (Rb_gravity_near(pl, 250.0) < 0.5 * Rb_thrust_acc(pl))
 	    dir = MOD2(dir + (int)(d->steer_off + (d->steer_off < 0 ? -0.5 : 0.5)), RES);
-	Rb_steer(pl, dir, fl.thrust);
+	Bot_steer(pl, dir, fl.thrust);
     }
     else
 	Thrust(pl, false);

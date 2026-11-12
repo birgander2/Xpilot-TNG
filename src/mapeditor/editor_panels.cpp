@@ -390,7 +390,7 @@ void EditorApp::DrawToolbar() {
     // test play button on the right
     const char* play = testing_ ? "Stop test" : "Test play";
     const float bw = ImGui::CalcTextSize(play).x + ImGui::GetStyle().FramePadding.x * 2 + 10;
-    ImGui::SameLine(ImGui::GetWindowContentRegionMax().x - bw);
+    ImGui::SameLine(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - bw);
     if (testing_) {
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.55f, 0.18f, 0.18f, 1.0f));
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.70f, 0.24f, 0.24f, 1.0f));
@@ -1461,7 +1461,7 @@ void EditorApp::DrawStatusBar() {
     else
         std::snprintf(right, sizeof(right), "%d selected   |   %d objects", int(sel_.size()), int(map_.items.size()));
     const float w = ImGui::CalcTextSize(right).x;
-    ImGui::SameLine(std::max(ImGui::GetCursorPosX() + 20, ImGui::GetWindowContentRegionMax().x - w));
+    ImGui::SameLine(std::max(ImGui::GetCursorPosX() + 20, ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - w));
     ImGui::TextDisabled("%s", right);
 }
 
@@ -1470,7 +1470,7 @@ void EditorApp::DrawLogWindow() {
     ImGui::TextColored(kAccent, "Test play log");
     ImGui::SameLine();
     if (testing_) ImGui::TextColored(ImVec4(0.4f, 0.9f, 0.5f, 1.0f), proc_.IsServerReady() ? "(running)" : "(starting)");
-    ImGui::SameLine(ImGui::GetWindowContentRegionMax().x - 110);
+    ImGui::SameLine(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - 110);
     if (ImGui::SmallButton("Clear")) proc_.ClearLogs();
     ImGui::SameLine();
     if (ImGui::SmallButton("Hide")) show_log_ = false;

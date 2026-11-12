@@ -152,7 +152,6 @@ void Voice_release_all(void)
 #ifdef HAVE_OPUS
 
 #define FRAME_BYTES_MONO	(VOICE_FRAME_SAMPLES * 2)
-#define FRAME_BYTES_STEREO	(VOICE_FRAME_SAMPLES * 4)
 
 typedef struct {
     bool		valid;
