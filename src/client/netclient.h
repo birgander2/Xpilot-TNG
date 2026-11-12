@@ -68,6 +68,7 @@ int Net_init(char *server, int port);
 void Net_cleanup(void);
 void Net_key_change(void);
 int Net_flush(void);
+int Net_idle_check(void);
 int Net_fd(void);
 int Net_start(void);
 void Net_init_measurement(void);
