@@ -11,7 +11,7 @@
 #include "process_manager.h"
 #include "server_browser.h"
 
-enum class Screen { Menu, LocalSetup, ServerSetup, ServerRunning, NetworkBrowser, Profile, Playing };
+enum class Screen { Menu, LocalSetup, ServerSetup, ServerRunning, NetworkBrowser, Profile, About, Playing };
 
 struct ImFont;
 
@@ -41,10 +41,10 @@ public:
 
     // Window integration (used by main loop)
     void DesiredWindowSize(int* w, int* h) const;
-    bool WindowResizable() const { return screen_ != Screen::Menu; }   // welcome screen has a fixed size
+    bool WindowResizable() const { return screen_ != Screen::Menu && screen_ != Screen::About; }   // welcome screen has a fixed size
     bool WindowHidden() const { return screen_ == Screen::Playing; }
     void RequestQuit();                    // window close button / SDL_QUIT
-    bool WantsAnimation() const { return screen_ == Screen::Menu; }   // welcome screen has a moving background
+    bool WantsAnimation() const { return screen_ == Screen::Menu || screen_ == Screen::About; }   // welcome screen has a moving background
     bool WantsQuit() const { return quit_; }
 
 private:
@@ -140,8 +140,7 @@ private:
     bool quit_ = false;
     bool open_running_popup_ = false;
     bool open_quit_popup_ = false;
-    bool open_about_popup_ = false;
-    void RenderAboutPopup();
+    void RenderAbout();
     bool open_leave_profile_popup_ = false;
     bool focus_first_ = true;
     std::string banner_;        // pending error message; shown once in the "Error" dialog

@@ -187,7 +187,7 @@ void LauncherApp::Init() {
 }
 
 void LauncherApp::DesiredWindowSize(int* w, int* h) const {
-    if (screen_ == Screen::Menu) { *w = (int)(MenuTileWidth() * 2 + 10.0f) + 80;
+    if (screen_ == Screen::Menu || screen_ == Screen::About) { *w = (int)(MenuTileWidth() * 2 + 10.0f) + 80;   // About keeps the menu window
         // sum of the welcome screen's vertical layout (see RenderMenu): padding, title, tile rows, bottom bar
         const float title_h = 74.0f;
         *h = (int)(10 + 12 + title_h + 6 + 14 + 114 + 9 + 108 + 20 + 36 + 10); }
@@ -475,6 +475,7 @@ void LauncherApp::RenderUI() {
         case Screen::ServerRunning: RenderServerRunning(); break;
         case Screen::NetworkBrowser: RenderNetworkBrowser(); break;
         case Screen::Profile:       RenderProfile(); break;
+        case Screen::About:         RenderAbout(); break;
         case Screen::Playing:       break;
     }
 
@@ -483,11 +484,6 @@ void LauncherApp::RenderUI() {
         open_quit_popup_ = false;
     }
     RenderQuitPopup();
-    if (open_about_popup_) {
-        ImGui::OpenPopup("About XPilot TNG");
-        open_about_popup_ = false;
-    }
-    RenderAboutPopup();
     if (!banner_.empty()) {   // errors go into their own dialog
         error_text_ = banner_;
         banner_.clear();
@@ -846,7 +842,7 @@ void LauncherApp::RenderMenu() {
     quit |= HotkeyPressed(ImGuiKey_Q);
 
 
-    if (about) open_about_popup_ = true;
+    if (about) GoTo(Screen::About);
     if (local) GoTo(Screen::LocalSetup);
     else if (join) { banner_.clear(); GoTo(Screen::NetworkBrowser); }
     else if (server) GoTo(server_active ? Screen::ServerRunning : Screen::ServerSetup);
@@ -1744,15 +1740,23 @@ void LauncherApp::RenderProfileLeavePopup() {
     ImGui::EndPopup();
 }
 
-void LauncherApp::RenderAboutPopup() {
-    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
-    if (!ImGui::BeginPopupModal("About XPilot TNG", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) return;
+// The About screen replaces the whole window; OK (or Esc/Enter) returns to the menu.
+void LauncherApp::RenderAbout() {
+    {
+        const ImVec2 wp = ImGui::GetWindowPos();
+        DrawStarfield(wp, ImVec2(wp.x + ImGui::GetWindowWidth(), wp.y + ImGui::GetWindowHeight()));
+    }
+    const float lw = 200.0f;
+    const float logo_block = logo_tex_ ? lw * logo_h_ / logo_w_ + ImGui::GetStyle().ItemSpacing.y : 0.0f;
+    const float text_block = 10.0f * ImGui::GetTextLineHeightWithSpacing();
+    const float button_block = ImGui::GetFrameHeight() + 2 * ImGui::GetStyle().ItemSpacing.y;
+    ImGui::SetCursorPosY(std::max(10.0f, (ImGui::GetWindowHeight() - logo_block - text_block - button_block) * 0.5f));
     auto centered = [](const char* text, const ImVec4& col) {
         ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize(text).x) * 0.5f);
         ImGui::TextColored(col, "%s", text);
     };
     if (logo_tex_) {
-        const float lw = 200.0f, lh = lw * logo_h_ / logo_w_;
+        const float lh = lw * logo_h_ / logo_w_;
         ImGui::SetCursorPosX((ImGui::GetWindowWidth() - lw) * 0.5f);
         ImGui::Image((ImTextureID)(intptr_t)logo_tex_, ImVec2(lw, lh));
     }
@@ -1780,9 +1784,9 @@ void LauncherApp::RenderAboutPopup() {
     link("https://github.com/birgander2/xpilot-tng");
     ImGui::Spacing();
     ImGui::SetCursorPosX((ImGui::GetWindowWidth() - 100) * 0.5f);
-    if (ImGui::Button("Close", ImVec2(100, 0)) || ImGui::IsKeyPressed(ImGuiKey_Escape))
-        ImGui::CloseCurrentPopup();
-    ImGui::EndPopup();
+    if (ImGui::Button("OK", ImVec2(100, 0)) || ImGui::IsKeyPressed(ImGuiKey_Escape)
+        || ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))
+        GoTo(Screen::Menu);
 }
 
 void LauncherApp::RenderQuitPopup() {
