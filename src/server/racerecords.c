@@ -281,17 +281,17 @@ static void Rr_load(int kind, rr_entry_t *total, int *nt, rr_entry_t *lap, int *
     if (path == NULL || (fp = fopen(path, "r")) == NULL)
 	return;
     while (fgets(line, sizeof(line), fp) != NULL) {
-	char kind, *name;
+	char tag, *name;
 	double secs;
 	long when;
 	int off = 0;
 	rr_entry_t *e;
 
-	if (sscanf(line, "%c %lf %ld %n", &kind, &secs, &when, &off) != 3 || off == 0)
+	if (sscanf(line, "%c %lf %ld %n", &tag, &secs, &when, &off) != 3 || off == 0)
 	    continue;
-	if (kind == 'T' && *nt < RR_TOP)
+	if (tag == 'T' && *nt < RR_TOP)
 	    e = &total[(*nt)++];
-	else if (kind == 'L' && *nl < RR_TOP)
+	else if (tag == 'L' && *nl < RR_TOP)
 	    e = &lap[(*nl)++];
 	else
 	    continue;

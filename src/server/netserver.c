@@ -663,11 +663,10 @@ int Setup_connection(char *user, char *nick, char *dpy, int team,
 		 * and if previous packet got lost.
 		 */
 		return connp->my_port;
-	    else
-		/*
-		 * Nick already in use.
-		 */
-		return -1;
+	    /*
+	     * Nick already in use: not an error, Handle_login()
+	     * appends a suffix to make it unique.
+	     */
 	}
     }
 
@@ -1118,14 +1117,6 @@ static int Handle_login(connection_t *connp, char *errmsg, size_t errsize)
     } else
 	connp->team = TEAM_NOT_SET;
 
-    for (i = 0; i < NumPlayers; i++) {
-	if (strcasecmp(Player_by_index(i)->name, connp->nick) == 0) {
-	    warn("Name already in use %s", connp->nick);
-	    strlcpy(errmsg, "Name already in use", errsize);
-	    return -1;
-	}
-    }
-
     if (connp->rectype < 2) {
 	if (!Init_player(NumPlayers, connp->ship, PL_TYPE_HUMAN)) {
 	    strlcpy(errmsg, "Init_player failed: no free ID", errsize);
@@ -1146,6 +1137,36 @@ static int Handle_login(connection_t *connp, char *errmsg, size_t errsize)
 
     LegalizeName(pl->name, true);
     LegalizeName(pl->username, false);
+
+    /* Silently make the nick unique by appending _#2, _#3, ... */
+    {
+	char base[MAX_CHARS];
+	int n = 1, clash;
+
+	strlcpy(base, pl->name, sizeof(base));
+	do {
+	    clash = 0;
+	    for (i = 0; i < NumPlayers; i++) {
+		player_t *other = Player_by_index(i);
+		if (other != pl && strcasecmp(other->name, pl->name) == 0) {
+		    clash = 1;
+		    break;
+		}
+	    }
+	    if (clash) {
+		char suffix[16];
+		size_t sl, bl;
+
+		snprintf(suffix, sizeof(suffix), "_#%d", ++n);
+		sl = strlen(suffix);
+		bl = strlen(base);
+		if (bl + sl >= MAX_CHARS)
+		    bl = MAX_CHARS - 1 - sl;
+		memcpy(pl->name, base, bl);
+		strcpy(pl->name + bl, suffix);
+	    }
+	} while (clash);
+    }
     LegalizeHost(pl->hostname);
 
     pl->team = connp->team;

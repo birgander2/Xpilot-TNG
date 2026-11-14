@@ -74,6 +74,7 @@ static int		(*receive_tbl[256])(void),
 static int		keyboard_delta;
 static unsigned		magic;
 static time_t           last_send_anything;
+static time_t           last_recv_anything;
 static long		last_keyboard_change,
 			last_keyboard_update,
 			reliable_offset,
@@ -652,6 +653,26 @@ int Net_flush(void)
 }
 
 /*
+ * Called from the game loop on every iteration.  Sends a keepalive when we
+ * have been silent for a while, even if no frames arrive (the server drops
+ * clients it has not heard from for 30 seconds, and we only send in reply
+ * to frames otherwise).  Returns how many seconds the server has been silent.
+ */
+int Net_idle_check(void)
+{
+    time_t now = time(NULL);
+
+    if (last_recv_anything == 0)
+	last_recv_anything = now;
+    if (now - last_send_anything >= 2) {
+	/* Send errors during an outage are expected; ignore them here. */
+	Key_update();
+	last_send_anything = now;
+    }
+    return (int)(now - last_recv_anything);
+}
+
+/*
  * Return the socket filedescriptor for use in a select(2) call.
  */
 int Net_fd(void)
@@ -1040,6 +1061,7 @@ static int Net_read(frame_buf_t *frame)
 	    Sockbuf_clear(&frame->sbuf);
 	    return 0;
 	}
+	last_recv_anything = time(NULL);
 	/*IFWINDOWS( Trace("Net_read: read %d bytes type=%d\n",
 	  frame->sbuf.len, frame->sbuf.ptr[0]) ); */
 	if (frame->sbuf.ptr[0] != PKT_START)

@@ -113,7 +113,7 @@ The same layout as the local game, but without client and PLAY. Differences:
   + 10), **Register at meta server** (on by default) and a **Greeting** message.
 * The **Network** tab contains the settings for hosting behind a router — *Public host name*
   (`serverHost`).
-  Preset order (later wins): compiled default, `lib/defaults.txt`, then the xpilotrc
+  Preset order (later wins): compiled default, `lib/defaults.cfg`, then the xpilotrc
   (`xpilot.serverHost`, `xpilot.contactPort`).
   Without an entry the port is a free random one. The xpilotrc is read by the launcher only.
   The tab shows which port to forward. The complete background is in
@@ -156,12 +156,12 @@ free bases, number of team bases (*Teams*), status, ping in ms.
 The option editor does not start the server with a long list of arguments. It works like this:
 
 ```
-baseline = compiled defaults (server -dump)  <-  lib/defaults.txt  <-  map file
+baseline = compiled defaults (server -dump)  <-  lib/defaults.cfg  <-  map file
 current  = baseline + what you changed in the GUI
 ```
 
 * Only options that **differ from the baseline** are passed on the command line. Everything
-  you did not touch behaves exactly as with a plain server start (`defaults.txt` and the map
+  you did not touch behaves exactly as with a plain server start (`defaults.cfg` and the map
   file stay in charge).
 * Command line options have the highest priority in the server, so your edits win.
 * An option you changed is marked with `*`. **Right-click** it and choose *Reset to map
@@ -185,8 +185,8 @@ Not saved: the launcher does not write a configuration file. Your choices (name,
 |-----------------------------|---------------------------------------------------------|
 | Server / client binaries    | project directory, `build/`, directory of the launcher, its parent, `/usr/local/bin`, `/usr/bin`, finally the `PATH` |
 | Maps                        | `lib/maps/*.xp2`, `lib/maps/*.xp`                       |
-| Server defaults             | `lib/defaults.txt`                                      |
-| Ship shapes                 | `lib/shipshapes.txt` (the names offered in the list)    |
+| Server defaults             | `lib/defaults.cfg`                                      |
+| Ship shapes                 | `lib/shipshapes.cfg` (the names offered in the list)    |
 | Nickname and ship           | `~/.xpilotrc` (`xpilot.name`, `xpilot.shipShape`)       |
 
 The launcher captures the output of the programs it starts (stdout and stderr) and shows it in

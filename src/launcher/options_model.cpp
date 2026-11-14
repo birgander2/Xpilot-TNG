@@ -62,7 +62,7 @@ bool OptionsManager::SameValue(const std::string& a, const std::string& b) {
     std::string lx = Lower(x), ly = Lower(y);
     static const char* kBool[] = {"yes", "no", "true", "false", "on", "off"};
     auto is_bool = [](const std::string& s) {
-        for (const char* b : kBool) if (s == b) return true;
+        for (const char* w : kBool) if (s == w) return true;
         return false;
     };
     if (is_bool(lx) && is_bool(ly)) return ParseBool(lx) == ParseBool(ly);
@@ -120,7 +120,7 @@ bool OptionsManager::LoadBaseline(const std::string& server_bin, const std::stri
     }
     if (base_.empty()) return false;
 
-    // lib/defaults.txt is honoured by a normal server start, so it is part of the baseline.
+    // lib/defaults.cfg is honoured by a normal server start, so it is part of the baseline.
     ParseDefaultsFile(defaults_path);
 
     current_.clear();
@@ -311,7 +311,7 @@ std::vector<std::string> OptionsManager::BuildServerArgs(LaunchMode mode, const 
     }
 
     // The public name must reach the server even when it equals the launcher's baseline
-    // (the server may not see the same defaults.txt); never emit an empty name.
+    // (the server may not see the same defaults.cfg); never emit an empty name.
     if (mode == LaunchMode::Server) {
         std::string v = Get("serverHost");
         if (base_.count("serverhost") && !v.empty()) emit("serverhost", v);

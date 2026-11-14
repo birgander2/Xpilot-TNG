@@ -110,7 +110,7 @@ void Editor::Init(const std::string& open_arg) {
     data_dir_ = FindDataDir(app_dir_);
     std::string err;
     if (!data_dir_.empty()) {
-        stock_path_ = data_dir_ + "/shipshapes.txt";
+        stock_path_ = data_dir_ + "/shipshapes.cfg";
         LoadShipFile(stock_path_, &stock_, &err);
     }
     mine_path_ = CollectionPath();
@@ -125,7 +125,7 @@ void Editor::Init(const std::string& open_arg) {
         else if (Parse(open_arg, &s) && !s.hull().empty()) SetDoc(s, "command line");
         else Status("No ship shape in the command line argument", true);
     }
-    if (stock_.empty()) Status("Stock ships (lib/shipshapes.txt) not found; set XPILOT_DATADIR.", true);
+    if (stock_.empty()) Status("Stock ships (lib/shipshapes.cfg) not found; set XPILOT_DATADIR.", true);
 }
 
 void Editor::ReloadRc() {

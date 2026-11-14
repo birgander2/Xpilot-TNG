@@ -17,8 +17,8 @@ launcher; the editor uses the launcher's `xpilotrc.cpp`.
 
 ## Features
 
-- **Library**: stock ships (`lib/shipshapes.txt`, read-only), your own collection
-  (`~/.config/xpilot-tng/shipshapes.txt`), any opened file (or drag & drop), and the
+- **Library**: stock ships (`lib/shipshapes.cfg`, read-only), your own collection
+  (`~/.config/xpilot-tng/shipshapes.cfg`), any opened file (or drag & drop), and the
   ship currently set in the xpilotrc. Double-click loads a ship; right-click for more
   (copy to collection, use as my ship, reorder, delete).
 - **Editing**: tools for hull, engine, main gun, left/right (rear) guns, lights and

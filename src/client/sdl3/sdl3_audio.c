@@ -315,9 +315,3 @@ void audioDeviceClose(void)
 {
     SDL3_Cleanup_Audio();
 }
-
-void SDL3_Play_Sound(int sound_ind, int volume)
-{
-    Handle_audio(sound_ind, volume);
-}
-

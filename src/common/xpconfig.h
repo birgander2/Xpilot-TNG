@@ -61,11 +61,11 @@
 #endif
 
 #ifndef CONF_DEFAULTS_FILE_NAME
-#  define CONF_DEFAULTS_FILE_NAME	CONF_DATADIR "defaults.txt"
+#  define CONF_DEFAULTS_FILE_NAME	CONF_DATADIR "defaults.cfg"
 #endif
 
 #ifndef CONF_PASSWORD_FILE_NAME
-#  define CONF_PASSWORD_FILE_NAME	CONF_DATADIR "password.txt"
+#  define CONF_PASSWORD_FILE_NAME	CONF_DATADIR "password.cfg"
 #endif
 
 /* not used currently */
@@ -74,7 +74,7 @@
 #endif
 
 #ifndef CONF_ROBOTFILE
-#  define CONF_ROBOTFILE		CONF_DATADIR "robots.txt"
+#  define CONF_ROBOTFILE		CONF_DATADIR "robots.cfg"
 #endif
 
 #ifndef CONF_SERVERMOTDFILE
@@ -94,7 +94,7 @@
 #endif
 
 #ifndef CONF_SHIP_FILE
-#  define CONF_SHIP_FILE		CONF_DATADIR "shipshapes.txt"
+#  define CONF_SHIP_FILE		CONF_DATADIR "shipshapes.cfg"
 #endif
 
 
@@ -188,6 +188,7 @@ char *Conf_sounddir(void);
 char *Conf_soundfile(void);
 char *Conf_localguru(void);
 char *Conf_robotfile(void);
+char *Conf_metaserver_file(void);
 char *Conf_zcat_ext(void);
 char *Conf_zcat_format(void);
 

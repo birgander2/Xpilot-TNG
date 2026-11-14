@@ -1,4 +1,5 @@
 # Build outputs and temporary directories
+/xpilot-tng
 build/
 *.log
 *.o
@@ -15,11 +16,6 @@ screenshot*
 settings.local.json
 
 # Root convenience symlinks
-/xpilot-tng-server
-/xpilot-tng-client
-/xpilot-tng-launcher
-/xpilot-tng-mapeditor
-/xpilot-tng-shipeditor
 imgui.ini
 make-deb.sh
 tools/

@@ -27,8 +27,6 @@
 
 #include "xpserver.h"
 
-#define ROB_LOOK_AH		2
-
 #define WITHIN(NOW,THEN,DIFF) (NOW<=THEN && (THEN-NOW)<DIFF)
 
 /*

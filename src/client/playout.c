@@ -84,19 +84,14 @@ void Playout_start(void)
     }
 }
 
-bool Playout_active(void)
-{
-    return po_active;
-}
-
 /* Frame datagram arrived at 'now': decide when it is released. */
-static double Po_release_time(long loops, double now)
+static double Po_release_time(long frame_loops, double now)
 {
-    double fps = FPS > 0 ? FPS : 50, ideal = loops / fps;
+    double fps = FPS > 0 ? FPS : 50, ideal = frame_loops / fps;
     double offset = now - ideal, base, excess, cap = maxJitterBuffer * 1e-3;
     int i;
 
-    if (loops < po_last_loops - 100) {
+    if (frame_loops < po_last_loops - 100) {
 	/* server restarted or frame counter jumped, start over */
 	po_noff = po_ioff = 0;
 	po_delay = 0;
@@ -120,7 +115,7 @@ static double Po_release_time(long loops, double now)
     if (po_delay > cap)
 	po_delay = cap;
     po_last_time = now;
-    po_last_loops = loops;
+    po_last_loops = frame_loops;
 
     return ideal + base + po_delay;
 }
@@ -136,14 +131,14 @@ int Playout_read(sock_t *sock, char *buf, int max)
     while ((len = sock_read(sock, tmp, sizeof(tmp))) > 0) {
 	now = Po_now();
 	if (len >= 5 && (u_byte)tmp[0] == PKT_START) {
-	    long loops = ((long)(u_byte)tmp[1] << 24) | ((u_byte)tmp[2] << 16)
+	    long frame_loops = ((long)(u_byte)tmp[1] << 24) | ((u_byte)tmp[2] << 16)
 		| ((u_byte)tmp[3] << 8) | (u_byte)tmp[4];
 
-	    if (loops <= po_last_loops)
+	    if (frame_loops <= po_last_loops)
 		/* duplicate or out of order, the client would drop it too */
 		continue;
 	    if ((p = Po_push(&po_frames)) != NULL) {
-		double t = Po_release_time(loops, now);
+		double t = Po_release_time(frame_loops, now);
 
 		if (t < po_last_release)
 		    t = po_last_release;

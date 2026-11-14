@@ -48,9 +48,3 @@ endif()
 
 install(TARGETS xpilot-tng-shipeditor DESTINATION ${CMAKE_INSTALL_BINDIR})
 
-if(NOT WIN32)
-add_custom_target(xpilot-tng-shipeditor-symlink ALL
-    COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_BINARY_DIR}/xpilot-tng-shipeditor ${PROJECT_SOURCE_DIR}/xpilot-tng-shipeditor
-    DEPENDS xpilot-tng-shipeditor
-)
-endif()

@@ -15,7 +15,7 @@ and join it from the Internet — and *why* each step is necessary.
 5. [Step 3 – Port forwarding on the router](#5-step-3--port-forwarding-on-the-router)
 6. [Step 4 – Firewall on the server machine](#6-step-4--firewall-on-the-server-machine)
 7. [Step 5 – Start and verify](#7-step-5--start-and-verify)
-8. [Command line / defaults.txt equivalent](#8-command-line--defaultstxt-equivalent)
+8. [Command line / defaults.cfg equivalent](#8-command-line--defaultstxt-equivalent)
 9. [Troubleshooting](#9-troubleshooting)
 10. [Security notes](#10-security-notes)
 
@@ -117,7 +117,7 @@ The port of the server (`contactPort`) and *Register at meta server* are in *Qui
 The tab prints the port you have to forward, and the *Command* line at the bottom shows
 the resulting server command.
 
-Values already defined in `lib/defaults.txt` are used as the initial values of these fields.
+Values already defined in `lib/defaults.cfg` are used as the initial values of these fields.
 
 ---
 
@@ -191,7 +191,7 @@ obvious firewall problems.)
 
 ---
 
-## 8. Command line / defaults.txt equivalent
+## 8. Command line / defaults.cfg equivalent
 
 Without the Launcher:
 
@@ -205,13 +205,13 @@ Without the Launcher:
 (`-noQuit` keeps the server running when the last player leaves, which is what you want for a
 public server.)
 
-To make the settings permanent put them into `lib/defaults.txt`:
+To make the settings permanent put them into `lib/defaults.cfg`:
 
 ```
 serverHost:      play.example.org
 ```
 
-Command line options override `defaults.txt`; the Launcher passes only the values you changed
+Command line options override `defaults.cfg`; the Launcher passes only the values you changed
 in the GUI.
 
 ---

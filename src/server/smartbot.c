@@ -742,6 +742,119 @@ static void Smart_ballareas_update(void)
 }
 
 /*
+ * Neutral ball game (spaceball): one ball of options.specialBallTeam, goals of
+ * the real teams, no treasures for them.  A team scores in every goal but its
+ * own.  The goals are kept as pseudo treasures (position only) so that the
+ * ball run code can aim at them like at a treasure.
+ */
+static treasure_t	SmartGoalTr[MAX_TEAMS];
+static double		SmartGoalRadius[MAX_TEAMS];
+static bool		SmartGoalOk[MAX_TEAMS];
+static bool		SmartNeutral;
+static const poly_t	*GoalsPdata;
+static int		GoalsNumPolys = -1;
+
+static void Smart_goals_update(void)
+{
+    double minx[MAX_TEAMS], maxx[MAX_TEAMS], miny[MAX_TEAMS], maxy[MAX_TEAMS];
+    int i, k, t, goals = 0;
+    bool special = false, regular = false;
+
+    if (GoalsPdata == pdata && GoalsNumPolys == num_polys)
+	return;
+    GoalsPdata = pdata;
+    GoalsNumPolys = num_polys;
+    SmartNeutral = false;
+    memset(SmartGoalOk, 0, sizeof(SmartGoalOk));
+    if (!BIT(world->rules->mode, TEAM_PLAY))
+	return;
+
+    for (i = 0; i < Num_treasures(); i++) {
+	treasure_t *tr = Treasure_by_index(i);
+
+	if (tr->empty)
+	    continue;
+	if (tr->team == options.specialBallTeam)
+	    special = true;
+	else
+	    regular = true;
+    }
+    if (!special || regular)
+	return;
+
+    for (t = 0; t < MAX_TEAMS; t++) {
+	minx[t] = miny[t] = 1e19;
+	maxx[t] = maxy[t] = -1e19;
+    }
+    for (i = 0; i < num_polys; i++) {
+	group_t *gp = groupptr_by_id(pdata[i].group);
+	int *edges;
+	double x, y;
+
+	if (gp == NULL || gp->type != TREASURE || gp->hitmask == BALL_BIT
+	    || gp->team < 0 || gp->team >= MAX_TEAMS
+	    || gp->team == options.specialBallTeam)
+	    continue;
+	edges = edgeptr + pdata[i].edges;
+	x = CLICK_TO_PIXEL(pdata[i].pos.cx);
+	y = CLICK_TO_PIXEL(pdata[i].pos.cy);
+	for (k = 0; k < pdata[i].num_points; k++) {
+	    minx[gp->team] = MIN(minx[gp->team], x);
+	    maxx[gp->team] = MAX(maxx[gp->team], x);
+	    miny[gp->team] = MIN(miny[gp->team], y);
+	    maxy[gp->team] = MAX(maxy[gp->team], y);
+	    x += CLICK_TO_PIXEL(edges[2 * k]);
+	    y += CLICK_TO_PIXEL(edges[2 * k + 1]);
+	}
+    }
+    for (t = 0; t < MAX_TEAMS; t++) {
+	if (maxx[t] < minx[t])
+	    continue;
+	memset(&SmartGoalTr[t], 0, sizeof(SmartGoalTr[t]));
+	SmartGoalTr[t].team = t;
+	SmartGoalTr[t].pos.cx = PIXEL_TO_CLICK((minx[t] + maxx[t]) / 2.0);
+	SmartGoalTr[t].pos.cy = PIXEL_TO_CLICK((miny[t] + maxy[t]) / 2.0);
+	SmartGoalRadius[t] = LENGTH(maxx[t] - minx[t], maxy[t] - miny[t]) / 2.0;
+	SmartGoalOk[t] = true;
+	goals++;
+    }
+    SmartNeutral = goals >= 2;
+}
+
+static bool Smart_neutral_game(void)
+{
+    Smart_goals_update();
+    return SmartNeutral;
+}
+
+/* Goal (as pseudo treasure) a team scores in, nearest to pos, NULL if none. */
+static treasure_t *Smart_enemy_goal(int team, clpos_t pos)
+{
+    treasure_t *best = NULL;
+    double best_d = 1e19;
+    int t;
+
+    for (t = 0; t < MAX_TEAMS && Smart_neutral_game(); t++) {
+	double d;
+
+	if (t == team || !SmartGoalOk[t])
+	    continue;
+	d = Wrap_length(SmartGoalTr[t].pos.cx - pos.cx, SmartGoalTr[t].pos.cy - pos.cy);
+	if (d < best_d) {
+	    best_d = d;
+	    best = &SmartGoalTr[t];
+	}
+    }
+    return best;
+}
+
+/* Is this pseudo treasure the goal of some team? */
+static bool Smart_is_goal(const treasure_t *tr)
+{
+    return tr >= SmartGoalTr && tr < SmartGoalTr + MAX_TEAMS;
+}
+
+/*
  * Signed distance (pixels) from (px, py) to a BallArea outline, negative
  * inside.  (*nx, *ny) is the unit normal pointing away from the box.
  */
@@ -2492,6 +2605,9 @@ static bool Smart_ball_on_target(player_t *pl, ballobject_t *ball, treasure_t *t
 	return false;
     miss = LENGTH(rx - vx * t, ry - vy * t);
     tol = options.ballRadius + 8.0 + (100 - eff_level) * 0.2;
+    /* a goal is wide: flying through any part of it scores */
+    if (Smart_is_goal(tr))
+	tol = MAX(tol, 0.7 * SmartGoalRadius[tr->team]);
     return miss < tol && Smart_has_line_of_sight(pl, ball->pos, tr->pos, true);
 }
 
@@ -3197,17 +3313,33 @@ static bool Smart_handle_ctf(player_t *pl, vector_t repulse_vec,
     int i;
     int home_tr = NO_IND, enemy_tr = NO_IND;
     double home_tr_dist = 1e19, enemy_tr_dist = 1e19;
+    bool neutral = Smart_neutral_game();
+    treasure_t *goal_tr = NULL;
 
     if (!BIT(world->rules->mode, TEAM_PLAY)
 	|| Num_treasures() <= 0
-	|| world->teams[pl->team].NumTreasures <= 0)
+	|| (!neutral && world->teams[pl->team].NumTreasures <= 0))
 	return false;
+    if (neutral) {
+	/* ball into the nearest goal that is not ours */
+	goal_tr = Smart_enemy_goal(pl->team, pl->pos);
+	if (goal_tr != NULL)
+	    home_tr_dist = Wrap_length(goal_tr->pos.cx - pl->pos.cx,
+				       goal_tr->pos.cy - pl->pos.cy) / CLICK;
+    }
 
     for (i = 0; i < Num_treasures(); i++) {
 	treasure_t *tr = Treasure_by_index(i);
 	double d = Wrap_length(tr->pos.cx - pl->pos.cx, tr->pos.cy - pl->pos.cy) / CLICK;
 
-	if (tr->team == pl->team) {
+	if (neutral) {
+	    /* the neutral ball is the only treasure; it is to be stolen */
+	    if (!tr->empty && tr->team == options.specialBallTeam
+		&& Smart_believes_ball_home(pl->team, tr) && d < enemy_tr_dist) {
+		enemy_tr_dist = d;
+		enemy_tr = i;
+	    }
+	} else if (tr->team == pl->team) {
 	    if (d < home_tr_dist) {
 		home_tr_dist = d;
 		home_tr = i;
@@ -3256,8 +3388,8 @@ static bool Smart_handle_ctf(player_t *pl, vector_t repulse_vec,
     }
 
     /* Case 1: We are carrying a ball -> Navigate home & release it on target */
-    if (BIT(pl->have, HAS_BALL) && home_tr != NO_IND) {
-	treasure_t *htr = Treasure_by_index(home_tr);
+    if (BIT(pl->have, HAS_BALL) && (home_tr != NO_IND || goal_tr != NULL)) {
+	treasure_t *htr = goal_tr != NULL ? goal_tr : Treasure_by_index(home_tr);
 	ballobject_t *ball = Smart_carried_ball(pl);
 
 	/* Just stole the enemy ball: a small reward on the way to the big one */
@@ -3486,6 +3618,23 @@ static void Smart_update_team_knowledge(void)
 	    continue;
 	bt = ball->ball_treasure->team;
 	owner = Player_by_id(ball->id);
+	if (owner != NULL && Smart_neutral_game() && bt == options.specialBallTeam) {
+	    /* neutral ball: every other team sees the carrier as a thief */
+	    for (t = 0; t < MAX_TEAMS; t++) {
+		if (t == owner->team || !SmartGoalOk[t])
+		    continue;
+		for (j = 0; j < NumPlayers; j++) {
+		    player_t *mate = Player_by_index(j);
+
+		    if (mate->team == t && !Player_is_tank(mate) && Player_is_alive(mate)
+			&& !Player_is_paused(mate) && Smart_detect_ship(mate, owner)) {
+			SmartTeams[t].enemy_carrier_id = owner->id;
+			break;
+		    }
+		}
+	    }
+	    continue;
+	}
 	if (owner == NULL || owner->team == bt || Smart_team(bt) == NULL)
 	    continue;
 	/* A teammate has to see the thief; cloaking hides him as for humans */
@@ -3530,6 +3679,10 @@ static treasure_t *Smart_team_treasure(int team, clpos_t pos, bool need_ball_hom
     double best_d = 1e19;
     int i;
 
+    /* neutral ball game: what a team guards is its goal */
+    if (Smart_neutral_game())
+	return (team >= 0 && team < MAX_TEAMS && SmartGoalOk[team] && !need_ball_home)
+	       ? &SmartGoalTr[team] : NULL;
     for (i = 0; i < Num_treasures(); i++) {
 	treasure_t *tr = Treasure_by_index(i);
 	double d;
@@ -3556,7 +3709,11 @@ static treasure_t *Smart_enemy_treasure(int team, clpos_t pos)
 	treasure_t *tr = Treasure_by_index(i);
 	double d;
 
-	if (tr->team == team || Team_by_index(tr->team) == NULL
+	if (Smart_neutral_game()) {
+	    if (tr->empty || tr->team != options.specialBallTeam
+		|| !Smart_believes_ball_home(team, tr))
+		continue;
+	} else if (tr->team == team || Team_by_index(tr->team) == NULL
 	    || !Smart_believes_ball_home(team, tr)
 	    || Team_by_index(tr->team)->NumMembers <= 0)
 	    continue;
@@ -3674,7 +3831,11 @@ static void Smart_assign_roles(void)
 	player_t **pool = bots[t];
 	int n = nbots[t], left, k;
 	treasure_t *home, *enemy_tr;
-	bool our_ball_home = !Smart_team_ball_away(t);
+	bool neutral = Smart_neutral_game();
+	bool our_ball_home = neutral ? SmartTeams[t].enemy_carrier_id == NO_ID
+				     : !Smart_team_ball_away(t);
+	bool have_target;
+	clpos_t target_pos;
 	int escort_target = carrier_of_enemy_ball[t];
 	clpos_t ref;
 
@@ -3698,10 +3859,30 @@ static void Smart_assign_roles(void)
 	    if (pool[k] != NULL)
 		enemy_tr = Smart_enemy_treasure(t, pool[k]->pos);
 	}
+	have_target = enemy_tr != NULL;
+	if (have_target)
+	    target_pos = enemy_tr->pos;
+	else if (neutral && escort_target == NO_ID && our_ball_home) {
+	    /* the neutral ball lies loose where a teammate sees it */
+	    for (k = 0; k < NumObjs; k++) {
+		if (Obj[k]->type == OBJ_BALL && Obj[k]->id == NO_ID
+		    && Smart_team_sees(t, Obj[k]->pos)) {
+		    have_target = true;
+		    target_pos = Obj[k]->pos;
+		    break;
+		}
+	    }
+	}
 
 	if (!our_ball_home) {
-	    if (left >= 3 && enemy_tr != NULL && escort_target == NO_ID) {
-		k = Smart_pick_closest(pool, n, enemy_tr->pos, ROLE_ATTACKER);
+	    if (neutral && home != NULL && left >= 3) {
+		/* they have the ball: one stays at our goal */
+		k = Smart_pick_closest(pool, n, home->pos, ROLE_DEFENDER);
+		Smart_set_role(pool, k, ROLE_DEFENDER, NO_ID);
+		left--;
+	    }
+	    if (left >= 3 && have_target && escort_target == NO_ID) {
+		k = Smart_pick_closest(pool, n, target_pos, ROLE_ATTACKER);
 		if (k >= 0) {
 		    Smart_set_role(pool, k, ROLE_ATTACKER, NO_ID);
 		    left--;
@@ -3715,8 +3896,8 @@ static void Smart_assign_roles(void)
 	}
 
 	/* Attacker, unless a teammate already tows the enemy ball */
-	if (escort_target == NO_ID && enemy_tr != NULL && left > 0) {
-	    k = Smart_pick_closest(pool, n, enemy_tr->pos, ROLE_ATTACKER);
+	if (escort_target == NO_ID && have_target && left > 0) {
+	    k = Smart_pick_closest(pool, n, target_pos, ROLE_ATTACKER);
 	    escort_target = pool[k]->id;
 	    Smart_set_role(pool, k, ROLE_ATTACKER, NO_ID);
 	    left--;
@@ -3742,7 +3923,7 @@ static void Smart_assign_roles(void)
 	/* The rest attack */
 	for (k = 0; k < n; k++) {
 	    if (pool[k] != NULL)
-		Smart_set_role(pool, k, enemy_tr != NULL ? ROLE_ATTACKER : ROLE_DEFENDER,
+		Smart_set_role(pool, k, have_target ? ROLE_ATTACKER : ROLE_DEFENDER,
 			       NO_ID);
 	}
     }

@@ -60,7 +60,14 @@ std::string ConfigDir() {
     return ".";
 }
 
-std::string CollectionPath() { return ConfigDir() + "/shipshapes.txt"; }
+std::string CollectionPath() {
+    std::string path = ConfigDir() + "/shipshapes.cfg";
+    // one-time migration of the former shipshapes.txt
+    std::error_code ec;
+    std::string old = ConfigDir() + "/shipshapes.txt";
+    if (!fs::exists(path, ec) && fs::exists(old, ec)) fs::rename(old, path, ec);
+    return path;
+}
 
 bool XpilotrcGet(const std::string& key, std::string* value) {
     return XpilotrcLookup(key.c_str(), value);
@@ -84,7 +91,7 @@ std::string FindDataDir(const std::string& app_dir) {
     cands.push_back("/usr/share/xpilot-tng");
     for (const auto& c : cands) {
         std::error_code ec;
-        if (fs::exists(fs::path(c) / "shipshapes.txt", ec)) return fs::weakly_canonical(c, ec).string();
+        if (fs::exists(fs::path(c) / "shipshapes.cfg", ec)) return fs::weakly_canonical(c, ec).string();
     }
     return "";
 }

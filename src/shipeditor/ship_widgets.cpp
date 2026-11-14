@@ -115,7 +115,7 @@ bool ShipPicker::Draw(const char* id, const ShipShape* current, bool current_val
                 ImGui::EndChild();
                 ImGui::EndTabItem();
             };
-            list("Stock", stock, "Stock ships (lib/shipshapes.txt) not found.");
+            list("Stock", stock, "Stock ships (lib/shipshapes.cfg) not found.");
             list("My collection", mine, "Your collection is empty. Create ships with \"Edit shipshape\".");
             ImGui::EndTabBar();
         }

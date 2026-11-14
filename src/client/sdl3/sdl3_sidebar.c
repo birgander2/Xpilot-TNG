@@ -794,7 +794,6 @@ void aboutCleanup(void)
 #define CFG_ARROW_H       16
 #define CFG_BOOL_W        30
 #define CFG_INT_W         44
-#define CFG_DOUBLE_W      44
 
 typedef struct {
     xp_option_t *opt;     /* NULL for Save Configuration button */

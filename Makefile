@@ -7,22 +7,18 @@ JOBS ?= $(shell nproc 2>/dev/null || echo 4)
 
 all build: $(BUILD_DIR)/CMakeCache.txt
 	@cmake --build $(BUILD_DIR) -j$(JOBS)
-	@ln -sf $(BUILD_DIR)/xpilot-tng-server xpilot-tng-server
-	@ln -sf $(BUILD_DIR)/xpilot-tng-client xpilot-tng-client
 
 $(BUILD_DIR)/CMakeCache.txt: CMakeLists.txt
 	@cmake -B $(BUILD_DIR)
 
 server: $(BUILD_DIR)/CMakeCache.txt
 	@cmake --build $(BUILD_DIR) --target xpilot-tng-server -j$(JOBS)
-	@ln -sf $(BUILD_DIR)/xpilot-tng-server xpilot-tng-server
 
 client: $(BUILD_DIR)/CMakeCache.txt
 	@cmake --build $(BUILD_DIR) --target xpilot-tng-client -j$(JOBS)
-	@ln -sf $(BUILD_DIR)/xpilot-tng-client xpilot-tng-client
 
 clean:
-	@rm -rf $(BUILD_DIR) xpilot-tng-server xpilot-tng-client
+	@rm -rf $(BUILD_DIR) xpilot-tng
 
 install:
 	@cmake --install $(BUILD_DIR)

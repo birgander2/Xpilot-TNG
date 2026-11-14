@@ -64,7 +64,7 @@ install(TARGETS xpilot-tng-launcher DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 if(NOT WIN32)
 add_custom_target(xpilot-tng-launcher-symlink ALL
-    COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_BINARY_DIR}/xpilot-tng-launcher ${PROJECT_SOURCE_DIR}/xpilot-tng-launcher
+    COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_BINARY_DIR}/xpilot-tng-launcher ${PROJECT_SOURCE_DIR}/xpilot-tng
     DEPENDS xpilot-tng-launcher
 )
 endif()

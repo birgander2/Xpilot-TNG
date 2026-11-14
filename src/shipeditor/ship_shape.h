@@ -54,7 +54,7 @@ struct ShipShape {
 };
 
 // Parse a shape definition. Anything before the first '(' is ignored, so whole
-// xpilotrc / shipshapes.txt lines work. Returns false if the text holds no
+// xpilotrc / shipshapes.cfg lines work. Returns false if the text holds no
 // shape at all (or is in the obsolete 3.1 format). Notes about ignored data
 // (duplicates, too many points, unknown keywords) are appended to *notes.
 bool Parse(const std::string& text, ShipShape* out, std::vector<std::string>* notes = nullptr);
@@ -108,7 +108,6 @@ bool NameUsable(const std::string& name, std::string* why);
 void FlipFrontBack(ShipShape& s);   // x -> -x
 void FlipLeftRight(ShipShape& s);   // y -> -y, left and right parts swapped
 void Rotate90(ShipShape& s, bool ccw);
-void Shift(ShipShape& s, int dx, int dy);
 bool MakeSymmetric(ShipShape& s, bool keep_left);   // mirror one half of the hull
 
 } // namespace ss

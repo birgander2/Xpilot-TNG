@@ -537,14 +537,9 @@ static robot_t	*TypedRobots;
 static int	MAX_TYPED_ROBOTS = 0;
 
 /*
- * Function prototype for robot type setup routines.
- * Add your own robot type setup routine here.
+ * Robot type setup routines are declared in robot.h.
+ * Add your own robot type setup routine there and below.
  */
-extern int Robot_default_setup(robot_type_t *type_ptr);
-extern int Robot_smart_setup(robot_type_t *type_ptr);
-extern int Robot_ball_setup(robot_type_t *type_ptr);
-extern int Robot_race_setup(robot_type_t *type_ptr);
-extern int Robot_fight_setup(robot_type_t *type_ptr);
 
 /*
  * Array to store function pointers to robot type setup routines.
@@ -949,6 +944,9 @@ static void Robot_create(bool want_smart)
     robot_type_t *rob_type;
 
     if (peek_ID() == 0 || pool_size <= 0)
+	return;
+    /* all bases taken (or the robots' team is full): no more robots */
+    if (BIT(world->rules->mode, TEAM_PLAY) && Pick_team(PL_TYPE_ROBOT) == TEAM_NOT_SET)
 	return;
 
     if ((new_data = XMALLOC(robot_data_t, 1)) == NULL) {

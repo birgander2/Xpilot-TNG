@@ -89,27 +89,10 @@ void Object_free_ptr(object_t *obj)
 
 static anyobject_t *objArray;
 
-#define SHOWTYPESIZE(T) warn("sizeof(" #T ") = %d", sizeof(T))
-
 void Alloc_shots(int number)
 {
     anyobject_t		*x;
     int			i;
-
-#if 0
-    SHOWTYPESIZE(object_t);
-    SHOWTYPESIZE(ballobject_t);
-    SHOWTYPESIZE(mineobject_t);
-    SHOWTYPESIZE(missileobject_t);
-    SHOWTYPESIZE(smartobject_t);
-    SHOWTYPESIZE(torpobject_t);
-    SHOWTYPESIZE(heatobject_t);
-    SHOWTYPESIZE(wireobject_t);
-    SHOWTYPESIZE(pulseobject_t);
-    SHOWTYPESIZE(itemobject_t);
-    SHOWTYPESIZE(anyobject_t);
-    SHOWTYPESIZE(player_t);
-#endif
 
     x = (anyobject_t *) calloc((size_t)number, sizeof(anyobject_t));
     if (!x) {
@@ -130,6 +113,16 @@ void Alloc_shots(int number)
 void Free_shots(void)
 {
     XFREE(objArray);
+}
+
+/*
+ * Slot of the object in the pool.  Unlike its index in Obj[] it stays
+ * the same while the object lives, and unlike its address it does not
+ * change from run to run.
+ */
+int Object_slot(const object_t *obj)
+{
+    return (int)((const anyobject_t *)obj - objArray);
 }
 
 

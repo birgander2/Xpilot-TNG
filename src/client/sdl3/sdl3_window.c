@@ -198,6 +198,112 @@ void Paint_frame(void)
     SDL_RenderPresent(tng_renderer);
 }
 
+/*
+ * Modal "connection lost" dialog drawn in the game window (the system
+ * message box is not reliable everywhere).  Returns after OK is clicked,
+ * Enter/Space/Esc is pressed or the window is closed.
+ */
+/*
+ * Banner drawn straight onto the window while the server is silent: the
+ * normal painting only runs when a frame arrives, so nothing else would show.
+ * Redrawn at most every 100 ms.
+ */
+static void Show_Connection_Warning(int silent)
+{
+    static Uint64 last = 0;
+    const SDL_Color white = { 255, 255, 255, 255 };
+    const float pad = 12.0f, h = 40.0f;
+    char msg[64];
+    int w = 0, oh = 0;
+    float tw, bw, bx, by;
+    Uint64 now = SDL_GetTicks();
+
+    if (!tng_renderer || now - last < 100)
+        return;
+    last = now;
+    snprintf(msg, sizeof(msg), "No data from server for %d s ...", silent);
+    SDL_GetCurrentRenderOutputSize(tng_renderer, &w, &oh);
+    tw = SDL3_Text_Width(msg);
+    bw = tw + 2 * pad;
+    bx = ((float)w - bw) / 2;
+    by = (float)oh / 4;
+    SDL_FRect box = { bx, by, bw, h };
+    SDL_SetRenderDrawColor(tng_renderer, 170, 30, 20, 255);
+    SDL_RenderFillRect(tng_renderer, &box);
+    SDL_SetRenderDrawColor(tng_renderer, 255, 255, 255, 255);
+    SDL_RenderRect(tng_renderer, &box);
+    SDL3_Draw_Text_Len_Color(msg, (int)strlen(msg), bx + pad, by + (h - 8.0f) / 2, white);
+    SDL_RenderPresent(tng_renderer);
+}
+
+static void Show_Connection_Lost(void)
+{
+    /* a captured pointer would hide the cursor and give no click position */
+    Platform_specific_pointer_control_set_state(false);
+
+    static const char *lines[] = {
+        "Connection to the server was lost.",
+        "No data received for 30 seconds."
+    };
+    const SDL_Color white = { 255, 255, 255, 255 };
+    const float line_h = 20.0f, pad = 24.0f, btn_w = 90.0f, btn_h = 30.0f;
+    bool done = false;
+
+    while (!done && tng_renderer) {
+        SDL_Event e;
+        int w = 0, h = 0;
+        float tw = 0.0f, bw, bh, bx, by, btn_x, btn_y;
+
+        SDL_GetCurrentRenderOutputSize(tng_renderer, &w, &h);
+        for (int i = 0; i < 2; i++)
+            tw = SDL_max(tw, SDL3_Text_Width(lines[i]));
+        bw = SDL_max(tw, btn_w) + 2 * pad;
+        bh = 2 * line_h + btn_h + 3 * pad;
+        bx = ((float)w - bw) / 2;
+        by = ((float)h - bh) / 2;
+        btn_x = bx + (bw - btn_w) / 2;
+        btn_y = by + bh - pad - btn_h;
+
+        while (SDL_PollEvent(&e)) {
+            if (e.type == SDL_EVENT_QUIT)
+                done = true;
+            else if (e.type == SDL_EVENT_KEY_DOWN
+                     && (e.key.key == SDLK_RETURN || e.key.key == SDLK_KP_ENTER
+                         || e.key.key == SDLK_SPACE
+                         || e.key.key == SDLK_ESCAPE))
+                done = true;
+            else if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
+                SDL_ConvertEventToRenderCoordinates(tng_renderer, &e);
+                if (e.button.x >= btn_x && e.button.x <= btn_x + btn_w
+                    && e.button.y >= btn_y && e.button.y <= btn_y + btn_h)
+                    done = true;
+            }
+        }
+
+        SDL_SetRenderDrawColor(tng_renderer, 0, 0, 0, 255);
+        SDL_RenderClear(tng_renderer);
+        SDL_FRect box = { bx, by, bw, bh };
+        SDL_SetRenderDrawColor(tng_renderer, 30, 30, 40, 255);
+        SDL_RenderFillRect(tng_renderer, &box);
+        SDL_SetRenderDrawColor(tng_renderer, 220, 60, 60, 255);
+        SDL_RenderRect(tng_renderer, &box);
+        for (int i = 0; i < 2; i++)
+            SDL3_Draw_Text_Len_Color(lines[i], (int)strlen(lines[i]),
+                bx + (bw - SDL3_Text_Width(lines[i])) / 2,
+                by + pad + i * line_h, white);
+        SDL_FRect btn = { btn_x, btn_y, btn_w, btn_h };
+        SDL_SetRenderDrawColor(tng_renderer, 60, 90, 160, 255);
+        SDL_RenderFillRect(tng_renderer, &btn);
+        SDL_SetRenderDrawColor(tng_renderer, 255, 255, 255, 255);
+        SDL_RenderRect(tng_renderer, &btn);
+        SDL3_Draw_Text_Len_Color("OK", 2,
+            btn_x + (btn_w - SDL3_Text_Width("OK")) / 2,
+            btn_y + (btn_h - 8.0f) / 2, white);
+        SDL_RenderPresent(tng_renderer);
+        SDL_Delay(16);
+    }
+}
+
 void SDL3_Game_Loop(void)
 {
     fd_set rfds, tfds;
@@ -255,6 +361,27 @@ void SDL3_Game_Loop(void)
 
         Voice_update();
         Key_turn_tick();
+
+        {
+            /* Server silent: warn after 10 s, give up after 30 s. */
+            static bool warned = false;
+            int silent = Net_idle_check();
+
+            if (silent >= 30) {
+                error("No data from server for %d seconds, connection lost",
+                      silent);
+                Show_Connection_Lost();
+                return;
+            }
+            if (silent >= 10 && !warned) {
+                Add_message("Connection to server lost? No data received. "
+                            "[*Client reply*]");
+                warned = true;
+            } else if (silent < 10)
+                warned = false;
+            if (silent >= 10)
+                Show_Connection_Warning(silent);
+        }
 
         if (Net_flush() == -1) {
             error("Bad net flush after input");

@@ -349,6 +349,7 @@ void ProfileEditor::Load(const std::string& stock_ships_path, bool keep_unsaved)
     net_.key_turn_mouse = get_bool("keyTurnMouse", false);
     net_.key_turn_rate = get_int("keyTurnRate", 630, 30, 2000);
     fx_.classic = get_bool("classicGraphics", false);
+    fx_.fullscreen = get_bool("fullScreen", true);
     fx_.explosions = get_bool("fxExplosions", true);
     fx_.sparks = get_bool("fxSparks", true);
     fx_.mine_explosions = get_bool("fxMineExplosions", true);
@@ -383,6 +384,9 @@ void ProfileEditor::Load(const std::string& stock_ships_path, bool keep_unsaved)
     for (const auto& kv : NetworkValues()) shown_[kv.first] = kv.second;
     for (const auto& kv : FxValues()) shown_[kv.first] = kv.second;
     loaded_ = true;
+    // The client defaults to windowed, the launcher to fullscreen: without an xpilotrc entry the
+    // shown state is "false", so the default counts as a change and is saved / passed on start.
+    if (get("fullScreen", "").empty()) shown_["fullScreen"] = "false";
     shown_["name"] = name_;
     shown_["shipShape"] = rc_ship_;
     int n = 0;
@@ -435,6 +439,7 @@ std::vector<std::pair<std::string, std::string>> ProfileEditor::FxValues() const
     std::snprintf(amount, sizeof amount, "%.2f", fx_.amount);
     return {
         {"classicGraphics", b(fx_.classic)},
+        {"fullScreen", b(fx_.fullscreen)},
         {"fxExplosions", b(fx_.explosions)},
         {"fxSparks", b(fx_.sparks)},
         {"fxMineExplosions", b(fx_.mine_explosions)},
@@ -676,9 +681,9 @@ void ProfileEditor::RenderModBanks() {
                            text.empty() ? "(empty)" : text.c_str());
         ImGui::Indent(24);
         // "Label: [value]" - label first, then the choice
-        auto label = [](const char* text, const char* tip = nullptr) {
+        auto label = [](const char* caption, const char* tip = nullptr) {
             ImGui::AlignTextToFramePadding();
-            ImGui::TextUnformatted(text);
+            ImGui::TextUnformatted(caption);
             if (tip && ImGui::IsItemHovered()) ImGui::SetTooltip("%s", tip);
             ImGui::SameLine();
         };
@@ -815,103 +820,9 @@ void ProfileEditor::RenderFx() {
     fx_.classic = (look == 0);
 
     ImGui::Spacing();
-    ImGui::SeparatorText("Effects");
-    ImGui::BeginDisabled(fx_.classic);
-    ImGui::Checkbox("Explosions", &fx_.explosions);
+    ImGui::Checkbox("Start fullscreen", &fx_.fullscreen);
     if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("Fireball, shockwave, embers and smoke when a ship is destroyed (xpilot.fxExplosions)");
-    ImGui::Checkbox("Sparks", &fx_.sparks);
-    if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("Sparks when a ship hits a wall or another ship (xpilot.fxSparks)");
-    ImGui::Checkbox("Mine explosions", &fx_.mine_explosions);
-    if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("Fireball for mines, bright blue for cluster mines, a mushroom cloud\n"
-                          "for nuclear mines, sized by their strength (xpilot.fxMineExplosions)");
-    ImGui::Checkbox("Missile trails", &fx_.missile_trails);
-    if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("Smoke trails and exhaust glow behind missiles (xpilot.fxMissileTrails):\n"
-                          "smart missiles yellow with thick white smoke, heat seekers red with dark\n"
-                          "smoke, torpedoes blue with a thin light blue-grey trail.");
-    ImGui::Checkbox("Laser glow", &fx_.laser_glow);
-    if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("Laser pulses as glowing beams with a bright core (xpilot.fxLaserGlow)");
-    ImGui::Checkbox("Hyperjump streaks", &fx_.hyperjump);
-    if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("Hyperjumping ships stretch into a light streak and shoot in on one\n"
-                          "where they come out (xpilot.fxHyperjump)");
-    ImGui::Checkbox("Wormholes", &fx_.wormholes);
-    if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("Wormholes as glowing tunnels, and a swirling vortex when a ship goes\n"
-                          "through (xpilot.fxWormholes; needs a current TNG server)");
-    ImGui::Checkbox("Ball tether glow", &fx_.tether);
-    if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("Ball connector and tractor beams as a shimmering glowing rope; the ball\n"
-                          "connector turns red the harder it is stretched (xpilot.fxTether)");
-    ImGui::Checkbox("Mines", &fx_.mines);
-    if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("3D-shaded mine textures with a highlight (xpilot.fxMines; needs textured\n"
-                          "objects)");
-    ImGui::Checkbox("Ball", &fx_.ball);
-    if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("Ball as a glossy sphere with a soft anti-aliased edge (xpilot.fxBall)");
-    ImGui::Checkbox("Starfield", &fx_.stars);
-    if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("Subtle static starfield behind the map instead of the blue\n"
-                          "navigation dots (xpilot.fxStars)");
-    ImGui::Checkbox("Cannons", &fx_.cannons);
-    if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("Muzzle flash and smoke when map cannons fire, a charred outline with\n"
-                          "a smoke wisp while destroyed (xpilot.fxCannons; needs a current TNG\n"
-                          "server)");
-    ImGui::Checkbox("Nuke flash", &fx_.nuke_flash);
-    if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("Brief bright flash of the whole view when a nuke goes off in sight (xpilot.fxNukeFlash)");
-    ImGui::Checkbox("Screen shake", &fx_.screen_shake);
-    if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("The view shakes when a nuke goes off anywhere on the map (xpilot.fxScreenShake).\n"
-                          "Needs the server option sound (on by default).");
-    ImGui::Checkbox("Contrails", &fx_.contrails);
-    if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("Short glowing wingtip trails when a ship turns hard at speed (xpilot.fxContrails)");
-    ImGui::SetNextItemWidth(280);
-    ImGui::SliderFloat("Amount", &fx_.amount, 0.0f, 2.0f, "%.2f");
-    if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("Number of particles (xpilot.fxAmount).\n"
-                          "Lower it on slow machines, 0 turns the effects off.");
-
-    ImGui::Spacing();
-    ImGui::SeparatorText("Ships");
-    ImGui::Checkbox("Glossy hull", &fx_.ship_hull);
-    if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("Ships get a glossy, lit hull, and the outline is brighter on the side facing\n"
-                          "the light (xpilot.fxShipHull). The outline stays exactly the ship shape.\n"
-                          "Phased ships are half transparent, cloaked ones running glowing dashes.");
-    ImGui::Checkbox("Engine flame", &fx_.engine_flame);
-    if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("Flickering flame at the engine while a ship thrusts (xpilot.fxEngineFlame)");
-    ImGui::Checkbox("Hexagon shield and deflector", &fx_.shield);
-    if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("Shield as a pale dashed hexagon that flashes on hits and wall contact;\n"
-                          "armor hits show it briefly. The deflector becomes turning, softly\n"
-                          "glowing arcs (xpilot.fxShield)");
-    ImGui::Checkbox("Team halo", &fx_.ship_halo);
-    if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("Soft glow around ships, only in team play: blue for your own team\n"
-                          "including yourself (xpilot.fxShipHalo)");
-
-    ImGui::Spacing();
-    ImGui::SeparatorText("Walls");
-    ImGui::Checkbox("Hill landscape", &fx_.terrain);
-    if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("Filled walls are drawn as shaded low-poly hills (xpilot.fxTerrain).\n"
-                          "The wall edges stay exactly where they are. Needs filled walls.");
-    ImGui::BeginDisabled(!fx_.terrain);
-    ImGui::Checkbox("Lattice lines", &fx_.terrain_mesh);
-    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Thin lines along the hill facets (xpilot.fxTerrainMesh)");
-    ImGui::EndDisabled();
-    ImGui::EndDisabled();
-    ImGui::Spacing();
-    ImGui::TextDisabled("Purely cosmetic: the effects never change the game, and work on every server.");
+        ImGui::SetTooltip("Start the game in fullscreen mode (xpilot.fullScreen). F11 toggles it in the game.");
 }
 
 bool ProfileEditor::Render(float bottom_reserve) {
@@ -925,7 +836,7 @@ bool ProfileEditor::Render(float bottom_reserve) {
         if (ImGui::BeginTabItem("Modifier banks")) { RenderModBanks(); ImGui::EndTabItem(); }
         if (ImGui::BeginTabItem("Audio")) { RenderAudio(); ImGui::EndTabItem(); }
         if (ImGui::BeginTabItem("Network")) { RenderNetwork(); ImGui::EndTabItem(); }
-        if (ImGui::BeginTabItem("FX")) { RenderFx(); ImGui::EndTabItem(); }
+        if (ImGui::BeginTabItem("Graphics")) { RenderFx(); ImGui::EndTabItem(); }
         ImGui::EndTabBar();
     }
     ImGui::EndChild();

@@ -30,6 +30,8 @@ public:
     explicit ServerSearch(Kind kind) : kind_(kind) {}
     ~ServerSearch();
 
+    // Internet only: path of lib/metaserver.cfg (built-in defaults if empty/missing)
+    void SetMetaConfig(const std::string& path) { meta_config_ = path; }
     void Start();
     bool Busy() const { return busy_; }
     // Internet only: meta server entries that did not answer the ping (before the per-IP limit)
@@ -44,6 +46,7 @@ private:
     void SetMessage(const std::string& msg);
 
     Kind kind_;
+    std::string meta_config_;
     std::thread thread_;
     std::atomic<bool> busy_{false};
     std::atomic<bool> cancel_{false};

@@ -457,14 +457,17 @@ void ServerSearch::RunInternet() {
         std::lock_guard<std::mutex> lock(mtx_);
         servers_.clear();
     }
-    const char* metas[] = {META_HOST, META_HOST_TWO};
+    MetaEntry metas[META_MAX_SERVERS];
+    int num_metas = Meta_read_config(meta_config_.c_str(), metas);
     std::vector<ServerEntry> found;
     std::string errors;
     int reachable = 0;
-    for (const char* meta : metas) {
+    for (int mi = 0; mi < num_metas; mi++) {
         if (cancel_) return;
         std::string body, err;
-        if (!FetchAll(meta, kMetaProgPort, &body, &err, cancel_)) {
+        // hostname first; the configured IP is the fallback if it cannot be resolved
+        if (!FetchAll(metas[mi].name, kMetaProgPort, &body, &err, cancel_) &&
+            !FetchAll(metas[mi].addr, kMetaProgPort, &body, &err, cancel_)) {
             errors += (errors.empty() ? "" : "; ") + err;
             continue;
         }

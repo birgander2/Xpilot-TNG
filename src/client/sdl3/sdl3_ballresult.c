@@ -17,6 +17,7 @@
 #define BR_TITLE_H      34
 #define BR_FOOTER_H     26
 #define BR_SHOW_SECS    30      /* closes by itself after this */
+#define BR_JOIN_SECS    10      /* deathmatch list shown on joining */
 
 /* Two popups: the ballrun records and the deathmatch highscores. */
 typedef struct {
@@ -119,7 +120,8 @@ static void Br_render(br_popup_t *p)
     }
     if (!p->active)
         return;
-    if (SDL_GetTicks() - p->opened > BR_SHOW_SECS * 1000) {
+    if (SDL_GetTicks() - p->opened >
+        (Uint64)((p->dm && r->reason == HIGHSCORE_DM_JOIN ? BR_JOIN_SECS : BR_SHOW_SECS) * 1000)) {
         Br_close(p);
         return;
     }
@@ -147,8 +149,13 @@ static void Br_render(br_popup_t *p)
         struct tm *tm = localtime(&when);
         int color = (l->flags & HIGHSCORE_F_YOU) ? XP_COLOR_YELLOW : XP_COLOR_WHITE;
 
-        if (l->flags & HIGHSCORE_F_NEW)
-            color = XP_COLOR_GREEN;
+        bool fresh = (l->flags & HIGHSCORE_F_NEW) != 0;
+        int dcolor = XP_COLOR_GRAY;
+
+        if (fresh) {            /* solid green bar, dark text */
+            SDL3_Fill_Rect(x + 4.0f, cy - 2.0f, w - 8.0f, (float)BR_ROW_H, XP_COLOR_GREEN);
+            color = dcolor = XP_COLOR_BLACK;
+        }
         snprintf(buf, sizeof(buf), "%2d.%s", l->rank,
                  (l->flags & HIGHSCORE_F_NEW) ? "*" : " ");
         SDL3_Draw_Text(buf, x + BR_PAD, cy, color);
@@ -158,8 +165,9 @@ static void Br_render(br_popup_t *p)
         else
             Br_format(l->time_ms, buf, sizeof(buf));
         SDL3_Draw_Text(buf, x + w - BR_PAD - 84.0f - SDL3_Text_Width(buf), cy, color);
-        if (tm != NULL && strftime(date, sizeof(date), "%d.%m.%y", tm) > 0)
-            SDL3_Draw_Text(date, x + w - BR_PAD - SDL3_Text_Width(date), cy, XP_COLOR_GRAY);
+        if (tm != NULL && snprintf(date, sizeof(date), "%02d.%02d.%02d", tm->tm_mday,
+                                    tm->tm_mon + 1, tm->tm_year % 100) > 0)
+            SDL3_Draw_Text(date, x + w - BR_PAD - SDL3_Text_Width(date), cy, dcolor);
     }
 
     SDL3_Draw_Text(p->dm ? "* new highscore   Esc, Enter or a click closes"

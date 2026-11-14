@@ -489,6 +489,7 @@ void Object_free_ind(int ind);
 void Object_free_ptr(object_t *obj);
 void Alloc_shots(int number);
 void Free_shots(void);
+int Object_slot(const object_t *obj);
 const char *Object_typename(object_t *obj);
 
 /*
