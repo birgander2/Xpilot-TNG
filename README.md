@@ -1,5 +1,5 @@
 # 🚀 XPilot TNG (The Next Generation) 🛸
-### *The 90s cult classic returns — dust-free, turbocharged & powered by SDL3!*
+### *The 90s cult classic returns — dust-free & turbocharged!*
 
 > *"In space, no one can hear you scream... but across university computer labs in 1994, everyone knew who just ate a cluster nuke."*
 
@@ -9,9 +9,9 @@
 
 ## 🛰️ What is XPilot TNG?
 
-Welcome to **XPilot TNG** — the resurrection of one of the most legendary 2D multiplayer space dogfight games in computer history!
+XPilot is a legendary 2D multiplayer space dogfight game, an early milestone in computer history. First conceived in 1991 by Bjørn Stabell and Ken Ronny Schouten, it reliably brought down university subnets, hijacked dormitory networks and dominated office LAN parties throughout the 1990s and early 2000s. Years before Quake, it moved beyond local networks to introduce fast graphical gameplay across international borders over the early internet.
 
-First conceived in 1991 by Bjørn Stabell and Ken Ronny Schouten, XPilot reliably brought down university subnets, hijacked dormitory networks, and dominated office LAN parties throughout the 1990s and early 2000s. After years of dormancy — bogged down by ancient 2006 GNU Autotools, obsolete C89 prototypes, and libraries that now belong in computer museums — the codebase has been thoroughly modernized:
+After a long dormancy — bogged down by ancient GNU Autotools, obsolete C89 prototypes and libraries that now belong in computer museums — the codebase has been thoroughly modernized. Newtonian physics, gravity, walls and the entire gameplay are totally preserved. Under the hood lots of things have been changed:
 
 - 🏎️ **No more Autotools headaches:** Rebuilt with a modern **CMake** & **Ninja** build system.
 - 🦾 **C23 & GCC 15 Ready:** Pure, type-safe C code, UTF-8 clean, and stripped of deprecated syntactic fossils.
@@ -25,22 +25,22 @@ First conceived in 1991 by Bjørn Stabell and Ken Ronny Schouten, XPilot reliabl
 ## 🎮 New game features
 
 - 🤖 **Smartbots**: Strong AI-powered robots that will make you suffer (see below)
-- 🚀 **Launcher**: A cool new launcher app for both client and server. 
 - ✨ **Improved graphics**: A modern look with smoother rendering, many effects and spectacular explosions — way more fun to blow things up. Prefer the old days? Switch back to the classic style anytime in the launcher.
 - 🎧 **Voice chat**: Bark orders at your team over crackling radio, or trash-talk everyone within earshot — headset not included.
-- 🤝 **Teamplay**: Better team selection and balancing, now with robots on your side — or against you. Try Blood's Music against a smartbot team if you dare.
+- 🚀 **Launcher**: A cool new launcher app for both client and server.
+- 🤝 **Teamplay**: Better team selection and balancing, now with robots on your side — or against you. Try Blood's Music against a ballbot team if you dare!
 - 🐣 **Newbie mode**: Finally repaired after 30 years — now you can learn to fly without being fed to the cannons on day one.
 - 🗺️ **Map editor**: Draw your own battlefields: bases, fuel depots and cannons placed by click; every map option at your fingertips. No more counting ASCII characters.
-- 🏁 **Highscores**: The server now keep a hall of fame — only humans count, so the bots can't hog the podium.
-- 📡 **Lag countermeasures** (experimental): For smoother gamplay a jitter buffer - it doesn't wait for the server's opinion.
+- 🏁 **Highscores**: The server now keeps a hall of fame — only humans count, so the bots can't hog the podium.
+- 📡 **Lag countermeasures** (experimental): For smoother gameplay a jitter buffer - it doesn't wait for the server's opinion.
 
 ---
 
 ## 📖 Background
 
-I'm an old XPilot player (Sri Synadasti back in the day), and after almost 30 years I wanted to fly a few rounds with my kids. The catch: the available versions all had their problems. What a pity — it was such a cool game! So I rolled up my sleeves and, over a longer period, put some effort into bringing it back to life and improving a few things. Then a miracle happened: when introducing my gaming-savvy teenagers to XPilot, they really loved it, and I got lots of "modern" input on how the game should work. As a result, we spent many, many hours together changing things (AI assisted), testing everything, training the smartbots and of course playing a lot like in the old times! 
+I'm an old XPilot player (Sri Synadasti back in the day), and after almost 30 years I wanted to fly a few rounds with my kids. The catch: the available versions all had their problems. What a pity — it was such a cool game! So I rolled up my sleeves and worked on modernizing it on and off for quite a while with lower intensity: library dependencies and especially focusing on developing a better bot (so few players around nowadays). Then a miracle happened: when introducing my gaming-savvy teenagers to XPilot, they really loved it, and I got lots of "modern" input on how the game should work. As a result, we spent many, many hours together changing things (AI assisted), testing everything, training the smartbots and of course playing a lot like in the old times! It's work in progress, and there are still some more fresh ideas waiting in the hangar…
 
-Let's hope this effort helps to bring XPilot again a bit more attention.
+Let's hope this effort helps to bring XPilot again a bit more attention!
 
 ---
 
@@ -140,14 +140,15 @@ XPilot models **Newtonian space physics and inertia**. When you hit the thruster
 
 ## 🤖 Hostile Intelligence: The Smartbots
 
-Behind the scenes, mainly because there are so few players around nowadays, the server now runs a cunning bot AI that can be activated. The old bots are still there, but smartbots play much stronger:
+Mainly because there are so few players around nowadays, the server can run a cunning bot AI. The old bots are still there, but smartbots play much stronger: they compute predictive ballistic deflection firing solutions, bounce shots off walls with billiards-grade geometry, dodge incoming fire and sense when your fuel is low to swarm in for the kill.
 
-- They compute predictive ballistic deflection firing solutions.
-- They bounce shots off walls with billiards-grade geometry.
-- They sense when your fuel is low and swarm in for the kill.
-- There are specialised bots for ballgame and racing. Don't underestimate them on maximum level!
+Smartbots pick a specialised flight driver to match the map (`smartBotType auto`), and each of them plans with a physics model of its ship:
 
-Give them hell, or join forces with them in team-play mode! Ball-games against pure smartbot teams are possible, but the guys still have to learn that a bit better.
+- ⚔️ **Fighters** on deathmatch maps: they see only what a human sees, and fight with dodging, kiting and shields.
+- 🏀 **Ballbots** on team ball maps: they tow the ball as a pair, throw it into the goal with a swing manoeuvre and play as a team with roles (attacker, defender, escort, hunter).
+- 🏁 **Racers** on race maps: they plan the racing line, manage laps and fuel, and defend themselves.
+
+Don't underestimate them on maximum level! Give them hell, or join forces with them in team-play mode.
 
 📖 **For detailed usage, configuration options, in-game chat commands, and AI architecture, see the [Smartbots Documentation](doc/SMARTBOTS.md).**
 
@@ -158,7 +159,7 @@ Give them hell, or join forces with them in team-play mode! Ball-games against p
 XPilot TNG is released under the **GNU General Public License v2 (GPLv2)**.
 
 - **Original XPilot Authors:** Bjørn Stabell, Ken Ronny Schouten, Bert Gijsbers, Dick Balaska, Kristian Söderblom, Uoti Urpala, Erik Andersson, and many open-source contributors.
-- **XPilot TNG Modernization (2026):** Andreas Reigber.
+- **XPilot TNG Modernization (2026):** Andreas Reigber and friends.
 
 ---
 
@@ -174,6 +175,7 @@ For enthusiasts, historians, and retro space aces seeking original archives, rep
 - 📁 [**Local Legacy Trees (`legacy/`)**](legacy/) & [**Legacy Documentation (`doc/OLD_DOCS.md`)**](doc/OLD_DOCS.md) — Preserved, compilable copies of `xpilot-classic-4.5.5` and `xpilot-ng-4.7.3` included directly inside this repository.
 
 ### 📖 History, Guides & Community Lore
+- 📜 [**The Story of XPilot**](https://dl.acm.org/doi/fullHtml/10.1145/332132.332134) — The inventors' own account (Bjørn Stabell & Ken Ronny Schouten, ACM Crossroads, 1996) of how the game came to be.
 - 📚 [**Wikipedia: XPilot**](https://en.wikipedia.org/wiki/XPilot) — Comprehensive overview of the game's 1991 inception at the University of Tromsø, development history, and reception.
 - 🎓 [**Jarno's Unofficial XPilot Newbie Guide**](https://web.archive.org/web/20070216124707/http://www.j-a-r-n-o.nl/newbie/) — The quintessential flight academy manual covering Newtonian maneuvers, dodge maneuvers, and ballistics.
 - 🏆 [**XPilot Tournament & Teamcup Archives**](https://web.archive.org/web/20050212003730/http://www.xpilot.org/tournaments/) — Historical records of the European Team Cups, Spring Teamcup, Death Cup, and clan wars.
